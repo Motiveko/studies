@@ -45,9 +45,7 @@ export class InMemHeroService implements InMemoryDbService {
       {id : 2, name : "토르"},
       {id : 3, name : "헐크"},
       {id : 4, name : "블랙 위도우"},
-    ]
-
-    
+    ]    
     return { 
       heros, 
       persons: this.persons() 

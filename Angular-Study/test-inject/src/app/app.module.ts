@@ -9,7 +9,6 @@ import { HttpClientModule, HttpXhrBackend } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { InMemoryDbService, HttpClientInMemoryWebApiModule, InMemoryBackendConfigArgs } from 'angular-in-memory-web-api';
 import { InMemHeroService } from './in-mem-hero.service';
-import { ChildModule } from './child/child.module';
 
 const inMemoryOptions: InMemoryBackendConfigArgs= {
   // apiBase: '/api',
@@ -27,8 +26,8 @@ const inMemoryOptions: InMemoryBackendConfigArgs= {
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    environment.production ? [] : HttpClientInMemoryWebApiModule.forRoot(InMemHeroService, inMemoryOptions),
-    ChildModule,
+    // prod 환경이 아닐때만 HttpClientInMemoryWebApiModule 의존성을 주입해 http client의 요청을 mocking한다.
+    environment.production ? [] : HttpClientInMemoryWebApiModule.forRoot(InMemHeroService, inMemoryOptions),  
   ],
   bootstrap: [AppComponent]
 })

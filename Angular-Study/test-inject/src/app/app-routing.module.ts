@@ -8,7 +8,7 @@ const routes: Routes = [
       { path: 'lazy', loadChildren: () => import('./lazy-loading/lazy-loading.module').then(m => m.LazyLoadingModule )}
     ]
   },
-  { path: 'customers', loadChildren: () => import('./lazy-loading/customers/customers.module').then(m => m.CustomersModule) }
+  { path: 'customers', loadChildren: () => import('./lazy-loading/customers/customers.module').then(m => m.CustomersModule) },
 ];
 
 @NgModule({

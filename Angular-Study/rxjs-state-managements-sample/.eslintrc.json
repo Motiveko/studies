@@ -1,0 +1,38 @@
+{
+    "env": {
+      "browser": true,
+      "amd": true,
+      "node": true
+    },
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint"],
+    "extends": [
+      "airbnb-base",
+      "plugin:prettier/recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module",
+      //  Cannot read file tsconfig.json 관련 에러 수정, {PROJECT_NAME}/tsconfig.json 까지 해줘야함, 근디 npm run lint에서는 이게 문제가된다(프로젝트명 중복으로들어감)
+      "project": "rxjs-state-managements-sample/tsconfig.json" 
+    },
+    "settings": {
+      "import/resolver": {
+        "node": {
+          "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        }
+      }
+    },
+    "rules": {
+      "import/extensions": "off",
+      "import/prefer-default-export": "off",
+      "class-methods-use-this": "off",
+      // off할 rules
+      "no-useless-constructor": "off",
+      "@typescript-eslint/no-empty-function": "off",
+      "lines-between-class-members": "off",
+      "import/no-unresolved": "off",
+      "no-underscore-dangle": "off"    // private _something 같은 _ 허용
+    }
+  }
