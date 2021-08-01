@@ -108,7 +108,9 @@ export class TodosStateService extends StateService<TodoState> {
 
   update(todo: Todo): void {
     this.apiService.updateTodo(todo).subscribe((updatedTodo) => {
-      this.setState({ todos: { ...this.state.todos, ...updatedTodo } });
+      this.setState({
+        todos: this.state.todos.map((item) => (item.id === updatedTodo.id ? updatedTodo : item)),
+      });
     });
   }
 
