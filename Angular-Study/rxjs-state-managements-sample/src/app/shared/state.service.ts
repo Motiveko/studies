@@ -18,7 +18,7 @@ export class StateService<T> {
       distinctUntilChanged()
     );
   }
-
+  // 왜 next에 기존 ...this.state가 같이 들어가는건가?
   protected setState(newState: Partial<T>): void {
     this.state$.next({
       ...this.state,

@@ -53,11 +53,12 @@ export class TodosStateService extends StateService<TodoState> {
 
   filter$: Observable<Filter> = this.select((state) => state.filter);
 
-  selectedTodo$: Observable<Todo | undefined> = this.select((state) => {
+  selectedTodo$: Observable<Todo> = this.select((state) => {
     if (state.selectedTodoId === 0) {
       return new Todo();
     }
-    return state.todos.find((todo) => todo.id === state.selectedTodoId);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return state.todos.find((todo) => todo.id === state.selectedTodoId)!;
   }).pipe(
     // Multicast to prevent multiple executions due to multiple subscribers
     shareReplay({ refCount: true, bufferSize: 1 })
@@ -73,7 +74,7 @@ export class TodosStateService extends StateService<TodoState> {
     this.setState({ selectedTodoId: todo.id });
   }
 
-  // 새로 생설할 때?
+  // 새로 생설할 때
   initNewTodo(): void {
     // selectedTodo$ 에서 selectedTodoId === 0 일 때 새로운 Todo 객체를 내보냈다
     this.setState({ selectedTodoId: 0 });
@@ -95,5 +96,29 @@ export class TodosStateService extends StateService<TodoState> {
   }
 
   // API CALLS
-  load() {}
+  load(): void {
+    this.apiService.getTodos().subscribe((todos) => this.setState({ todos }));
+  }
+
+  create(todo: Todo): void {
+    this.apiService.createTodo(todo).subscribe((newTodo) => {
+      this.setState({ todos: { ...this.state.todos, ...newTodo } });
+    });
+  }
+
+  update(todo: Todo): void {
+    this.apiService.updateTodo(todo).subscribe((updatedTodo) => {
+      this.setState({ todos: { ...this.state.todos, ...updatedTodo } });
+    });
+  }
+
+  delete(todo: Todo): void {
+    this.apiService.deleteTodo(todo).subscribe(() => {
+      this.setState({
+        // todo를 select한 후에만 지울 수 있기때문이다.
+        selectedTodoId: undefined,
+        todos: { ...this.state.todos.filter((item) => item.id !== todo.id) },
+      });
+    });
+  }
 }

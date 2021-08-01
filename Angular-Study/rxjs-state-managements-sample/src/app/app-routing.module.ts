@@ -6,6 +6,10 @@ const routes: Routes = [
     path: 'todos',
     loadChildren: () => import('./modules/todo/todo.module').then((m) => m.TodoModule),
   },
+  {
+    path: 'counter',
+    loadChildren: () => import('./modules/counter/counter.module').then((m) => m.CounterModule),
+  },
 ];
 
 @NgModule({
