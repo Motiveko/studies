@@ -57,8 +57,7 @@ export class TodosStateService extends StateService<TodoState> {
     if (state.selectedTodoId === 0) {
       return new Todo();
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return state.todos.find((todo) => todo.id === state.selectedTodoId)!;
+    return state.todos.find((item) => item.id === state.selectedTodoId);
   }).pipe(
     // Multicast to prevent multiple executions due to multiple subscribers
     shareReplay({ refCount: true, bufferSize: 1 })

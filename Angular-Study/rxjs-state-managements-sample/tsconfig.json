@@ -6,9 +6,11 @@
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    // 이거 안하면 토한다,,{ T | undefined}  cannot be assigned to T 에러 계속뜬다 시발
+    "strictNullChecks": false,
     "noImplicitReturns": true,
     // class를 interface처럼 property의 key와 형태만 지정했을 때, initializer / default value 가 없다는 애러 관련 처리
-    "strictPropertyInitialization" : false, 
+    "strictPropertyInitialization": false,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "declaration": false,
@@ -21,12 +23,13 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
   },
-  "angularCompilerOptions": {
+  "angularCompilerOptions": {    
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true,
+    // 이거하는순간 child component에 @Input의 type과 부모에서 넣어주는게 정확히 일치해야한다
+    // "strictTemplates": true
   }
 }

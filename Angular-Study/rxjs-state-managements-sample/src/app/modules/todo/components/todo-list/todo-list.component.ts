@@ -6,7 +6,6 @@ import {
   Output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { Observable } from 'rxjs';
 import { Todo } from '../../models/todo';
 
 @Component({
@@ -17,8 +16,8 @@ import { Todo } from '../../models/todo';
 })
 export class TodoListComponent implements OnInit {
   // {Observable | async} 로 넘어오는 데이터는 자식 컴포넌트에서 Observable로도, 그냥 객체로도 받을 수 있다.
-  @Input() todos$: Observable<Todo[]> | Todo[];
-  @Input() selectedTodo$: Observable<Todo>;
+  @Input() todos: Todo[];
+  @Input() selectedTodo: Todo;
 
   @Output() selectTodo: EventEmitter<Todo> = new EventEmitter();
 

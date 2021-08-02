@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Todo } from '../../models/todo';
 
-const apiUrl = 'api/todos/';
+const apiUrl = 'api/todos';
 
 @Injectable({
   providedIn: 'root',

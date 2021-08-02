@@ -3,12 +3,8 @@ import { CommonModule } from '@angular/common';
 
 import { CounterRoutingModule } from './counter-routing.module';
 
-
 @NgModule({
   declarations: [],
-  imports: [
-    CommonModule,
-    CounterRoutingModule
-  ]
+  imports: [CommonModule, CounterRoutingModule],
 })
-export class CounterModule { }
+export class CounterModule {}
