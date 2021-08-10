@@ -10,7 +10,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.Random;
 
-@Component
+//@Component
 @Slf4j
 public class ReactorDebuggingExample implements CommandLineRunner {
     @Override
