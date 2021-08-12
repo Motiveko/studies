@@ -6,7 +6,7 @@ import org.thymeleaf.TemplateEngine;
 import reactor.blockhound.BlockHound;
 
 @SpringBootApplication
-public class HackingWithSpringBootChapter2ReactiveDataApplication {
+public class HackingWithSpringBootChapterReactiveDataApplication {
 
 	public static void main(String[] args) {
 		// 블로킹 코드 검출
@@ -16,7 +16,7 @@ public class HackingWithSpringBootChapter2ReactiveDataApplication {
 				.allowBlockingCallsInside(
 						TemplateEngine.class.getCanonicalName(), "process"
 				).install();
-		SpringApplication.run(HackingWithSpringBootChapter2ReactiveDataApplication.class, args);
+		SpringApplication.run(HackingWithSpringBootChapterReactiveDataApplication.class, args);
 	}
 
 }

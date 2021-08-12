@@ -11,6 +11,8 @@ import java.util.Date;
 @NoArgsConstructor
 @RequiredArgsConstructor
 public class Item {
+
+
     private @Id String id;
     @NonNull
     private String name;
@@ -18,6 +20,13 @@ public class Item {
     private String description;
     @NonNull
     private double price;
+
+    public Item (String id, String name, String description, double price) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+    }
 
     private String distributorRegion;
     private Date releaseDate;
