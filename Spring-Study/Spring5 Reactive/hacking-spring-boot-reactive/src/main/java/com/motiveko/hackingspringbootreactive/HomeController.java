@@ -10,9 +10,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class HomeController {
 
-    private final ItemRepository itemRepository;
-    private final CartRepository cartRepository;
-    private final CartService cartService;
     private final InventoryService inventoryService;
 
     @GetMapping
