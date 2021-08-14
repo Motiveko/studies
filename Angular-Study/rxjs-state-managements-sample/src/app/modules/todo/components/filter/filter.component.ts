@@ -13,7 +13,7 @@ export class FilterComponent implements OnInit, OnDestroy {
   @Input()
   set filter(filter: Filter) {
     // {emitEvent: false}는 setValue가 formGroup의 valueChanges() 에 이벤트를 방출하지 않게함
-    // 이미 filtered한 state를 가지고 모든동작이 이뤄지므로 쓸데없이 중복호출하는걸 막는다?? 로 이해하면될까?
+    // 이미 filtered한 state를 가지고 모든동작이 이뤄지므로, setValue시 valueChange가 발생해 쓸데없이 중복호출하는걸 막는다
     this.formGroup.setValue(filter, { emitEvent: false });
   }
   @Output() filterUpdate: EventEmitter<Filter> = new EventEmitter();
@@ -39,7 +39,7 @@ export class FilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // search, category를 나누는 이유는 category의 valueChanges가 formGroup의 valueChanges로 이어지지 않기 때문인듯
+    // search, category를 나누는 이유는 category의 valueChanges가 formGroup의 valueChanges로 이어지지 않기 때문
     this.search.valueChanges
       .pipe(takeUntil(this.unSubscribe$), debounceTime(350))
       .subscribe((value) => {
@@ -49,7 +49,7 @@ export class FilterComponent implements OnInit, OnDestroy {
         });
       });
 
-    this.search.valueChanges
+    this.category.valueChanges
       .pipe(takeUntil(this.unSubscribe$), debounceTime(300))
       .subscribe((value) => {
         this.filterUpdate.emit({

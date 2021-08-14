@@ -10,6 +10,7 @@
     </nav>
 
     <div class="flex-grow-1">
+        <!-- Edit/Create Todo -->
         <mat-sidenav-container class="example-container h-100">
             <mat-sidenav mode="side"
                          [opened]="selectedTodo$ | async"
@@ -19,6 +20,7 @@
                                  [todo]="selectedTodo"></app-todo-detail>
             </mat-sidenav>
 
+            <!-- Todo List -->
             <mat-sidenav-content>
                 <div class="container">
                     <div class="row">

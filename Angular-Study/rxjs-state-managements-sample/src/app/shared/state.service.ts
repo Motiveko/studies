@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { distinctUntilChanged, map, tap } from 'rxjs/operators';
 
 export class StateService<T> {
   private state$: BehaviorSubject<T>;
@@ -14,6 +14,7 @@ export class StateService<T> {
 
   protected select<K>(mapFn: (state: T) => K): Observable<K> {
     return this.state$.asObservable().pipe(
+      // tap(console.log),
       map((state: T) => mapFn(state)),
       distinctUntilChanged()
     );

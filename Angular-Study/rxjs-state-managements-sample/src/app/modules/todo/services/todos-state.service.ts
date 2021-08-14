@@ -23,7 +23,6 @@ const initialState: TodoState = {
   },
 };
 
-// eslint-disable-next-line no-shadow
 function getTodosFiltered(todos: Todo[], filter: Filter): Todo[] {
   return todos.filter((item) => {
     return (
@@ -96,12 +95,17 @@ export class TodosStateService extends StateService<TodoState> {
 
   // API CALLS
   load(): void {
-    this.apiService.getTodos().subscribe((todos) => this.setState({ todos }));
+    this.apiService.getTodos().subscribe((todos) => {
+      this.setState({ todos });
+    });
   }
 
   create(todo: Todo): void {
     this.apiService.createTodo(todo).subscribe((newTodo) => {
-      this.setState({ todos: { ...this.state.todos, ...newTodo } });
+      this.setState({
+        todos: [...this.state.todos, newTodo],
+        selectedTodoId: newTodo.id,
+      });
     });
   }
 
@@ -118,7 +122,7 @@ export class TodosStateService extends StateService<TodoState> {
       this.setState({
         // todo를 select한 후에만 지울 수 있기때문이다.
         selectedTodoId: undefined,
-        todos: { ...this.state.todos.filter((item) => item.id !== todo.id) },
+        todos: [...this.state.todos.filter((item) => item.id !== todo.id)],
       });
     });
   }

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CounterStateService } from './modules/counter/services/counter-state.service';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,6 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'rxjs-state-managements-sample';
+  counter$ = this.counterState.$count;
+  constructor(private counterState: CounterStateService) {}
 }
