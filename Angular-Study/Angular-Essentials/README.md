@@ -48,7 +48,15 @@ export class MyNgIfDirective {
 <elemnt *myNgIf="true | false">
 ```
 - 이렇게 넘겨준 값은 @Input() 디렉티브로 받을 수있다.
-- 디렉티브의 constructor parameter로 TemplateRef 객체와 ViewContainerRef객체를 받는데 각각 아래와 같은 객체이다.
+- 디렉티브의 constructor parameter로 TemplateRef 객체와 ViewContainerRef객체를 DI하는데, 각각 아래와 같은 객체이다.
     - TemplateRef : ng-template 디렉티브의 참조를 갖는 객체
     - 새로운 요소(Component, ng-template으로 랩핑된 요소)를 DOM에 삽입하기 위한 컨테이너(DOM)
 - 코드와 같이 @Input()의 setter방식으로 condition값의 변경(onChanges)에 따라 ViewContainerRef의 createEmbeddedView(TemplateRef) 메소드로 ng-template 을 DOM에 추가/삭제하는 로직을 수행시킨다.
+
+<br>
+
+---
+
+## [Dynamic component loader](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Essentials/src/app/dynamic-component-loader)
+> 동적 컴포넌트 로딩 README 작성중..
+- 동적 컴포넌트 로딩시 뷰의 캡슐화가 이뤄지지 않는다 -> style 맥이려면 inline으로 작성하던가, index.html에 작성해야하는 치명적 문제점이 존재한다..
