@@ -58,5 +58,86 @@ export class MyNgIfDirective {
 ---
 
 ## [Dynamic component loader](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Essentials/src/app/dynamic-component-loader)
-> 동적 컴포넌트 로딩 README 작성중..
-- 동적 컴포넌트 로딩시 뷰의 캡슐화가 이뤄지지 않는다 -> style 맥이려면 inline으로 작성하던가, index.html에 작성해야하는 치명적 문제점이 존재한다..
+> ViewContainerRef, ComponentFactory를 이용해 런타임에서 동적으로 컴포넌트를 DOM에 추가/제거할 수 있다.
+
+- [앵귤러 공식문서 가이드](https://angular.io/guide/dynamic-component-loader)
+
+- 호스트 컴포넌트(AdBannerComponent)에 동적으로 컴포넌트를 랜더링할 위치에 ng-template을 선언하고 커스텀 디렉티브(adHost)를 추가한다. adHost디렉티브는 생성자로 ViewContainerRef를 주입받는다.
+
+```typescript
+// 랜더링할 컴포넌트, 컴포넌트에 주입할 데이터의 인터페이스 클래스
+export class AdItem {
+    constructor(public component: Type<any>, public data: any) {}
+}
+```
+
+```typescript
+@Directive({
+  selector: '[adHost]',
+})
+export class AdDirective {
+  constructor(public viewContainerRef: ViewContainerRef) {}
+}
+```
+- 호스트 컴포넌트는 ComponentFactoryResolver를 생성자로 주입받는다. 이 클래스는 ComponentFactory를 생성하고, ViewContainerRef의 createComponent() 메소드의 파라미터로 사용되어, DOM에 컴포넌트를 추가할 수 있다.
+- ViewContainerRef.createComponent(ComponentFactory) 의 결과로 ComponentRef를 얻을 수 있고 이는 DOM에 추가된 컴포넌트에 대한 참조를 지닌다. .으로 내부 프로퍼티를 참조/조작 할 수 있다.
+
+```typescript
+export class AdBannerComponent implements OnInit, OnDestroy{
+  
+  // 서비스 등으로 랜더링할 컴포넌트를 주입받는다.
+  @Input('ads') ads: AdItem[] = [];
+  currentAdIndex = -1;
+  // 선언된 디렉티브를 참조, 디렉티브의 ViewContainerRef를 사용한다.
+  @ViewChild(AdDirective, { static: true }) adHost!: AdDirective;
+  interval: number | undefined;
+
+  // 생성자로 ComponentFactoryResolver를 받는다.
+  constructor(private componentFactoryResolver: ComponentFactoryResolver) {}
+  
+  ngOnDestroy(): void {
+    clearInterval(this.interval);
+  }
+
+  ngOnInit(): void {
+    this.loadComponent();
+    this.getAds();
+  }
+
+  // 3초마다 랜더링할 컴포넌트 변경
+  getAds() {
+    this.interval = setInterval(() => {
+      this.loadComponent();
+    }, 3000);
+  }
+
+  loadComponent() {
+    
+    this.currentAdIndex = (this.currentAdIndex + 1) % this.ads.length;
+    const adItem: AdItem = this.ads[this.currentAdIndex];
+
+    // Component Factory를 받는다.
+    const componentFactory: ComponentFactory<AdComponent> = this.componentFactoryResolver.resolveComponentFactory(adItem.component);
+    
+    const viewContainerRef = this.adHost.viewContainerRef;
+    viewContainerRef.clear()
+
+    // Directive의 vieContainerRef.createComponent()로 DOM에 AdComponent Component 추가
+    const componentRef = viewContainerRef.createComponent(componentFactory);
+
+    // componentRef로 컴포넌트 내부 프로퍼티를 조작할 수 있다.
+    componentRef.instance.data = adItem.data;
+  
+  }
+
+}
+
+```
+
+- 이 방법으로 동적 컴포넌트를 랜더링 할 때 치명적인 문제가 있는데, 컴파일이 완료된 런타임에 컴포넌트가 DOM에 추가되기 때문에 <strong>뷰의 캡슐화가 이뤄지지 않는다.</strong>는 것이다. 결국 컴포넌트의 스타일을 변경하려면
+  - 인라인으로 스타일 지정
+  - ViewEncapsulation.None으로 스타일 캡슐화를 사용하지 않음
+  - index.html에 css를 직접 넣는다
+
+ - 의 방법이 존재하나 이는 바람직한 방법인가 생각해봐야한다.
+
