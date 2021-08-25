@@ -8,6 +8,8 @@ describe('CounterComponent', () => {
   let component: CounterComponent;
   let fixture: ComponentFixture<CounterComponent>;
   let debugElement: DebugElement
+
+  // Arrange(given)
   // Configuring the test Module
   beforeEach(async () => {
     // compileComponents method는 async이므로(외부 url의 참조때문), async-await을 사용한다.
@@ -28,11 +30,19 @@ describe('CounterComponent', () => {
   });
 
   it('implements the count', () => {
+    // Act(when)
     const incrementButton = 
       debugElement.query(By.css('[data-testid="increment-button"]'));
+    
     incrementButton.triggerEventHandler('click',null);
+    fixture.detectChanges();
 
+    // Assert(then)
     const countOutput = 
-      debugElement.query(By.css('[data-testid="count"]'))
+      debugElement.query(By.css('[data-testid="count"]'));
+    
+    expect(countOutput.nativeElement.textContent).toBe('1');
+
+
   })
 });
