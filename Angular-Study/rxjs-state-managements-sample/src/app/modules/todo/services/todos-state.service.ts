@@ -98,6 +98,9 @@ export class TodosStateService extends StateService<TodoState> {
     this.apiService.getTodos().subscribe((todos) => {
       this.setState({ todos });
     });
+    const hey$ = new Observable((observer) => {
+      observer.next(1);
+    });
   }
 
   create(todo: Todo): void {

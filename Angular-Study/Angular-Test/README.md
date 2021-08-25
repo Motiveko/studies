@@ -65,3 +65,5 @@
         ```
         console.log(JSON.parse(JSON.stringify(exampleObject)));
         ```
+
+### Testing Components
