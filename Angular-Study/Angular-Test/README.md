@@ -50,20 +50,41 @@
     - console.log
         - 원시적이지만 강력한 방법. 
         - Object를 console로 찍을 때 렌더링이 async하게 되는데, 여기서 문제가 발생할 수 있다.
-        ```
+        ```typescript
         const exampleObject = { name: 'Usagi Tsukino' };
         console.log(exampleObject);
         exampleObject.name = 'Sailor Moon';
         ```
         - 위와같은 코드 실행시, 콘솔창에서 Object Object누르면 나오는 name값은 Sailer Moon이 된다.
         - 이를 방지하기 위해 Json.Stringify()를 string으로 만들어 찍으면 동기적으로 찍힌다.
-        ```
+        ```typescript
         console.log(JSON.stringify(exampleObject, null, '  '));
         ```
 
         - interactive하게 console을 찍고 싶다면 JSON.parse로 한번더 묶어주자.
-        ```
+        ```typescript
         console.log(JSON.parse(JSON.stringify(exampleObject)));
         ```
 
 ### Testing Components
+... 작성중 ...
+- Filling out Forms
+    - Angular의 Testing Tool은 form을 쉽게 채울수 있는 솔류션이 없다. 따라서 NativeElement를 찾아서 elemnt.value = {SOMETHING} 으로 채워야한다.
+    - Angular의 Form은 직접 value change를 detect할 수 없다. input에서 valueChange가 발생할 때 브라우저에서 'input'이벤트를 발생시키는데, 이를 감지한다.
+    - 따라서 input에 value를 패우고, 'input'이벤트를 발생기켜서 Agnular가 value change를 알아차리게 해야한다.
+        ```typescript
+            const resetInputEl = findEl(fixture, 'reset-input').nativeElement;
+            resetInputEl.value = '123';
+            resetInputEl.dispatchEvent(new Event('input'));
+        ```
+    - IE에서는 new Event()가 작동하지 않으므로 이벤트를 조금 더 복잡한 방법으로 생성해야한다.
+        ```typescript
+            const event = document.createEvent('Event');
+            event.initEvent('input', true, false);
+            resetInputEl.dispatchEvent(event);
+        ``` 
+
+- Testing Inputs
+    - ComponentInstance.{INPUT_PROPERTY} 로 @Input으로 부모Component에서 받는 값을 test에서 직접 설정 가능하다.
+    - 그런데 @Input의 값의 변화에 후킹되는 OnChanges()는 테스트 환경에서는 자동으로 실행되지 않으므로 ComponentInstance.OnChanges()로 따로 호출해줘야 한다.
+    

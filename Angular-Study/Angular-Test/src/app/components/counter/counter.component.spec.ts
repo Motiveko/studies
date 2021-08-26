@@ -1,8 +1,11 @@
 import { DebugElement, ElementRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { click, expectText, findEl, setFieldElementValue } from 'src/app/spec-helpers/element.spec-helper';
 import { CounterComponent } from './counter.component';
 
+const startCount = 123;
+const newCount = 456;
 
 describe('CounterComponent', () => {
   let component: CounterComponent;
@@ -20,9 +23,16 @@ describe('CounterComponent', () => {
     fixture = TestBed.createComponent(CounterComponent);
     component = fixture.componentInstance;
     debugElement = fixture.debugElement;
+
+    component.startCount = startCount;
+    component.ngOnChanges();
     // test환경에는 auto Change detection이 없기때문에 수동으로한다.
     fixture.detectChanges();
   });
+
+  it('시작시 startCount가 랜더링된다.', () => {
+    expectText(fixture, 'count', String(startCount));
+  })
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -34,7 +44,7 @@ describe('CounterComponent', () => {
     fixture.detectChanges();
 
     // Assert(then)
-    expectText(fixture, 'count', '1');
+    expectText(fixture, 'count', String(startCount + 1));
   });
 
   it('decrements the count', () => {
@@ -43,54 +53,37 @@ describe('CounterComponent', () => {
     fixture.detectChanges();
 
     // Assert(then)
-    expectText(fixture, 'count', '-1');
+    expectText(fixture, 'count', String(startCount - 1));
   });
 
   it('resets the count', () => {
+    const newCount = '123';
+
     // Act(when)
     const resetInputEl = findEl(fixture, 'reset-input').nativeElement;
-    resetInputEl.value = '123';
+    // set Input Field
+    setFieldElementValue(resetInputEl, newCount);
+
+    // Click Reset Button
+    click(fixture, 'reset-button');
+
+    fixture.detectChanges();
+
+    // Assert(then)
+    expectText(fixture, 'count', newCount);
+  });
+
+  it('리셋하고자하는 값이 숫자가 아니면 리셋하지 않는다.', () => {
+    const value = 'not a number';
+
+    // Act(when)
+    const resetInputEl = findEl(fixture, 'reset-input').nativeElement;
+    setFieldElementValue(resetInputEl, value);
     click(fixture, 'reset-button');
     fixture.detectChanges();
 
     // Assert(then)
-    expectText(fixture, 'count', '123');
-
-  })
+    expectText(fixture, 'count', String(startCount));
+  }) 
 });
 
-function findEl<T>(fixture: ComponentFixture<T>, testid: string): DebugElement {
-  return fixture.debugElement.query(By.css(`[data-testid="${testid}"]`));
-}
-export function click<T>(
-  fixture: ComponentFixture<T>,
-  testid: string
-): void {
-    const element = findEl(fixture, testid);
-    const event = makeClickEvent(element.nativeElement);
-    element.triggerEventHandler('click', event);
-}
-
-export function makeClickEvent(target : EventTarget): Partial<MouseEvent> {
-  return {
-    preventDefault(): void {},
-    stopPropagation(): void {},
-    stopImmediatePropagation(): void {},
-    type: 'click',
-    target,
-    currentTarget: target,
-    bubbles: true,
-    cancelable: true,
-    button: 0    
-  }
-}
-
-export function expectText<T>(
-  fixture: ComponentFixture<T>,
-  testid: string,
-  text: string
-): void {
-  const element = findEl(fixture, testid);
-  const actualText = element.nativeElement.textContent;
-  expect(actualText).toBe(text);
-}
