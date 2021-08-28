@@ -113,3 +113,34 @@
     ```
 
     - 따라서 expectation은 반드시 실행될 수 있는 동기적인 자리에 배치해야한다.
+
+- Repetitive Component specs
+    > 반복적인 테스트를 어떻게 줄일 수 있을까?
+
+    - beforeEach, afterEach 등은 반복을 줄이는 대표적인 예
+    - 반복적인 작동을 helper method로 추상화하거나, 라이브러리를 사용해 줄일 수 있을 것이다.
+        - 그러나 테스트를 읽는 사람이 helper method에 대해 잘 인지해야한다.
+        - 자신만의 skill이나 습관을 추상화 하면 오히려 가독성이 매우 안좋아진다.
+    - 반복을 줄이는 것의 궁극적인 목표는 테스트륵 쉽게 읽고 쉽게 파악하도록 하는 것이다.
+
+    - (예) Testing Output은 모두 increment, decreement, reset 버튼 클릭 시 output이 이벤트를 방출하는 공통부분이 있다. 이를 RxJs의 operator를 사용해 합칠 수 있다.
+    ```typescript
+    import { take, toArray } from 'rxjs/operators'
+
+    it('버튼 클릭으로 countChange event 방출', () => {
+        let resetValue = 444;
+        let actualCounts: number[] | undefined;
+
+        component.countChange.pipe(take(3), toArray()).subscribe((counts) => {
+            actualCounts = counts;
+        });
+    
+        click(fixture, 'increment-button');
+        click(fixture, 'decrement-button');
+        setFieldValue(fixture, 'reset-input', String(resetValue));
+        click(fixture, 'reset-button');
+
+        expect(actualCounts).toEqual([startCount + 1, startCount, resetValue]);
+    });
+    ```
+    - 위의 코드는 click을 3회 발생시키고 순서대로 next()를 통해 받을 값을 3회 묶어서 array로 만들었다. expectation 역시 array를 통째로 expect해 1번으로 테스트가 가능하다.

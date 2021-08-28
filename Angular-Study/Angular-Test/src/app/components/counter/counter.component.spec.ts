@@ -8,6 +8,7 @@ import {
   setFieldElementValue,
   setFieldValue,
 } from 'src/app/spec-helpers/element.spec-helper';
+import { take, toArray } from 'rxjs/operators'
 import { CounterComponent } from './counter.component';
 
 const startCount = 123;
@@ -90,50 +91,23 @@ describe('CounterComponent', () => {
     expectText(fixture, 'count', String(startCount));
   });
 
-  it('increment버튼 클릭 시 countChange는 startCount + 1을 방출한다.', () => {
-    let actualCount: number | undefined;
+  it('버튼 클릭으로 countChange event 방출', () => {
 
-    // Arrange(given)
-    component.countChange.subscribe((count: number) => {
-      actualCount = count;
-    });
+    let resetValue = 444;
+    let actualCounts: number[] | undefined;
 
-    // Act(when)
+    component.countChange.pipe(
+      take(3),
+      toArray()
+    ).subscribe(
+      (counts) => {  actualCounts = counts;}
+    )
+
     click(fixture, 'increment-button');
-
-    // Assert(then)
-    expect(actualCount).toBe(startCount + 1);
-  });
-
-  it('decrement버튼 클릭 시 countChange는 startCount - 1을 방출한다', () => {
-    let actualCount: number | undefined;
-    // Arrange(given)
-    component.countChange.subscribe((count: number) => {
-      actualCount = count;
-    });
-
-    // Act(when)
     click(fixture, 'decrement-button');
-
-    // Assert(then)
-    expect(actualCount).toBe(startCount - 1);
-  });
-
-  it('reset버튼 클릭 시 countChange는 reset-input의 값을 방출한다.', () => {
-    
-    // Arrange(given)
-    let resetCount = 125;
-    let actualCount: number | undefined;
-
-    component.countChange.subscribe((count: number) => {
-      actualCount =  count;
-    })
-    
-    // Act(when)
-    setFieldValue(fixture, 'reset-input', String(resetCount));
+    setFieldValue(fixture, 'reset-input', String(resetValue));
     click(fixture, 'reset-button');
 
-    // Assert(then)
-    expect(actualCount).toBe(resetCount);
+    expect(actualCounts).toEqual([startCount + 1, startCount, resetValue]);
   })
 });
