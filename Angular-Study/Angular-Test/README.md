@@ -3,6 +3,8 @@
 
 학습자료는 [Testing Angular - A Guide to Robust Angular Applications](https://testing-angular.com/introduction/#introduction).
 
+추후 notion으로 재정리 후 markdown으로 옮길 예정(https://swieeft.github.io/2020/03/02/NotionToGithubioPorting.html)
+
 <br>
 
 ---
@@ -66,8 +68,18 @@
         console.log(JSON.parse(JSON.stringify(exampleObject)));
         ```
 
+<br>
+
+---
+
+<br>
+
+
 ### [Testing Components](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Test/src/app/components/counter)
 ... 작성중 ...
+
+<br>
+
 - Filling out Forms
     - Angular의 Testing Tool은 form을 쉽게 채울수 있는 솔류션이 없다. 따라서 NativeElement를 찾아서 elemnt.value = {SOMETHING} 으로 채워야한다.
     - Angular의 Form은 직접 value change를 detect할 수 없다. input에서 valueChange가 발생할 때 브라우저에서 'input'이벤트를 발생시키는데, 이를 감지한다.
@@ -84,9 +96,13 @@
             resetInputEl.dispatchEvent(event);
         ``` 
 
+<br>
+
 - Testing Inputs
     - ComponentInstance.{INPUT_PROPERTY} 로 @Input으로 부모Component에서 받는 값을 test에서 직접 설정 가능하다.
     - 그런데 @Input의 값의 변화에 후킹되는 OnChanges()는 테스트 환경에서는 자동으로 실행되지 않으므로 ComponentInstance.OnChanges()로 따로 호출해줘야 한다.
+
+<br>
 
 - Testing Outputs
     - @Output 데코레이터로 장식되는 EventEmitter는 RxJs Subject를 상속하는데, 부모컴포넌트의 @Output의 이벤트 바인딩은, 내부적으로 EventEmitter를 구독해서 next()를 구현하는것이다.
@@ -112,7 +128,9 @@
     WARN: 'Spec 'CounterComponent increment버튼 클릭 시 countChange는 startCount + 1을 방출한다.' has no expectations.'
     ```
 
-    - 따라서 expectation은 반드시 실행될 수 있는 동기적인 자리에 배치해야한다.
+    - <u>**따라서 expectation은 반드시 실행될 수 있는 동기적인 자리에 배치해야한다.**</u>
+
+<br>
 
 - Repetitive Component specs
     > 반복적인 테스트를 어떻게 줄일 수 있을까?
@@ -144,6 +162,8 @@
     });
     ```
     - 위의 코드는 click을 3회 발생시키고 순서대로 next()를 통해 받을 값을 3회 묶어서 array로 만들었다. expectation 역시 array를 통째로 expect해 1번으로 테스트가 가능하다.
+
+<br>
 
 - BlacBox vs WhiteBox Testing
     - BlackBox는 Component에 어떤 Input을 넣고 내부 동작을 고려하지 않고, Output을 테스트한다.
