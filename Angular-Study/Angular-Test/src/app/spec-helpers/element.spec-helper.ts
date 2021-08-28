@@ -8,6 +8,7 @@ export function findEl<T>(
 ): DebugElement {
   return fixture.debugElement.query(By.css(`[data-testid="${testid}"]`));
 }
+
 export function click<T>(fixture: ComponentFixture<T>, testid: string): void {
   const element = findEl(fixture, testid);
   const event = makeClickEvent(element.nativeElement);
@@ -47,8 +48,8 @@ export function setFieldValue<T>(
 }
 
 /**
- * Form Field(Input, TextArea, Select)에 value를 채움.
- * Angular 가 value change를 detect할 수 있게 적절한 event를 dispatch한다.
+ * Form Field(Input, TextArea, Select)에 value를 채운다.
+ * 그 후 Angular 가 value change를 detect할 수 있게 적절한 event를 dispatch한다.
  * 'input' => Input, TextArea, 'select' => 'select'
  * 
  * @param element form field

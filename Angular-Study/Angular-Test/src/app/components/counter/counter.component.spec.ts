@@ -1,7 +1,13 @@
 import { DebugElement, ElementRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { click, expectText, findEl, setFieldElementValue } from 'src/app/spec-helpers/element.spec-helper';
+import {
+  click,
+  expectText,
+  findEl,
+  setFieldElementValue,
+  setFieldValue,
+} from 'src/app/spec-helpers/element.spec-helper';
 import { CounterComponent } from './counter.component';
 
 const startCount = 123;
@@ -32,7 +38,7 @@ describe('CounterComponent', () => {
 
   it('시작시 startCount가 랜더링된다.', () => {
     expectText(fixture, 'count', String(startCount));
-  })
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -57,12 +63,10 @@ describe('CounterComponent', () => {
   });
 
   it('resets the count', () => {
-    const newCount = '123';
-
     // Act(when)
     const resetInputEl = findEl(fixture, 'reset-input').nativeElement;
     // set Input Field
-    setFieldElementValue(resetInputEl, newCount);
+    setFieldElementValue(resetInputEl, String(newCount));
 
     // Click Reset Button
     click(fixture, 'reset-button');
@@ -70,7 +74,7 @@ describe('CounterComponent', () => {
     fixture.detectChanges();
 
     // Assert(then)
-    expectText(fixture, 'count', newCount);
+    expectText(fixture, 'count', String(newCount));
   });
 
   it('리셋하고자하는 값이 숫자가 아니면 리셋하지 않는다.', () => {
@@ -84,6 +88,52 @@ describe('CounterComponent', () => {
 
     // Assert(then)
     expectText(fixture, 'count', String(startCount));
-  }) 
-});
+  });
 
+  it('increment버튼 클릭 시 countChange는 startCount + 1을 방출한다.', () => {
+    let actualCount: number | undefined;
+
+    // Arrange(given)
+    component.countChange.subscribe((count: number) => {
+      actualCount = count;
+    });
+
+    // Act(when)
+    click(fixture, 'increment-button');
+
+    // Assert(then)
+    expect(actualCount).toBe(startCount + 1);
+  });
+
+  it('decrement버튼 클릭 시 countChange는 startCount - 1을 방출한다', () => {
+    let actualCount: number | undefined;
+    // Arrange(given)
+    component.countChange.subscribe((count: number) => {
+      actualCount = count;
+    });
+
+    // Act(when)
+    click(fixture, 'decrement-button');
+
+    // Assert(then)
+    expect(actualCount).toBe(startCount - 1);
+  });
+
+  it('reset버튼 클릭 시 countChange는 reset-input의 값을 방출한다.', () => {
+    
+    // Arrange(given)
+    let resetCount = 125;
+    let actualCount: number | undefined;
+
+    component.countChange.subscribe((count: number) => {
+      actualCount =  count;
+    })
+    
+    // Act(when)
+    setFieldValue(fixture, 'reset-input', String(resetCount));
+    click(fixture, 'reset-button');
+
+    // Assert(then)
+    expect(actualCount).toBe(resetCount);
+  })
+});

@@ -87,4 +87,29 @@
 - Testing Inputs
     - ComponentInstance.{INPUT_PROPERTY} 로 @Input으로 부모Component에서 받는 값을 test에서 직접 설정 가능하다.
     - 그런데 @Input의 값의 변화에 후킹되는 OnChanges()는 테스트 환경에서는 자동으로 실행되지 않으므로 ComponentInstance.OnChanges()로 따로 호출해줘야 한다.
+
+- Testing Outputs
+    - @Output 데코레이터로 장식되는 EventEmitter는 RxJs Subject를 상속하는데, 부모컴포넌트의 @Output의 이벤트 바인딩은, 내부적으로 EventEmitter를 구독해서 next()를 구현하는것이다.
     
+    - 따라서, Output의 EventEmitter를.emit(value)가 정상작동했는지를 테스트하려면 @Output이 붙은 컴포넌트의 프로퍼티를 구독하여 next()로 넘어오는 값을 테스트하면 된다.
+
+    - Component 초기화 후 increment버튼을 누르면 시작값 + 1이 emit되는지 테스트하는 코드는 아래와 같다.
+    ```typescript
+    it('increment버튼 클릭 시 countChange는 startCount + 1을 방출한다.', () => {
+        let actualCount: number | undefined;
+        // Arrange(given)
+        component.countChange.subscribe((count: number) => {
+        actualCount = count;
+        });
+        // Act(when)
+        click(fixture, 'increment-button');
+        // Assert(then)
+        expect(actualCount).toBe(startCount + 1);
+    });
+    ```
+    - 위 코드에서, subscribe()에서 next()에 바로 expect를 넣어서 테스트 할 수도 있다. 가능은 하지만 문제가 있는 방식인데, 이유는 테스트에 문제가있거나, 컴포넌트가 변경되어서 click이 emit()을 아예 발생시키지 않을 경우, Jasmine은 expectation이 없다고 WARN 메시지를 보내고 테스트를 통과시키기 때문이다.
+    ```
+    WARN: 'Spec 'CounterComponent increment버튼 클릭 시 countChange는 startCount + 1을 방출한다.' has no expectations.'
+    ```
+
+    - 따라서 expectation은 반드시 실행될 수 있는 동기적인 자리에 배치해야한다.
