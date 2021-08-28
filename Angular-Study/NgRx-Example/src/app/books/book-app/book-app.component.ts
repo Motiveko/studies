@@ -46,9 +46,9 @@ export class BookAppComponent implements OnInit {
     this.store.dispatch(removeBook({ bookId }));
   }
   ngOnInit(): void {
+    // (Book) ==> (Book: Book[])
     this.bookService.getBooks().subscribe((Book) => {
-      console.log(Book);
-      this.store.dispatch(retrievedBookList({ Book }));
+      this.store.dispatch(retrievedBookList({ Book })); // { Book } ==> { Book: Book[] }
     });
   }
 }
