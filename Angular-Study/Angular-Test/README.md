@@ -66,7 +66,7 @@
         console.log(JSON.parse(JSON.stringify(exampleObject)));
         ```
 
-### Testing Components
+### [Testing Components](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Test/src/app/components/counter)
 ... 작성중 ...
 - Filling out Forms
     - Angular의 Testing Tool은 form을 쉽게 채울수 있는 솔류션이 없다. 따라서 NativeElement를 찾아서 elemnt.value = {SOMETHING} 으로 채워야한다.
@@ -144,3 +144,35 @@
     });
     ```
     - 위의 코드는 click을 3회 발생시키고 순서대로 next()를 통해 받을 값을 3회 묶어서 array로 만들었다. expectation 역시 array를 통째로 expect해 1번으로 테스트가 가능하다.
+
+- BlacBox vs WhiteBox Testing
+    - BlackBox는 Component에 어떤 Input을 넣고 내부 동작을 고려하지 않고, Output을 테스트한다.
+    - WhiteBox는 내부 동작을 고려하고 이를 구현한다.
+    - 우리가 위에서 한 테스트는 모두 BlackBox이다.
+        - increment 버튼을 클릭했고(Input), 내부에서 어떤메소드가 호출되고 작동하여 최종적으로 어떤 값이 랜더링되거나 방출되는지(Ouptput)을 테스트했다.
+        - 이를 WhiteBox테스트로 바꾸면, 컴포넌트 내부 increment()를 직접 호출하고(내부로직 관여) 어떤 값이 랜더링 하는지 테스트할 것이다.
+        ```typescript
+        describe('CounterComponent', () => {
+            /* … */
+            it('increments the count', () => {
+                component.increment();
+                fixture.detectChanged();
+                expectText(fixture, 'count', '1');
+            });
+        });        
+        ```
+        - 이런식의 테스트는 컴포넌트 테스트시 권장되지 않는다. 이유는 template에서 버튼이 사라졌다고 가정할 때, increment()는 호출될 일이 없고, 테스트가 의미가 없을 것이기 때문.
+
+        - Angular의 DOM, Component, Input, Output이 상호작용 하는것을 테스트 할 때 의미가 있다.
+            (물론 WhiteTest로 해야하는 부분도 있다.)
+        - 아래의 표는 Component 테스트 시 BlackBox로 테스트해야 하는 부분을 의미한다.
+
+        | ClassMember | Acess from Test | 
+        |---|:---:|
+        | `@Input Properties` | O (write) | 
+        | `@Output Properties` | O (subscribe) |  
+        | `Lifecycle Methods` | Avoid, except for OnChanges |  
+        | `Other public Methods` | Avoid |  
+        | `Private Properties & Methods` | WhiteBox(DOM등과 직접 상호작용하지 않는다.) |  
+
+

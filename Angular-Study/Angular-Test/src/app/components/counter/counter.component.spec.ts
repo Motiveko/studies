@@ -8,7 +8,7 @@ import {
   setFieldElementValue,
   setFieldValue,
 } from 'src/app/spec-helpers/element.spec-helper';
-import { take, toArray } from 'rxjs/operators'
+import { take, toArray } from 'rxjs/operators';
 import { CounterComponent } from './counter.component';
 
 const startCount = 123;
@@ -92,16 +92,12 @@ describe('CounterComponent', () => {
   });
 
   it('버튼 클릭으로 countChange event 방출', () => {
-
     let resetValue = 444;
     let actualCounts: number[] | undefined;
 
-    component.countChange.pipe(
-      take(3),
-      toArray()
-    ).subscribe(
-      (counts) => {  actualCounts = counts;}
-    )
+    component.countChange.pipe(take(3), toArray()).subscribe((counts) => {
+      actualCounts = counts;
+    });
 
     click(fixture, 'increment-button');
     click(fixture, 'decrement-button');
@@ -109,5 +105,5 @@ describe('CounterComponent', () => {
     click(fixture, 'reset-button');
 
     expect(actualCounts).toEqual([startCount + 1, startCount, resetValue]);
-  })
+  });
 });
