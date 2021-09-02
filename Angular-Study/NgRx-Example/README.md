@@ -86,5 +86,20 @@ onSubmit(username: string, password: string) {
 <br><br>
 
 ## Reducer
+정리필요
+Featured State 파트 헷갈림
+하위모듈에서 StoreModule.forFeature({ some.key : some.value}) 형태로 등록하고 이 모듈을 상위 모듈에 import하는 방식인데 정확한 의미 파익이 필요할듯
 
+## Selector
+정리필요
+selector는 pure function인데 이게 약간 값을 캐싱하는거같은 기능이 있다는거같다? -> memoized value가 있다(MemoizedSelector)
+...  createSelector()는 굉장히 다양한 파라미터로 overloading 되어있다.
+parameter로 ...Selector, Projector가 받아지는데, ...Selector 에 각각의 return값을 Projector가 parameter로 받아서 하나의 값을 return하게 하는 형태.
 
+Resetting Memoized Selectors
+ - selector는 인자가 같으면 기존 memory에 memoized된 값을 그대로 리턴한다(로직수행 x)
+ - 초기값 null임
+ - memozied 된 값은 계속 남아있는데, 안쓸거면 selector.release()로 제거 가능
+ - release()는 recursive하게 상위 selector까지 죄다 release시킨다.
+
+ Using Store Without Type Generic 부터 보자
