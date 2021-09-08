@@ -90,6 +90,14 @@ onSubmit(username: string, password: string) {
 Featured State 파트 헷갈림
 하위모듈에서 StoreModule.forFeature({ some.key : some.value}) 형태로 등록하고 이 모듈을 상위 모듈에 import하는 방식인데 정확한 의미 파익이 필요할듯
 
+Advanced에 나오는 MetaReducer
+참고 ; https://medium.com/@yeon22/ngrx-meta-reducer-565c1799d5f5
+meta reducer는 action - reducer 사이에서 hook으로 동작한다. action이 일반 reducer를 invoke하기 전 pre-processing하는데에 사용할 수 있다. 
+공홈예는 모든 action에 대해 state, action을 로그로 찍는 meta-reducer
+참고자료에는 Logout시 state를 undefined로 만들어버리는 meta-reducer
+
+
+
 ## Selector
 정리필요
 selector는 pure function인데 이게 약간 값을 캐싱하는거같은 기능이 있다는거같다? -> memoized value가 있다(MemoizedSelector)
@@ -103,3 +111,5 @@ Resetting Memoized Selectors
  - release()는 recursive하게 상위 selector까지 죄다 release시킨다.
 
  Using Store Without Type Generic 부터 보자
+
+
