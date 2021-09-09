@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { select, Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import {
   selectBookCollection,
   selectBooks,
+  selectLastStateTransitioins,
 } from 'src/app/state/books/book.selector';
 import {
   addBook,
@@ -31,12 +34,14 @@ import { GoogleBookService } from '../books.service';
   `,
   styles: [],
 })
-export class BookAppComponent implements OnInit {
+export class BookAppComponent implements OnInit, OnDestroy {
   constructor(private bookService: GoogleBookService, private store: Store) {}
 
   books$ = this.store.pipe(select(selectBooks));
 
   bookCollection$ = this.store.pipe(select(selectBookCollection));
+
+  unsubscriber = new Subject();
 
   onAdd(bookId: string): void {
     this.store.dispatch(addBook({ bookId }));
@@ -51,5 +56,15 @@ export class BookAppComponent implements OnInit {
     this.bookService.getBooks().subscribe((Book) => {
       this.store.dispatch(retrievedBookList({ Book })); // { Book } ==> { Book: Book[] }
     });
+
+    this.store
+      .pipe(selectLastStateTransitioins(3))
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((res) => console.log(res));
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscriber.next();
+    this.unsubscriber.complete();
   }
 }

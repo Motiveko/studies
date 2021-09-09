@@ -15,8 +15,8 @@ import { AppRoutingModule } from './app-routing.module';
 
 export function debug(reducer: ActionReducer<unknown>): ActionReducer<unknown> {
   return (state, action) => {
-    console.log('state : ', state);
-    console.log('action : ', action);
+    // console.log('state : ', state);
+    // console.log('action : ', action);
     return reducer(state, action);
   };
 }
@@ -26,10 +26,9 @@ export function debugBookList(
 ): ActionReducer<unknown> {
   return (state, action) => {
     if (action.type === '[Book List/API] Retrieve Books Success') {
-      console.log('bookListState : ', state);
-
+      // console.log('bookListState : ', state);
       // {type: string, Book: Book[]}
-      console.log('bookListAction : ', action);
+      // console.log('bookListAction : ', action);
     }
     return reducer(state, action);
   };
