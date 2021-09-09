@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
-import { StoreModule } from '@ngrx/store';
+import { ActionReducer, MetaReducer, StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
 import { counterReducer } from './state/counter/counter.reducer';
@@ -12,6 +12,30 @@ import { collectionReducer } from './state/books/collection.reducer';
 import { BookCollectionComponent } from './books/book-collection/book-collection.component';
 import { BookAppComponent } from './books/book-app/book-app.component';
 import { AppRoutingModule } from './app-routing.module';
+
+export function debug(reducer: ActionReducer<unknown>): ActionReducer<unknown> {
+  return (state, action) => {
+    console.log('state : ', state);
+    console.log('action : ', action);
+    return reducer(state, action);
+  };
+}
+
+export function debugBookList(
+  reducer: ActionReducer<unknown>
+): ActionReducer<unknown> {
+  return (state, action) => {
+    if (action.type === '[Book List/API] Retrieve Books Success') {
+      console.log('bookListState : ', state);
+
+      // {type: string, Book: Book[]}
+      console.log('bookListAction : ', action);
+    }
+    return reducer(state, action);
+  };
+}
+
+export const metaReducers: MetaReducer<unknown>[] = [debug, debugBookList];
 
 @NgModule({
   declarations: [
@@ -29,7 +53,7 @@ import { AppRoutingModule } from './app-routing.module';
         books: booksReducer,
         collection: collectionReducer,
       },
-      {}
+      { metaReducers }
     ),
     HttpClientModule,
     AppRoutingModule,

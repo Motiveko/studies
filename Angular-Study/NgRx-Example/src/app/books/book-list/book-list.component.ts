@@ -8,5 +8,6 @@ import { Book } from '../books.model';
 })
 export class BookListComponent {
   @Input() books: Array<Book>;
+
   @Output() add = new EventEmitter();
 }

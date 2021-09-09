@@ -3,7 +3,6 @@
 
 학습자료는 [Testing Angular - A Guide to Robust Angular Applications](https://testing-angular.com/introduction/#introduction).
 
-추후 notion으로 재정리 후 markdown으로 옮길 예정(https://swieeft.github.io/2020/03/02/NotionToGithubioPorting.html)
 
 <br>
 
@@ -194,5 +193,26 @@
         | `Lifecycle Methods` | Avoid, except for OnChanges |  
         | `Other public Methods` | Avoid |  
         | `Private Properties & Methods` | WhiteBox(DOM등과 직접 상호작용하지 않는다.) |  
+
+<br>
+
+---
+<br>
+
+### Testing Components with Children
+
+ 자식 컴포넌트가 없는 **Low Level Component**들은 테스트하기 비교적 쉽다. 하지만 이런 low Level Component들은 결국 결합되어 애플리케이션을 구성되는데, 이 때 결합하는 역할을 하는 Component를 **Container Component**라고 한다.
+
+ <br>
+ Container Component를 테스트하는 케이스는 두가지가 존재한다. 
+ 하나는 자식 컴포넌트를 랜더링하지 않고(Shallow Rendering) 테스트하는것이고(Unit Testing), 다른 하나는 자식 컴포넌트를 랜더링하여(Deep Rendering) 테스트하는것이다.(Integration Testing)
+
+- Shallow Rendering
+    - ShallowRendering에서는 자식 요소를 빈 껍데기로 랜더링한다. 그리고 자식 요소의 존재여부, 그것이 Container Component와 잘 연결되었는지, @Input과 @Output의 정상동작을 테스트한다.
+
+- Deep Rendering
+    - DeepRendering에서는 모든 자식 컴포넌트를 랜더링한다. 이후 세부 작동에 대해서 테스트 여부는 하위 컴포넌트의 Unit Test 존재 여부에 따라 결정한다.
+
+
 
 
