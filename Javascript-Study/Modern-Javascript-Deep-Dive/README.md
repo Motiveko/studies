@@ -366,16 +366,70 @@ typeof undeclared;      // -> ReferenceError
 
 <br><br>
 
-8. 제어문
-<!-- 8.3 반복문 - forEach, for ... in(object properties) , for ... of(이터러블)   -->
-<!-- 8.4 break문 - label 문 -->
+## 8. 제어문
+--- 
+<br>
 
-9. 타입 변환과 단축 평가
+### 8.3 반복문
+다향한 for문
+- 배열순회 : Array.prototype.forEach()
+- 객체의 프로퍼티를 열거할 때 사용하는 for ...in 문
+- ES6에서 도입된 Iterable을 순회할 수 있는 for ...of문
+
+### 8.4 break문
+break문은 **코드 블록을 탈출**하는데 쓰인다. 좀 더 정확히 표현하면, 레이블문, 반복문, 또는 switch문의 코드 블록을 탈출한다.
+이 외의 코드 블록에서 break를 사용하면 SyntaxError가 발생한다.
+
+```js
+if(true) {
+    break;      // Uncaught SyntaxError: Illegal break statement
+}
+```
+
+레이블 문(label statement)은 식별자가 붙은 문을 말한다.
+```js
+// foo라는 레이블 식별자가 붙은 레이블문
+foo: console.log('foo');
+```
+
+레이블 문은 프로그램의 실행 순서를 제어하는데 사용한다. 사실 swtich문의 case와 default도 레이블문이다. 레이블 문을 탈출하려면 **break문에 레이블 식별자를 지정한다.**
+
+```js
+foo: {
+    console.log(1);
+    break foo;
+    console.log(2);
+}
+```
+
+레이블 문을 사용하면 break를 이용해 중첩 for문을 한번에 탈출하는것이 가능하다.
+
+```js
+outer: for(var i = 0; i < 3; i++) {
+    for(var j = 0; j < 3; j++) {
+        // i+j === 3이면 outer라는 식별자가 붙은 레이블문(for 문)을 탈출한다.
+        if( i + j === 3) break outer;
+        cosnole.log(`i : ${i}, j : ${j}`);
+    }
+}
+```
+
+label문은 유용해 보이지만 일반적으로 권장하지 않는다. label문이 사용되면 프로그램의 흐름이 복잡해져서 가독성이 나빠지고 오류를 발생시킬 가능성이 높아지기 때문이다.
+
+<br><br>
+
+## 9. 타입 변환과 단축 평가
+---
+<br>
+
+
+
 <!-- 전부정리 ./. -->
 
 
-10. 객체 리터럴
-
+## 10. 객체 리터럴
+---
+<br>
 
 10.3프로퍼티
  - 객체의 프로퍼티 key는 공백을 포함하는 문자열, symbol간으. value는 모든 타입의 값 가능
