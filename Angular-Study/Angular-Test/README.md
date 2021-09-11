@@ -492,12 +492,16 @@ it('버튼 클릭으로 countChange event 방출', () => {
 <br>
 
 ## 11. Testing Components with Children
+> 자식 컴포넌트가 있는 컴포넌트의 테스트는 어떻게 할 것인가?
 
- 자식 컴포넌트가 없는 **Low Level Component**들은 테스트하기 비교적 쉽다. 하지만 이런 low Level Component들은 결국 결합되어 애플리케이션을 구성되는데, 이 때 결합하는 역할을 하는 Component를 **Container Component**라고 한다.
+<br>
 
- <br>
- Container Component를 테스트하는 케이스는 두가지가 존재한다. 
- 하나는 자식 컴포넌트를 랜더링하지 않고(Shallow Rendering) 테스트하는것이고(Unit Testing), 다른 하나는 자식 컴포넌트를 랜더링하여(Deep Rendering) 테스트하는것이다.(Integration Testing)
+## 11.1 Shallow vs. deep rendering
+
+자식 컴포넌트가 없는 **Low Level Component**들은 테스트하기 비교적 쉽다. 하지만 이런 low Level Component들은 결국 결합되어 애플리케이션을 구성되는데, 이 때 결합하는 역할을 하는 Component를 **Container Component**라고 한다.
+
+Container Component를 테스트하는 케이스는 두가지가 존재한다. 
+하나는 자식 컴포넌트를 랜더링하지 않고(Shallow Rendering) 테스트하는것이고(Unit Testing), 다른 하나는 자식 컴포넌트를 랜더링하여(Deep Rendering) 테스트하는것이다.(Integration Testing)
 
 - Shallow Rendering
     - ShallowRendering에서는 자식 요소를 빈 껍데기로 랜더링한다. 그리고 자식 요소의 존재여부, 그것이 Container Component와 잘 연결되었는지, @Input과 @Output의 정상동작을 테스트한다.
@@ -505,6 +509,54 @@ it('버튼 클릭으로 countChange event 방출', () => {
 - Deep Rendering
     - DeepRendering에서는 모든 자식 컴포넌트를 랜더링한다. 이후 세부 작동에 대해서 테스트 여부는 하위 컴포넌트의 Unit Test 존재 여부에 따라 결정한다.
 
+<br>
+
+## 11.2 Unit Test
+<!-- 여기서부터 요약중.. -->
+home.component.spec 에는 smoke test라 불리는, 가장 기본적인 오류없이 컴포넌트 인스턴스가 생성되는가를 테스트하는 코드가 있다.
+아래와 같은 에러뜸
+
+```
+'app-counter' is not a known element:
+1. If 'app-counter' is an Angular component, then verify that it is part of this module.
+2. If 'app-counter' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.
+```
+해결하면 integration, 무시하면 unit 테스트가 되는거다
+
+app-counter 존재 테스트
+-> 이게 컴포넌트가 존재하던 그런게 중요한게아니다. 그건 Warning으로 뜬거임
+-> DOM에 해당 요소가 존재하는지를 테스트하는거임
 
 
+app-counter에 startCount를 넘겨주는걸 테스트
+-> 위와 마찬가지다. 실제로 Component는 등록을 안했기때무에 없다. 그냥 해당 element를 template에 적었고, property-binding 문법으로 값을 넘겨준거다
+-> 따라서 app-counter DebugElement를 가져와서 property중 startCount라는 녀석의 값이, 여기서는 5인지 테스트하는거다.
 
+Output event test
+-> 마찬가지로 UnitTest에서 counter component는 Component Instance없기때문에 element로 취급한다. 
+-> 이벤트 핸들러를 트리거 하고 값을 냈을 때 바인딩 되어있는 method 내에 console.log가 호출되는지를 확인한다.
+-> Jasmine의 spyOn()으로 테스트한다.
+
+<br>
+
+## 11.3 Faking a Child Component
+
+자식컴포넌트를 fake하는것은 unit과 integration 중간형태의 테스트이다.
+
+FakeComponent는 Partial<CounterComponent>를 구현하고, selector가 같고, Input,Output이 동일하며, 아무것도 랜더링하지 않아도 된다.
+
+이제는 app-counter element를 찾는게 아닌 FakeCounterComponent Instance를 찾아야한다.
+DebugElement에 query()의 인자로 By.directive(FakeCounterComponent)로 찾으면 DebugElement가 나온다.
+원래 fixture.componenetInstance로 Component 객체에 접근했으나, 여기서는 debugElement.componentInstance로 접근하는데, 타입은 any다
+
+FakeComponent를 수동으로 만들어서 테스하는것은 단순히 HomeComponent에서 element 탐색하는거보다 훨씬 견고하다. Component property에 접근할 수 있으므로 편리하고 직관적이다.
+
+단점이라면 selector를 원래 component에서 복사해서 넣은것이기때문에, 원래 컴포넌트에서 selector가 바뀌면 테스트가 깨진다는것. 이는 해결 가능하다.
+
+<br>
+
+## 11.4 Faking a child Component with ng-mocks
+
+[ng-mocks](https://github.com/ike18t/ng-mocks)
+
+...

@@ -81,3 +81,16 @@ export function dispatchFakeEvent(
     event.initEvent(type, bubbles, false);
     element.dispatchEvent(event);
 }
+
+/**
+ * fixture에서 selector로 원하는 Component를 찾는다.
+ * @param fixture 
+ * @param selector 
+ * @returns 
+ */
+export function findComponent<T> (
+  fixture: ComponentFixture<T>,
+  selector: string
+): DebugElement {
+  return fixture.debugElement.query(By.css(selector));
+}
