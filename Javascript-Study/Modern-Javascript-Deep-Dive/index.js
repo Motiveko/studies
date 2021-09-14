@@ -1,7 +1,8 @@
-var res = (function (){
-  var a= 5;
-  var b= 4;
-  return a+b;
-}());
-console.log(typeof res);
-// console.log(typeof (function(){}()));
+function repeat(n, f) {
+  for( var i = 0; i < n; i++ ) {
+    f(i)
+  }
+}
+var logAll = (i) => console.log(i);
+
+repeat(5, logAll);
