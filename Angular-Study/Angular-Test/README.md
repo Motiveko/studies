@@ -648,5 +648,18 @@ ng-mocks를 이용하면 **_FakeComponent와 달리 CounterComponent 타입으�
 
 FakeComponent를 직접 선언할 때 @Input, @Output 프로퍼티를 직접 선언해야하고, selector가 원본 Component와 같아야 하는 등의 단점이 싹 사라진다. 
 
-> 결론 : 자식 컴포넌트는 ng-mocks로 fake하여 테스트하는것이 최고다!
+> ❗️결론 : 자식 컴포넌트는 ng-mocks로 fake하여 테스트하는것이 최고다!
 
+<br><br>
+
+<!-- 12장 정리중.. -->
+## 12. Testing Components depending on Services
+---
+<br>
+Service를 Faking하면 Unit Test, 안하면 Integration Test이다.
+
+## 12.1 Service Dependency Integration Test
+- service-counter Component가 의존하는  CounterService가 간단해서 Integration Test가 Unit Test보다 훨씬 쉽다.
+- Moudle에 Provider에 CounterService 넣어주기만 하면 끝
+- Integeration은 실제 의존 Service를 주입하기때문에 Component <-> Service간의 작동은 테스트하지 않는다. 버튼 누르면 Component -> Service -> Component로 count값이 변하는건 고려하지 않고 최종적으로 랜더링 된 값의 변화만 체크한다.
+- Service에 상태가 저장된 Integration Test는 두개의 Component를 띄우고 한쪽에서 상태변경을 일으킬 때 다른쪽에서도 해당상태를 받는지 테스트해야한다.
