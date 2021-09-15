@@ -21,10 +21,11 @@
 
 <br>
 
-- spyOn( SOME_EXISTING_METHOD )
+- spyOn(SOME_COMPONENT, METHOD )
     - 예) spyOn(window,'fetch').and.returnValue( SOMETHING )
     - 이미 존재하는 global method 등을 spy한다.
     - 생성자 DI등을 사용하지 않는 method도 이렇게 global하게 overwrite해서 테스트하는 부분을 isolate할 수 있다.
+    - **_spyOn으로 faking한  method는 실제 호출이 이뤄지지 않는다. expect()의 paramter로 호출 여부를 테스트한다._**
     - [Jasmine Reference: SpyOn](https://jasmine.github.io/api/edge/global.html#spyOn)
 
 
