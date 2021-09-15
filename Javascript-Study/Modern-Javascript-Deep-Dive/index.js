@@ -1,8 +1,13 @@
-function repeat(n, f) {
-  for( var i = 0; i < n; i++ ) {
-    f(i)
-  }
-}
-var logAll = (i) => console.log(i);
+var x = 1;
 
-repeat(5, logAll);
+function foo() {
+  var x = 10;
+  bar();
+}
+
+function bar() {
+  console.log(x);
+}
+
+foo();
+bar();
