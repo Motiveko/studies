@@ -502,7 +502,8 @@ it('버튼 클릭으로 countChange event 방출', () => {
 자식 컴포넌트가 없는 **Low Level Component**들은 테스트하기 비교적 쉽다. 하지만 이런 low Level Component들은 결국 결합되어 애플리케이션을 구성되는데, 이 때 결합하는 역할을 하는 Component를 **Container Component**라고 한다.
 
 Container Component를 테스트하는 케이스는 두가지가 존재한다. 
-하나는 자식 컴포넌트를 랜더링하지 않고(Shallow Rendering) 테스트하는것이고(Unit Testing), 다른 하나는 자식 컴포넌트를 랜더링하여(Deep Rendering) 테스트하는것이다.(Integration Testing)
+
+하나는 자식 컴포넌트를 **랜더링하지 않고(Shallow Rendering)** 테스트하는것이고(**Unit Testing**), 다른 하나는 **자식 컴포넌트를 랜더링하여(Deep Rendering)** 테스트하는것이다.(**Integration Testing**)
 
 - Shallow Rendering
     - ShallowRendering에서는 자식 요소를 빈 껍데기로 랜더링한다. 그리고 자식 요소의 존재여부, 그것이 Container Component와 잘 연결되었는지, @Input과 @Output의 정상동작을 테스트한다.
@@ -513,46 +514,110 @@ Container Component를 테스트하는 케이스는 두가지가 존재한다.
 <br>
 
 ## 11.2 Unit Test
-<!-- 여기서부터 요약중.. -->
-home.component.spec 에는 smoke test라 불리는, 가장 기본적인 오류없이 컴포넌트 인스턴스가 생성되는가를 테스트하는 코드가 있다.
-아래와 같은 에러뜸
+
+기본적으로 컴포넌트에는 **Smoke Test**라 불리는, 가장 기본적인 오류없이 컴포넌트 인스턴스가 생성되는가를 테스트하는 코드가 있다. 자식 컴포넌트가 생기면, Smoke Test에서 아래와 같은 WARNING을 볼 수 있다.
 
 ```
 'app-counter' is not a known element:
 1. If 'app-counter' is an Angular component, then verify that it is part of this module.
 2. If 'app-counter' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.
 ```
-해결하면 integration, 무시하면 unit 테스트가 되는거다
 
-app-counter 존재 테스트
--> 이게 컴포넌트가 존재하던 그런게 중요한게아니다. 그건 Warning으로 뜬거임
--> DOM에 해당 요소가 존재하는지를 테스트하는거임
+**이 에러를 해결하려면 자식 컴포넌트를 랜더링 해야하고(integration), 무시하면 unit 테스트가 되는거다**
+
+TestBed의 Module설정에 { schemas: [NO_ERRORS_SCHEMA] }를 추가해주면 사라진다.
+
+자식 컴포넌트가 있는 컴포넌트를 테스트 하는 방법은 3가지가 있다.
+
+1. 그냥 부모 컴포넌트만 Module에 등록하고 테스트한다
+  - 자식 컴포넌트는 selector로 찾고, debugElement 타입니다.
+  - Module에 Component를 등록하지 않았기 때문에 빈 껍데기다. ComponentInstance는 존재하지 않는다.
+  - 예를 들어, 자식 컴포넌트와 event binding된 method를 테스트한다고 생각해보자. 
+    ```js
+      const counter = findComponent(fixture, 'app-counter');
+      counter.triggerEventHandler('countChange',count);
+    ```
+  - findCompont의 타입은 debugElement이고 triggerEventHandler()로 이벤트를 발생키겨 해당 내용을 테스트 할 수 있다.
 
 
-app-counter에 startCount를 넘겨주는걸 테스트
--> 위와 마찬가지다. 실제로 Component는 등록을 안했기때무에 없다. 그냥 해당 element를 template에 적었고, property-binding 문법으로 값을 넘겨준거다
--> 따라서 app-counter DebugElement를 가져와서 property중 startCount라는 녀석의 값이, 여기서는 5인지 테스트하는거다.
+2. Module에 자식 컴포넌트의 fake component를 등록하여 테스트
+  11.3에서 다룬다.
 
-Output event test
--> 마찬가지로 UnitTest에서 counter component는 Component Instance없기때문에 element로 취급한다. 
--> 이벤트 핸들러를 트리거 하고 값을 냈을 때 바인딩 되어있는 method 내에 console.log가 호출되는지를 확인한다.
--> Jasmine의 spyOn()으로 테스트한다.
+3. ng-mocks로 자식 컴포넌트 faking후 Module에 등록
+  11.4에서 다룬다.
 
 <br>
 
 ## 11.3 Faking a Child Component
 
-자식컴포넌트를 fake하는것은 unit과 integration 중간형태의 테스트이다.
+**_Child Component를 fake하는것은 unit과 integration 중간형태의 테스트이다._**
 
-FakeComponent는 Partial<CounterComponent>를 구현하고, selector가 같고, Input,Output이 동일하며, 아무것도 랜더링하지 않아도 된다.
+FakeComponent를 선언하고 TestBed의 Module에 등록한다.
 
-이제는 app-counter element를 찾는게 아닌 FakeCounterComponent Instance를 찾아야한다.
+FakeComponent는 **Partial<CounterComponent>** 를 구현하고, selector가 같고, Input,Output이 동일하며, **아무것도 랜더링하지 않아도 된다.**(template은 empty)
+
+```ts
+// home.component.fake-child.spec.ts
+
+// FakeComponent 선언, selector는 원본과 같아야한다.
+@Component({
+  selector: 'app-counter',
+  template: ``,
+})
+export class FakeCounterComponent implements Partial<CounterComponent> {
+
+  @Input()
+  public startCount = 0;
+
+  @Output()
+  public countChange = new EventEmitter<number>();
+}
+
+...
+// 변수 선언, 타입은 FakeCounterComponent
+let counter: FakeCounterComponent;
+
+// TestBed 모듈에 FakeComponent 등록
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [HomeComponent, FakeCounterComponent],
+  })})
+...
+
+```
+<br>
+
+부모 Component만 등록했을 때 처럼 'app-counter' selector로 DebugElement를 찾는게 아닌 **선언한 FakeCounterComponent 타입의 Instance를 찾을 수 있다.**
+
 DebugElement에 query()의 인자로 By.directive(FakeCounterComponent)로 찾으면 DebugElement가 나온다.
-원래 fixture.componenetInstance로 Component 객체에 접근했으나, 여기서는 debugElement.componentInstance로 접근하는데, 타입은 any다
 
-FakeComponent를 수동으로 만들어서 테스하는것은 단순히 HomeComponent에서 element 탐색하는거보다 훨씬 견고하다. Component property에 접근할 수 있으므로 편리하고 직관적이다.
+```ts
+// home.component.fake-child.spec.ts
 
-단점이라면 selector를 원래 component에서 복사해서 넣은것이기때문에, 원래 컴포넌트에서 selector가 바뀌면 테스트가 깨진다는것. 이는 해결 가능하다.
+let counter: FakeCounterComponent;
+
+// DebugElement, By.directive(FakeCounterComponent)로 찾을 수 있다.
+const counterEl = fixture.debugElement.query(By.directive(FakeCounterComponent));
+// 최종적으로 찾고자 했던 Fake Component
+counter = counterEl.componentInstance
+
+```
+
+<br>
+
+원래 fixture.componenetInstance로 Component 객체에 접근했으나, 여기서는 **debugElement.componentInstance로 접근하는데, 타입은 any다.** 따라서 변수에 타입을 미리 선언해서 받는다.
+
+FakeComponent를 만드는 테스트는 그러지 않는 테스트에 비해 Component Instance의 property에 접근이 가능하기 때문에 훨씬 다양한 테스트가 가능하다.
+
+11.2에서 처럼 자식 컴포넌트의 이벤트 바인딩 관련해 자식 Component의 이벤트 방출을 좀 더 직관적으로 할 수 있다.
+
+```ts
+  // home.component.fake-child.spec.ts
+
+  counter.countChange.emit(count);
+```
+
+단점이라면 selector를 원래 component에서 복사해서 넣은것이기때문에, 원래 컴포넌트에서 selector가 바뀌면 테스트가 깨진다는것. 이는 ng-mocks로 해결 가능하다.
 
 <br>
 
@@ -560,4 +625,28 @@ FakeComponent를 수동으로 만들어서 테스하는것은 단순히 HomeComp
 
 [ng-mocks](https://github.com/ike18t/ng-mocks)
 
-...
+TestBed의 Module에 자식 Component를 등록한다. 이 때, ng-mocks의 MockComponent()를 사용해서 등록한다.
+
+```ts
+  // home.component.ng-mocks.spec.ts
+  await TestBed.configureTestingModule({
+    declarations: [HomeComponent, MockComponent(CounterComponent)],
+  }).compileComponents();
+```
+
+ng-mocks를 이용하면 **_FakeComponent와 달리 CounterComponent 타입으로 ComponentInstance를 참조할 수 있다._**
+
+```ts
+  // home.component.ng-mocks.spec.ts
+  let counter: CounterComponent;
+
+  const counterEl = fixture.debugElement.query(
+    By.directive(CounterComponent)
+  );
+  counter = counterEl.componentInstance;
+```
+
+FakeComponent를 직접 선언할 때 @Input, @Output 프로퍼티를 직접 선언해야하고, selector가 원본 Component와 같아야 하는 등의 단점이 싹 사라진다. 
+
+> 결론 : 자식 컴포넌트는 ng-mocks로 fake하여 테스트하는것이 최고다!
+

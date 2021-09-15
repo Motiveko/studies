@@ -1,10 +1,9 @@
-import { NO_ERRORS_SCHEMA } from "@angular/core"
-import { ComponentFixture, TestBed } from "@angular/core/testing"
-import { By } from "@angular/platform-browser"
-import { MockComponent } from "ng-mocks"
-import { CounterComponent } from "../counter/counter.component"
-import { HomeComponent } from "./home.component"
-
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { MockComponent } from 'ng-mocks';
+import { CounterComponent } from '../counter/counter.component';
+import { HomeComponent } from './home.component';
 
 describe('HomeComponent with ng-mocks', () => {
   let fixture: ComponentFixture<HomeComponent>;
@@ -19,12 +18,13 @@ describe('HomeComponent with ng-mocks', () => {
 
     fixture = TestBed.createComponent(HomeComponent);
     homeComponent = fixture.componentInstance;
-    
+
     fixture.detectChanges();
 
-    const counterEl = fixture.debugElement.query(By.directive(CounterComponent));
+    const counterEl = fixture.debugElement.query(
+      By.directive(CounterComponent)
+    );
     counter = counterEl.componentInstance;
-
   });
   it('renders an independent counter', () => {
     expect(counter).toBeTruthy();
@@ -32,15 +32,15 @@ describe('HomeComponent with ng-mocks', () => {
 
   it('passes a start count', () => {
     expect(counter.startCount).toBe(5);
-  })
+  });
 
   it('listens for count changes', () => {
     spyOn(console, 'log');
     const count = 5;
     counter.countChange.emit(count);
     expect(console.log).toHaveBeenCalledWith(
-      'countChange event from CounterComponent', 
+      'countChange event from CounterComponent',
       count
     );
-  })
-})
+  });
+});
