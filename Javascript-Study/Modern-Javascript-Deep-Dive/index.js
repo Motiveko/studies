@@ -1,7 +1,13 @@
-var res = (function (){
-  var a= 5;
-  var b= 4;
-  return a+b;
-}());
-console.log(typeof res);
-// console.log(typeof (function(){}()));
+var x = 1;
+
+function foo() {
+  var x = 10;
+  bar();
+}
+
+function bar() {
+  console.log(x);
+}
+
+foo();
+bar();
