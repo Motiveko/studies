@@ -661,5 +661,85 @@ Service를 Faking하면 Unit Test, 안하면 Integration Test이다.
 ## 12.1 Service Dependency Integration Test
 - service-counter Component가 의존하는  CounterService가 간단해서 Integration Test가 Unit Test보다 훨씬 쉽다.
 - Moudle에 Provider에 CounterService 넣어주기만 하면 끝
-- Integeration은 실제 의존 Service를 주입하기때문에 Component <-> Service간의 작동은 테스트하지 않는다. 버튼 누르면 Component -> Service -> Component로 count값이 변하는건 고려하지 않고 최종적으로 랜더링 된 값의 변화만 체크한다.
+- Integeration은 실제 의존 Service를 주입하기때문에 Component <-> Service 사이의 로직 등은 테스트하지 않는다. 버튼 누르면 Component -> Service -> Component로 count값이 변하는건 고려하지 않고 최종적으로 랜더링 된 값의 변화만 체크한다.
 - Service에 상태가 저장된 Integration Test는 두개의 Component를 띄우고 한쪽에서 상태변경을 일으킬 때 다른쪽에서도 해당상태를 받는지 테스트해야한다.
+
+## 12.2 Faking Service dependencies
+
+우선 껍데기를 만든다 faking 할 때 중요한 사항이 있다
+  - fake의 타입은 original에서 가져와야한다.
+  - original은 건들면 안된다.
+
+- 그냥 객체 리터럴로 선언할 수 있으나, fake는 original과 sync를 유지해야한다. 
+- 타입스크립트의 mapped types로 싱크를 유지한다. 여기선 Pick<T, keyof T>로 public property를 구현한다. Original이 변해서 싱크를 유지해야하면 컴파일 에러를 뱉을것이다.
+- 왜 public만 구현되면 되는걸까? private은 어차피 public method에서 호출되는것일 것이다. 실제 로직은 필요 없고 껍데기만 필요한 상황에선 불필요하다
+```ts
+const fakeCounterService:
+  Pick<CounterService, keyof CounterService> = {
+  increment() {},
+  decrement() {},
+  reset() {},
+  getCount() {return of(currentCount);}
+};
+```
+- 테스트 하는법은 호출여부를 테스트하는것이다. 그러기 위해서는 spy해줘야한다. 전부다 해주자
+```ts
+// service-counter.component.spec.ts
+
+  const fakeCounterService: Pick<CounterService, keyof CounterService> = {
+    increment: jasmine.createSpy('increment'),
+    decrement: jasmine.createSpy('decrement'),
+    reset: jasmine.createSpy('reset'),
+    getCount: jasmine.createSpy('getCount').and.returnValue(of(currentCount))
+  };
+```
+- 좀 노가다성이 있다. 개선된 방법을 써보자.
+```ts
+// service-counter.component.spec.ts
+  fakeCounterService = jasmine.createSpyObj<CounterService>(
+    'CounterService',
+    {
+      getCount: of(currentCount),
+      increment: undefined,
+      decrement: undefined,
+      reset: undefined,
+    }
+  );
+```
+- createSpyObj는 모든 property를 spy해준다. spyOn이 필요없다!
+- return type은 SpyObj<T>다. module에 등록해주기 위해서는 아래와 같이 해준다.
+
+```ts
+  await TestBed.configureTestingModule({
+    declarations: [ServiceCounterComponent],
+    providers: [{ provide: CounterService, useValue: fakeCounterService }],
+  }).compileComponents();
+```
+- 토큰과 실제 주입받을 타입이 일치하진 않기때문이다.
+- 이 방식에 약간의 단점아닌 단점이 있는데, Pick을 사용하면 keyof로 추출된 모든 public property의 key가 overriding되어야하는데 createSpyObj에서는 쓸데없는 key를 overriding하지 않는 이상 에러가 뜨진 않는다. 아예 빈 객체를 써도 무방함. 근데 실제로 필요한 부분만 overriding하면 되니까 노상관
+
+
+## 12.3 Fake Service with minimal logic
+<!-- 12장 전체 정리중.. -->
+우리 테스트에서는 불필요하난 Service와 Component의 로직이 복잡하게 얽히면 service에 최소한의 로직을 구현해야 할 필요가 있다. 그럴 것 같다.
+실제 구현이 필요하므로 아까 봤던 Pick<T, keyof T>로 구현한다.
+
+spyOn(some, method) 에 .and.callThrough()로 체이닝하면 spy해서 method call 여부 체크 가능하면서 실제 기능도 돌아간다.
+
+>❗️ beforeEach()에서 spy하지 않고 it()에서 spy하면 toHaveBeenCalled() 에서 에러가 난다. 정확한 원인은 미래의 내가 알아볼 예정
+
+
+## 12.4 Faking Services: Summary
+Service를 적절히 fake하는것은 테스트중 가장 어려운 부분이다. 자꾸 해야만 실력이 늘 것이다. 자꾸 하다 보면 알게되는게있는데,
+
+> simple Services that are easy to fake: Services with a clear API and an obvious purpose.
+
+즉 api는 심플하고 명확해야한다는것이다. 객체지향에서도 늘 강조되는 Single Responsibility 원칙이다. 모든 method는 한가지 동작만 하게, 심플하게 짜서 조립해서 써야하는것이다! 그것이 테스트하기도 훨씬 쉽다.
+
+Faking Service에는 많은 방법이 있고 정답은 없다. 전부 장단점이 있기때문이다. 계속 해보면서 상황에 맞춰 더 적절한 방법을 써보자.
+
+
+- 이 테스트가 가치있는 테스트인지 생각해보자. 테스트가 Component와 Service 중요한 Interaction을 커버하고 있는가? Interaction의 어느정도까지 테스트할것인가?
+- 어떤식으로 테스트에 접근하든 Faking원칙을 기억하자.
+  - fake의 타입은 original에서 가져와야한다.
+  - original은 건들면 안된다.
