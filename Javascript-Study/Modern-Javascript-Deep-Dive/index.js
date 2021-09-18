@@ -1,13 +1,17 @@
-var x = 1;
+var Counter = (function() {
+  var count = 0;
 
-function foo() {
-  var x = 10;
-  bar();
-}
+  return {
+    increase() {
+      return ++count;
+    },
+    decrease() {
+      return --count;
+    }
+  }
+}())
 
-function bar() {
-  console.log(x);
-}
-
-foo();
-bar();
+console.log(Counter.increase());
+console.log(Counter.increase());
+console.log(Counter.increase());
+console.log(Counter.count);
