@@ -7,11 +7,7 @@ import {
   selectBooks,
   selectLastStateTransitioins,
 } from 'src/app/state/books/book.selector';
-import {
-  addBook,
-  removeBook,
-  retrievedBookList,
-} from 'src/app/state/books/books.action';
+import { addBook, getBook, removeBook } from 'src/app/state/books/books.action';
 import { GoogleBookService } from '../books.service';
 
 @Component({
@@ -53,9 +49,10 @@ export class BookAppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // (Book) ==> (Book: Book[])
-    this.bookService.getBooks().subscribe((Book) => {
-      this.store.dispatch(retrievedBookList({ Book })); // { Book } ==> { Book: Book[] }
-    });
+    // this.bookService.getBooks().subscribe((Book) => {
+    //   this.store.dispatch(retrievedBookList({ Book })); // { Book } ==> { Book: Book[] }
+    // });
+    this.store.dispatch(getBook());
 
     this.store
       .pipe(selectLastStateTransitioins(3))

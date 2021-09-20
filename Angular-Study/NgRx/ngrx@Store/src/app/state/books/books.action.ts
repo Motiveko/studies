@@ -11,6 +11,11 @@ export const removeBook = createAction(
   props<{ bookId }>()
 );
 
+export const getBook = createAction('[Book List] Get Book');
+
+export const getBookError = createAction('[Book Effects] Get Book Error');
+
+/** Book state 저장 */
 export const retrievedBookList = createAction(
   '[Book List/API] Retrieve Books Success',
   props<{ Book: Book[] }>()

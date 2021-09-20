@@ -12,6 +12,10 @@ import { collectionReducer } from './state/books/collection.reducer';
 import { BookCollectionComponent } from './books/book-collection/book-collection.component';
 import { BookAppComponent } from './books/book-app/book-app.component';
 import { AppRoutingModule } from './app-routing.module';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { environment } from 'src/environments/environment';
+import { EffectsModule } from '@ngrx/effects';
+import { BookEffects } from './state/books/books.effects';
 
 export function debug(reducer: ActionReducer<unknown>): ActionReducer<unknown> {
   return (state, action) => {
@@ -54,6 +58,7 @@ export const metaReducers: MetaReducer<unknown>[] = [debug, debugBookList];
       },
       { metaReducers }
     ),
+    EffectsModule.forRoot([BookEffects]),
     HttpClientModule,
     AppRoutingModule,
   ],
