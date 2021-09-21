@@ -54,10 +54,10 @@ export class BookAppComponent implements OnInit, OnDestroy {
     // });
     this.store.dispatch(getBook());
 
-    this.store
-      .pipe(selectLastStateTransitioins(3))
-      .pipe(takeUntil(this.unsubscriber))
-      .subscribe((res) => console.log(res));
+    // this.store
+    //   .pipe(selectLastStateTransitioins(3))
+    //   .pipe(takeUntil(this.unsubscriber))
+    //   .subscribe((res) => console.log(res));
   }
 
   ngOnDestroy(): void {

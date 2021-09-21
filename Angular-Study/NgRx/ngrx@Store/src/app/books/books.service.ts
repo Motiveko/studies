@@ -16,7 +16,7 @@ export class GoogleBookService {
         'https://www.googleapis.com/books/v1/volumes?maxResults=5&orderBy=relevance&q=oliver%20sacks'
       )
       .pipe(
-        tap((books) => console.log(books)),
+        // tap((books) => console.log(books)),
         map((books) => books.items || [])
       );
   }

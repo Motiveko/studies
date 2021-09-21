@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { ActionReducer, MetaReducer, StoreModule } from '@ngrx/store';
 
+import { EffectsModule } from '@ngrx/effects';
 import { AppComponent } from './app.component';
 import { counterReducer } from './state/counter/counter.reducer';
 import { MyCounterComponent } from './my-counter/my-counter.component';
@@ -12,9 +13,6 @@ import { collectionReducer } from './state/books/collection.reducer';
 import { BookCollectionComponent } from './books/book-collection/book-collection.component';
 import { BookAppComponent } from './books/book-app/book-app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import { environment } from 'src/environments/environment';
-import { EffectsModule } from '@ngrx/effects';
 import { BookEffects } from './state/books/books.effects';
 
 export function debug(reducer: ActionReducer<unknown>): ActionReducer<unknown> {

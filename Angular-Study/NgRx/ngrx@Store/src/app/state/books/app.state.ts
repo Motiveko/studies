@@ -1,6 +1,7 @@
-import { Book } from 'src/app/books/books.model';
+import { EntityState } from '@ngrx/entity';
+import { BookState } from './books.reducer';
 
 export interface AppState {
-  books: ReadonlyArray<Book>;
-  collection: ReadonlyArray<string>;
+  books: BookState;
+  collection: EntityState<string>;
 }
