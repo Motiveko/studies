@@ -1,4 +1,8 @@
 # 모던 자바스크립트 Deep Dive
+![표지](https://wikibook.co.kr/images/cover/m/9791158392239.png)
+
+## 1.~3. 
+교양으로 정리하지 않음
 
 <br><br>
 
@@ -1447,3 +1451,178 @@ console.log(Object.isFrozen(person.address)); // true
 ## 17. 생성자 함수에 의한 객체 생성
 ---
 <br>
+객체를 생성하는 방법에는 객체 리터럴 외에도 다양한 방법이 있다. 그 중 생성자 함수 방식을 알아본다.
+
+### 17.1 Object 생성자 함수
+- '**생성자 함수**'란 `new` 연산자와 함께 호출하여 객체(인스턴스)를 생성하는 함수를 말한다.
+- 자바스크립트는 Object, String, Number, Boolean, Function, Array, Date, RegExp, Promise 등의 built-in 생성자 함수를 제공한다.
+
+```js
+const obj = new Object();
+obj.name = 'motiveko';
+obj.helloWorld = function() {
+  console.log('hello World!');
+}
+
+typeof obj; // 'object'
+```
+- Object 등의 built-in 생성자 함수보다 객체 리터럴이 훨씬 편해보인다.
+
+<br>
+
+### 17.2 생성자 함수
+### 17.2.1 객체 리터럴에 의한 객체 생성 방식의 문제점
+- 객체 리터럴은 편하지만 프로퍼티 구조가 동일한 객체를 여러개 생성할 때 노가다가 심하다.
+
+### 17.2.2 생성자 함수에 의한 객체 생성 방식의 장점
+- 생성자 함수에 의한 객체 생성 방식은 템플릿처럼 프로퍼티 구조가 같은 객체를 여러개를 간편히 생성 가능하다.
+
+```js
+function Circle(radius) {
+  // 생성자 함수 내부 this는 생성자 함수가 생성할 인스턴스를 가르킨다!
+  this.radius = radius;
+  this.getDiameter = function() {
+    return 2 * this.radius;
+  }
+}
+// 생성자 함수
+const circleObj = new Circle(5);
+
+console.log(circleObj);
+// Circle {radius: 5, getDiameter: ƒ}
+
+
+// 일반 함수, Circle()은 반환문이 없으므로 undefined가 반환된다.
+const circle = Circle(5);
+
+console.log(circle);  // undefined
+
+```
+- 생성자 함수는 형식이 정해져 있지 않고, **`new 연산자와 함계 호출하면 해당 함수는 생성자 함수로 동작한다.` new가 없으면 일반 함수로 동작한다.**
+
+### 17.2.3 생성자 함수의 인스턴스 생성 과정
+1. 인스턴스 생성과 this 바인딩
+    - 생성자 함수가 암묵적으로 빈 객체를 생성하고 이 인스턴스를 this에 바인딩한다.
+    - 이 과정은 함수의 몸체 코드가 실행되는 런타임 이전에 실행된다.
+2. 인스턴스 초기화
+    - this에 바인딩 되어 있는 인스턴스 프로퍼티에 값을 할당하여 초기화한다.
+    - 이 과정은 개발자가 직접 기술하는 부분.
+3. 인스턴스 반환
+    - 생성자 함수 내부 처리가 모두 끝나면 완성된 인스턴스가 바인딩된 this가 **암묵적으로 반환된다.**
+    - **return문을 통해 객체를 명시적으로 반환**하면, this가 아닌 **반환문 객체가 반환된다.** 원시값을 반환하면 이는 무시되고 this가 반환된다.
+
+```js
+function Circle(radius) {
+
+  // 1. 암묵적 인스턴스 생성 및 this에 바인딩
+  console.log(this); // Circle {}
+
+  // 2. 인스턴스 초기화
+  this.radius = radius;
+  this.getDiameter = function() {
+    return 2 * this.radius;
+  }
+
+  // 3. 암묵적인 this 인스턴스 반환
+};
+```
+
+### 17.2.4 내부 메서드 [[Call]]과 [[Constructor]]
+- 함수는 객체지만, 일반 객체와 다르게 **함수는 호출할 수 있다.**
+- 함수는 일반 객체가 가지는 내부 슬롯,메소드는 물론 함수 객체만을 위한 [[Enviroment]], [[FormalParameters]] 등의 내부 슬롯과, [[Call]], [[Construct]] 같은 내부 메서드를 추가로 가지고 있다.
+- 일반 함수로서 호출시 내부메소드 [[Call]], new와 함께 생성자 함수로서 호출시 [[Construct]]가 호출된다.
+
+```js
+function foo() {}
+// 일반적인 함수로서 호출, [[Call]] 호출
+foo();
+
+// 생성자 함수로서 호출, [[Construct]] 호출
+new foo();
+```
+- [[Call]]을 갖는 객체를 callable, [[Construct]]를 갖는 객체를 constructor라고 한다.
+- 함수는 callable인 객체를 의미하고, non-constructor일 수도 있다.
+
+### 17.2.5 constructor와 non-constructor의 구분
+- 함수의 constructor 여부는 **`함수의 정의 방식`** 에 따라 아래와 같이 구분된다.
+  - constructor: 함수 선언문, 함수 표현식, 클래스(클래스도 함수다)
+  - non-constructor: 메서드(ES6 메서드 축약 표현만), 화살표 함수
+- `ECMAScript 사양에서 메서드란` 일반적인 메서드와 달리 `ES6 축약 표현만을 의미`한다.
+
+```js
+// 함수 선언문
+function foo() {} 
+// 함수 표현식
+const bar = function() {};
+// 프로퍼티 x에 할당된 일반함수, 메소드로 인정되지 않는다.
+const baz = {
+  x: function() {}
+}
+// ES6 메서드 축약표현으로 정의된 x, 메소드로 인정
+const obj = {
+  x(){}
+};
+// 화살표 함수
+const arrow = () => {};
+
+// constructor
+new foo();    // foo {}
+new bar();    // bar {}
+new baz.x();  // x {}
+
+// non-constructor
+new obj.x();  // TypeError: obj.x is not a constructor
+new arrow();  // TypeError: arrow is not a constructor   
+```
+
+### 17.2.6 new 연산자
+- 생성자 함수를 일반 함수처럼 호출하면 문제가 될 수 있다.
+```js
+function Circle(r) {
+  this.r = r;
+}
+
+const c = Circle(10);
+```
+- 위와 같은 함수에서 일반 함수 호출시 Circle 내부 this는 window객체다.
+- 따라서 window에 r이라는 프로퍼티가 생성되고 값으로 10이 할당되는 문제 발생
+- 일반적으로 생성자 함수는 대문자로 시작하는 파스칼 케이스로 구분해 생성자 함수로 실행될 수 있도록 한다.
+
+### 17.2.7 new.target
+- 생성자 함수가 일반 함수로 호출되는것을 방지해야한다.
+- ES6에서 지원하는 new.target은 함수 내부에서 함수가 new 연산자로 실행되었는지 확인할 수 있다.
+- new.target은 생정자 함수로 호출시 함수 자신을, 일반적인 함수 호출시 undefined이다.
+```js
+function Circle(radius) {
+  if(!new.target) {
+    return new Circle(radius);
+  }
+
+  ...
+}
+```
+- IE에서는 new.target을 지원하지 않으므로 스코프 세이프 생성자 패턴(scope-safe constructor)을 사용할 수 있다.
+```js 
+function Circle() {
+  // 일반함수로 호출시 this는 window객체를 가르킨다.
+  if(!(this instanceof Circle)) {
+    return new Circle(radius);
+  }
+
+  ...
+}
+```
+
+- 대부분의 빌트인 함수는 new 연산자와 함계 호출되었는지를 확인한 후 적절한 값을 반환한다.
+  - Object, Function 는 new없이 호출해도 new와 호출한 것과 같은 결과가 나온다.
+  - String, Number, Boolean 생성자 함수는
+    - 생성자 함수로 호출 : String, Number, Boolean 객체 반환
+    - 일반 함수로 호출 : string, number, boolean 값 반환
+
+<br><br>
+
+## 18. 함수와 일급 객체
+---
+<br>
+
+
