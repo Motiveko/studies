@@ -1220,3 +1220,230 @@ const는 상수를 선언하기 위해 사용한다. const의 기본 특징은 l
 - ES6를 사용한다면 var 키워드는 사용하지 않는다.
 - 재할당이 필요한 경웨 한정해 let키워드를 사용한다. 이 때 변수의 스코프는 최대한 좁게 만든다.
 - 변경이 발생하지 않고 읽기 전용으로 사용하는(재할당이 필요 없는 상수)원시 값과 객체에는 const를 사용한다. 재할당이 안되므로 변경에서 안전하다.
+
+<br><br>
+
+## 16. 프로퍼티 어트리뷰트
+--- 
+<br>
+<!-- 정리 필요. 이 장부터 완전정리해야할듯  -->
+
+### 16.1 내부 슬롯(internal slot)과 내부 메소드(internal method)
+
+- 내부 슬록과 내부 메소드는 자바스크립트 엔진의 구현 알고리즘을 설명하기 위해 ECMAScript 사양에서 사용하는 pseudo property와 peseudo method이다. 
+- ECMAScript 사양에서 이중 대괄호( [[]] )로 감싼 이름들이다.
+- 자바스크립트 엔진 내부 로직이므로 원칙적으로는 개발자가 접근 불가능.
+- 일부 내부 슬롯과 내부 메소드는 접근 가능한데, 예로, 모든 객체는 [[Prototpy]]이라는 내부 슬롯을 갖고, __ proto __ 로 간접적으로 접근 가능하다.
+```js 
+  const o = {};
+  o.[[Prototype]] // Uncaught SyntaxError: Unexpected token '['
+  o.__poroto__    // {constructor: ƒ, __defineGetter__: ƒ,... }
+```
+
+<br>
+
+### 16.2 프로퍼티 어트리뷰트와(PropertyAttribute) 프로터피 디스크립터(PropertyDescriptor) 객체
+
+- `자바스크립트 엔진은 프로퍼티를 생성할 때 프로퍼티의 상태를 나타내는 프로퍼티 어트리뷰트를 기본값으로 자동 정의한다.`
+
+- 프로퍼티의 상태 4가지
+  - value
+  - writable(값의 갱신 가능 여부)
+  - enumerable(열거 가능 여부)
+  - configurable(재정의 가능 여부)
+
+- _Property Attribute_ 는 자바스크립트 엔진이 관리하는 내부 상태 값(meta-property)의 **내부슬롯** 이다. 따라서 직접 접근은 불가능하고, **Object.getOwnPropertyDescriptor()** 로 간접 접근할 수 있다.
+  - [[Value]]
+  - [[Wriatble]]
+  - [[Enumerable]]
+  - [[Configurable]]
+```js
+const person = {name: 'motiveko'};
+
+// param1 : 객체의 참조, param2 : property key
+Object.getOwnPropertyDescriptor(person, 'name');
+// {value: 'motiveko', writable: true, enumerable: true, configurable: true}
+```
+
+- Object.getOwnPropertyDescriptor() 메소드가 반환하는 객체가 **Property Discriptor**이다. 
+- Object.getOwnPropertyDescriptors()는 객체의 모든 프로퍼티의 property discriptor를 반환한다.
+
+<br>
+
+### 16.3 데이터 프로퍼티(data property)와 접근자 프로퍼티(accessor property)
+
+- **프로퍼티는 data property, accessor property로 구분된다.**
+- data property
+  - 키와 값으로 구성된 일반적인 프로퍼티
+- accessor property
+  - 자체적으로 값을 갖지 않고, 다른 프로퍼티의 값을 읽거나 저장할 때 호출되는 accessor function으로 구성된 프로퍼티
+
+### 16.3.1 data property
+data property는 다음과 같은 property attribute를 갖는다. 이는 프로퍼티를 생성할 때 js 엔진이 자동정의한다.
+
+| property attribute | property descriptor | 설명 |
+|:---|:---|:---|
+| `[[Value]]` | value | 프로퍼티의 값 |
+| `[[Writable]]` | writable | 값은 변경여부, boolean, <br>false이면 읽기 전용 프로퍼티이다.|
+| `[[Enumerable]]` | enumerable | prorperty의 열거 가능여부, boolean <br/> false인 경우 for ... in이나 Object.keys 메소드로 열거가 불가능 |
+| `[[Configurable]]` | configurable | 프로퍼티의 재정의 가능 여부, boolean <br> **false인경우 프로퍼티의 삭제, 어트리뷰트 값 변경이 불가능**<br> 단 [[Writable]]이 true면 값의 변경과, [[Writable]]을 false로 변경 가능 |
+
+- writable, enumerable, configurable의 기본값은 모두 true
+
+### 16.3.2 Accessor Property
+accessor property는 자체적인 값이 없고 accessor function으로 구성된 프로퍼티다.
+| property attribute | property descriptor | 설명 |
+|:---|:---|:---|
+|`[[Get]]` | get | 값이 접근하는 getter |
+|`[[Set]]` | set | 값을 저장하는 setter  |
+|`[[Enumerable]]` | enumerable | dataproperty와 동일 |
+|`[[Configurable]]` | configurable | dataproperty와 동일 |
+
+```js
+const person = {
+  firstName: 'donggi',
+  lastName: 'Ko',
+
+  // fullName은 accessor function으로 구성된 accessor property이다.
+  get fullName() {
+    return `${this.firstName} ${this.lastName}`;
+  },
+  set fullName(name) {
+    // 배열 디스트럭처링 할당
+    [this.firstName, this.lastName] = name.split(' ');
+  }
+};
+
+// accessor property를 통한 value 저장
+person.fullName = 'mac mini';
+console.log(person);  // {firstName: 'mac', lastName: 'mini'}
+
+console.log(person.fullName) // mac mini
+
+// data property
+console.log(Object.getOwnPropertyDescriptor(person, 'firstName'));
+// {value: 'mac', writable: true, enumerable: true, configurable: true}
+
+// accessor property
+console.log(Object.getOwnPropertyDescriptor(person, 'fullName'));
+// {enumerable: true, configurable: true, get: ƒ, set: ƒ}
+```
+
+- accessor property fullName으로 값에 접근시 내부적으로 getter가 호출되어 다음과 같이 동작한다.
+  1. property key가 유효한지 확인. key는 string/symbol 이어야하고, fullName은 string으로 유효
+  2. **prototype chain**에서 프로퍼티 검색, person에 fullName이란 프로퍼티가 존재한다.
+  3. fullName이 data/accessor property인지를 확인한다. 여기선 accessor property
+  4. fullName의 property attribute [[Get]]의 값, 즉 getter 함수를 호출하여 결과를 반환한다.
+
+<br>
+
+### 16.4 프로퍼티 정의
+
+Object.defineProperty() 메소드를 사용해 property attribute를 직접 정의할 수 있다. 
+
+```js
+const person = {};
+// Data Property의 정의
+// p1: 객체 참조, p2: key, p3: property descriptor 객체
+Object.defineProperty(person, 'firstName', {
+  value: 'donggi',
+  writable, false,
+  enumerable: false,
+  configurable: false
+})
+
+person.lastName = 'Ko';
+
+console.log(Object.getOwnPropertyDescriptor(person, 'firstName'));
+// {value: 'donggi', writable: false, enumerable: false, configurable: false}
+
+// firstName은 enumerable: false로 key값 열거 불가
+console.log(Object.keys(person)) // ['lastName']
+
+// configurable : false이면 프로퍼티 삭제불가, 에러는 나지 않는다.
+delete person.firstName;
+
+console.log(Object.getOwnPropertyDescriptor(person, 'firstName'));
+// {value: 'donggi', writable: false, enumerable: false, configurable: false}
+
+// Accessor Property의 정의
+Object.defineProperty(person, 'fullName', {
+  get() {
+    return `${this.firstName} ${this.lastName}`;
+  },
+  set(name) {
+    [this.firstName, this.lastName] = name.split(' ');
+  },
+  eumerable: true,
+  configurable: true
+})
+```
+
+- Obejct.defineProperty()로 property정의 시, property descriptor를 일부 생략할 경우 아래와 같은 기본값이 적용된다.
+
+| property descriptor의 <br> property | 생략시 기본값 |
+|:---:|:---|
+| value | undefined |
+| get | undefined |
+| set | undefined |
+| writable | false |
+| enumerable | false |
+| configurable | false |
+
+- Obejct.defineProperties() 메소드로 한번에 여러개의 property 정의 가능
+
+<br>
+
+### 16.5 객체 변경 방지
+
+자바스크립튼 객체의 변경을 방지하는 다양한 메소드를 제공한다. 각 객체 변경 방지 메서드들의 금지 장도는 다르다.
+
+| 구분 | 메서드 | (프로퍼티) 추가 | 삭제 | 값 읽기 | 값 쓰기 | 어트리뷰트 재정의 |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|
+| 객체 확장 금지 | **Object.preventExtensions** | X | O | O | O | O |
+| 객체 밀봉 | **Object.seal** | X | X | O | O | X |
+| 객체 동결 | **Object.freeze** | X | X | O | X | X |
+
+### 16.5.1 객체 확장 금지
+- 객체 확장 금지란 **프로퍼티 추가의 금지**를 의미한다. person.newAttr = 'some' 과 같은 프로퍼티 동적 추가와 Obejct.defineProperty() 메서드로의 추가 모두 금지된다.
+- 프로퍼티 추가시 기본적으로 에러없이 무시되나, _strict mode에서는 에러가 발생한다._
+
+### 16.5.2 객체 밀봉
+- 객체 밀봉이란 객체의 **읽기,쓰기만 가능한 금지**를 의미한다.
+- 역시 금지된 행위는 기본적으로 에러없이 무시되나, _strict mode에서는 에러가 발생한다._
+
+### 16.5.3 객체 동결
+- 객체 동결이란 프로퍼티의 추가, 삭제 및 프로퍼티 어트리뷰트 재정의 금지, 값 갱신 금지를 의미한다. ___즉 동결된 객체는 읽기만 가능하다.___
+
+### 16.5.4 불변 객체
+- js에서 제공하는 객체 변경 방지 메소드들은 shallow only로 중첩 객체에는 영향을 주지 못한다. 중첩 객체까지 변경금지 하기 위해서는 recursive function을 사용해야한다.
+
+```js
+// 중첩 객체까지 동결
+function deepFreeze(target) {
+  if(target && typeof target === 'object' && !Object.isFrozen(target)) {
+    Obejct.freeze(target);
+
+    Object.keys(target).forEach(key => deepFreeze(target[key]));
+  }
+  return target;
+}
+
+const person = {
+  name: 'motiveko',
+  address: { city: 'Seoul' }
+};
+
+// 깊은 객체 동결
+deepFreeze(person);
+
+console.log(Object.isFrozen(person)); // true
+
+console.log(Object.isFrozen(person.address)); // true
+```
+
+<br><br>
+
+## 17. 생성자 함수에 의한 객체 생성
+---
+<br>
