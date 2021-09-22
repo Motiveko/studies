@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { MockProvider } from 'ng-mocks';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 import { CounterService } from 'src/app/services/counter.service';
@@ -185,3 +186,42 @@ describe('ServiceCounterComponent: unit test with minimal logic', () => {
     expect(fakeCounterService.reset).toHaveBeenCalledWith(newCount);
   })
 });
+
+describe('ServiceCounterComponent: unit test with ng-mocks', () => {
+  let fixture: ComponentFixture<ServiceCounterComponent>;
+  let component: ServiceCounterComponent;
+  let currentCount = 0;
+  // let counterService: 
+  beforeEach(async () => {
+    let fakeCount$ = new BehaviorSubject<number>(currentCount);
+    TestBed.configureTestingModule({
+      declarations: [ServiceCounterComponent],
+      providers: [
+        MockProvider(CounterService, {
+          getCount: () => fakeCount$,
+          increment: () => fakeCount$.next(currentCount + 1),
+          reset: (val) => fakeCount$.next(val),
+        })
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ServiceCounterComponent);
+    fixture.detectChanges();
+    component = fixture.componentInstance;
+  })
+
+
+  it('increment the count', () => {
+    click(fixture, 'increment-button');
+    fixture.detectChanges();
+    expectText(fixture, 'count', String(currentCount + 1));
+  })
+
+  it('reset the count', () => {
+    let resetCount = 100;
+    setFieldValue(fixture, 'reset-input', String(100));
+    click(fixture, 'reset-button');
+    fixture.detectChanges();
+    expectText(fixture, 'count', String(resetCount));
+  })
+})

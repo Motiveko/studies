@@ -613,7 +613,6 @@ FakeComponent를 만드는 테스트는 그러지 않는 테스트에 비해 Com
 
 ```ts
   // home.component.fake-child.spec.ts
-
   counter.countChange.emit(count);
 ```
 
@@ -652,27 +651,50 @@ FakeComponent를 직접 선언할 때 @Input, @Output 프로퍼티를 직접 선
 
 <br><br>
 
-<!-- 12장 정리중.. -->
 ## 12. Testing Components depending on Services
 ---
 <br>
-Service를 Faking하면 Unit Test, 안하면 Integration Test이다.
+
+> Service를 Faking하면 Unit Test, 안하면 Integration Test이다.
+
+<br>
 
 ## 12.1 Service Dependency Integration Test
-- service-counter Component가 의존하는  CounterService가 간단해서 Integration Test가 Unit Test보다 훨씬 쉽다.
-- Moudle에 Provider에 CounterService 넣어주기만 하면 끝
-- Integeration은 실제 의존 Service를 주입하기때문에 Component <-> Service 사이의 로직 등은 테스트하지 않는다. 버튼 누르면 Component -> Service -> Component로 count값이 변하는건 고려하지 않고 최종적으로 랜더링 된 값의 변화만 체크한다.
-- Service에 상태가 저장된 Integration Test는 두개의 Component를 띄우고 한쪽에서 상태변경을 일으킬 때 다른쪽에서도 해당상태를 받는지 테스트해야한다.
+- 실습중인 Service Counter Component가 의존하는  CounterService는 로직이나 의존성이 간단해서 Integration Test가 Unit Test보다 훨씬 쉽다.
+- 실제 코드와 같이 Test Moudle의 Provider에 CounterService 넣어주기만 하면 설정이 끝난다,
+```ts
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [ServiceCounterComponent],
+      providers: [CounterService],
+    }).compileComponents();
+```
+- Integeration은 실제 의존 Service를 주입하기때문에 Component와 Service 사이의 로직은 테스트하지 않는다. 예를, Increment버튼을 누르면 Componet 내부로직 -> Service -> Component 내부로직 -> 랜더링 같은 형태로 으로 진행되는데 이 과정을 버튼클릭 -> 랜더링값 확인 형태로 테스트한다.
+```ts
+  it('increments the count', () => {
+    // 
+    click(fixture, 'increment-button');
+    fixture.detectChanges();
+    expectText(fixture, 'count', '1');
+  });
+```
+- **`여러개의 컴포넌트가 Service로 하나의 상태를 공유하는 경우, Integration Test는 두개의 Component를 띄우고 한쪽에서 상태변경을 일으킬 때 다른쪽에서도 해당상태를 받는지 테스트해야한다.`**
+
+<br>
 
 ## 12.2 Faking Service dependencies
 
-우선 껍데기를 만든다 faking 할 때 중요한 사항이 있다
-  - fake의 타입은 original에서 가져와야한다.
+Component가 의존하는 Service 객체의 Fake를 만들고 TestModule에 등록해준다. 
+
+Service를 Fake 할 때 중요한 사항이 있다
+  - fake의 타입은 original의 Partial이어야 한다. -> fake는 original과의 sync를 유지해야한다.
   - original은 건들면 안된다.
 
-- 그냥 객체 리터럴로 선언할 수 있으나, fake는 original과 sync를 유지해야한다. 
-- 타입스크립트의 mapped types로 싱크를 유지한다. 여기선 Pick<T, keyof T>로 public property를 구현한다. Original이 변해서 싱크를 유지해야하면 컴파일 에러를 뱉을것이다.
-- 왜 public만 구현되면 되는걸까? private은 어차피 public method에서 호출되는것일 것이다. 실제 로직은 필요 없고 껍데기만 필요한 상황에선 불필요하다
+- Fake를 객체 리터럴로 선언할 수 있으나, 이런 방식으로는 fake와 original의 sync 유지가 어렵다.
+- 타입스크립트의 **`mapped types`** 로 싱크를 유지한다. 여기선 Pick<T, keyof T>로 **public property**를 구현한다. Original이 변해서 싱크를 유지해야하면 컴파일 에러를 뱉을것이다.
+> ❗️문서에서는 Pick을 [mapped types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)로 분류하였는데, Typescript 공식문서에서는 [Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)로 분류해놨다. Typescript를 공부하자..
+- private은 구현이 불필요한데, 이유는 public 함수에서 private을 실제 호출하지 않기 때문이다.
+
 ```ts
 const fakeCounterService:
   Pick<CounterService, keyof CounterService> = {
@@ -682,7 +704,7 @@ const fakeCounterService:
   getCount() {return of(currentCount);}
 };
 ```
-- 테스트 하는법은 호출여부를 테스트하는것이다. 그러기 위해서는 spy해줘야한다. 전부다 해주자
+- 테스트 하는법은 호출여부를 테스트하는것이다. 해당 함수를 전부 spy해야한다. jasmine.createSpy(FUNCTION_NAME)으로 가능하다.
 ```ts
 // service-counter.component.spec.ts
 
@@ -693,7 +715,7 @@ const fakeCounterService:
     getCount: jasmine.createSpy('getCount').and.returnValue(of(currentCount))
   };
 ```
-- 좀 노가다성이 있다. 개선된 방법을 써보자.
+- jasmine.createSpy()는 노가다성이 짗다. Fake 객체 생성단계에서 ___jasmine.createSpyObj()___ 로 생성하면 객체의 모든 property가 spy된다. 생성된 객체의 타입은 SpyObj<T>.
 ```ts
 // service-counter.component.spec.ts
   fakeCounterService = jasmine.createSpyObj<CounterService>(
@@ -706,8 +728,7 @@ const fakeCounterService:
     }
   );
 ```
-- createSpyObj는 모든 property를 spy해준다. spyOn이 필요없다!
-- return type은 SpyObj<T>다. module에 등록해주기 위해서는 아래와 같이 해준다.
+- 생성된 SpyObj를 Module에 등록해준다. 
 
 ```ts
   await TestBed.configureTestingModule({
@@ -715,31 +736,65 @@ const fakeCounterService:
     providers: [{ provide: CounterService, useValue: fakeCounterService }],
   }).compileComponents();
 ```
-- 토큰과 실제 주입받을 타입이 일치하진 않기때문이다.
-- 이 방식에 약간의 단점아닌 단점이 있는데, Pick을 사용하면 keyof로 추출된 모든 public property의 key가 overriding되어야하는데 createSpyObj에서는 쓸데없는 key를 overriding하지 않는 이상 에러가 뜨진 않는다. 아예 빈 객체를 써도 무방함. 근데 실제로 필요한 부분만 overriding하면 되니까 노상관
+- CounterService와 SpyObj<CounterService>의 타입이 다르므로 useValue로 Fake 객체를 사용한다.
+- jasmine.createSpyObj()로 Fake하는 방식은 Typescript의 Pick을 이용할 때보다 soft하다. 모든 public property를 구현하지 않아도 에러가 발생하지 않는다. 단, CounterService에 없는 property를 구현하면 에러가 발생한다.
 
+
+<br>
 
 ## 12.3 Fake Service with minimal logic
-<!-- 12장 전체 정리중.. -->
-우리 테스트에서는 불필요하난 Service와 Component의 로직이 복잡하게 얽히면 service에 최소한의 로직을 구현해야 할 필요가 있다. 그럴 것 같다.
-실제 구현이 필요하므로 아까 봤던 Pick<T, keyof T>로 구현한다.
+> Spring에서 의존객체에 given().thenReturn() 형태로 메소드 호출시 원하는 값을 return하도록 만든다.
 
-spyOn(some, method) 에 .and.callThrough()로 체이닝하면 spy해서 method call 여부 체크 가능하면서 실제 기능도 돌아간다.
+- Fake는 실제로 값을 return해야하므로 Typescript의 Pick type으로 구현한다.
+```js
+// service-counter.component.spec.ts
 
->❗️ beforeEach()에서 spy하지 않고 it()에서 spy하면 toHaveBeenCalled() 에서 에러가 난다. 정확한 원인은 미래의 내가 알아볼 예정
+describe('ServiceCounterComponent: unit test with minimal logic', () => {
+  ...
+  let fakeCounterService: Pick<CounterService, keyof CounterService>;
+  let currentCount = 0;
+  ...
 
+  beforeEach(async () => { 
+    let fakeCount$ = new BehaviorSubject<number>(currentCount);
+    fakeCounterService = {
+      getCount() { return fakeCount$;},
+      increment() { fakeCount$.next(currentCount + 1);},
+      decrement() { fakeCount$.next(currentCount - 1);},
+      reset() { fakeCount$.next(newCount);},
+    };
+  });
+  ...
+});
+```
+- fake객체 메소드의 호출 테스트를 해야하는데, spyOn()을 사용하면 실제 호출은 되지 않는다.
+```js
+  // service-counter.component.spec.ts
+
+    spyOn(fakeCounterService, 'getCount').and.callThrough();
+    spyOn(fakeCounterService, 'increment').and.callThrough();
+    spyOn(fakeCounterService, 'decrement').and.callThrough();
+    spyOn(fakeCounterService, 'reset').and.callThrough();
+  ```
+- spyOn() 뒤 .and.callThrough()를 해주면 호출시 실제 작동하면서 동시에 호출여부 테스트가 가능하다.(beforeEach문에서 해줘야 한다. it() 내부에서 해주면 에러발생)
+
+
+<br>
 
 ## 12.4 Faking Services: Summary
-Service를 적절히 fake하는것은 테스트중 가장 어려운 부분이다. 자꾸 해야만 실력이 늘 것이다. 자꾸 하다 보면 알게되는게있는데,
 
 > simple Services that are easy to fake: Services with a clear API and an obvious purpose.
 
-즉 api는 심플하고 명확해야한다는것이다. 객체지향에서도 늘 강조되는 Single Responsibility 원칙이다. 모든 method는 한가지 동작만 하게, 심플하게 짜서 조립해서 써야하는것이다! 그것이 테스트하기도 훨씬 쉽다.
+즉 api는 심플하고 명확해야한다는것이다. Single Responsibilty 원칙에서 말하는 것 처럼, 하나의 method는 하나의 동작을 하는것이 가독성과 유지보수, 테스트 측면에서 모두 좋다.
 
 Faking Service에는 많은 방법이 있고 정답은 없다. 전부 장단점이 있기때문이다. 계속 해보면서 상황에 맞춰 더 적절한 방법을 써보자.
 
-
-- 이 테스트가 가치있는 테스트인지 생각해보자. 테스트가 Component와 Service 중요한 Interaction을 커버하고 있는가? Interaction의 어느정도까지 테스트할것인가?
-- 어떤식으로 테스트에 접근하든 Faking원칙을 기억하자.
+- 테스트가 Component와 Service 중요한 Interaction을 커버하고 있는가? Interaction의 어느정도까지 테스트할것인가?
+- Faking 원칙
   - fake의 타입은 original에서 가져와야한다.
   - original은 건들면 안된다.
+
+<br>
+
+## 12.5 추가 찾은 사항  
+> ❗️[ng-mocks](https://ng-mocks.sudo.eu/api/MockProvider) 를 이용해 MockProvider를 만들고 spring mockito의 given().thenReturn처럼 mocking이 가능하다.
