@@ -7,6 +7,7 @@ import { CounterComponent } from './components/counter/counter.component';
 import { HomeComponent } from './components/home/home.component';
 import { ServiceCounterComponent } from './components/service-counter/service-counter.component';
 import { NgrxCounterComponent } from './components/ngrx-counter/ngrx-counter.component';
+import { SignupFormComponent } from './components/signup-form/signup-form.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { NgrxCounterComponent } from './components/ngrx-counter/ngrx-counter.com
     CounterComponent,
     HomeComponent,
     ServiceCounterComponent,
-    NgrxCounterComponent
+    NgrxCounterComponent,
+    SignupFormComponent
   ],
   imports: [
     BrowserModule,
