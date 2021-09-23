@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, ValidationErrors, Validators } from '@angular/forms';
-import { Observable, timer } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { EMPTY, merge, Observable, Subject, timer } from 'rxjs';
+import { catchError, debounceTime, first, map, mapTo, switchMap } from 'rxjs/operators';
 import { SignupService } from 'src/app/services/signup/signup.service';
 
 const { email, maxLength, pattern, required, requiredTrue } = Validators;
@@ -20,6 +20,8 @@ export class SignupFormComponent {
     private formBuilder: FormBuilder
   ) { }
 
+
+  
   public form = this.formBuilder.group({
     plan: ['personal', required],
     username: [
@@ -46,7 +48,6 @@ export class SignupFormComponent {
 
   })
 
-
   validateUsername(username: any): Observable<ValidationErrors> {
     return timer(ASYNC_VALIDATION_DELAY).pipe(
       switchMap(() => this.signupService.isUsernameTaken(username)),
@@ -62,8 +63,28 @@ export class SignupFormComponent {
   }
 
   validatePassword(): Observable<ValidationErrors> {
-    // TODO : 다시한번 살펴보고 해보자
-    throw new Error('Method not implemented.');
+    return this.passwordStrength$.pipe(
+      first((passwordStrength) => passwordStrength !== null),
+      map((passwordStrength) => 
+      passwordStrength && passwordStrength?.score < 3 ? { week : true} : {})
+    )
+  }
+
+  private passwordSubject = new Subject<string>();
+  private passwordStrengthFromServer$ = this.passwordSubject.pipe(
+    debounceTime(ASYNC_VALIDATION_DELAY),
+    switchMap((password) => 
+      this.signupService.getPasswordStrength(password).pipe(catchError(() => EMPTY))),
+  );
+
+  // 서버에서 조회한 Password Strength 결과를 validatePassword()에서도 사용하고, 템플릿 랜더링에서도 사용하기 위함
+  public passwordStrength$ = merge(
+    this.passwordSubject.pipe(mapTo(null)),
+    this.passwordStrengthFromServer$
+  )
+
+  public getPasswordStrength(): void {
+    this.passwordSubject.next(this.form.controls.password.value);
   }
 
 }
