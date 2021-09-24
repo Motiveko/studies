@@ -1625,4 +1625,103 @@ function Circle() {
 ---
 <br>
 
+### 18.1 일급 객체
+**`❗️일급 객체`** 란 다음 조건을 만족하는 객체를 말한다.
+1. 무명의 리터럴로 생성할 수 있다. 즉 런타임에 생성 가능하다.
+2. 변수나 자료구조에 저장할 수 있다.
+3. 함수의 매개변수에 전달할 수 있다.
+4. 함수의 반환값으로 사용할 수 있다.
 
+<br>
+
+### 18.2 함수 객체의 프로퍼티
+함수에는 __arguments, caller, length, name, prototype__ 프로퍼티가 있다.\_\_prototype__ 는 accessor property이고, 이는 Object.prototype 객체의 프로퍼티를 상속받은것이다.
+
+```js
+function sq(){}
+
+console.log(Object.getOwnPropertyDescriptors(sq));
+
+/*
+arguments: {value: null, writable: false, enumerable: false, configurable: false}
+caller: {value: null, writable: false, enumerable: false, configurable: false}
+length: {value: 0, writable: false, enumerable: false, configurable: true}
+name: {value: 'sq', writable: false, enumerable: false, configurable: true}
+prototype: {value: {…}, writable: true, enumerable: false, configurable: false}
+[[Prototype]]: Object
+*/
+```
+
+### 18.2.1 arguments 프로퍼티
+- arguments 프로퍼티는 함수 호출 시 전달된 인수(argument)들의 정보를 잠고있는 arguments 객체다.
+- iterable한 유사 배열 객체
+- ES3부타 표준에서 폐지되어, Function.arguments와 같은 사용법은 권장하지 않는다.
+- 함수 내부에서 지역변수처럼 사용할 수 있다.
+```js
+function multiply(x, y) {
+  console.log(arguments);
+  return x * y;
+}
+
+console.log(multiply());  // NaN
+/** 
+callee: ƒ multiply(x, y)
+length: 0
+Symbol(Symbol.iterator): ƒ values()
+[[Prototype]]: Object
+*/
+console.log(multiply(1)); // NaN
+
+console.log(multiply(1,2)); // 2
+
+console.log(multiply(1,2,3)); // NaN
+/**
+0: 1
+1: 2
+2: 3
+callee: ƒ multiply(x, y)
+length: 3
+Symbol(Symbol.iterator): ƒ values()
+...
+*/
+```
+- 출력 결과의 의미는 각각 이래와 같다.
+  - 0,1,2... : 사용한 argument값
+  - length :  호출시 사용한 arguments
+  - callee: 함수 자신을 가르킴
+  - Symbol : arguments 객체를 순회 가능한 iterable로 만들기 위한 프로퍼티, 아래와 같이 사용한다.
+  ```js
+  function multiply(x, y){
+    const iterator = arguments[Symbol.iterator]();
+    console.log(iterator.next()); // {value: 1, done: false}
+    console.log(iterator.next()); // {value: 2, done: false}
+    console.log(iterator.next()); // {value: 3, done: false}
+    console.log(iterator.next()); // {value: undefined, done: true}
+  }
+  multiply(1,2,3);
+  ```
+- arguments 객체로 매개변수 개수를 확정할 수 없는 가변 인자 함수를 구현할 때 쓸 수 있다.
+- 그러나 ES6의 Rest 파라미터로 해결 가능한다.(...args)
+
+### 18.2.2 caller 프로퍼티
+  - 함수 자신을 호출한 함수를 의미한다. ECMAScript 사양에 포함되지 않는 비표준으로 몰라도 된다.
+
+### 18.2.3 length 프로퍼티
+  - 함수를 정의할 때 선언한 매개변수의 개수
+  - arguments의 length와 의미가 다르다.
+
+### 18.2.4 name 프로퍼티
+  - 함수의 이름, ES6부터 표준으로 자리잡음
+  - 익명 함수에 대해 ES6+ 는 anonymousFunc를, 그 이전은 공백의 값을 가진다.
+
+### 18.2.5 \_\_prototype__ 접근자 프로퍼티
+  - 모든 객체가 갖는 [[Prototype]]이라는 내부 슬롯에 접근하기 위한 프로퍼티.
+  - 
+
+### 18.2.6 prototype 프로퍼티
+  - prototype 프로퍼티는 생성자 함수로 호출할 수 있는 함수 객체, 즉 **constructor만이 소유하는 프로퍼티다.**
+  - **함수가 생성자 함수로 호출될 때 생성자 함수가 생성할 인스턴스의 프로토타입 객체를 가리킨다.**
+  ```js
+  (function () {}).hasOwnProperty('prototype'); // true
+  ({}).hasOwnProperty('prototype'); // false
+  ```
