@@ -1627,10 +1627,12 @@ function Circle() {
 
 ### 18.1 일급 객체
 **`❗️일급 객체`** 란 다음 조건을 만족하는 객체를 말한다.
-1. 무명의 리터럴로 생성할 수 있다. 즉 런타임에 생성 가능하다.
+1. **무명의 리터럴로 생성할 수 있다. 즉 런타임에 생성 가능하다.**
 2. 변수나 자료구조에 저장할 수 있다.
 3. 함수의 매개변수에 전달할 수 있다.
 4. 함수의 반환값으로 사용할 수 있다.
+
+함수는 일급 객체로 위 조건을 모두 만족한다. 함수가 일급 객체라는 의미는 **`함수를 객체와 동일하게 취급할 수 있다는 의미`** 이다.
 
 <br>
 
@@ -1656,7 +1658,7 @@ prototype: {value: {…}, writable: true, enumerable: false, configurable: false
 - arguments 프로퍼티는 함수 호출 시 전달된 인수(argument)들의 정보를 잠고있는 arguments 객체다.
 - iterable한 유사 배열 객체
 - ES3부타 표준에서 폐지되어, Function.arguments와 같은 사용법은 권장하지 않는다.
-- 함수 내부에서 지역변수처럼 사용할 수 있다.
+- **함수 내부에서 지역변수처럼 사용**할 수 있다.
 ```js
 function multiply(x, y) {
   console.log(arguments);
@@ -1707,7 +1709,7 @@ Symbol(Symbol.iterator): ƒ values()
   - 함수 자신을 호출한 함수를 의미한다. ECMAScript 사양에 포함되지 않는 비표준으로 몰라도 된다.
 
 ### 18.2.3 length 프로퍼티
-  - 함수를 정의할 때 선언한 매개변수의 개수
+  - 함수를 정의할 때 선언한 매개변수(parameter)의 개수
   - arguments의 length와 의미가 다르다.
 
 ### 18.2.4 name 프로퍼티
@@ -1716,7 +1718,11 @@ Symbol(Symbol.iterator): ƒ values()
 
 ### 18.2.5 \_\_prototype__ 접근자 프로퍼티
   - 모든 객체가 갖는 [[Prototype]]이라는 내부 슬롯에 접근하기 위한 프로퍼티.
-  - 
+  - \_\_prototype__프로퍼티는 Object.property의 프로퍼티를 상속받아 생긴것으로 함수 자신의것은 아니다.
+  ```js
+  function x() {}
+  console.log(x.hasOwnProperty(__proto__)); // false
+  ```
 
 ### 18.2.6 prototype 프로퍼티
   - prototype 프로퍼티는 생성자 함수로 호출할 수 있는 함수 객체, 즉 **constructor만이 소유하는 프로퍼티다.**
@@ -1725,3 +1731,56 @@ Symbol(Symbol.iterator): ƒ values()
   (function () {}).hasOwnProperty('prototype'); // true
   ({}).hasOwnProperty('prototype'); // false
   ```
+
+<br><br>
+
+## 19. 프로토타입
+---
+<br>
+
+- 자바스크립트는 명령형(imperative), 함수형, 프로토타입기반, 객체지향 프로그래밍을 지원하는 멀티 패러다임 언어이다.
+- 자바스크립트는 **프로토타입 기반의 객체지향 프로그래밍 언어**이다.
+
+<br>
+
+### 19.1 객체지향 프로그래밍
+
+- 객체지향 프로그래밍은 상태(state)를 나타내는 데이터와 상태 데이터를 조작할 수 있는 동작(behavior)을 하나의 논리적인 단위로 묶어 생각한다.
+- 상태와 동작을 각각 property와 method라 부른다.
+
+<br>
+
+### 19.2 상속과 프로토타입
+- 상속은 불필요한 코드 중복을 줄일 수 있는, OOP의 핵심 개념이다.
+- 17.의 생성자 함수 방식의 문제점을 살펴보자.
+```js
+function Circle(radius) {
+  this.radius = radius;
+  this.getArea = function() {
+    return Math.PI * this.radius ** 2;
+  };
+}
+
+const circle1 = new Circle(1);
+const circle2 = new Circle(2);
+
+console.log(circle1.getArea === circle2.getArea) // false
+```
+- 생성자 함수 방식으로 객체 생성시, 내부 메소드가 매번 새로 생성되어 메모리에 새로운 참조를 가진다. 객체 10개를 만들면 똑같은 메소드 10개가 생기는 것. 코드중복은 해결되었지만 메모리가 문제다.
+- 위 방식의 문제를 **prototype 기반의 상속으로 해결 가능하다.**
+```js
+function Circle(radius) {
+  this.radius = radius;
+}
+
+Circle.prototype.getArea = function() {
+  return Math.PI * this.radius ** 2;
+};
+
+
+const circle1 = new Circle(1);
+const circle2 = new Circle(2);
+
+console.log(circle1.getArea === circle2.getArea) // true
+```
+- **circle1과 circle2는 Circle.prototype(Circle의 프로토타입 객체)를 상속해 같은 getArea 메소드를 공유하게 된다. 메모리에는 Circle.prototype.getArea 한 개의 메소드만 존재한다. 자신의 상태를 나타내는 radius만 개별소유.**
