@@ -1,0 +1,361 @@
+<!DOCTYPE HTML>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+<title>FLAT DESIGN</title>
+<link rel="stylesheet" type="text/css" href="css/reset.css">
+<link rel="stylesheet" type="text/css" href="">
+<link rel="shortcut icon" href="images/favicon/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="images/favicon//flat-design-touch.png">
+<script src="js/jquery.min.js"></script>
+<style>
+/* 모바일용 CSS */
+/* 기본 CSS */
+#wrap {
+  display: flex;
+  /* 모바일에서는 박스들이 세로로 정렬되어있다. */
+  flex-flow: column nowrap;
+  width: 80%;
+  margin: 0 auto;
+  /* 와이드 모니터 사용시 너무 옆으로 늘어지는걸 방지, 와이드 모니터용 작업을 해주는게 더 좋다. */
+  max-width: 1200px;
+}
+
+#wrap section {
+  box-sizing: border-box;
+}
+
+/* 인포메이션 영역 CSS */
+.info_section {
+  order: 1;
+  width: 100%;
+  background-color: darkolivegreen;
+  border-bottom: 1px solid lightgray;
+}
+
+.info_list {
+  display: flex;
+}
+
+.info_list li {
+  width: 25%;
+  text-align: center;
+}
+
+.info_list li a {
+  display: block;
+  /* rem 지원 안하는 브라우저에서는 15px로 들어간다.(폴백 기법) */
+  padding: 15px 0;
+  padding: 0.938rem 0;
+}
+
+/* 헤더 영역 CSS */
+.header {
+  display: flex;
+  order: 2;
+  flex-direction: column;
+  /* 토글버튼에 position: absolute 사용하기 위함 */
+  position: relative; 
+  width: 100%;
+}
+
+.logo {
+  order: 1;
+  /* width: 100%; */
+  padding: 30px 0;
+  padding: 1.875rem 0;
+  font-size: 1.188em;
+  font-size: 1.188rem;
+  line-height: 21px;
+  line-height: 1.313rem;
+  text-align: center;
+  text-transform: uppercase;
+  background: #2ecc71;
+  text-shadow: 0px 1px 1px #25ab5e;
+}
+
+.nav {
+  order: 2;
+  /* width: 100%; */
+}
+
+.gnb li {
+  display: flex;
+  background: #2c3e50;
+}
+
+.gnb li a {
+  width: 80%;
+  padding: 20px 0;
+  padding: 1.250rem 0;
+  font-size: 0.938em;
+  font-size: 0.938rem;
+  /* 들여쓰기 */
+  text-indent: 20px;
+  text-indent: 1.250rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.gnb li span {
+  width: 20%;
+  /* 글자 안보이게 */
+  text-indent: -9999px;
+  /* center 1번만 넣으면 상하좌우 center로 알아서 맞춤,  */
+  background: url(images/s_images/sub_menu_toggle_btn.png) center no-repeat;
+  cursor: pointer;
+}
+
+/* 태블릿용 CSS */
+@media all and (min-width:768px) {
+  /* 테블릿과 pc에서는 박스들이 가로로 정렬되어있다. */
+  #wrap {
+    flex-flow: row wrap;
+  }
+
+  /* 헤더 영역 CSS */
+  .header {
+    flex-direction: row;
+  }
+  .logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    width: 15.625%;
+    padding: 0;
+  }
+
+  .logo a {
+    display: block;
+    padding: 50px 0;
+    padding: 3.125rem 0;
+  }
+
+  .nav {
+    /* nav 하위 ul을 absolute로 포지셔닝 하기 위함 */
+    position: relative;
+    min-height: 80px;
+    min-width: 5rem;
+    background: #2ecc71;
+  }
+
+  .gnb {
+    position: absolute;
+    /* nav의 높이만큼, 바로 밑에 붙는다. */
+    top: 100%;
+    right: 0;
+    z-index: 20;
+    width: 40.10416%;
+  }
+
+  .menu_toggle_btn {
+    top: 50%;
+    right: 30px;
+    right: 1.875rem;
+    z-index: 20;
+    margin-top: -15px;
+    margin-top: -0.938rem;
+  }
+
+}
+
+/* PC용 CSS */
+@media all and (min-width:960px) {
+  #wrap {
+    /* 인포메이션 영역이 화면 상단 오른쪽 위치, 이를 결정하기 위한 position값 */
+    position: relative;
+    width: 90%;
+  }
+
+  /* 인포메이션 영역 CSS */
+  .info_section {
+    /* 기본값으로 초기화 */
+    order: 0;
+    position: absolute;
+    top: 30px;
+    top: 1.875rem;
+    right: 30px;
+    right: 1.875rem;
+    z-index: 30;
+    /* 없으면 모바일의 100%가 먹어 #wrap과 동일한크기, auto는 내부요소 크기만큼 */
+    width: auto;
+    border-bottom: 0;
+  }
+  .info_list li {
+    width: auto;
+    margin-left: 15px;
+    margin-left: 0.625rem;
+  }
+
+  .info_list li a {
+    padding: 0;
+  }
+
+  /* 헤더 영역 CSS */
+  .header {
+    order: 1;
+    justify-content: flex-end;
+    /* 기본값으로 */
+    position: static;
+  }
+  .logo {
+    width: 12.5%;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    position: static;
+    width: 87.5%;
+  }
+
+  .gnb {
+    display: flex !important;
+    flex-direction: row;
+    position: static;
+    width: 100%;
+    text-shadow: 0px 1px 1px #25ab52;
+  }
+
+  .gnb li {
+    display: block;
+    margin-left: 5.2083%;
+    background: none;
+  }
+
+  .gnb li a {
+    width: auto;
+    padding: 0;
+    text-indent: 0;
+  }
+
+  .gnb li span {
+    display: none;
+  }
+
+  .menu_toggle_btn {
+    display: none;
+  }
+}
+
+</style>
+</head>
+<body>
+  <div id="wrap">
+    <section class="info_search">
+      <ul class="info_list">
+        <li><a href="index.html"></a><img src="images/s_images/info_icon_01.png" alt=""></a></li>
+        <li><a href=""><img src="images/s_images/info_icon_02.png" alt=""></a></li>
+        <li><a href=""><img src="images/s_images/info_icon_03.png" alt=""></a></li>
+        <li><a href=""><img src="images/s_images/info_icon_04.png" alt=""></a></li>
+      </ul>
+    </section>
+    <header class="header">
+      <h1 class="logo">
+        <a href="index.html">flat<br>design</a>
+      </h1>
+      <nav class="nav">
+        <ul class="gnb">
+          <li><a href="index.html">홈</a><span class="sub_menu_toggle_btn"></span></li>
+          <li><a href="introudce.html">플랫 디자인이란?</a><span class="sub_menu_toggle_btn"></span></li>
+          <li><a href="gallery.html">갤러리</a><span class="sub_menu_toggle_btn"></span></li>
+          <li><a href="board.html">문의사항</a><span class="sub_menu_toggle_btn"></span></li>
+        </ul>
+      </nav>
+      <span class="menu_toggle_btn">전체 메뉴 토글 버튼</span>
+    </header>
+    <section class="slider_section">
+      <span class="prev_btn">이전 버튼</span><span class="next_btn">다음 버튼</span>
+    </section>
+    <!-- 
+      갤러리 영역보다 최근/인기글을 먼저 두는 이유는 mobile에서 이런 구조이고, 큰 화면에서는 반대인데, 
+      flex의 order가 IE하위버전등에서는 먹지 않을 수 있기 때문. 결국 mobile first이다. 
+    -->
+    <section class="latest_post_section">
+      <h2 class="title">최근 글</h2>
+      <ul class="latest_post_list">
+        <li><a href="">안녕하세요 홈페이지가 오픈...</a></li>
+        <li><a href="">홈페이지 리뉴얼...</a></li>
+        <li><a href="">flat design은...</a></li>
+        <li><a href="">blog에서 다양한 정보를...</a></li>
+        <li><a href="">저는 누굴까요?...</a></li>
+      </ul>
+    </section>
+    <section class="popular_post_section">
+      <h2 class="title">인기 글</h2>
+      <ul class="popular_post_list">
+        <li><a href="">안녕하세요 홈페이지가 오픈...</a></li>
+        <li><a href="">홈페이지 리뉴얼...</a></li>
+        <li><a href="">flat design은...</a></li>
+        <li><a href="">blog에서 다양한 정보를...</a></li>
+        <li><a href="">저는 누굴까요?...</a></li>
+      </ul>
+    </section>
+
+    <section class="gallery_section">
+      <ul class="gallery_list">
+        <li>
+          <a href="#">
+            <!-- figure : 이미지 설명 영역을 구성하기 위핸 태그, img(이미지) + figcaption(설명)로 구성-->
+            <figure>
+              <img src="images/p_images/gallery_01.jpg" alt="">
+              <figcaption>디자인 트렌드 플랫</figcaption>
+            </figure>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <figure>
+              <img src="images/p_images/gallery_02.jpg" alt="">
+              <figcaption>원색이 포인트 플랫</figcaption>
+            </figure>
+          </a>
+        </li>        
+      </ul>
+    </section>
+
+    <section class="rankup_section">
+      <h2 class="title">인기 검색어</h2>
+      <ul class="rankup_list">
+        <li><a href="">반응형 웹</a></li>
+        <li><a href="">미디어 쿼리</a></li>
+        <li><a href="">뷰포트</a></li>
+        <li><a href="">CSS 트릭스</a></li>
+        <li><a href="">W3C</a></li>
+        <li><a href="">루크 W</a></li>
+        <li><a href="">클리어 보스</a></li>
+        <li><a href="">CSS 젠 가든</a></li>
+        <li><a href="">XE</a></li>
+        <li><a href="">워드프레스</a></li>
+      </ul>
+    </section>
+
+    <section class="banner_section">
+      <div class="banner_box_01"> 
+        <a href=""><img src="images/s_images/w3c_logo.png" alt=""></a>
+      </div>
+      <div class="banner_box_02">
+        <ul class="banner_list">
+          <li><a href=""><img src="images/s_images/js_logo.png" alt=""></a></li>
+          <li><a href=""><img src="images/s_images/html_logo.png" alt=""></a></li>
+          <li><a href=""><img src="images/s_images/css_logo.png" alt=""></a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="social_section">
+      <ul class="social_list">
+        <li><a href=""><img src="images/s_images/social_icon_01.png" alt=""></a></li>
+        <li><a href=""><img src="images/s_images/social_icon_02.png" alt=""></a></li>
+        <li><a href=""><img src="images/s_images/social_icon_03.png" alt=""></a></li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <p>copyright&copy; 2021.motiveko all rights reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>
