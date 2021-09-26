@@ -1784,3 +1784,159 @@ const circle2 = new Circle(2);
 console.log(circle1.getArea === circle2.getArea) // true
 ```
 - **circle1과 circle2는 Circle.prototype(Circle의 프로토타입 객체)를 상속해 같은 getArea 메소드를 공유하게 된다. 메모리에는 Circle.prototype.getArea 한 개의 메소드만 존재한다. 자신의 상태를 나타내는 radius만 개별소유.**
+
+<br>
+
+### 19.3 프로토타입 객체
+
+- 프로토타입은 어떤 객체의 상위 객체 역할을 하는 객체로, 공유 프로퍼티를 제공해 상속을 구현한다.
+- 모든 객체는 [[Prototype]]이라는 내부 슬롯을 가지고, 이 내부슬롯의 값이 프로토타입의 참조다.
+- 모든 객체는 **하나의 프로토타입을 가지고 있고, 모든 프로토타입은 생성자 함수와 연결되어 있다.**
+
+### 19.3.1 \_\_proto__ 접근자 프로퍼티
+- **`모든 객체는 접근자 프로퍼티 \_\_proto__로 [[Prototype]]에 접근할 수 있다.`**
+- \_\_proto__는 접근자 프로퍼티로, 직접 값을 가지지 않고 gettter/setter로 접근한다.
+- \_\_proto__는 객체가 직접 소유하는 프로퍼티가 아니라 Object.prototype의 프로퍼티다.(Object.prototype은 프로토타입 체인의 최상위 객체이다)
+- 프로토타입 체인은 단방향 링크드 리스트로 구현되어야 한다.(순환참조를 허용하지 않는다.)
+- **\_\_proto__ 를 코드 내에서 직접 사용하는것은 권장하지 않는다.**
+  - Object.getPrototypeOf() / Object.setPrototypeOf()를 사용한다.
+```js
+const obj = {};
+const parent = {x: 1};
+
+Object.getPrototypeOf(obj); // == obj.__prototype__;
+Object.setPrototypeOf(obj, parent)  // obj.__prototype__ = parent;
+
+console.log(obj.x); // 1
+```
+```js
+// 직접 실험해본 내용
+// case1
+const obj1 = new Object();
+obj1.__proto__ === Object.prototype;  // true
+// Object.prototype 이 통째로 바뀐다.
+obj1.__proto__.val = 1;              
+const obj2 = new Object();
+
+obj2.__proto__.val // 1
+obj1.__proto__ === Object.prototype;  // true
+
+
+
+// case 2
+const obj1 = new Object();
+// obj1의 프로토타입을 바꾼다. Object.prototype에는 영향 x
+Object.setPrototypeOf(obj, {val: 1});
+obj1.__proto__ === Object.prototype;  // false
+
+const obj2 = new Object9);
+obj2.__proto__.val; // undefined
+
+```
+- \_\_proto__ 로 접근해서 프로토타입을 수정하는것과 Object.setPrototypeOf()로 프로토타입을 수정하는것은 매우 큰 차이가있다!
+
+### 19.3.2 함수 객체의 prototype 프로퍼티
+- **`prototype 프로퍼티는 함수 객체만이 소유하는, 생성자 함수가 생성할 인스턴스의 프로토타입을 가리킨다.`**
+- 즉, 생성자 함수가 아닌 arrow function이나, ES6 메서드 축약표현으로 정의한 메서드는 prototype 프로퍼티를 소유하지 않으며, 프로토타입을 생성하지도 않는다.
+- 모든 객체가 가지고 있는(Object.prototype으로부터 상속받은) \_\_prototype__ 프로퍼티와 생성자 함수 객체만이 가지는 prototype 프로퍼티는 **결국 동일한 프로토타입을 가리킨다.**
+```js
+// 생성자 함수
+function Person (name) {
+  this.name = name;
+}
+const me = Person('motiveko');
+// Person.prototype과 me.__proto__는 결국 동일한 프로토타입을 가리킨다.
+console.log(Person.prototype === me.__proto__); // true
+```
+
+### 19.3.3 프로토타입의 constructor 프로퍼티와 생성자 함수
+- 모든 프로토타입은 constructor 프로퍼티를 갖는데, **constructor는** prototype 프로터피로, **자신을 참조하고 있는 생성자 함수**를 가리킨다. 이해가 안되면 책에 다이어그램을 보면 바로 이해될것이다.
+
+```js
+// 생성자 함수
+const Person () {}
+
+const p = new Person();
+// p.constructor는 p.__prototype__.constructor라고 할 수 있다.
+console.log(p.constructor === Person);  // true
+```
+
+<br>
+
+### 19.4 리터럴 표기법에 의해 생성된 객체의 생성자 함수와 프로토타입
+
+- 객체를 리터럴로 생성하는것과 생성자 함수를 사용하는 것은 내부적인 과정과 스코프, 클로저 등에 약간의 차이는 있으나 객체의 특성은 같다.
+- 따라서 리터럴 표기법으로 생성한 객체의 prototype.constructor가 생성자 함수라고 생각해도 큰 무리는 없다.
+
+| 리터럴 표기법 | 생성자 함수 | 프로토타입 |
+|:---|:---|:---|
+| 객체 | Object | Object.prototype |
+| 함수 | Function | Function.prototype |
+| 배열 | Array | Array.prototype |
+| 정규표현식 | RegExp | RegExp.prototype |
+
+<br>
+
+### 19.5 프로토타입의 생성 시점
+- **프로토타입은 생성자 함수가 생성되는 시점에 더불어 생성된다.**
+
+### 19.5.1 사용자 정의 생성자 함수와 프로토타입 생성 시점
+- constructor 함수의 정의가 평가되어 함수 객체를 생성하는 시점에 프로토타입도 생성된다.
+- 함수 선언문의 경우 런타임 이전 평가되어 객체생성하므로(함수 호이스팅) 런타임 이전에 생성됨
+
+### 19.5.2 빌트인 생성자 함수와 프로토타입 생성 시점
+- 모든 빌트인 생성자 함수는 전역 객체(window / global)가 생성되는 시점에 생성된다. 이 때 프로토타입은 빌트인 생성자 함수의 prototype 프로퍼티에 바인딩된다.
+
+<br>
+
+### 19.6 객체 생성 방식과 프로토타입의 결정
+- 객체 생성에는 여러가지 방식이 있는데, 내부의 세부적인 방식에는 차이가 있지만 결국 모두 추상연산 OrdinaryObjectCreate에 의해 성성된다는 공통점이 있다.
+- OrdinaryObjectCreate는 필수적으로 **자신이 생성할 객체의 프로토타입을 인수로 받는데,** 여기서 생성될 객체의 프로토타입이 결정된다.
+- 객체 생성 방식별 프로토타입은 아래와 같다.
+  1. 객체 리터럴
+      - Object.prototype
+      - 프로퍼티를 객체 리터럴 내부에서 추가 가능
+  2. Object 생성자 함수
+      - Object.prototype
+      - 빈 객체 생성 후 프로퍼티 추가 가능
+  3. 생성자 함수
+      - **생성자 함수의 prototype 프로퍼티에 바인딩되어 있는 객체**
+      - 생성자 함수의 prototype에 프로퍼티를 추가해 상속을 구현할 수 있다.
+      ```js
+      function Person(name) {
+        this.name = name;
+      }
+      // 프로토타입 메소드
+      Person.prototype.sayHello = function() {
+        console.log(`Hi! My name is ${this.name}`);
+      }
+      ```
+  4. [Object.create](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create) 메서드
+      - 책에는 안나온다.
+      - Objcet.create(proto, propertiesObject?)로 첫번째 인자에 프로토타입 객체를 받는다. 따라서 **프로토타입 객체는 함수 호출시 동적으로 할당된다.**
+  5. 클래스(ES6)
+      - 이것도 책에 안나온다.
+      - 직접 해본 결과 생성자 함수와 동일하게 class의 prototype 프로퍼티에 바인딩된 객체를 프로토타입으로 가진다.
+      ```js
+      class M {}
+
+      const m = new M();
+
+      m.__proto__ === M.prototype; // true
+      ``` 
+
+<br>
+
+### 19.7 프로토타입 체인
+- 프로토타입 체인은 상속과 프로퍼티 검색을 위한 메커니즘이다.
+- 스코프 체인은 식별자 검색을 위한 메커니즘이다.
+- 객체의 메소드 호출시, 프로토타입 체인은 해당 객체에서, 프로토타입 체인의 종점인 Object.prototype까지 순서대로 해당 프로퍼티가 존재하는지 검색한다. 
+```js
+  me.hasOwnProperty('name');
+  // Object.prototype에서 hasOwnProperty를 발견하고 call() 메서드를 이용해 호출한다.
+  Object.prototype.hasOwnProperty.call(me, 'name');  
+```
+
+<br>
+
+## 19.8 오버라이딩과 프로퍼티 섀도잉
