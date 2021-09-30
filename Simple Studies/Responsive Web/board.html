@@ -9,37 +9,8 @@
 <link rel="shortcut icon" href="images/favicon/favicon.ico">
 <link rel="apple-touch-icon-precomposed" href="images/favicon//flat-design-touch.png">
 <script src="js/jquery.min.js"></script>
-<style>
-/* 모바일용 CSS */
-/* 기본 CSS */
-#wrap {
-  display: flex;
-  /* 서브페이지는 모든 화면에서 박스가 column방향으로 1자로 정렬이다 */
-  flex-flow: column nowrap;
-  width: 80%;
-  margin: 0 auto;
-  /* 와이드 모니터 사용시 너무 옆으로 늘어지는걸 방지, 와이드 모니터용 작업을 해주는게 더 좋다. */
-  max-width: 1200px;
-}
-
-#wrap section {
-  box-sizing: border-box;
-}
-
-/* 태블릿용 CSS */
-@media all and (min-width:768px) {
-
-}
-
-/* PC용 CSS */
-@media all and (min-width:960px) {
-  #wrap {
-    /* 인포메이션 영역이 화면 상단 오른쪽 위치, 이를 결정하기 위한 position값 */
-    position: relative;
-    width: 90%;
-  }
-}
-</style>
+<script src="js/flat.min.js"></script>
+<link rel="stylesheet" type="text/css" href="./css/board.css">
 </head>
 <body>
   <div id="wrap">
@@ -141,7 +112,7 @@
         <a href="#">1</a>
         <a href="#">2</a>
         <a href="#">3</a>
-        <div class="list_next_btn">갤러리 다음 버튼</div>
+        <span class="list_next_btn">갤러리 다음 버튼</div>
       </div>
 
     </section>
