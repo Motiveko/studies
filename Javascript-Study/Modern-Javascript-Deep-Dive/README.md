@@ -1939,4 +1939,119 @@ console.log(p.constructor === Person);  // true
 
 <br>
 
-## 19.8 오버라이딩과 프로퍼티 섀도잉
+### 19.8 오버라이딩과 프로퍼티 섀도잉
+- ___프로퍼티 섀도잉___ 이란 프로토타입에 정의된 프로퍼와 같은 이름의 인스턴스 프로퍼티가 존재해, 프로토타입 프로퍼티가 오버라이딩 된 것 처럼 보이는 현상이다.
+
+```js
+// 생성자 함수
+const Person = (function () {
+  function Person(name) {
+    this.name = name;
+  }
+  // prototype 프로퍼티 sayHello
+  Person.prototype.sayHello = function () {
+    console.log(`[Proto] : Hi! I'm ${this.name}`);
+  }
+  return Person;
+}())
+
+const motiveko = new Person('motiveko');
+motiveko.sayHello = function() {
+  console.log(`[Motiveko] : Hi! I'm ${this.name}`);
+}
+
+// 프로퍼티 섀도잉이 일어났다
+motiveko.sayHello();  // [Motiveko] : Hi! I'm motiveko
+
+// __proto__로 호출 가능, 그러나 name 프로퍼티가 Prototype에는 없으므로 undefined
+motiveko.__proto__.sayHello();  // [Proto] : Hi! I'm undefined
+
+```
+- 위와 같이 motiveko.sayHello()는 인스턴스 프로퍼티 메소드를 호출한다.
+- 프로퍼티 섀도잉은 덮어쓰기가 아니므로 아래와 같이 instance property를 지워도 prototype property는 여전히 호출할 수 있다.
+```js
+delete motiveko.sayHello;
+motiveko.sayHello();  // [Proto] : Hi! I'm motiveko
+
+// 하위 객체에서 프로토타입에 get은 엑세스 가능하나 set 엑세스는 허용되지 않는다.
+delete motiveko.sayHello;
+motiveko.sayHello();  // [Proto] : Hi! I'm motiveko
+```
+
+<br>
+
+### 19.9 프로토타입의 교체
+- 자바스크립트에서 프로토타입은 임의의 객체로 변경할 수 있다(동적으로 변경 가능)
+
+### 19.9.1 생성자 함수에 의한 프로토타입의 교체
+```js
+const Person = (function () {
+  function Person(name) {
+    this.name = name;
+  }
+  Person.prototype = {
+    sayHello() {
+      console.log(`Hi! I'm ${this.name}`);
+    }
+  }
+  return Person;
+}())
+
+const a = new Person('a');
+
+console.log(a.constructor); // Object
+```
+- 위와 같이 생성자 함수 내에서 prototype을 객체 리터럴로 교체할 수 있다
+- 그러나 생성된 인스턴스의 constructor는 최상위 프로토타입의 프로퍼티인 Object.prototype.constructor(=Object)를 가리킨다.
+- 아래와 같은 형식으로 교체하면 일반적인 생성자 함수처럼 constructor가 생성자 함수를 가리키게 할 수 있다.
+```js
+...
+
+  Person.prototype = {
+    constructor : Person,
+    sayHello() {
+      console.log(`Hi! I'm ${this.name}`);
+    }
+  }
+
+...
+```
+
+### 19.9.2 인스턴스에 의한 프로토타입의 교체
+- 인스턴스에서 직접 프로토타입을 교체할 수 있다.
+```js
+function Person(name) {
+  this.name = name;
+}
+const a = new Person('a');
+// 프로토타입으로 교체할 객체
+const parent = {};
+
+Object.setPrototypeOf(a, parent); // -> a.__proto__ = parent;
+
+console.log(Person.prototype === parent) // false
+```
+- 생성된 인스턴스의 프로토타입을 변경하는것은 생성자 함수와는 별개로 이뤄져, Person.prototype과 생성된 객체의 a.prototype의 불일치가 생긴다.
+- 아래와 같이 프로토타입을 교체하면 깔끔하게 교체가 된다. 하지만 좋은 방법은 아니고, 직접 상속하는것이 훨씬 낫다.
+
+```js
+function Person(name) {
+  this.name = name;
+}
+const me = new Person('motiveko');
+
+const parent = {
+  constructor: Person,
+  sayHello() {
+    console.log(`Hi! I'm ${this.name}`);
+  }
+}
+
+Person.prototype = parent;  // Person <-> Person.prototype 사이 순환참조 
+
+Object.setPrototype(me, parent);
+```
+
+<br>
+
+### 19.10 instanceof 연산자
