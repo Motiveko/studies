@@ -2055,3 +2055,222 @@ Object.setPrototype(me, parent);
 <br>
 
 ### 19.10 instanceof 연산자
+- instanceof 연산자는 아래와 같은 형태로, 우변이 생성자 함수가 아니면 TypeError가 발생한다.
+```js
+객체 instanceof 생성자함수
+```
+- **`생성자 함수의 prototype에 바인딩된 객체`** 가 **`객체의 프로토타입 체인상에 존재`** 하면 true, 그렇지 않으면 false
+
+```js
+function Person(name) {
+  this.name = name;
+}
+
+const me = new Person('motiveko');
+
+console.log(me instanceof Person);  // true
+
+// 객체의 프로토타입 교체
+const parent = {};
+Object.setPrototypeOf(me, parent);  
+
+// Person.prototype이 가리키는 객체가 me의 프로토타입 체인에 존재하지 않는다.
+console.log(me instanceof Person);  // false
+
+// 생성자함수의 prototype 프로퍼티의 객체를 me의 프로토타입으로 변경
+Person.prototype = parent;
+
+console.log(me instanceof Person);  // true
+```
+- 인스턴스의 프로토타입 교체가 아닌 생성자 함수에 의한 프로토타입 교체시 instanceof는 true가 될 것이다
+```js
+const Person = (function() {
+  function Person(name) {
+    this.name = name;
+  }
+  // Person.prototype === 생성될 객체의 prototype
+  Person.prototype = {};  
+  return Person;
+}())
+
+const me = new Person('motiveko');
+
+console.log(me instanceof Person); // true
+```
+
+<br>
+
+### 19.11 직접 상속
+### 19.11.1 Object.create에 의한 직접 상속
+- Object.create는 prototype객체와 propertyDescriptors를 argument로 받아 객체를 생성한다. 정의는 아래와같다.
+```ts
+/**
+ * Creates an object that has the specified prototype, and that optionally contains specified properties.
+ * @param o Object to use as a prototype. May be null
+ * @param properties JavaScript object that contains one or more property descriptors.
+ */
+  create(o: object | null, properties: PropertyDescriptorMap & ThisType<any>): any;
+```
+- prototype 인자로 null
+```js
+let obj = Object.create(null);
+console.log(Object.getPrototypeOf(obj) === null); // ture
+// 프로토타입이 null인 객체는 프로토타입 체인의 종점에 위치한다.
+console.log(obj.toString());  // TypeError: obj.toString is not a function
+```
+- prototype 인자로 Object.prototype
+```js
+// let obj1 = {}; 와 같다
+let obj1 = Object.create(Object.prototype); 
+
+// let obj2 = { x:1 }; 과 같다.
+let obj2 = Object.create(Object.prototype, {
+  x: { value: 1, writable: true, enumerable: true, configurable: true}
+});
+```
+
+- 임의의 객체를 상속받는다.
+```js
+// obj -> parent -> Object.prototype -> null
+const parent = { x: 10};
+let obj = Object.reate(parent);
+
+console.log(obj instanceof Object); // true
+```
+- prototype으로 생성자함수의 프로토타입을 받는다.
+```js
+function Person(name) {
+  this.name = name;
+}
+// obj -> Person.prototype -> Object.prototype -> null
+let obj = Object.create(Person.prototype);
+
+console.log(obj instanceof Person); // true
+console.log(obj instanceof Object); // true
+```
+- prototype 인자로 null을 인자로 받은 경우 인스턴스는 상위의 프로토타입이 없어, Object.protoype의 빌트인 메소드 사용이 불가능하다.
+- 이런이유로 ESlint는 Object.protoype의 빌트인 메소드를 직접호출하기보다 call() 을 이용해간접호출하는것을 권한다. 
+```js
+let obj = {x : 1};
+
+// Object.protoype의 빌트인 메소드 직접호출
+obj.hasOwnProperty('x');
+
+// 간접호출
+Object.prototype.hasOwnProperty.call(obj, 'x');
+```
+
+### 19.11.2 객체 리터럴 내부에서 \_\_proto__에 읜한 직접 상속
+- 이 방법이 훨씬 깔끔하다.
+```js
+const parent = { x: 10};
+const obj = {
+  y: 20,
+  __proto__: parent
+};
+
+console.log(Object.getPrototypeOf(obj) === parent); // ture
+```
+
+<br>
+
+### 19.12 정적 프로퍼티/메서드(static property/method)
+- `정적 프로퍼티/메서드란` 생성자 함수 객체가 소유한 프로퍼티/메서드를 의미한다.
+- 생성자 함수가 생성한 인스턴스는 참조할 수 없다(인스턴스의 프로토타입 체인에 존재하지 않는다).
+```js
+// create는 Object의 정적 메서드, 인스턴스가 참조 불가능
+const obj = Object.create({name : 'Lee'});
+
+// hasOwnProperty는 프로토타입 메서드, 인스턴스가 참조 가능
+obj.hasOwnProperty('name'); 
+```
+- 메서드 내에서 this(== 인스턴스)를 호출하는게 아니라면 정적메서드로 만들어서 쓸 수 있다.
+- MDN등의 문서에서는 static <-> prototype 프로퍼티/메서드를 나눠서 설명하고있다.
+- 프로토타입 프로퍼티/메서드는 prototype을 #으로 표기하는 경우도 있다. **Object#toString** 같은 형태
+
+<br>
+
+### 19.13 프로퍼티 존재 확인
+### 19.13.1 in 연산자
+- in 연산자는 객체 내에 특정 프로퍼티가 존재하는지 여부를 확인. 객체 뿐만 아니라 프로토타입 체인 전체를 검사한다.
+- ES6에서 도입된 Reflect.has 메서드는 in과 같이 동작한다.
+```js
+const person = {
+  name: 'motiveko';
+}
+
+console.log('name' in person);      // true
+console.log('toString' in person);  // ture
+
+console.log(Reflect.has(person, 'toString')); // true
+```
+
+### 19.13.2 Object.prototype.hasOwnProperty 메서드
+- 인스턴스 자체의 프로퍼티 존재 여부만 검사, 프로토타입 체인은 검사하지 않는다.
+```js
+console.log(person.hasOwnProperty('toString')); // false
+```
+
+<br>
+
+### 19.14 프로터피 열거
+### 19.14.1 for ... in문
+- for(변수선언문 in 객체) {...}
+- 객체 인스턴스와 `프로토타입 체인상의 모든 프로퍼티`를 순회한다. 
+- 단, `순회 가능한({enumerable : true}) 프로퍼티만` 순회한다.
+- 추가로 키가 심벌인 프로퍼티도 열거하지 않는다.
+```js
+const person = {
+  name : 'motiveko',
+  age : 13,
+  [sym]: 10 // symbol
+}
+for(const key in person) { 
+  console.log(`${key} : ${person[key]}`);
+}
+// name : motiveko
+// age : 13
+```
+- Object.prototype의 프로퍼티는 모두{ enumerable: false }이므로 열거하지 않는다.
+- [sym]은 Symbol이므로 열거하지 않는다.
+- 기본적으로 for ... in은 **순서를 보장하지 않으나** 대부분의 모던 브라우저에서는 순서를 보장하고, 숫자인 프로퍼티 키(사실은 문자)에 대해서는 정렬을 실시한다.
+
+- `배열`에는 for ... in문이 아닌 for ... of 혹슨 Array.prototype.forEach를 사용하길 권한다. for ... of는 값을 열거한다.
+```js
+const arr = [1,2,3];
+arr.x = 10;   // 배열도 객체이므로 프로퍼티를 가진다.
+
+for(const i in arr) {
+  // 프로퍼티 x도 출력된다.
+  console.log(arr[i]);  // 1 2 3 10  
+}
+
+arr.forEach(console.log); // 1 2 3
+for( const val of arr ){
+  console.log(val); // 1 2 3
+}
+```
+
+### 19.14.2 Object.keys/values/entries 메서드
+- `Object.keys`메서드는 객체 자신의 enumerable한 프로퍼티 키를 **`배열로`** 반환한다.
+- ES8에서 도입된 `Object.values`메서드는 객체 자신의 enumerable한 프로퍼티 값을 배열로 반환한다.
+- ES8에서 도입된 `Object.entries` 메서드는 객체 자신의 enumerable한 프로퍼티 키와 값의 쌍을 배열에 담아 반환한다.( [][] 형태 )
+
+```js
+
+const person = {
+  name : 'motiveko',
+  age : 13,
+  __proto__: {gender: 'male'}
+}
+
+console.log(Object.keys(person));     // [ "name", "age" ]
+console.log(Object.values(person));   // [ "motiveko", 13 ]
+console.log(Object.entries(person));  // [ ["name", "motiveko"], ["age", 13]]
+```
+
+<br><br>
+
+## 20. strict mode
+---
+<br>

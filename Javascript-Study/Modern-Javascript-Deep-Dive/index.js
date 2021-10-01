@@ -1,17 +1,15 @@
-const Person = (function () {
-  function Person(name) {
-    this.name = name;
+const obj = {
+  a : 1,
+  b : 'b',
+  __proto__ : {
+    x: '출력되면 안되쥬'
   }
-  Person.prototype = {
-    constructor: Person,
-    sayHello() {
-      console.log(`Hi! I'm ${this.name}`);
-    }
-  }
-  return Person;
-}())
+};
 
-const a = new Person('a');
+for(const key in obj) {
+  console.log(`${key} : ${obj[key]}`);
+}
 
-console.log(a.constructor); // Person
-
+for( const key of obj) {
+  console.log(key)
+}
