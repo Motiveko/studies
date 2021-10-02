@@ -2274,3 +2274,79 @@ console.log(Object.entries(person));  // [ ["name", "motiveko"], ["age", 13]]
 ## 20. strict mode
 ---
 <br>
+
+### 20.1 strict mode란?
+- **strict mode**는 자바스크립트 언어의 문법을 좀 더 엄격히 적용해 오류를 발생시킬 가능성이 있거나 js 엔진의 최적화 작업에 문제를 일으킬 수 있는 코드에 대해 명시적인 에러를 발생시킨다.
+- 예를 들면, var, let, const키워드가 붙지 않은 변수는 암묵적으로 전역변수로 생성(implicit global)
+- **`ESLint`**를 사용하면 strict mode와 같은 검사를 할 수 있고 추가적으로 코드 컨벤션을 설정파일로 관리할 수 있어 무조건 사용해야한다.
+- ES6에서 도입된 class와 module은 기본적으로 strict mode적용
+
+<br>
+
+### 20.2 strict mode의 적용
+- 파일 최상단에 'use strict'; 를 작성하면 해당 스크립트에 strict mode가 적용된다.
+- 함수 몸체 최상단에 작성시 해당 함수 단위로 strict mode가 적용된다.
+
+
+### 20.3 전역에 strict mode를 적용하는것은 피하자
+- 서드파티 라이브러리를 사용할 경우 라이브러리가 non-strict-mode인 경우가 있으므로, strict mode를 전역으로 사용하는것은 피한다.
+
+### 20.4 함수 단위로 strict mode를 적용하는 것도 피하자.
+- 함수 단위로 사용할 경우 어떤함수는 strict, 어떤함수는 non-strict가 섞이는 것은 바람직하지 않다.
+- 따라서 strict mode는 **즉시실행함수 단위로** 적용하는것이 바람직하다.
+
+<br>
+
+### 20.5 strict moder가 발생시키는 에러(대표적인 예시들)
+- 암묵적 전역 implicit global
+> 선언하지 않은 변수를 참조하면 ReferenceError 발생
+```js
+(function() {
+  'use strict';
+  x = 1;
+  console.log(x); // ReferenceError: x is not defined
+})())
+```
+
+- 변수, 함수, 매개변수의 삭제
+> delete 연산자로 변수, 함수, 매개변수를 삭제하면 SyntaxError발생
+```js
+(function() {
+  'use strict';
+
+  var x = 1;
+  delete x; // SyntaxError : Delete of an unqualified identifier in strict mode
+
+  function foo(a) {
+    delete a; // SyntaxError
+  }
+  delete foo; //SyntaxError
+})
+```
+
+- 매개변수 이름 중복
+> 중복된 매개분수 이름을 사용하면 SyntaxError 발생. 상식이다
+
+- with문의 사용
+> with문을 사용하면 SyntaxError 발생, with문은 사용하지 않는것으로 한다.
+
+<br>
+
+### 20.6 strict mode 적용에 의한 변화
+### 20.6.1 일반 함수의 this
+  - strict mode에서 **함수를 일반 함수로 호출시 this에 undefined가 바인딩된다.** this가 필요가 없기 때문. 에러는 발생하지 않는다.
+  - 예제생략
+
+### 20.6.2 arguments 객체
+  - strict mode에서는 매개변수에 전달된 인수를 재할당하여 변경해도 arguments 객체에 반영되지 않는다.
+  ```js
+  (function(a) {
+    'use strict';
+    a = 2;  // 매개변수에 전달된 인수 재할당.
+
+    console.log(a); // 2
+
+    // arguments 객체에는 반영되지 않는다.
+    console.log(arguments);  // { 0: 1, length : 1}
+  }(1))
+  ```
