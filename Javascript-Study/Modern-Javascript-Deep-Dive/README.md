@@ -2350,3 +2350,59 @@ console.log(Object.entries(person));  // [ ["name", "motiveko"], ["age", 13]]
     console.log(arguments);  // { 0: 1, length : 1}
   }(1))
   ```
+
+<br><br>
+
+## 21. 빌트인 객체
+---
+<br>
+
+### 21.1 자바스크립트 객체의 분류
+- 표준 빌트인 객체( standard built-in / native / global objects)
+  - 표준 빌트인 객체는 ECMAScript 사양에 정의된 객체를 말하며, 애플리케이션 전역의 공통 기능 제공
+  - 자바스크립트 실행 환경에 관계없이 언제나 사용 가능
+  - 전역 객체의 프로퍼티로 제공되므로 별도의 선언 없이 전역 변수처럼 언제나 참조 가능
+- 호스트 객체
+  - ECMAScript 사양에 정의되지 않은, 자바스크립트 실행 환경에서 추가적으로 제공하는 객체
+  - `브라우저`에서는 DOM, BOM, Canvas, XMLHttpRequest, fetch, requestAnimationFrame, SVG, Web Storage, Web Component, Web Worker와 같은 클라이언트 사이트 Web API를 호스트 객체로, Node.js 환경에서는 Node.js 고유의 API를 호스트 객체로 제공한다.
+- 사용자 정의 객체 (user-defined objects)
+  - 사용자가 직접 정의한 객체를 말한다.
+
+<br>
+
+### 21.2 표준 빌트인 객체
+- 자바스크립트는 Object, String, Boolean, Date, Math, Map/Set, ... 등 `40여개의 표준 빌트인 객체를 제공`
+- Math, Reflect, JSON을 제외한 표준 빌트인 객체는 모두 **`생성자 함수 객체`**
+- 생성자 함수 객체는 prototype + static method를 제공, 그 외인 위 3개는 static method만 제공
+
+<br> 
+
+### 21.3 원시값과 래퍼 객체
+- **`래퍼 객체`**(wrapper object)란 string, number, boolean _`원시값에 대해 객체처럼 접근하면 생성되는 임시 객체를 말한다.`_
+- string으로 예를 들면, 리터럴 표기법으로 생성된 원시값에 대해, 객체처럼 마침표 표기법으로 참조하는 순간 js 엔진이 **`일시적으로`** 원시값을 연관된 객체로 변환해 준다.
+이때, 래퍼 객체는 String 생성자 함수의 인스턴스이고, 문자열은 래퍼 객체의 [[StringData]] 내부 슬롯에 할당된다.
+- 일시적이기 때문에 **래퍼 객체의 처리가 종료되면** [[StringData]] 내부 슬롯에 할당된 원시값으로 식별자의 값이 되돌아가고, **래퍼 객체는 가비지 컬렉션에 의해 제거**된다.
+```js
+// 문자열 primitive type
+const str = 'hello';
+
+// . 으로 참조해 객체처럼 사용 -> String 생성자 함수에 의해 래퍼 객체가 생성되고 name 프로퍼티에 'motiveko' 할당
+str.name = 'motiveko';
+
+// 가비지 컬렉터에 의해 래퍼객체 제거, 원시값으로 다시 바뀜
+
+// . 으로 참조해 또 래퍼객체 생성. 이전 래퍼 객체는 이미 제거되었으므로 name 프로퍼티는 존재하지 않는다.
+console.log(str.name);  // undefined
+
+// 래퍼 객체 또 제거
+
+// str은 다시 원시값이 되어있다.
+console.log(typeof str);  // string
+```
+
+- string, number, boolean은 `리터럴 표기법으로 생성해도 생성자 함수로 생성한 것과 같이 prototype메서드를 모두 사용할 수 있으므로 생성자 함수에 의한 생성을 권장하지 않는다.` Lint에서도 기본적으로 빨간불 띄운다.
+- Symbol도 비슷한데, 37장에서 다룬다.
+
+<br>
+
+### 21.4 전역 객체
