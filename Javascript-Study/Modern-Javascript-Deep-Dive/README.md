@@ -2579,3 +2579,89 @@ console.log(window.y);  // undefined
 - 위와같이 foo 호출시 내부에 변수 y에 값을 할당하는데, 이 때 스코프 체인상에 y가 존재하지 않을 경우 js 엔진이 `y = 20을 window.y = 20으로 해석하여 전역 객체에 프로퍼티를 동적으로 생성`한다. 이 때 y가 마치 전역 변수처럼 동작하는 현상을 **implicit global** 이라고 한다. 
 - **암묵적 전역은** 변수 선언 없이 단지 전역 객체의 프로퍼티로 추가될 뿐이므로, 변수가 아니다. 따라서 **변수 호이스팅이 발생하지 않는다.**
 - 변수가 아닌 프로퍼티는 delete연산자로 삭제할 수 있으나, **전역 변수는 프로퍼티이지만 delete 연산자로 삭제할 수 없다.**
+
+<br><br>
+
+## 22. this
+---
+<br>
+
+### 22.1 this 키워드
+- this는 자신이 속한 객체 또는 자신이 생성할 인스턴스를 가리키는 자기 참조 변수(self-referencing variable)이다.
+- this는 JS엔진에 의해 암묵적으로 생성되며, 코드 어디서든 참조가능해 지역변수처럼 사용 가능하다.
+- this가 기리키는값, 즉 **this 바인딩은 함수 호출 방식에 의해 동적으로 결정된다.**
+  | 위치 | 가리키는 객체 |
+  | --- | --- |
+  | 전역에서의 this | 전역 객체(window) |
+  | 일반 함수 내부의 this | 전역 객체(window) |
+  | 객체 리터럴의 프로퍼티 내부의 this | 전역 객체(window) |
+  | 객체 리터럴의 메서드 내부의 this | 메서드를 호출한 객체 자신 |
+  | 생성자 함수 내부의 this| 생정자 함수가 생성할 인스턴스 |
+
+<br>
+
+### 22.2 함수 호출 방식과 this 바인딩
+- this 바인딩은 함수 호출 방식에 따라 동적으로 결정된다. 
+- 이 말은, `this 바인딩은 함수 호출 시점에 결정된다`는 것을 의미한다. 함수의 상위 스코프를 결정하는 방식인 렉시컬 스코프는 함수 정의가 평가되어 객체가 생성되는 시점에 상위 스코프를 결정한다.
+- 함수를 호출하는 방식은 다음과 같다
+  - 일반 함수 호출
+  - 메서드 호출
+  - 생성자 함수 호출
+  - Function.prototpye.apply/call/bind 메서드에 의한 `간접호출`
+
+### 22.2.1 일반 함수 호출
+- 기본적으로 this에는 `global object`가 바인딩된다.
+- `strict mode`가 적용된 일반 함수 내부의 this에는 `undefined`가 바인딩
+- '`메서드 내부에 정의된 일반함수`'의 this에는 global object
+  ```js
+  const obj = {
+    foo() {
+      console.log(`foo's this : `, this);   // obj
+      function bar() {
+        console.log(`bar's this : `, this); // window
+      }
+      bar();
+    }
+  }
+
+  obj.foo();
+  ```
+- 콜백 함수도 일반함수로 호출되면 내부 this에는 전역 객체가 바인딩된다. `어떤 함수라도 일반 함수로 호출되면 this에 전역 객체가 바인딩된다.`
+  ```js
+  const obj = {
+    foo() {
+      // 콜백 함수 내부의 this에는 전역객체가 바인딩
+      setTimeout(function() {
+        console.log(`callback's this : `, this);  // window
+      }, 100);
+    }
+  };
+  obj.foo();
+  ```
+  - 메서드 내부의 중첩 함수나 콜백 함수의 this바인딩을 메서드의 this바인딩과 일치시키기 위해서 변수를 선언해 this바인딩을 할당하는 방법이 있다.
+  ```js
+  const obj = {
+    foo() {
+      // this 바인딩(obj)를 변수 that에 할당
+      const that = this;
+      setTimeout(function() {
+        console.log(that);  // obj
+      }, 100)
+    }
+  }
+  obj.foo();
+  ```
+  - 또는 Function.prototype.apply/call/bind를 사용해 this를 명시적으로 할당할 수 있다.
+  ```js
+  const obj = {
+    foo() {
+      setTimeout(function() {
+        console.log(this);  // obj
+      }.bind(this), 100);
+    }
+  }
+  obj.foo();
+  ```
+  - 콜백 함수에 화살표 함수를 사용하는 방법도 있다. `화살표 함수 내부의 this는 상위 스코프의 this를 가리킨다.`
+  
+### 22.2.2 메서드 호출
