@@ -2406,3 +2406,141 @@ console.log(typeof str);  // string
 <br>
 
 ### 21.4 전역 객체
+- 전역 객체는 코드가 실행되기 이전 단계에서 js엔진에 의해 어떤 객체보다 먼저 생성되고 어떤 객체에도 속하지 않는 최상위 객체
+- 브라우저에서는 window(self, this, frames), nodejs에서는 global
+> ❗️ES11에서 도입된 `globalThis`는 브라우저와 노드 환경에서 전역 객체를 가리키던 다양한 식별자를 통일한 식별자로 ECMAScript 표준 사양을 준수하는 모든 환경에서 사용할 수 있다.
+```js
+globalThis === this;    // true
+// 브라우저 환경
+globalThis === window;  // true
+globalThis === self;    // true
+globalThis === fames;   // true
+// Node.js환경
+globalThis === global;  // true
+```
+- 전역 객체는 표준 빌트인 객체(Object, String...), 환경에 따른 호스트 객체(Web API, Node.js의 호스트 API), 그리고 var 키워드로 선언한 전역 변수와 전역 함수를 프로퍼티로 갖는다.
+- 전역 객체의 프로퍼티를 참조할 때 window / global을 생격할 수 있다.
+```js
+window.parseInt('F', 16);     // 15
+parseInt('F', 16);            // 15
+window.parseInt === parseInt; // true
+```
+
+- 브라우저 환경의 모든 js코드는 하나의 전역 객체 window를 공유한다. 여러 개의 script 태그를 통해 코드를 분리해도 마찬가지다.
+
+### 21.4.1 빌트인 전역 프로퍼티
+- 애플리케이션 전역에서 사용하는 값
+- Infinity : 무한대를 나타는 숫자값
+  ```js
+  console.log(3/0); // Infinity
+  console.log(typeof Infinity); // number
+  ```
+- NaN : Not a Number
+  ```js
+  console.log(Number('xyz')); // NaN
+  ```
+- undefined : 원시타입 undefined를 값으로 가진다.
+
+### 21.4.2 빌트인 전역 함수
+- 애플리케이션 전역에서 호출할 수 있는 함수
+- `eval`
+  - 인수로 **자바스크립트 코드를 나타내는 문자열**을 받는다.
+  - 전달받은 문자열이 expression이라면 런타임에 평가하여 값을 생성하고, statement라면 코드를 런타임에 실행한다.
+  ```js
+  // 표현식
+  eval('1 + 2;'); // 3
+  
+  // statement
+  eval('var x = 5;')  // undefined;
+  console.log(x);     // 5
+  
+  // 객체리터럴은 반드시 괄호로 둘러싼다.
+  const o = eval('({ a : 1 })');
+  console.log(o);   // { a : 1 }
+  
+  // 함수 리터럴은 반드시 괄호로 둘러싼다.
+  const f = eval('(function() { return 1;})');
+  console.log(f()); // 1
+
+  // 여러개의 statement가 들어오면 모든 statement실행 후 마지막 결과값을 반환한다.
+  eval('1 + 2; 3 + 4;'); // 7
+  ```
+
+  - eval 함수는 자신이 호출된 위치에 해당하는 기존의 스코프를 런타임에 동적으로 수정한다. 단, strict mode라면 eval함수는 기존 스코프를 수정하지 않고 자신의 자체적인 스코프를 생성한다.
+
+  ```js
+  const x = 1;
+  function foo() {
+    // 'use strict';
+
+    eval('var x = 2;');
+    console.log(x);   // 2,  use stric이면 1
+  }
+
+  foo();
+  console.log(x);     // 1
+  ```
+    - eval 함수 내부 변수 선언에 let, const사용시 해당 변수는 암묵적으로 stric mode가 적용된다.(eval 자체의 스코프를 만든다.)
+    
+    - eval 함수를 통해 입력받은 콘텐츠를 실행하는 것은 보안에 매우 취약하고 js엔진에 의한 최적화가 수행되지 않으므로 느리다. **`eval 함수는 사용하지 말자.`**
+
+- isFinite
+  - 전달받은 인수가 유한수이면 true, 무한수이면 false. 숫자가 아니라면 false
+  - null을 받으면 null을 number 타입으로 변환시 0이 나와, 반환값은 true가 된다.
+  ```js
+  isFinite(null); // true
+  ```
+- isNaN
+  - 전달받은 인수가 NaN인지 여부를 검사하여 boolean으로 반환한다. 전달받는 값을 `숫자타입으로 형변환` 한다.
+  ```js
+  // string
+  isNaN('ads');   // true
+  isNaN('10');    // false: '' -> 0
+  isNaN(' ');     // false: ' ' -> 0
+
+  // boolean
+  isNaN(true);    // false: true -> 1
+  
+  // null
+  isNaN(null);   // false: null -> 0
+
+  // undefined
+  isNaN(undefined); // true
+
+  // date
+  isNaN(new Date());  // false: new Date() -> Number
+  isNaN(new Date().toString()); // true: String -> NaN
+  ```
+  - 햇갈리는 경우가 많으니 주의
+- parseFloat
+  - 전달받은 문자열 인수를 부동 소수점 숫자(실수)로 해석하여 반환한다. 해석이 안되면 NaN
+  ```js
+  // 공백으로 구분된 문자열은 첫 번째 문자열만 변환
+  parseFloat('34 x 50'); // 34
+  parseFloat('Hi 40');   // NaN
+  // 앞뒤 공백은 무시
+  parseFloat(' 60 ');   // 60
+  ```
+- parseInt
+  - 전달받은 문자열을 정수로 해석하여 반환
+  - 두 번재 인자로 진법을 나타내는 기수(2~36)를 전달할 수 있다. 생략시 기본값 10.
+  ```js
+  parseInt('10');     // 10
+  // 10을 2진수로 해석
+  parseInt('10', 2);  // 2
+  // 10을 8진수로 해석
+  parseInt('10', 8);  // 8
+  // 10을 16진수로 해석
+  parseInt('10', 16); // 16
+  ```
+  - 참고로, 기수를 지정하여 10진수 숫자를 해당 기수 문자열로 변환하고 싶으면 Nubmer.prototype.toString() 메서드를 사용한다. 인주소 기수(2~36) 전달
+  ```js
+  const num = 15;
+
+  num.toString(2);   // '1111'
+  num.toString(8);   // '17'
+  num.toString(16);  // 'f'
+  ```
+  - parseInt에 기수 지정 없이 문자열이 0x로 시작하면 16진수로 해석된다. ES5까지는 0b로 시작하면 2진수, 0o로 시작하면 16진수였으나, 이제 0으로 시작하는 숫자는 모두 10진수로 해석해 0 이후를 무시한다.
+  - ESLint 사용시 parseInt에 기수를 넣지 않으면 'Missing radix parameter.eslint(radix)' 에러가 발생한다.
+- encodeURI /decodeURI
