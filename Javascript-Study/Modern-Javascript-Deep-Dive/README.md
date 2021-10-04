@@ -2543,4 +2543,39 @@ window.parseInt === parseInt; // true
   ```
   - parseInt에 기수 지정 없이 문자열이 0x로 시작하면 16진수로 해석된다. ES5까지는 0b로 시작하면 2진수, 0o로 시작하면 16진수였으나, 이제 0으로 시작하는 숫자는 모두 10진수로 해석해 0 이후를 무시한다.
   - ESLint 사용시 parseInt에 기수를 넣지 않으면 'Missing radix parameter.eslint(radix)' 에러가 발생한다.
-- encodeURI /decodeURI
+
+- encodeURI / decodeURI
+  - endcodeURI 함수는 URI를 문자열로 전달받아 이스케이프 처리를 위해 인코딩한다. decodeURI는 정반대.
+  - '이스케이프 처리'란 네트워크를 통해 정보를 공유할 때 어떤 시스템에서도 읽을 수 있는 아스키 문자 셋으로 변환하는 것이다.
+
+- encodeURIComponent / decodeURIComponent
+  - encodeURIComponent 함수는 URI 구성요소(componenet)를 전달받아 인코딩한다(이스케이프처리). decodeURIComponent는 정 반대.
+  - **encodeURIComponent는 `인수로 전달된 문자열을 URI의 구성요소인 쿼리 스트링의 일부로 간주하므로, 쿼리 스트링 구분자로 사용되는 =, ?, &까지 인코딩한다.`**. **반면 encodeURI함수는 인수로 전달된 문자열을 완전한 URI 전체로 간주해, 쿼리스트링 구분자로 사용되는 =?&은 인코딩하지 않는다.**
+
+### 21.4.3 암묵적 전역(implicit global)
+```js
+// 전역 변수는 호이스팅 발생
+console.log(x); // undefined
+
+// 전역 변수가 아닌, 전역 객체의 프로퍼티인 y는 호이스팅 발생 x
+console.log(y); // ReferenceError: y is not defined
+
+var x = 10;
+
+function foo() {
+  // 암묵적 전역 발생, window.y = 20
+  y = 20; 
+};
+foo();
+
+console.log(x + y); // 30
+
+delete x; // 전역변수는 삭제되지 않는다.
+delete y; // 프로퍼티는 삭제된다.
+
+console.log(window.x);  // 10
+console.log(window.y);  // undefined
+```
+- 위와같이 foo 호출시 내부에 변수 y에 값을 할당하는데, 이 때 스코프 체인상에 y가 존재하지 않을 경우 js 엔진이 `y = 20을 window.y = 20으로 해석하여 전역 객체에 프로퍼티를 동적으로 생성`한다. 이 때 y가 마치 전역 변수처럼 동작하는 현상을 **implicit global** 이라고 한다. 
+- **암묵적 전역은** 변수 선언 없이 단지 전역 객체의 프로퍼티로 추가될 뿐이므로, 변수가 아니다. 따라서 **변수 호이스팅이 발생하지 않는다.**
+- 변수가 아닌 프로퍼티는 delete연산자로 삭제할 수 있으나, **전역 변수는 프로퍼티이지만 delete 연산자로 삭제할 수 없다.**
