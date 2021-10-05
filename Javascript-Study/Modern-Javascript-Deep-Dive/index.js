@@ -1,10 +1,10 @@
-const obj = {
-  foo() {
-    console.log(`foo's this : `, this);
-    function bar() {
-      console.log(`bar's this : `, this);
-    }
-    bar();
-  }
+function getThisBinding() {
+  console.log(arguments);
+
+  const arr = Array.prototype.slice.call(arguments);
+  console.log(arr);
+
+  // return this;
 }
-obj.foo();
+
+getThisBinding.apply(this, [1,2,3]);

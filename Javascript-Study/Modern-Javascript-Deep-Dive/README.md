@@ -2665,3 +2665,116 @@ console.log(window.y);  // undefined
   - 콜백 함수에 화살표 함수를 사용하는 방법도 있다. `화살표 함수 내부의 this는 상위 스코프의 this를 가리킨다.`
   
 ### 22.2.2 메서드 호출
+- 메서드 내부의 this는 **메서드를 호출한 객체**가 바인딩된다. 주의할점은 **`메서드를 소유한 객체가 아니라는 점이다.`**
+- 메서드는 프로퍼티에 바인딩된 함수 객체로, 메서드를 소유한 객체와 별개로 존재한다. **객체의 프로퍼티는 별개로 존재하는 함수 객체를 기리키고 있을 뿐이다.**
+```js
+const person = {
+  name: 'motiveko',
+  getName() {
+    return this.name;
+  }
+}
+
+const anotherPserson = {
+  name: 'another motiveko'
+}
+
+// getName 변수에 메서드를 할당
+const getName = person.getName;
+
+anotherPerson.getName = person.getName;
+
+console.log(anotherPerson.getName()); // another motiveko
+
+console.log(person.getName());  // motiveko
+
+// 일반 함수로 호출된 getName 내부의 this는 전역객체를 가리키므로, window.name 리턴
+console.log(getName()); // '' 
+```
+- 프로토타입 메서드 내부에서 사용된 this도 메서드를 호출한 객체에 바인딩된다.
+
+### 22.2.3 생성자 함수 호출
+- 생성자 함수 내부의 this는 생성자 함수가 생성할 인스턴스가 바인딩된다.
+
+### 22.2.4 Function.prototype.apply/call/bind 메서드에 의한 간접 호출
+- apply, call 메서드는 this로 사용할 객체와 인수 리스트를 인수로 전달받아 함수를 호출한다. 첫번째 인자가 thisArg, 두번째 인자가 argsArray
+```js
+function getThisBinding() {
+  console.log(arguments);
+  return this;
+}
+
+const thisArg = { a: 1 };
+
+console.log(getThisBinding());  
+// Arguments [calle: f, ..]`
+// window
+
+console.log(getThisBinding.apply(thisArg, [1,2,3]));  // apply는 argument를 Array로 받음
+// Arguments(3) [1, 2, 3, callee: f, ...]
+// { a: 1 }
+
+console.log(getThisBinding.call(thisArg, 1, 2, 3)); // call은 argument를 쉼표로 나눠 받음
+// Arguments(3) [1, 2, 3, callee: f, ...]
+// { a: 1 }
+```
+- `apply, call의 대표적 사용 예`는 arguments 객체와 같은 유사 배열 객체에 Array.prototype 의 메서드를 사용하는 것. slice같은것을 arguments는 쓸 수 없으나 call/apply를 이용하면 가능하다.
+```js
+fucntion convertArgsToArr() {
+  console.log(arguments); // Argument
+  console.log(Array.prototype.slice.call(arguments)); // []
+}
+```
+- bind메서드는 thisArgs만 전달. 또한 함수 호출은 ()를 이용해 직접 명시적으로 해줘야 한다.
+```js
+function getThisBinding() {
+  return this;
+}
+const thisArg = { a: 1 };
+console.log(getThisBinding.bind(thisArg)());  // { a: 1 }
+```
+- **`bind 메서드`는 메서드의 this와 메서드 내부의 중첩함수 또는 콜백 함수의 this가 불일치 하는 문제를 해결하기 위해 사용된다.**
+```js
+const person = {
+  name : 'motiveko',
+  foo(callback) {
+    
+    // callback함수는 setTimeout에 의해 일반 함수로 실행 -> this는 전역객체
+    setTimeout(callback, 100);
+  }
+}
+
+person.foo(function() {
+  console.log(`안녕? 난 ${this.name}이야.`);  // 안녕? 난 야.
+})
+```
+- setTimeout 내부 콜백을 아래와 같이 고치면 this를 원하는데로 바인딩 할 수 있다.
+```js
+const person = {
+  name: 'motiveko',
+  foo(callback) {
+    // foo 메서드 내부의 this는 함수를 호출한 객체를 가리킨다!
+    setTimeout(callback.bind(this), 100);
+  }
+}
+
+// foo()를 호출한 객체는 person이므로 callback 내부의 this는 person
+person.foo(function() {
+  console.log(`안녕? 난 ${this.name}이야.`);  // 안녕? 난 motiveko야.
+})
+```
+- 정리해보자. 중요한 문제이다.
+
+| 함수 호출 방식 | this 바인딩 |
+| --- | --- |
+| 일반 함수 호출 | 전역 객체 |
+| 메서드 호출 | 메서드를 호출한 객체 |
+| 생성자 함수 호출 | 생성자 함수가 생성할 인스턴스 |
+| Function.prototype.apply/call/bind에 의한 간접호출| 함수의 첫번째 인수로 전달한 객체 |
+
+<br><br>
+
+## 23. 실행 컨텍스트
+---
+<br>
+
