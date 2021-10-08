@@ -3005,4 +3005,111 @@ innerFunc();  // 10
 - 위 코드에서 outer호출시 outer의 중첩 함수 inner를 반환하고 outer 함수의 실행 컨텍스트는 스택에서 제거된다.
 - outer의 실행 컨텍스트가 outer의 렉시컬 환경을 참조하고 있었는데, 해당 컨텍스트가 제거되므로 인해 렉시컬 환경이 가비지 컬렉터에 의해 사라질 것으로 보인다.
 - ❗️ **그러나 반환된 inner 함수의 내부 슬롯 [[Enviroment]]가 outer 함수의 렉시컬 환경을 참조하고 있으므로 outer의 렉시컬 환경은 사라지지 않고, x = 10 역시도 남아있게된다.**
-- 따라서 inner 함수를 호출 할 때 10이라는 결과를 반환할 수 있게 된다.
+- 따라서 inner 함수를 호출 할 때 10이라는 결과를 반환할 수 있게 된다. 참조하고 있으므로 값을 변경할 수도 잇다.
+- **모든 (중첩)함수는 클로저일까?**
+  1.  상위 스코프의 어떠한 식별자도 참조하지 않는 함수는 <u>**_클로저라 하지 않는다._**</u>. 
+      - 브라우저에서 디버깅 해보면 클로저인 함수는 Scope에 Closure로 상위 함수가 존재하고, 상위 스코프 식별자를 참조하지 않는, 클로저가 아닌 함수는 Scope에 클로저가 없다!
+  2. 중첩 함수가 외부 함수의 밖으로 return되지 않는다면, 중첩 함수의 생명 주기가 외부 함수보다 짧으므로 <u>___클로저라 하지 않는다___</u>. 
+      - 이런 케이스는 디버깅해보면 Scope에 클로저가 뜨긴 한다. 그러나 상위 함수의 실행 스택도 여전히 남아 있는 상태다.
+- 중첩 함수가 상위 함수의 식별자를 참조하고 상위 함수 밖으로 return되면 **클로저다.**
+클로저는 상위 함수의 식별자 중 **참조하고 있는 것만 기억한다.** 참조하고 있는 이 변수를 `자유 변수`(free variable)이라고 한다. 이렇게 하는 이유는 참조하지 않는걸 기억하는건 메모리 낭비이므로 **자바스크립트 엔진에 의해 최적화** 된 것이다.
+
+<br>
+
+### 24.4 클로저의 활용
+- 클로저는 **`상태`(state)를 안전하게 변경하고 유지하기 위해 사용한다.** 상태가 의도치 않게 변경되지 않도록 상태를 안전하게 `은닉`하고 특정 함수에게만 상태 변경을 허용하기 위해 사용한다.
+```js
+let num = 0;
+const increase = function() {
+  return ++num;
+}
+```
+- 위 코드에서 문제점은 변수 num의 값을 increase 함수 외의 다른 함수들도 접근하여 변경 가능하다는 것이다(암묵적 결합). 이는 의도치않은 상태 변경을 만들고 오류로 이어진다. 오직 **increase함수만이 num을 바꾸게 해보자.**
+```js
+const increase = function() {
+  let num = 0;
+  return ++num;
+}
+```
+- increase만이 num을 바꿀 수 있지만 increase호출시마다 렉시컬 환경은 새로 생성되고 num은 0, 반환값은 1로 고정된다. 이를 해결하는데 클로저를 쓸 수 있다.
+
+```js
+const increase = (function() {
+  let num = 0;
+  return function () {
+    return ++num;
+  }
+}());
+```
+- ___increase에 할당된 즉시실행함수가 실행되면 함수의 스코프에 num = 0이 생성되고 이를 상위 스코프로 참조하여 값을 증가시켜 반환하는 `클로저 함수`가 `increase`에 할당된다.___
+- **increase() 호출 시 계속 같은 num을 참조할 수 있게 되는것이다!** num의 상태가 의도치 않게 변하는 것을 막고(은닉) increase 함수에게만 상태 변경을 허용하여 상태를 안전하게 사용할 수 있게 된다.
+```js
+const counter = (function() {
+  let num = 0;
+  return {
+    increase() {return ++num;},
+    decrease() {return --num;}
+  }
+}());
+```
+- 위와 같이 counter.increase(), counter.decrease()로 상태 변경하게 확장 가능하다.
+- 생성자 함수로 표현하면 아래와 같다.
+```js
+const Counter = (function() {
+  let num = 0;
+  function Counter();
+  Counter.prototype.increase = function() {
+    return ++num;
+  }
+  Counter.prototype.decrease = function() {
+    return --num;
+  }
+  return Counter;
+})
+```
+- new Counter() 로 생성한 객체는 몇번을 해도 최초 1회 즉시실행된 함수의 스코프를 참조하므로 같은 num을 참조한다. 생성자 함수 호출시 매번 다른 스코프를 참조하게 만들어보자.
+```js
+const Counter = (function () {
+  return function() {
+    let num = 0;
+    return {
+      increase() { return ++num; },
+      decrease() { return --num; }
+    }
+  }
+})
+```
+- 외부 상태 변경이나 가변(mutable)데이터를 피하고 불변성(immutability)를 지향하는 `함수형 프로그래밍`에서 부수 효과를 최대한 억제하여 오류를 피하고 프로그램의 안정성을 높이기 위해 클로저는 적극적으로 사용된다.
+```js
+// makeCounter함수는 카운트 상태를 유지하기 위한 자유 변수 counter를 기억하는 클로저를 반환한다.
+function makeCounter(perdicate) {
+  // 자유변수
+  let counter = 0;
+  // makeCounter 스코프의 counter를 참조하는 클로저
+  return function() {
+    // 인자로 받은 predicate함수에 상태 변화를 위임한다.
+    counter = predicate(counter);
+    return counter;
+  }
+}
+function increaser = makeCounter((n) => ++n;)
+function decreaser = makeCounter((n) => --n;)
+```
+- 위 코드에서는 increaser와 decreaser가 다른 자유변수를 참조한다. 같은것을 참조하도록 바꿔보자.
+```js
+const makeCounter = (function() {
+  let counter = 0;
+  return function(predicate) {
+    counter = predicate(counter);
+    return counter;
+  }
+}());
+function increaser = makeCounter((n) => ++n;)
+function decreaser = makeCounter((n) => --n;)
+```
+- 즉시실행함수를 사용하여 상위 스코프를 한번만 만들도록 하여 increaser와 decreaser가 같은 자유변수를 참조하도록 바꿨다!
+
+<br>
+
+### 24.5 캡슐화와 정보 은닉
+
