@@ -1,58 +1,39 @@
-const number = (function() {
-  let num = 0;
-  return {
-    increase() { return ++num; },
-    decrease() { return --num; },
-    get() { return num; },
-    reset() {
-      num = 0;
-      return num;
-    }
-  }
-}());
-
-// 2-1 new Counter()로 매번 생성자 함수 호출해도 똑같은 상위 스코프를 참조하는 객체가 생성된다.(num 공유)
-// const Counter = (function() {
-//   let num = 0;
-//   function Counter () {}
-//   Counter.prototype.increase = function() {
-//     return ++num;
+// function Person(name, age) {
+//   this.name = name;
+//   let _age = age;
+//   this.__proto__.sayHi = function() {
+//     console.log(`name: ${this.name}, age : ${_age}`);
 //   }
-//   Counter.prototype.decrease = function() {
-//     return --num;
+// }
+
+// const p1 = new Person('mot1',13);
+// const p2 = new Person('mot2',26);
+// // p1,p2는 같은 프로토 타입을 참조하므로 sayHi 메소드도 같다. 
+// // sayHi는 클로저인데, 자유 변수는 마지막에 할당된 26을 참조한다.
+// p1.sayHi(); // name: mot1, age : 26
+// p2.sayHi(); // name: mot2, age : 26
+
+// const Person = (function(){
+//   let _age = 0;
+
+//   function Person(name, age) {
+//     this.name = name;
+//     _age = age;
 //   }
-//   return Counter;
-// }());
+//   Person.prototype.sayHi = function() {
+//     console.log(`name: ${this.name}, age : ${_age}`);
+//   }
+//   return Person;
+// }())
 
-// 2-2 new Counter()로 생성자 함수 호출하면 매번 다른 num을 참조하는 객체 반환
-const Counter = function() {
-  (function() {
-    let num = 0;
-    
-    increase = function() {
-      return ++num;
-    }
-    decrease = function() {
-      return --num;
-    }
-    return {increase, decrease};
-  }())
+var funcs = [];
+for(var i = 0; i < 3; i++) {
+  funcs[i] = new function() { return i; };
 }
+funcs.forEach(f => console.log(f()));
 
-// 3-1, makeCounter 호출시마다 다른 count를 참조하는 함수 생성
-function makeCounter (predicate) {
-  let count = 0;
-  return function () {
-    count = predicate(count);
-    return count;
-  }
-}
-
-// 3-2 makecount 매번 호출해도 같은 count를 참조하는 함수 생성
-const makeCounter = (function () {
-  let count = 0;
-  return function(predicate) {
-    count = predicate(count);
-    return count;
-  }
-}())
+const p1 = new Person('nick', 13);
+const p2 = new Person('nick2', 22);
+p1.sayHi();
+p2.sayHi();
+console.log(p1.sayHi === p2.sayHi)

@@ -3112,4 +3112,75 @@ function decreaser = makeCounter((n) => --n;)
 <br>
 
 ### 24.5 캡슐화와 정보 은닉
+- `캡슐화`(encapsulation)은 객체의 상태를 나타내는 `프로퍼티`와 프로퍼티를 참조하고 조작할 수 있는 동작인 `메서드`를 **하나로 묶는 것**을 말한다.
+- java 등의 언어에서는 접근 제한자를 통해 캡슐화를 구현할 수 있는데, 자바스크립트의 객체에는 접근 제한자가 없다. 모두 public
+- 아래와 같이 클로저를 사용해 private을 흉내낼 수 있긴 하다.
+```js
+function Person(name, age) {
+  this.name = name; // public
+  let _age = age; // private
 
+  this.sayHi = function() {
+    console.log(`name: ${this.name}, age : ${_age}`);
+  }
+}
+const p1 = new Person('p1', 10);
+console.log(p1._age); // undefined;
+const p2 = new Person('p2', 20);
+
+p1.sayHi(); // name: p1, age: 20
+p2.sayHi(); // name: p2, age: 20
+```
+- age를 클로저의 자유변수로 만들어 외부에서 접근할 수 없게 만드는데는 성공했다. 하지만 Person 생성자 함수로 여러 인스턴스를 만들때 클로저 함수 sayHi가 참조하는 _age가 같기때문에, 적절하지 않다.
+- 이는 sayHi()를 프로토타입 메서드로 선언하고 즉시실행 함수를 동원해도 해결이 안된다.
+```js
+const Person = (function() {
+  let _age = 0; // private
+  function Person(name, age) {
+    this.name = name;
+    _age = age;
+    this.__proto__.sayHi = function() {
+      console.log(`name: ${this.name}, age : ${_age}`);
+    }
+  }
+}());
+const p1 = new Person('p1', 10);
+console.log(p1._age); // undefined;
+const p2 = new Person('p2', 20);
+
+p1.sayHi(); // name: p1, age: 20
+p2.sayHi(); // name: p2, age: 20
+```
+- 다음장에 배울 `class`에는 private 선언이 가능해졌다. 이를 사용하도록 하자.
+
+<br>
+
+### 24.6 자주 발생하는 실수
+- 아래 코드를 보자
+```js
+var funcs = [];
+for(var i = 0; i < 3; i++) {
+  funcs[i] = function() { return i; };
+}
+funcs.forEach(f => console.log(f())); // 333
+```
+- 위 함수에서는 012가 출력되지 않고 333이 출력된다. funcs에 들어있는 함수들이 참조하는 자유변수는 하나의 `전역 변수` i로 for문 이후 최종값 3을 가지기 때문이다. 클로저를 이용해보자.
+```js
+var funcs = [];
+for(var i = 0; i < 3; i++) {
+  funcs[i]= (function(n) {
+    return function() {
+      return n;
+    }
+  }(i))
+}
+funcs.forEach(f => console.log(f)); // 012
+```
+- funcs내부의 함수들은 각각 즉시실행 함수의 n을 자유변수로 참조하고, 이 값은 for문에서 매번 바뀐 값이다!
+- 사실 변수를 let으로 선언하면 간단히 해결된다. i를 `let`으로 선언하면 **for문의 코드 블록이 반복 실행될 때마다 새로운(독립적인) 렉시컬 환경이 생성**된다. 즉 위에선 i = 0,1,2,3 네개의 독립적인 렉시컬 환경(PER_ITERATION Lexical Enviroment)이 생성되는 것.
+
+<br><br>
+
+## 25. 클래스
+---
+### 25.1 클래스는 프로토타입의 문법적 설탕인가?
