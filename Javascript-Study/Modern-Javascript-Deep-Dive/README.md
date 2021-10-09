@@ -1,7 +1,7 @@
 # 모던 자바스크립트 Deep Dive
 ![표지](https://wikibook.co.kr/images/cover/m/9791158392239.png)
 
-## 1.~3. 
+## 1.~3.
 교양으로 정리하지 않음
 
 <br><br>
@@ -92,7 +92,7 @@
     true
 
     // 식별자 표현식
-    sum 
+    sum
     person.name
     arr[1]
 
@@ -104,7 +104,7 @@
     // 함수/메서드 호출 표현식
     sum()
     person.getName()
-    ``` 
+    ```
 - 표현식은 값으로 평가되고, 평가된 값은 표현식과 동치(equals)이다.
 
 ### 5.4 문(statement)
@@ -117,7 +117,7 @@
   // 할당문
   x = 5;
 
-  // 함수 선언문 
+  // 함수 선언문
   function() {}
 
   // 조건문
@@ -139,7 +139,7 @@
         return
         {}
     }
-    
+
     // ASI return; {};
     // 예측 : return {}
 
@@ -170,32 +170,32 @@ ES6는  아래와 같은 7개의 데이터 타입을 지원한다.
         <tr>
             <td>string</td>
             <td>문자열</td>
-        </tr>        
+        </tr>
         <tr>
             <td>boolean</td>
             <td>논리적 참과 거짓</td>
-        </tr>        
+        </tr>
         <tr>
             <td>undefined</td>
             <td>var 키워드로 선언된 변수에 암묵적으로 할당되는 값</td>
-        </tr>        
+        </tr>
         <tr>
             <td>null</td>
             <td>값이 없다는 것을 의도적으로 명시할 때 사용하는 값</td>
-        </tr>        
+        </tr>
         <tr>
             <td>symbol</td>
             <td>ES6에서 추가된 7번째 타입</td>
-        </tr>                            
+        </tr>
         <tr>
             <td colspan=2>객체 타입</td>
             <td>객체, 함수, 배열 등</td>
-        </tr>                                                
+        </tr>
     </tbody>
 </table>
 
 ### 6.1 number 타입
-- ECMAScript사양에 따르면 숫자 타입의 값은 배정밀도 __64비트 부동소수점 형식__ 을 따른다. 즉 모든 수를 실수로 처리한다. 
+- ECMAScript사양에 따르면 숫자 타입의 값은 배정밀도 __64비트 부동소수점 형식__ 을 따른다. 즉 모든 수를 실수로 처리한다.
 
 - 정수, 실수, 2진수, 8진수, 16진수 리터럴은 모두 메모리에 배정밀도 64비트 부동소수점 형식의 2진수로 저장된다. 따라서 이 값을 참조하면 모두 10진수로 해석된다.
     ```javascript
@@ -222,14 +222,14 @@ ES6는  아래와 같은 7개의 데이터 타입을 지원한다.
     - \n : 개행
     - \t : 탭
     - \' , \" : 작은따음표, 큰따음표
-    
+
     ...
 
 ### 6.3 템플릿 리터럴
 - ES6부터 도입된 문자열 표기법으로 백틱을 사용한다.
 - 템플릿 리터럴 내에서는 Escape Sequence 없이 개행, 공백등이 그대로 적용된다.
 - 아래와 같은 방법으로 표현식 삽입도 가능하다.
-    
+
     ```javascript
         console.log(`1 + 2 is ${1 + 2}`); // 1 + 2 is 3
     ```
@@ -244,7 +244,7 @@ ES6는  아래와 같은 7개의 데이터 타입을 지원한다.
  - 변수에 null을 할당하면 이전 값을 더이상 참조하지 않겠다는 의미이고, 자바스크립트 엔진은 해당 메모리 공간에 가비지 콜렉션을 수행한다.
 
 ### 6.6 symbol
-- symbol은 ES6에 추가된 primitive 타입의 값으로, 다른 값과 중복되지 않는 유일무이한 값이다. 
+- symbol은 ES6에 추가된 primitive 타입의 값으로, 다른 값과 중복되지 않는 유일무이한 값이다.
 - 따라서 이름이 충돌할 위험이 없는 객체의 유일한 프로퍼티 키를 만들기 위해 사용한다.
 - 심벌은 리터럴이 아닌 Symbol 함수로 호출한다.
     ```javascript
@@ -283,12 +283,12 @@ ES6는  아래와 같은 7개의 데이터 타입을 지원한다.
 ### 7.3 비교 연산자
 > 비교연산자는 피연산자를 비교한 다음 결과를 boolean으로 반환하며, 부수효과를 가지지 않는다
 
-동등/일치 비교 연산자 
+동등/일치 비교 연산자
 
 == 는 피연산자의 값을 암묵적 타입 변환하여 값을 비교(동등 비교)하고, === 는 값의 타입까지 비교(일치 비교)한다.
 
-| 비교 연산자 | 의미 | 설명 | 부수효과 | 
-|---|:---:|---:|---:| 
+| 비교 연산자 | 의미 | 설명 | 부수효과 |
+|---|:---:|---:|---:|
 | `==` | 동등비교 | 값이 같음 | X |
 | `===` | 일치비교 | 값과 타입이 같음 | X |
 | `!=` | 부동등 비교 | 값이 다름 | X |
@@ -354,7 +354,7 @@ typeof undeclared;      // -> ReferenceError
 ### 7.10 그 외의 연산자
 | 연산자 | 개요 |
 |---|:---:|
-| `?.` | 옵셔널 체이닝 연산자 | 
+| `?.` | 옵셔널 체이닝 연산자 |
 | `??` | null 병합 연산자 |
 | `delete` | 프로퍼티 삭제 |
 | `new` | 생성자 함수를 호출할 때 사용하여 인스턴스를 생성 |
@@ -373,7 +373,7 @@ typeof undeclared;      // -> ReferenceError
 <br><br>
 
 ## 8. 제어문
---- 
+---
 <br>
 
 ### 8.3 반복문
@@ -459,7 +459,7 @@ delete person.name 과 같은 형태로 'delete연산자'를 이용해 지운닷
 ### 11.1 원시값
 값을 변경할 수 없다 -> 변수가 아닌 값에 대한 이야기
 원시 값의 불변성 -> 변수가 참조하는 메모리에 저장된 값을 변경하는것이 아닌 메모리 공간의 주소를 변경
-불변성을 갖는 원시값은 재할당 이외에 값을 변경할 수 있는 방법이 없다. 
+불변성을 갖는 원시값은 재할당 이외에 값을 변경할 수 있는 방법이 없다.
 const는 재할당이 금지된다. but const로 선언된 객체는 값 변경 가능
 
 ### 11.1.2 문자열과 불변성
@@ -484,7 +484,7 @@ str[0] = 'S' 같은 형태로 일부 변경하는건 반영되지않는다. immu
 메모리에 저장된 객체를 직접 수정해도 객체를 할당한 변수의 참조 값은 변하지 않는다. 신뢰도가 낮아짐에도 이렇게 하는 이유는 객체를 생성,관리,접근하는 비용은 매우 크기 때문이다.
 부작용: 여러개의 식별자가 하나의 객체를 공유할 수 있다
 - shallow copy, deep copy
- - 정리 ㄱ ㄱ 
+ - 정리 ㄱ ㄱ
 ### 11.2.2 참조에 의한 전달
 객체를 가리키는 변수를 다른 변수에 할당하면 원본의 참조값이 복사되어 전달된다. --> 두개의 식별자가 동일한 객체를 가리킨다!?
 copy === person // true (제일 얕은 복사)
@@ -581,7 +581,7 @@ console.log(foo(1,2));
 console.log(bar(1,2));
 // Uncaught ReferenceError: bar is not defined
 ```
-위 예제이서 함수 생성에 따라 콘솔에서 출력 결과가 다르다. **단독으로 사용된 함수 리터럴(foo)는 함수 선언문으로 해석된다.** 하지만 그룹연산자 () 내에 있는 함수 리터럴(bar)는 함수 리터럴 **표현식**으로 해석된다. 
+위 예제이서 함수 생성에 따라 콘솔에서 출력 결과가 다르다. **단독으로 사용된 함수 리터럴(foo)는 함수 선언문으로 해석된다.** 하지만 그룹연산자 () 내에 있는 함수 리터럴(bar)는 함수 리터럴 **표현식**으로 해석된다.
 **그룹 연산자의 피연산자는 값으로 평가될 수 있는 표현식이어야하기 때문이다.**
 
 **_함수 이름은 함수 몸체 내에서만 참조할 수 있는 식별자다._** 따라서 외부에서는 함수의 이름을 참조할 수 없다. 또한 () 내부는 값으로 해석되는 표현식이고, 이것이 식별자에 할당되지 않았기 때문에 호출이 불가능하게된다.
@@ -632,7 +632,7 @@ var sub = function (x, y) {
 }
 ```
 
-함수 선언문과 함수 표현식이 어떻게 다르게 작동했기에 위와같은 결과가 나온것일까? 
+함수 선언문과 함수 표현식이 어떻게 다르게 작동했기에 위와같은 결과가 나온것일까?
 
 **함수 선언문은 모든 선언문과 동일하게, 런타임 이전에 자바스크립트 엔진에 의해 먼저 실행된다. 그리고 마치 함수 선언문이 코드의 선두로 끌어올려진 것 처럼 동작하는데, 이를 함수 호이스팅이라고 한다.**
 
@@ -713,7 +713,7 @@ add('a','b'); // 'ab'
 
 <br>
 
-함수를 정의할 때 아래와 같이 적절한 타입의 인수가 전달되는지 확인할 수 있다. 
+함수를 정의할 때 아래와 같이 적절한 타입의 인수가 전달되는지 확인할 수 있다.
 
 <br>
 
@@ -741,7 +741,7 @@ console.log(add(2));    // 2
 ### 12.5.3 매개변수의 최대 개수
 ECMAScript 사양에서는 매개변수의 최대 개수를 명시적으로 제한하지 않는다. 하지만 매개변수의 개수는 적을수록 좋고, 가급적 3개를 넘기지 않기를 권장한다.
 
-매개변수의 순서에는 의미가 있고, 함수 호출 시 이를 고려해야한다. 매개변수가 많아질수록 함수의 사용법을 이해하기 어렵게 만들고 실수를 발생시킬 가능성을 높인다. 
+매개변수의 순서에는 의미가 있고, 함수 호출 시 이를 고려해야한다. 매개변수가 많아질수록 함수의 사용법을 이해하기 어렵게 만들고 실수를 발생시킬 가능성을 높인다.
 
 매개변수가 많을수록 함수는 많은 일을 한다는 것을 의미한다. 하나의 함수는 한가지 일만 하는것이 바람직하다.
 
@@ -758,7 +758,7 @@ $.ajax({
 })
 ```
 
-### 12.5.4 
+### 12.5.4
 
 함수는 return키워드와 표현식으로 이뤄진 반환문을 사용해 실행 결과를 함수 외부로 반환한다.
 
@@ -826,11 +826,11 @@ function (){}(); // SyntaxError: Function statements require a function name
 ```js
 function add(){}(); // SyntaxError: Unexpected token ')'
 ```
-위 예제 에러의 원인은 자바스크립트 엔진이 암묵적으로 함수 선언문이 끝나는 위치에 ;를 추가하기 때문이다. 
+위 예제 에러의 원인은 자바스크립트 엔진이 암묵적으로 함수 선언문이 끝나는 위치에 ;를 추가하기 때문이다.
 ```js
 function add(){}
 
-(); // SyntaxError: Unexpected token ')' 
+(); // SyntaxError: Unexpected token ')'
 ```
 위와같이 '()'가 함수 호출 연산자가 아닌 그룹 연산자로 해석되고, 그룹연산자에 피연산자가 없기때문에 발생하는 에러이다.
 
@@ -920,7 +920,7 @@ repeat(5, (i) => {
 따라서, 콜백 함수를 다른곳에서도 호출할 필요가 있거나, 콜백 함수를 전달받는 함수가 자주 호출된다면 **함수 외부에서 콜백 함수를 정의한 후 함수 참조를 고차 함수에 전달하는 편이 효율적이다.**
 
 ### 12.7.5 순수 함수와 비순수 함수
-함수형 프로그래밍에서 어떤 외부 상태에 의존하지도 않고 변경하지도 않는, 즉 부수 효과가 없는 함수를 순수 함수(pure function) 이라고 하고, 외부 상태에 의존하거나 외부 상태를 변경하는, 즉 부수 효과가 있는 함수를 비순수 함수(impure function)이라고 한다. 
+함수형 프로그래밍에서 어떤 외부 상태에 의존하지도 않고 변경하지도 않는, 즉 부수 효과가 없는 함수를 순수 함수(pure function) 이라고 하고, 외부 상태에 의존하거나 외부 상태를 변경하는, 즉 부수 효과가 있는 함수를 비순수 함수(impure function)이라고 한다.
 
 순수 함수는 동일한 인수가 전달되면 언제나 동일한 값을 반환한다. 비순수는 당연히 반대다.
 
@@ -940,7 +940,7 @@ function impureIncrease() {
 
 
 
-console.log(impureIncrease());  //2 
+console.log(impureIncrease());  //2
 console.log(count); // 1
 
 console.log(impureIncrease());  //2
@@ -963,7 +963,7 @@ console.log(count); // 2
 스코프란 **_모든 식별자(변수 이름, 함수 이름, 클래스 이름 등)는 자신이 선언된 위치에 의해 다른 코드가 식별자 자신을 참조할 수 있는 유효범위가 결정되는것_** 을 말한다.
 
 
-식별자 결정(identifier resolution)이란 **_코드에서 이름이 같은 변수가 선언되어 있고, 해당 변수를 참조할 때 자바스크립트 엔진이 어떤 변수를 참조할 것인지 결정하는 것_** 을 말한다. 
+식별자 결정(identifier resolution)이란 **_코드에서 이름이 같은 변수가 선언되어 있고, 해당 변수를 참조할 때 자바스크립트 엔진이 어떤 변수를 참조할 것인지 결정하는 것_** 을 말한다.
 따라서 스콜프란 자바스크립트 엔진이 **식별자를 검색할 때 사용하는 규칙**이라고도 할 수 있다.
 
 ```js
@@ -980,7 +980,7 @@ console.log(x); // global
 ```
 
 식별자는 어떤 값을 구별하여 식별해낼 수 있는 고유한 이름이다. 따라서 unique해야하고 중복되면 안된다. 즉, 하나의 값은 유일한 식별자에 연결(name binding)되어야 한다.
-하지만 위와같이 x라는 동일한 식별자가 존재할 수 있는 이유는 스코프 때문이다. 프로그래밍 언어에서는 **스코프(유효범위)를 통해 식별자인 변수 이름의 충돌을 방지하여 같은 이름의 변수를 사용할 수 있게 한다.** 
+하지만 위와같이 x라는 동일한 식별자가 존재할 수 있는 이유는 스코프 때문이다. 프로그래밍 언어에서는 **스코프(유효범위)를 통해 식별자인 변수 이름의 충돌을 방지하여 같은 이름의 변수를 사용할 수 있게 한다.**
 스코프 내에서 식별자는 유일해야 하지만 다른 스코프에서는 같은 이름의 식별자를 사용할 수 이싿. **_즉 스코프는 네임스페이스다._**
 
 > ❗️ var키워드로 선언된 변수는 같은 스코프 내에서 중복 선언이 허용된다. 이는 의도치 않게 변수값이 재할당되어 변경되는 부작용을 발생시킨다.
@@ -1012,7 +1012,7 @@ console.log(x); // global
 
 ### 13.4함수 레벨 스코프
 
-**지역 스코프는 코드 블록이 아닌 함수에 의해서 생성된다.** 이는 C나 Java와 다른 특징으로, C/Java와 같이 함수 몸체 뿐만 아니라 if, for while문 등에서 만들어지는 지역 스코프를 **블록 레벨 스코프** 라고 한다. 
+**지역 스코프는 코드 블록이 아닌 함수에 의해서 생성된다.** 이는 C나 Java와 다른 특징으로, C/Java와 같이 함수 몸체 뿐만 아니라 if, for while문 등에서 만들어지는 지역 스코프를 **블록 레벨 스코프** 라고 한다.
 자바스크립트에서 var 키워드로 선언된 변수는 오로지 함수의 코드 블록만을 지역스코프로 인정한다. 이런 특징을 **함수 레벨 스코프(function level scope)** 라고 한다.
 
 **함수 레벨 스코프로 인해, 코드블록 내에서 전역 변수와 같은 이름의 변수가 선언되면 전역변수가 재할당되어 예기치 못한 문제가 발생하게된다.**
@@ -1037,7 +1037,7 @@ function bar() {
 }
 
 foo();    // 1.
-bar();    // 2. 
+bar();    // 2.
 ```
 
 위 문제의 답은 bar()함수의 상위 스코프가 전역 / foo() 인지에 따라 결정된다. 상위 스코프를 결정하는 패턴은 두가지가 있다.
@@ -1066,7 +1066,7 @@ bar();    // 2.
 var x = 'global';
 
 function foo() {
-  console.log(x);   // undefined 
+  console.log(x);   // undefined
   var x = 'local';  // foo()호출 시 호이스팅 되어 undefined로 초기화
 }
 
@@ -1078,7 +1078,7 @@ foo();
 
 따라서 전역 변수는 애플리케이션이 종료되는 시점(마지막 문이 실행되어 더이상 실행할 문이 없을 때)까지 계속 메모리에 남아있게된다.
 
-이는 **전역 변수의 생명 주기는 전역객체와 일치한다는 것을 의미한다.** 
+이는 **전역 변수의 생명 주기는 전역객체와 일치한다는 것을 의미한다.**
 > ❗️ 전역 객체란 코드가 실행되기 전 자바스크립트 엔진에서 가장먼저 생성하는 특수한 객체. 브라우저에서는 window, node에서는 global 등이 있다.
 
 예를 들어 **브라우저 환경에서 var키워드로 선언한 변수는 전역 객체 windowd의 프로퍼티가 된다.**
@@ -1093,7 +1093,7 @@ foo();
 - 전역 변수는 애플리케이션 종료 시점까지 생존한다. 이는 기본적으로 메모리의 낭비로 이어지고, 코드 실행 중 의도치않은 재할당 등으로 인한 오류를 발생시킬 수 있다.
 
 #### 🍙 스코프 체인 상에서 종점에 존재
-- 전역 변수는 전역 스코프의 최상단에 위치한다. 이는 전역 변수의 검색 속도가 가장 느리다는것을 의미한다. 
+- 전역 변수는 전역 스코프의 최상단에 위치한다. 이는 전역 변수의 검색 속도가 가장 느리다는것을 의미한다.
 
 #### 🥃 네임스페이스 오염
 - 자바스크립트는 다른 파일이라도 하나의 전역 스코프를 공유한다. 즉 어디선가 의도치않게 전역변수의 이름으로 재할당이 일어날 수 있다는것을 의미한다.
@@ -1144,7 +1144,7 @@ console.log(Counter.count);       // undefined
 ```
 
 ### 14.3.4 ES6 모듈
-ES6모듈은 파일 자체의 독자적인 모듈 스코프를 제공하기 때문에, 전역변수를 사용할 수 없다. 
+ES6모듈은 파일 자체의 독자적인 모듈 스코프를 제공하기 때문에, 전역변수를 사용할 수 없다.
 
 script태그에 type="module" 을 추가하면 로드된 자바스크립트 파일은 ES6모듈로서 작동한다. 모듈의 파일 확장자는 mjs를 권장한다.
 
@@ -1185,7 +1185,7 @@ ES6 모듈은 IE를 포함한 구형 브라우저에서는 동작하지 않고, 
     console.error(e); // ReferenceError: Cannot access 'y' before initialization
   }
 
-  let y;            
+  let y;
 
   console.log(y);   // undefined
 
@@ -1228,17 +1228,16 @@ const는 상수를 선언하기 위해 사용한다. const의 기본 특징은 l
 <br><br>
 
 ## 16. 프로퍼티 어트리뷰트
---- 
+---
 <br>
-<!-- 정리 필요. 이 장부터 완전정리해야할듯  -->
 
 ### 16.1 내부 슬롯(internal slot)과 내부 메소드(internal method)
 
-- 내부 슬록과 내부 메소드는 자바스크립트 엔진의 구현 알고리즘을 설명하기 위해 ECMAScript 사양에서 사용하는 pseudo property와 peseudo method이다. 
+- 내부 슬록과 내부 메소드는 자바스크립트 엔진의 구현 알고리즘을 설명하기 위해 ECMAScript 사양에서 사용하는 pseudo property와 peseudo method이다.
 - ECMAScript 사양에서 이중 대괄호( [[]] )로 감싼 이름들이다.
 - 자바스크립트 엔진 내부 로직이므로 원칙적으로는 개발자가 접근 불가능.
-- 일부 내부 슬롯과 내부 메소드는 접근 가능한데, 예로, 모든 객체는 [[Prototpy]]이라는 내부 슬롯을 갖고, __ proto __ 로 간접적으로 접근 가능하다.
-```js 
+- 일부 내부 슬롯과 내부 메소드는 접근 가능한데, 예로, 모든 객체는 [[Prototpy]]이라는 내부 슬롯을 갖고, \_\_proto__ 로 간접적으로 접근 가능하다.
+```js
   const o = {};
   o.[[Prototype]] // Uncaught SyntaxError: Unexpected token '['
   o.__poroto__    // {constructor: ƒ, __defineGetter__: ƒ,... }
@@ -1269,7 +1268,7 @@ Object.getOwnPropertyDescriptor(person, 'name');
 // {value: 'motiveko', writable: true, enumerable: true, configurable: true}
 ```
 
-- Object.getOwnPropertyDescriptor() 메소드가 반환하는 객체가 **Property Discriptor**이다. 
+- Object.getOwnPropertyDescriptor() 메소드가 반환하는 객체가 **Property Discriptor**이다.
 - Object.getOwnPropertyDescriptors()는 객체의 모든 프로퍼티의 property discriptor를 반환한다.
 
 <br>
@@ -1343,7 +1342,7 @@ console.log(Object.getOwnPropertyDescriptor(person, 'fullName'));
 
 ### 16.4 프로퍼티 정의
 
-Object.defineProperty() 메소드를 사용해 property attribute를 직접 정의할 수 있다. 
+Object.defineProperty() 메소드를 사용해 property attribute를 직접 정의할 수 있다.
 
 ```js
 const person = {};
@@ -1551,7 +1550,7 @@ new foo();
 
 ```js
 // 함수 선언문
-function foo() {} 
+function foo() {}
 // 함수 표현식
 const bar = function() {};
 // 프로퍼티 x에 할당된 일반함수, 메소드로 인정되지 않는다.
@@ -1572,7 +1571,7 @@ new baz.x();  // x {}
 
 // non-constructor
 new obj.x();  // TypeError: obj.x is not a constructor
-new arrow();  // TypeError: arrow is not a constructor   
+new arrow();  // TypeError: arrow is not a constructor
 ```
 
 ### 17.2.6 new 연산자
@@ -1602,7 +1601,7 @@ function Circle(radius) {
 }
 ```
 - IE에서는 new.target을 지원하지 않으므로 스코프 세이프 생성자 패턴(scope-safe constructor)을 사용할 수 있다.
-```js 
+```js
 function Circle() {
   // 일반함수로 호출시 this는 window객체를 가르킨다.
   if(!(this instanceof Circle)) {
@@ -1666,7 +1665,7 @@ function multiply(x, y) {
 }
 
 console.log(multiply());  // NaN
-/** 
+/**
 callee: ƒ multiply(x, y)
 length: 0
 Symbol(Symbol.iterator): ƒ values()
@@ -1815,7 +1814,7 @@ console.log(obj.x); // 1
 const obj1 = new Object();
 obj1.__proto__ === Object.prototype;  // true
 // Object.prototype 이 통째로 바뀐다.
-obj1.__proto__.val = 1;              
+obj1.__proto__.val = 1;
 const obj2 = new Object();
 
 obj2.__proto__.val // 1
@@ -1923,18 +1922,18 @@ console.log(p.constructor === Person);  // true
       const m = new M();
 
       m.__proto__ === M.prototype; // true
-      ``` 
+      ```
 
 <br>
 
 ### 19.7 프로토타입 체인
 - 프로토타입 체인은 상속과 프로퍼티 검색을 위한 메커니즘이다.
 - 스코프 체인은 식별자 검색을 위한 메커니즘이다.
-- 객체의 메소드 호출시, 프로토타입 체인은 해당 객체에서, 프로토타입 체인의 종점인 Object.prototype까지 순서대로 해당 프로퍼티가 존재하는지 검색한다. 
+- 객체의 메소드 호출시, 프로토타입 체인은 해당 객체에서, 프로토타입 체인의 종점인 Object.prototype까지 순서대로 해당 프로퍼티가 존재하는지 검색한다.
 ```js
   me.hasOwnProperty('name');
   // Object.prototype에서 hasOwnProperty를 발견하고 call() 메서드를 이용해 호출한다.
-  Object.prototype.hasOwnProperty.call(me, 'name');  
+  Object.prototype.hasOwnProperty.call(me, 'name');
 ```
 
 <br>
@@ -2047,7 +2046,7 @@ const parent = {
   }
 }
 
-Person.prototype = parent;  // Person <-> Person.prototype 사이 순환참조 
+Person.prototype = parent;  // Person <-> Person.prototype 사이 순환참조
 
 Object.setPrototype(me, parent);
 ```
@@ -2072,7 +2071,7 @@ console.log(me instanceof Person);  // true
 
 // 객체의 프로토타입 교체
 const parent = {};
-Object.setPrototypeOf(me, parent);  
+Object.setPrototypeOf(me, parent);
 
 // Person.prototype이 가리키는 객체가 me의 프로토타입 체인에 존재하지 않는다.
 console.log(me instanceof Person);  // false
@@ -2089,7 +2088,7 @@ const Person = (function() {
     this.name = name;
   }
   // Person.prototype === 생성될 객체의 prototype
-  Person.prototype = {};  
+  Person.prototype = {};
   return Person;
 }())
 
@@ -2121,7 +2120,7 @@ console.log(obj.toString());  // TypeError: obj.toString is not a function
 - prototype 인자로 Object.prototype
 ```js
 // let obj1 = {}; 와 같다
-let obj1 = Object.create(Object.prototype); 
+let obj1 = Object.create(Object.prototype);
 
 // let obj2 = { x:1 }; 과 같다.
 let obj2 = Object.create(Object.prototype, {
@@ -2149,7 +2148,7 @@ console.log(obj instanceof Person); // true
 console.log(obj instanceof Object); // true
 ```
 - prototype 인자로 null을 인자로 받은 경우 인스턴스는 상위의 프로토타입이 없어, Object.protoype의 빌트인 메소드 사용이 불가능하다.
-- 이런이유로 ESlint는 Object.protoype의 빌트인 메소드를 직접호출하기보다 call() 을 이용해간접호출하는것을 권한다. 
+- 이런이유로 ESlint는 Object.protoype의 빌트인 메소드를 직접호출하기보다 call() 을 이용해간접호출하는것을 권한다.
 ```js
 let obj = {x : 1};
 
@@ -2182,7 +2181,7 @@ console.log(Object.getPrototypeOf(obj) === parent); // ture
 const obj = Object.create({name : 'Lee'});
 
 // hasOwnProperty는 프로토타입 메서드, 인스턴스가 참조 가능
-obj.hasOwnProperty('name'); 
+obj.hasOwnProperty('name');
 ```
 - 메서드 내에서 this(== 인스턴스)를 호출하는게 아니라면 정적메서드로 만들어서 쓸 수 있다.
 - MDN등의 문서에서는 static <-> prototype 프로퍼티/메서드를 나눠서 설명하고있다.
@@ -2216,7 +2215,7 @@ console.log(person.hasOwnProperty('toString')); // false
 ### 19.14 프로터피 열거
 ### 19.14.1 for ... in문
 - for(변수선언문 in 객체) {...}
-- 객체 인스턴스와 `프로토타입 체인상의 모든 프로퍼티`를 순회한다. 
+- 객체 인스턴스와 `프로토타입 체인상의 모든 프로퍼티`를 순회한다.
 - 단, `순회 가능한({enumerable : true}) 프로퍼티만` 순회한다.
 - 추가로 키가 심벌인 프로퍼티도 열거하지 않는다.
 ```js
@@ -2225,7 +2224,7 @@ const person = {
   age : 13,
   [sym]: 10 // symbol
 }
-for(const key in person) { 
+for(const key in person) {
   console.log(`${key} : ${person[key]}`);
 }
 // name : motiveko
@@ -2242,7 +2241,7 @@ arr.x = 10;   // 배열도 객체이므로 프로퍼티를 가진다.
 
 for(const i in arr) {
   // 프로퍼티 x도 출력된다.
-  console.log(arr[i]);  // 1 2 3 10  
+  console.log(arr[i]);  // 1 2 3 10
 }
 
 arr.forEach(console.log); // 1 2 3
@@ -2375,7 +2374,7 @@ console.log(Object.entries(person));  // [ ["name", "motiveko"], ["age", 13]]
 - Math, Reflect, JSON을 제외한 표준 빌트인 객체는 모두 **`생성자 함수 객체`**
 - 생성자 함수 객체는 prototype + static method를 제공, 그 외인 위 3개는 static method만 제공
 
-<br> 
+<br>
 
 ### 21.3 원시값과 래퍼 객체
 - **`래퍼 객체`**(wrapper object)란 string, number, boolean _`원시값에 대해 객체처럼 접근하면 생성되는 임시 객체를 말한다.`_
@@ -2449,15 +2448,15 @@ window.parseInt === parseInt; // true
   ```js
   // 표현식
   eval('1 + 2;'); // 3
-  
+
   // statement
   eval('var x = 5;')  // undefined;
   console.log(x);     // 5
-  
+
   // 객체리터럴은 반드시 괄호로 둘러싼다.
   const o = eval('({ a : 1 })');
   console.log(o);   // { a : 1 }
-  
+
   // 함수 리터럴은 반드시 괄호로 둘러싼다.
   const f = eval('(function() { return 1;})');
   console.log(f()); // 1
@@ -2481,7 +2480,7 @@ window.parseInt === parseInt; // true
   console.log(x);     // 1
   ```
     - eval 함수 내부 변수 선언에 let, const사용시 해당 변수는 암묵적으로 stric mode가 적용된다.(eval 자체의 스코프를 만든다.)
-    
+
     - eval 함수를 통해 입력받은 콘텐츠를 실행하는 것은 보안에 매우 취약하고 js엔진에 의한 최적화가 수행되지 않으므로 느리다. **`eval 함수는 사용하지 말자.`**
 
 - **isFinite**
@@ -2500,7 +2499,7 @@ window.parseInt === parseInt; // true
 
   // boolean
   isNaN(true);    // false: true -> 1
-  
+
   // null
   isNaN(null);   // false: null -> 0
 
@@ -2564,7 +2563,7 @@ var x = 10;
 
 function foo() {
   // 암묵적 전역 발생, window.y = 20
-  y = 20; 
+  y = 20;
 };
 foo();
 
@@ -2576,7 +2575,7 @@ delete y; // 프로퍼티는 삭제된다.
 console.log(window.x);  // 10
 console.log(window.y);  // undefined
 ```
-- 위와같이 foo 호출시 내부에 변수 y에 값을 할당하는데, 이 때 스코프 체인상에 y가 존재하지 않을 경우 js 엔진이 `y = 20을 window.y = 20으로 해석하여 전역 객체에 프로퍼티를 동적으로 생성`한다. 이 때 y가 마치 전역 변수처럼 동작하는 현상을 **implicit global** 이라고 한다. 
+- 위와같이 foo 호출시 내부에 변수 y에 값을 할당하는데, 이 때 스코프 체인상에 y가 존재하지 않을 경우 js 엔진이 `y = 20을 window.y = 20으로 해석하여 전역 객체에 프로퍼티를 동적으로 생성`한다. 이 때 y가 마치 전역 변수처럼 동작하는 현상을 **implicit global** 이라고 한다.
 - **암묵적 전역은** 변수 선언 없이 단지 전역 객체의 프로퍼티로 추가될 뿐이므로, 변수가 아니다. 따라서 **변수 호이스팅이 발생하지 않는다.**
 - 변수가 아닌 프로퍼티는 delete연산자로 삭제할 수 있으나, **전역 변수는 프로퍼티이지만 delete 연산자로 삭제할 수 없다.**
 
@@ -2601,7 +2600,7 @@ console.log(window.y);  // undefined
 <br>
 
 ### 22.2 함수 호출 방식과 this 바인딩
-- this 바인딩은 함수 호출 방식에 따라 동적으로 결정된다. 
+- this 바인딩은 함수 호출 방식에 따라 동적으로 결정된다.
 - 이 말은, `this 바인딩은 함수 호출 시점에 결정된다`는 것을 의미한다. 함수의 상위 스코프를 결정하는 방식인 렉시컬 스코프는 함수 정의가 평가되어 객체가 생성되는 시점에 상위 스코프를 결정한다.
 - 함수를 호출하는 방식은 다음과 같다
   - 일반 함수 호출
@@ -2663,7 +2662,7 @@ console.log(window.y);  // undefined
   obj.foo();
   ```
   - 콜백 함수에 화살표 함수를 사용하는 방법도 있다. `화살표 함수 내부의 this는 상위 스코프의 this를 가리킨다.`
-  
+
 ### 22.2.2 메서드 호출
 - 메서드 내부의 this는 **메서드를 호출한 객체**가 바인딩된다. 주의할점은 **`메서드를 소유한 객체가 아니라는 점이다.`**
 - 메서드는 프로퍼티에 바인딩된 함수 객체로, 메서드를 소유한 객체와 별개로 존재한다. **객체의 프로퍼티는 별개로 존재하는 함수 객체를 기리키고 있을 뿐이다.**
@@ -2689,7 +2688,7 @@ console.log(anotherPerson.getName()); // another motiveko
 console.log(person.getName());  // motiveko
 
 // 일반 함수로 호출된 getName 내부의 this는 전역객체를 가리키므로, window.name 리턴
-console.log(getName()); // '' 
+console.log(getName()); // ''
 ```
 - 프로토타입 메서드 내부에서 사용된 this도 메서드를 호출한 객체에 바인딩된다.
 
@@ -2706,7 +2705,7 @@ function getThisBinding() {
 
 const thisArg = { a: 1 };
 
-console.log(getThisBinding());  
+console.log(getThisBinding());
 // Arguments [calle: f, ..]`
 // window
 
@@ -2738,7 +2737,7 @@ console.log(getThisBinding.bind(thisArg)());  // { a: 1 }
 const person = {
   name : 'motiveko',
   foo(callback) {
-    
+
     // callback함수는 setTimeout에 의해 일반 함수로 실행 -> this는 전역객체
     setTimeout(callback, 100);
   }
@@ -2843,7 +2842,7 @@ console.log(x + y);
     - log 프로퍼티를 console 객체의 프로토타입 체인을 통해 검색. 그 후 log메서드에 a + x + y 표현식을 평가해 전달한다. 각각 스코프 체인을 통해 검색한다.
     - console.log 메서드 실행이 종료되면 함수 호출 이전으로 돌아가 전역코드 실행
 - 이처럼 코드가 실행되려면 스코프, 식별자, 코드 실행 순서 등의 관리가 필요하다.
-- <u>`실행 컨텍스트`</u> 는 **`소스코드 실행에 필요한 환경을 제공하고 코드의 실행 결과를 실제로 관리하는 영역`** 이다. 
+- <u>`실행 컨텍스트`</u> 는 **`소스코드 실행에 필요한 환경을 제공하고 코드의 실행 결과를 실제로 관리하는 영역`** 이다.
 - 식별자를 등록하고 관리하는스코프와 코드 실행 순서를 관리하는 내부 메커니즘으로 식별자와 스코프는 `렉시컬 환경`으로 관리하고 코듸 실행 순서는 `실행 컨텍스트 스택`으로 관리한다.
 
 <br>
@@ -2852,9 +2851,9 @@ console.log(x + y);
 - 실행 컨텍스트는 스택 자료구조로 관리된다(전역이 first in last out이 된다.)
 - 23.2의 예제 코드 실행을 예로들면, 실행 컨텍스트 스택은 아래와 같이 관리된다.
   1. 전역 코드 평가 -> 실행 컨텍스트 스택에 전역 실행 컨텍스트 push
-  2. 전역 코드 실행 
+  2. 전역 코드 실행
       - 전역 코드 실행 일시 중지
-      - 함수 코드 평가 -> 실행 컨텍스트 스택에 함수 실행 컨텍스트 push 
+      - 함수 코드 평가 -> 실행 컨텍스트 스택에 함수 실행 컨텍스트 push
       - 함수 코드 실행 -> 종료 후 실행 컨텍스트 스택 pop()
   5. 다시 전역 코드 실행 -> 종료 후 실행 컨텍스트 스택 pop()
 - 실행 컨텍스트의 최상위에 존재하는 실행 컨텍스트를 **실행 중인 실행 컨텍스트(running execution context)**라 부른다.(pop하면 나올애)
@@ -2870,7 +2869,7 @@ console.log(x + y);
     - `스코프에 등록된 식별자를 관리하고 바인딩된 값을 관리`한다.
   - `외부 렉시컬 환경에 대한 참조`(Outer Lexical Env Reference)
     - `상위 스코프의 참조`를 말한다. 상위 스코프란 상위 코드의 렉시컬 환경이다. 단뱡향 linked list 형태로, 상위 스코프는 하위 스코프에 대한 참조가 없다.
-  
+
 <br>
 
 ### **`23.6 실행 컨텍스트의 생성과 식별자 검색 과정`**
@@ -2909,7 +2908,7 @@ foo(20);  // 42
         - `let const 키워드`로 선언한 `전역` 변수 관리
         - 15.2.4에서 let, const 키워드로 선언한 전역 변수는 전역 객체 프로퍼티가 아닌 개념적인 블록 내에 존재한다고 했는데, 그 `개념적인 블록`이 바로 선언적 환경 레코드
         - BindingObject에 있는 값이 아니므로 window.y로 참조 불가
-        - undefined로 초기화 하지 않기때문에 값 할당 전에 참조할 수 없다.(일시적 사각지대, TDZ) 
+        - undefined로 초기화 하지 않기때문에 값 할당 전에 참조할 수 없다.(일시적 사각지대, TDZ)
   - `this 바인딩`
     - 전역 환경 레코드의 [[GlobalThisValue]] 내부슬롯에 this 바인딩. 일반적으로 전역객체
   - `외부 렉시컬 환경에 대한 참조 결정`
@@ -2937,7 +2936,7 @@ foo(20);  // 42
 ### 23.6.7 bar 함수 코드 실행
   - 매개변수와 z에 값을 할당한다.
   - console.log(a + b + x + y + z); 실행
-    - console 식별자 검색 
+    - console 식별자 검색
       - 스코프 체인에서 검색한다. 최종적으로 전역 렉시컬 환경 - 객체 환경 레코드 - BindingObject(window) 에서 찾는다
       - console 객체에서 log 메서드 검색
       - a + b + x + y + z 평가(스코프 체인에서 각각 검색)
@@ -2976,8 +2975,8 @@ console.log(x);   // 1
 <br>
 
 ### 24.1 렉시컬 스코프
-- 자바스크립트 엔진은 함수를 어디서 호출했는지가 아닌 함수를 `어디에 정의`했는지에 따라 상위 스코프를 결정한다. 이를 렉시컬 스코프(lexical/static scope)라 한다.(- _13.5 렉시컬 스코프_ 참고) 
-- 이와 반대로 this바인딩은 호출 방식에 따라 동적으로 생성된다 
+- 자바스크립트 엔진은 함수를 어디서 호출했는지가 아닌 함수를 `어디에 정의`했는지에 따라 상위 스코프를 결정한다. 이를 렉시컬 스코프(lexical/static scope)라 한다.(- _13.5 렉시컬 스코프_ 참고)
+- 이와 반대로 this바인딩은 호출 방식에 따라 동적으로 생성된다
 - 렉시컬 스코프에 의하면 렉시컬 환경의 _"외부 렉시컬 환경에 대한 참조"_ 에 저장할 참조값(**상위 스코프**)은 함수 정의가 평가되는 시점에 정의된 환경(위치)에 의해 결정된다.
 
 <br>
@@ -3007,9 +3006,9 @@ innerFunc();  // 10
 - ❗️ **그러나 반환된 inner 함수의 내부 슬롯 [[Enviroment]]가 outer 함수의 렉시컬 환경을 참조하고 있으므로 outer의 렉시컬 환경은 사라지지 않고, x = 10 역시도 남아있게된다.**
 - 따라서 inner 함수를 호출 할 때 10이라는 결과를 반환할 수 있게 된다. 참조하고 있으므로 값을 변경할 수도 잇다.
 - **모든 (중첩)함수는 클로저일까?**
-  1.  상위 스코프의 어떠한 식별자도 참조하지 않는 함수는 <u>**_클로저라 하지 않는다._**</u>. 
+  1.  상위 스코프의 어떠한 식별자도 참조하지 않는 함수는 <u>**_클로저라 하지 않는다._**</u>.
       - 브라우저에서 디버깅 해보면 클로저인 함수는 Scope에 Closure로 상위 함수가 존재하고, 상위 스코프 식별자를 참조하지 않는, 클로저가 아닌 함수는 Scope에 클로저가 없다!
-  2. 중첩 함수가 외부 함수의 밖으로 return되지 않는다면, 중첩 함수의 생명 주기가 외부 함수보다 짧으므로 <u>___클로저라 하지 않는다___</u>. 
+  2. 중첩 함수가 외부 함수의 밖으로 return되지 않는다면, 중첩 함수의 생명 주기가 외부 함수보다 짧으므로 <u>___클로저라 하지 않는다___</u>.
       - 이런 케이스는 디버깅해보면 Scope에 클로저가 뜨긴 한다. 그러나 상위 함수의 실행 스택도 여전히 남아 있는 상태다.
 - 중첩 함수가 상위 함수의 식별자를 참조하고 상위 함수 밖으로 return되면 **클로저다.**
 클로저는 상위 함수의 식별자 중 **참조하고 있는 것만 기억한다.** 참조하고 있는 이 변수를 `자유 변수`(free variable)이라고 한다. 이렇게 하는 이유는 참조하지 않는걸 기억하는건 메모리 낭비이므로 **자바스크립트 엔진에 의해 최적화** 된 것이다.
@@ -3183,4 +3182,231 @@ funcs.forEach(f => console.log(f)); // 012
 
 ## 25. 클래스
 ---
-### 25.1 클래스는 프로토타입의 문법적 설탕인가?
+### 25.1 클래스는 프로토타입의 문법적 2탕인가?
+- ES6에서 도입된 클래스는 Java나 C#같은 클래스 기반 객체지향 프로그래밍 언어와 매우 흡사한 객체 생성 메커니즘을 제공한다.
+- 클래스와 생성자 함수는 모두 `프로토타입` 기반의 인스턴스를 생성하지만 동일하게 동작하지 않는다.
+  - 클래스는 new 연산자 없이 호출 불가능
+  - 클래스는 extends, super 키워드를 지원한다.
+  - 클래스는 호이스팅이 발생하지 않는 것처럼 동작한다. 함수는 함수/변수 호이스팅 발생.
+  - 클래스 내의 모든 코드에는 암묵적으로 strict mode가 지정되나 생성자 함수는 그렇지 않다.
+  - 클래스의 constructor, 프로토타입 메서드, 정적 메서드는 모두 프로퍼티 어트리뷰트 [[Enumerable]]의 값이 false로 열거할 수 없다.
+- 클래스를 프로토타입 기반 객체 생성 패턴의 단순한 문법적 설탕이라고 보기보다는 새로운 객체 생성 메커니즘으로 봐야한다.
+
+<br>
+
+### 25.2 클래스의 정의
+- 클래스는 아래와 같이 선언할 수 있다.
+```js
+// 일반적인 클래스 선언문
+class Person {}
+
+// 익명 클래스 표현식
+const Person = class {}
+
+// 기명 클래스 표현식
+const Person = class MyClass{}
+```
+- 클래스를 표현식으로 정의할 수 있다는 것은 클래스가 값으로 사용할 수 있는 `일급 객체`라는 말이다.
+  - 무명의 리터럴로 생성 할 수 있다.
+  - 변수나 자료구조에 저장 가능하다.
+  - 함수의 매개변수에 전달 할 수 있다.
+  - 함수의 반환값으로 사용 가능하다.
+- 클래스 몸체에는 0개 이상의 메서드가 정의 가능하다. 정의 할 수 있는 메서드로는 `constructor`, `프로토타입 메서드`, `정적 메서드` 세가지가 있다.
+
+<br>
+
+### 25.3 클래스 호이스팅
+- 클래스는 `함수`로 평가된다.
+- 클래스가 평가되어 생성된 함수 객체는 생성자 함수로서 호출할 수 있는 함수(`constructor`)이다. 평가시점에 프로토타입도 더불어 생성한다.
+- 그러나 let,const 키워드로 선언한 변수처럼 클래스 정의 이전에 참조할 수 없다.
+(일시적 사각지대(TDZ) 발생, 선언문 평가시 초기화하지 않는다.)
+
+```js
+// ReferenceError: Cannot access 'Person' before initialization
+console.log(Person);
+class Person{}
+```
+
+<br>
+
+### 25.4 인스턴스 생성
+- 클래스는 생성자 함수이며 반드시 new 키워드와 함께 호출되어야한다. 새로운 인스턴스 생성이 클래스의 존재 이유이기때문
+- 클래스 표현식(expression)으로 정의된 클래스는 클래스 이름으로 인스턴스 생성이 불가능하다. 기명 함수 표현식과 마찬가지로 표현식에서 사용한 이름은 함수 외부에서 접근이 불가능하기 때문.
+  ```js
+  const Person = class MyClass{};
+  const p = new MyClass();  // ReferenceError: MyClass is not defined
+  ```
+
+<br>
+
+### 25.5 메서드
+- 클래스 몸체에서 정의 가능한 메서드는 constructor, prototype method, static method 세가지가 있다.
+
+### 25.5.1 constructor
+```js
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+}
+console.log(typeof Person); // function
+console.dir(Person);
+/**
+ * ...
+ *   prototype
+ *     constructor: class Person
+ * ...
+ * /
+```
+- 클래스의 타입을 출력하면 function이 출력된다.
+- 클래스의 프로퍼티를 출력해보면 `prototype`을 가지고 prototype.costructor는 **클래스 자신**을 가리킨다. 생성자 함수와 같다.
+- 헷갈리지 말아야 할 것은 prototype.constructor와 클래스 몸체에 선언한 constructor는 **아무런 연관이 없다**는것이다.
+- constructor 내부에 임의의 객체를 반환하는 반환문을 작성하면 정상작동하지 않는다. 원시타입값을 반환하는 반환문은 다행이 무시된다.
+
+<br>
+
+### 25.5.2 프로토타입 메서드
+- 생성자 함수에 프로토타입 메서드를 선언하기 위해서는 명시적으로 **Person.prototype**.~ 로 prototye 프로퍼티에 메서드를 추가해줘야했다. this.~ 로 선언한 메서드는 프로토타입 메서드가 아니므로 매 인스턴스마다 새로 생성된다.
+- **클래스 몸체에 정의한 메서드**는  prototype 프로퍼티에 추가하지 않아도 **기본적으로 프로토타입 메서드**가 된다.
+- 생성자 함수와 마찬가지로 클래스가 생성한 인스턴스는 `프로토타입 체인의 일원`이 된다.
+```js
+class Person {
+
+  // constructor
+  constructor(name) {
+    this.name = name;
+  }
+
+  // 프로토타입 메서드
+  sayHi() {
+    console.log(`Hi! I'm ${this.name}`);
+  }
+}
+const p = new Person('motvieko');
+
+Object.getPrototypeOf(p) === Person.prototype; // true
+
+// Obejct.prototype을 상속해 프로토탑 체인의 일원이 되었다.
+Object.getPrototypeOf(Person.prototype) === Object.prototype; //true
+
+p.constructor === Person; // true
+```
+- 클래스는 생성자 함수와 마찬가지로 ***프로토타입 기반의 객체 생성 메커니즘***인 것이다.
+
+<br>
+
+### 25.5.3. 정적 메서드
+- 19.12 '정적 프로퍼티/메서드' 에서 보았듯 정적 메서드는 인스턴스 생성 없이 호출 가능한 메서드를 말한다.(Object.create)
+- 생성자 함수의 경우 명시적으로 생성자 함수 프로퍼티에 메서드를 추가해줘야한다.
+- 클래스는 메서드에 static 키워드를 붙이면 된다.
+```js
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+
+  static empty() {
+    return new this('');
+  }
+}
+```
+
+<br>
+
+### 25.5.4 정적 메서드와 프로토타입 메서드의 차이
+- 둘의 차이는 다음과 같다.
+  - 정적 메서드와 프로토타입 메서드는 자신이 속해 있는 프로토타입 체인이 다르다.
+  - 정적 메서드는 클래스로 호출하고 프로토타입 메서드는 인스턴스로 호출한다.
+  - 정적 메서드는 인스턴스 프로퍼티를 참조할 수 없지만 프로토타입 메서드는 인스턴스 프로퍼티를 참조할 수 있다.
+
+- 메서드 호출시 this 바인딩은 **메서드를 호출한 객체**이다.
+- static메서드는 클래스 객체에서만 참조할 수 있기때문에 static 메서드 내의 this는 클래스 함수를 가리킨다.
+- 프로토타입 메서드는 일반적으로 생성된 인스턴스에서 호출하기때문에 메서드 내 this는 생성된 인스턴스를 가리킨다. 따라서 인스턴스 프로퍼티 참조가 가능하다.
+
+- 클래스/생성자 함수를 하나의 `네임스페이스`로 사용하여 정적 메서드를 모아놓으면 이름 충돌 가능성을 줄이고 관련 함수들을 구조화 할 수 있는 장점이 있어, 전역에서 사용할 유틸리티 함수를 전역 함수로 정의하지 않고 메서드로 구조화 할 때 유용하다.
+
+<br>
+
+### 25.5.5 클래스에서 정의한 메서드의 특징
+- 클래스에서 정의한 메서드는 다음과 같은 특징을 가진다.
+  - function 키워드를 생략한 메서드 축약 표현 사용
+  - 객체 리터럴과 다르게 콤마가 필요 없다
+  - 암묵적으로 strict mode로 실행
+  - [[Enumerable]]이 false로 Object.keys와 같은 메서드로 열거 불가능하다.
+  - 내부 메서드 [[Construct]]를 갖지 않는 `non-custroctr`다. 따라서 new 연산자와 함께 호출할 수 없다.
+
+<br>
+
+### 25.6 클래스의 인스턴스 생성 과정
+- new 연산자로 클래스를 호출하면 생성자 함수와 마찬가지로 내부 메서드[[Contructor]]가 호출되며 아래의 순서로 인스턴스를 생성한다.
+1. 인스턴스 생성과 this 바인딩
+    - 빈 객체를 생성하고, 프로토타입을 지정한다. 프로토타입은 Class의 prototype 프로퍼티가 가리키는 객체다. 그리고 this는 생성한 빈 객체에 바인딩된다.
+
+2. 인스턴스 초기화
+    - constructor 내부 코드가 실행되며 this에 바인딩된 인스턴스를 초기화한다.
+
+3. 인스턴스 반환
+    - this가 반환된다.
+
+<br>
+
+### 25.7 프로퍼티
+### 25.7.1 인스턴스 프로퍼티
+- 인스턴스 프로퍼티는 constructor 내부에서 this에 정의해야한다.
+- ES6 클래스는 인스턴스 프로퍼티에 기본적으로 접근 제한자(access modifier)를 지원하지 않으나, private한 프로퍼티를 정의할 수 있는 사양이 현재 제안중에있다.
+
+###  25.7.2 접근자 프로퍼티(accessor property)
+- 16.3.2절 '접근자 프로퍼티'에서 객체에 적용한 접근자 프로퍼티는 클래스에도 적용할 수 있다.
+```js
+class Person {
+  constructor(firstName, lastName) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+  get fullName() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+  set fullName(name) {
+    [this.firstName, this.lastName] = name.split(' ');
+  }
+}
+```
+- 클래스의 메서드는 기본적으로 프로토타입 메서드가 된다. 따라서 **접근자 프로퍼티** getter/setter 또한 인스턴스 프로퍼티가 아닌 **프로토타입 프로퍼티**가 된다.
+
+### 25.7.3 클래스 필드 정의 제안
+- 클래스 필드란 객체지향 언어에서 클래스가 생성할 인스턴스의 프로퍼티를 가리키는 용어다.
+- Java처럼 class에 필드를 선언하는 방식으로 프로퍼티를 사용하는 방법은 정식 표준 사양은 아니지만 아마 정식 표준 사양이 될 예정이다.
+- 필드 정의시 this를 필드에 바인딩하면 안된다. `this`는 `constructor`와 `메서드` 내에서만 유효하다.
+- 함수는 `일급객체`로 필드에 할당할 수 있다. 클래스 필드에 함수를 할당해 메서드를 정의할 수 있다.
+> ❗️필드는 prototype이 아닌 인스턴스 프로퍼티이다. 필드에 할당한 함수는 인스턴스 메서드가 되므로 권장하지 않는다.
+
+### 25.7.4 private 필드 정의 제안
+- TC39 프로세스에 private 필드를 정의할 수 있는 새로운 표준 사양이 제안되어있다. Chrome 74이상, Node 12버전 이상에서 이미 작동한다.
+- private 필드를 선언하는 방법은 식별자 앞에 `#`을 붙이는것이다. 또한 private필드는 반드시 클래스 몸체에 정의해야한다. constructor에 정의하면 에러난다.
+```js
+class Person {
+  #name = '';
+  constructor(name) {
+   this.#name = name;
+  }
+}
+const p = new Person('motiveko');
+console.log(p.#name);
+// Uncaught SyntaxError: Private field '#name' must be declared in an enclosing class
+```
+> ❗️Typescript는 public, private, protected를 모두 지원한다! Angular에서 접근 제한자를 사용할 수 있었던 이유!
+- private 필드는 접근자 프로퍼티 getter/setter를 통해서 조작해야한다.
+
+### 25.7.5 static 필드 정의 제안
+- static 필드를 정의할 수 있는 표준 사양인 "Static class feature"가 TC39 프로세스의 state 3(candidate)에 제안되어 있다. Chrome 72 이상, Node 12이상에서 사용 가능하다.
+```js
+class MyMath {
+  static PI = 3.15;
+}
+console.log(MyMath.PI); // 3.15
+```
+
+<br>
+
+### 25.8 상속에 의한 클래스 확장
+
