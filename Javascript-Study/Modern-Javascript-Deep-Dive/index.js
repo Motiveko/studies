@@ -1,15 +1,15 @@
-function Db(x) {
-  this.n = x;
-
-
-}
-Db.n = 10;
-Db.square =  function() {
-  return this.n * this.n;
+class Super {
+  constructor(name) {
+    this.name = name;
+    console.log(this);
+  }
 }
 
-const d = new Db(3);
+class Sub extends Super {
+  constructor(name, age) {
+    super(name);
+    this.age = age;
+  }
+}
 
-console.log(d);
-console.log(d.__proto__.constructor.square())
-console.dir(Db)
+const s = new Sub('adf', 13);

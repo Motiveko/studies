@@ -1793,7 +1793,7 @@ console.log(circle1.getArea === circle2.getArea) // true
 - 모든 객체는 **하나의 프로토타입을 가지고 있고, 모든 프로토타입은 생성자 함수와 연결되어 있다.**
 
 ### 19.3.1 \_\_proto__ 접근자 프로퍼티
-- **`모든 객체는 접근자 프로퍼티 \_\_proto__로 [[Prototype]]에 접근할 수 있다.`**
+- **`모든 객체는 접근자 프로퍼티 __proto__로 [[Prototype]]에 접근할 수 있다.`**
 - \_\_proto__는 접근자 프로퍼티로, 직접 값을 가지지 않고 gettter/setter로 접근한다.
 - \_\_proto__는 객체가 직접 소유하는 프로퍼티가 아니라 Object.prototype의 프로퍼티다.(Object.prototype은 프로토타입 체인의 최상위 객체이다)
 - 프로토타입 체인은 단방향 링크드 리스트로 구현되어야 한다.(순환참조를 허용하지 않는다.)
@@ -3409,4 +3409,177 @@ console.log(MyMath.PI); // 3.15
 <br>
 
 ### 25.8 상속에 의한 클래스 확장
+### 25.8.1 클래스 상속과 생성자 함수 상속
+- 생성자 함수의 프로토타입 기반 상속은 프로토타입 체인을 통해 다른 객체의 자산을 상속받는 개념이지만, **상속에 의한 클래스 확장은 기존 클래스를 상속받아 새로운 클래스를 확장하여 정의** 하는것이다. 자바에서 맨날 하던 extends.
+- 상속에 의한 클래스 확장
+```js
+class Animal {
+  constructor(age, weight) {
+    this.age = age;
+    this.weight = weight;
+  }
+  eat() { return 'eat'; }
+  move() { return 'move'; }
+}
 
+// 상속을 통해 Animal 클래스를 확장한 Bird
+class Bird extends Animal {
+  fly() { return 'fly' }
+}
+
+const bird = new Bird(1, 5);
+console.log(bird instanceof Bird); // true
+console.log(bird instanceof Animal); // true
+```
+- 의사 클래스 상속(pseudo classical inheritance) 패턴을 사용하여 상속에 의한 클래스 확장을 흉내낸다. class의 등장으로 쓸 필요 없어졌다.
+```js
+var Animal = (function(){
+  function Animal(age, weight) {
+    this.age = age;
+    this.weight = weight;
+  }
+  Animal.prototype.eat = function() { return 'eat'; }
+  Animal.prototype.move = function() { return 'move'; }
+
+  return Animal;
+}());
+
+// Animal 생성자 함수를 상속하여 확장한 Bird 생성자 함수
+var Bird = (function(){
+  function Bird() {
+    // Animal 함수에게 this와 인수를 전달하면서 "호출"
+    Animal.apply(this, arguments);
+  }
+  // Bird.prototype을 Animal.prototype을 상속하는 객체로 생성한다.
+  Bird.prototype = Object.create(Animal.prototype);
+
+  // Bird와 prototype을 양방향 링크 시켜준다.
+  Bird.prototype.constructor = Bird;
+
+  Bird.prototype.fly = function(){ return 'fly'; }
+
+  return Bird;
+}());
+
+var bird = new Bird(1,5);
+console.log(bird instanceof Animal); // true
+console.log(bird instanceof Bird);   // true
+```
+<br>
+
+### 25.8.2 extends 키워드
+- extends 키워드를 통해 클래스의 상속 관계를 설정하는데, 클래스도 `프로토타입`을 통해 상속 관계를 구현한다.
+- 부모와 자식 클래스는 인스턴스의 **프로토타입 체인** 뿐 아니라 **클래스간의 프로토 타입 체인**도 생성한다. 이를 통해 **프로토타입 메서드, static 메서드 모두 상속이 가능하다.**
+
+<br>
+
+### 25.8.3 동적 상속
+- extends 키워드는 `생성자 함수`도 상속받아 확장 가능하다. 단 클래스에서만 가능하다.
+- extends 키워드는 [[Construct]] 내부 메서드를 갖는 함수 객체로 평가될 수 있는 모든 표현식을 상속할 수 있다. 이를 이용해 `동적 상속`도 가능하다.
+
+```js
+function Base1() {}
+class Base2 {}
+
+let condition = true;
+
+// condition에 따른 상속할 constructor 결정
+class Derived extends (condition ? Base1 : Base2) {}
+
+const derived = new Derived();
+console.log(derived instance of Base1); // true
+```
+
+<br>
+
+### 25.8.4 서브클래스의 constructor
+- class에서 constructor 메서드를 생략하면 암묵적으로 empty constructor가 생성된다.
+- 서브클래스에서 constructor를 생략하면 암묵적으로 다음과 같은 constructor가 생성된다.
+```js
+// args는 new 연산자와 함께 클래스를 호출할 때 전달한 인수의 리스트
+constructor(...args) { super(...args); }
+```
+
+<br>
+
+### 25.8.5 super 키워드
+- super는 함수처럼 호출할 수 있고, 식별자처럼 참조할 수 있는 특수한 키워드다.
+  - super를 호출하면 수퍼클래스의 constructor를 호출한다.
+  - super를 참조하면 수퍼클래스의 메서드를 호출할 수 있다.
+- super 호출시 아래와 같은 제약사항이 있다.
+  - 서브클래스에 constructor 작성 시 super를 반드시 호출해야한다.
+  - 서브클래스의 constructor 내에서 super 호출전에는 this를 참조할 수 없다.
+  - super는 서브클래스의 constructor 내부에서만 호출 가능하다.
+
+- `super`를 참조하는 것은 `수퍼클래스.prototype` 을 참조하는 것과 같다. 따라서 super는 Object.getPrototypeOf({SubClass}.prototype)과 같다. 단 후자로 method 호출 시 반드시 `Function.prototype.call` 등을 이용해 `this`를 넘겨줘야한다.
+- super가 동작하기 위해서는 super를 참조하고 있는 메서드가 바인딩 되어 있는 객체의 프로토타입을(Superclass.Prototype) 찾을 수 있어야한다. 이를 위해 메서드는 내부슬롯 [[HomeObject]]를 가지며, 자신을 바인딩하고 있는 객체를 가진다.
+- 이를 이용해  super 참조를 의사 코드(pseudo code)로 표현하면 다음과 같다.
+  ```js
+  super = Object.getPrototypeOf([[HomeObject]]);
+  ```
+- 주희할 점은 **ES6의 메서드 축약 표현**으로 정의된 함수만이 [[HomeObject]]를 갖는다는 것. super 참조는 [[HomeObject]]를 가진 `메서드`만이 참조할 수 있다. 물론 객체 리터럴에서도 ES6 메서드 축약 표현으로 정의된 함수는 super참조가 가능하다.
+
+```js
+const base = {
+  name: 'motiveko',
+  sayHi() {
+    return `Hi! ${this.name}`;
+  }
+}
+const derived = {
+  __proto__: base,
+  sayHi() {
+    return super.sayHi();
+  }
+}
+```
+- 서브클래스의 static 메서드 내에서 super는 수퍼클래스의 정적 메서드를 가리키게된다.([[HomeObject]]가 수퍼클래스를 가리키기 때문)
+
+<br>
+
+### 25.8.6 상속 클래스의 인스턴스 생성 과정
+1. 서브클래스의 super 호출
+    - 자바스크립트 엔진은 클래스의 내부 슬롯 [[ConstructorKind]]에 base, derived값을 저장한다. extends로 상속한 클래스는 derived
+    - 서브클래스에서 super를 실행하면 super클래스의 constructor가 실행된다. **즉 서브클래스의 인스턴스 생성은 super class에 위임한다.**
+
+2. 수퍼클래스의 인스턴스 생성과 this 바인딩
+    - super class의 constructor가 빈 객체를 생성한다. 이 때, new 키워드로 호출된 클래스는 서브클래스로 `new.target`**값은 서브클래스이다**. 따라서 생성된 빈 객체는 SubClass.prototype이 된다!
+
+3. 수퍼클래스의 인스턴스 초기화
+    - constructor의 동작을 마무리한다.
+4. 서브클래스의 constructor로 복귀와 this 바인딩
+    - 서브클래스의 constructor에서 super가 반환한 인스턴스를 this에 바인딩한다.
+    이런 이유로 constructor에서 super 호출 전까지 this를 사용하지 못하는것이다.
+5. 서브클래스의 인스턴스 초기화
+    - constructor의 동작을 마무리한다.
+6. 인스턴스 반환
+    - 인스턴스가 바인딩된 this가 암묵적으로 반환된다.
+
+<br>
+
+### 25.8.7 표준 빌트인 생성자 함수 확장
+- extends 키워드는 constructor라면 뭐든 상속 가능하다. String, Number, Array와 같은 표준 빌트인 객체도 constructor이므로 extends로 확장할 수 있다.
+```js
+class MyArray extends Array {
+  unique() {
+    return this.filter((v, i, self) => self.indexOf(v) === i);
+  }
+}
+```
+- 이 때 확장한 메서드 unique를 비롯한 filter 등의 Array의 prototype 메서드들은 모두 MyArray을 반환하게 된다. 메서드를 호출한 객체가 this에 바인딩 되기 때문
+- 만약 MyArray클래스의 unique 메서드가 Array를 반환하게 하려면 Symbol.species를 사용해 정적 접근자 프로퍼티를 추가한다.
+```js
+class MyArray extends Array {
+  // 모든 메서드가 Array 타입의 인스턴스를 반환한다.
+  static get [Symbol.species]() { return Array; }
+  unique() {
+    return this.filter((v, i, self) => self.indexOf(v) === i);
+  }
+}
+```
+
+<br><br>
+
+## 26. ES6 함수의 추가 기능
+---
+### 26.1 함수의 구분
