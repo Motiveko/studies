@@ -3583,3 +3583,70 @@ class MyArray extends Array {
 ## 26. ES6 함수의 추가 기능
 ---
 ### 26.1 함수의 구분
+- ES6이전의 모든 함수는 일반 함수로서 호출할 수 있는것은 물론 생성자 함수로서 호출할 수 있었다. 즉 모든 함수는 `callable` 이면서 `constructor`였다.
+- 이는 성능이나 안정성 측면에서 불리하다. 메서드나 콜백함수는 constructor로 사용하지 않는데, constructor면 prototype 프로퍼티를 가지고 프로토타입 객체를 생성하기 때문.
+- 이런 문제를 해결하기 위해 ES6는 함수를 사용 목적에 따라 세 종류로 명확히 구분했다.
+
+| ES6 함수의 구분 | constructor | prototype | super | arguments |
+|:---:|:---:|:---:|:---:|:---:|
+| 일반 함수(Normal) | O | O | X | O |
+| 메서드(Method) | X | X | O | O |
+| 화살표 함수(Arrow) | X | X | X | X |
+
+<br>
+
+### 26.2 메서드
+- ES6 사양에서 메서드는 **메서드 축약 표현으로 정의된 함수**만을 의미한다.
+```js
+const obj = {
+  x: 1,
+  // foo 는 메서드다
+  foo() { return this.x; },
+  // bar는 일반함수다.
+  bar: function() { return this.x; }
+}
+new obj.foo();  // TyepError: obj.foo is not a constructor
+new obj.bar();  // bar {}
+
+obj.foo.hasOwnProperty('prototype');  // false
+obj.bar.hasOwnProperty('prototype');  // true
+```
+- ES6 메서드는 인스턴스 인스턴스를 생성할 수 없으므로 prototype 프로퍼티가 없다.
+- 참고로, 표준 빌트인 객체가 제공하는 프로토타입 메서드와 static 메서드는 모두 `non-constructor`이다.
+- **ES6메서드는 자신을 바인딩한 객체를 가리키는 내부 슬롯 [[HomeObject]]를 갖는다.**
+super 참조는 내부 슬롯 [[HomeObject]]를 사용하여 수퍼클래스의 메서드를 참조하므로 메서드는 super 키워드를 사용할 수 있다. 반대로 메서드가 아닌 함수는 [[HomeObject]]를 가지지 않으므로 super참조가 불가능하다.
+
+```js
+const base = {
+  name: 'motiveko',
+  sayHi() {
+    return `Hi! I'm ${name}`;
+  }
+}
+const derived = {
+  __proto__: base,
+
+  // 메서드, super 참조 가능
+  sayHi() { return `${super.sayHi()}`; },
+
+  // hi는 메서드가 아니므로 [[HomeObject]]를 갖지 않으므로 super 참조 불가능
+  hi : function() { return `${super.sayHi()}`;}
+}
+```
+- **메서드를 정의할 때 프로퍼티 값으로 익명 함수 표현식을 할당하는 ES6 이전 방식은 사용하지 말도록 하자.**
+
+<br>
+
+### 26.3 화살표 함수
+- 화살표 함수의 정의 방식은 기존의 함수 정의 방식보다 간결하다. 내부 동작역시도 간결한데, 특히 화살표 함수는 `콜백 함수` 내부에서 `this`가 전역객체를 가리키는 문제를 해결하는 대안으로 유용하다.
+
+### 26.3.1 화살표 함수의 정의
+- 아는내용이므로 생략
+### 26.3.2 화살표 함수와 일반 함수의 차이
+- 화살표 함수는 인스턴스를 생성할 수 없는 non-constructor이다.
+- 화살표 함수는 중복된 매개변수 이름을 선언할 수 없다(일반함수느 strict mode가 아니면 가능했다.)
+- 화살표 함수는 자체의 `this`, `arguments`, `super`, `new.target` 바인딩을 갖지 않는다.
+  - 따라서, 화살표 함수에서 위의 내용을 참조하면 스코프 체인을 통해 상위 스코프의 this, arguments, super.. 를 참조하게 된다.
+
+### 26.3.3 this
+- 화살표 함수는 콜백함수 내부의 this 문제를 해결하기 위해 설계되었다.
