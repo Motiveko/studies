@@ -1,15 +1,9 @@
-class Super {
-  constructor(name) {
-    this.name = name;
-    console.log(this);
+class Person {
+  constructor() {
+    this.name = 'motiveko';
+    this.hi = () => console.log(this.name);
   }
+  rm = this
 }
-
-class Sub extends Super {
-  constructor(name, age) {
-    super(name);
-    this.age = age;
-  }
-}
-
-const s = new Sub('adf', 13);
+const p = new Person();
+console.log(p.rm)

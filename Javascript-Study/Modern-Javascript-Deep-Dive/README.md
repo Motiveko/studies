@@ -2601,7 +2601,7 @@ console.log(window.y);  // undefined
 
 ### 22.2 함수 호출 방식과 this 바인딩
 - this 바인딩은 함수 호출 방식에 따라 동적으로 결정된다.
-- 이 말은, `this 바인딩은 함수 호출 시점에 결정된다`는 것을 의미한다. 함수의 상위 스코프를 결정하는 방식인 렉시컬 스코프는 함수 정의가 평가되어 객체가 생성되는 시점에 상위 스코프를 결정한다.
+- 이 말은, **`this` 바인딩은 함수 `호출 시점`에 결정된다는 것**을 의미한다. 함수의 상위 스코프를 결정하는 방식인 `렉시컬 스코프`는 함수 정의가 평가되어 객체가 `생성되는 시점`에 상위 스코프를 결정한다.
 - 함수를 호출하는 방식은 다음과 같다
   - 일반 함수 호출
   - 메서드 호출
@@ -3644,9 +3644,235 @@ const derived = {
 - 아는내용이므로 생략
 ### 26.3.2 화살표 함수와 일반 함수의 차이
 - 화살표 함수는 인스턴스를 생성할 수 없는 non-constructor이다.
-- 화살표 함수는 중복된 매개변수 이름을 선언할 수 없다(일반함수느 strict mode가 아니면 가능했다.)
+- 화살표 함수는 중복된 매개변
+수 이름을 선언할 수 없다(일반함수느 strict mode가 아니면 가능했다.)
 - 화살표 함수는 자체의 `this`, `arguments`, `super`, `new.target` 바인딩을 갖지 않는다.
   - 따라서, 화살표 함수에서 위의 내용을 참조하면 스코프 체인을 통해 상위 스코프의 this, arguments, super.. 를 참조하게 된다.
 
 ### 26.3.3 this
 - 화살표 함수는 콜백함수 내부의 this 문제를 해결하기 위해 설계되었다.
+```js
+class Prefixer {
+  constructor(prefix) {
+    this.prefix = prefix;
+  }
+
+  add(arr) {
+    return arr.map(function(item) {
+      return this.prefix + item;  // TypeError: Cannot read property 'prefix' of undefined
+    })
+  }
+}
+```
+- 위에서 메서드 add 내에서 고차함수 Array.prototype.map()에 전달된 콜백 함수 내부 this는 `undefined`를 가리킨다.
+- 함수를 일반 함수로 호출시 this는 전역객체지만 class 내부의 모든 코드는 `strict mode`가 암묵적으로 전용되어, 일반 함수의 this에는 undefined가 배치된다.
+- 화살표 함수 이전에는 아래와 같이 해결했다.
+
+1. this를 회피시킨 후 콜백 함수 내부에서 사용
+```js
+...
+add(arr) {
+  // add를 호출한 인스턴스를 가리키는 this를 '회피'시킨다.
+  const that = this;
+  return arr.map(function (item) {
+    return that.prefix + item;
+  });
+}
+```
+
+2. map 함수의 두번째 인자로 this를 전달할 수 있다.
+```js
+...
+  return arr.map(function(item){
+      return this.prefix + item;
+  }, this);
+...
+```
+
+3. Function.prototype.`bind` 메서드 사용
+```js
+...
+  return arr.map(function(item) {
+    return this.prefix + item;
+  }.bind(this));  // this에 바인딩된 값이 콜백 함수 내부의 this에 바인딩된다.
+...
+```
+
+4. ES6에서는 화살표 함수로 해결한다.
+```js
+...
+  return arr.map(item => this.prefix + item);
+...
+```
+- **화살표 함수는 자체의 this바인딩을 갖지 않는다. 따라서 화살표 함수 내부에서 this를 참조하면 상위 스코프의 this를 그대로 참조하는데,  이를 `lexical this` 라고 한다.** 렉스컬 스코프와 같이 화살표 함수의 this가 함수가 정의된 위치에 의해 결정된다는 것을 의미한다.
+
+- 화살표 함수를 제외한 모든 함수에는 this 바인딩이 **반드시 존재한다.** 따라서 ES6이전엔 일반적인 식별자처럼 스코프 체인을 통해 this를 탐색할 필요가 없었다. 하지만 화살표 함수는 this 바인딩이 존재하지 않으므로 일반적인 식별자처럼 스코프 체인을 통해 탐색한다.
+
+```js
+// 화살표 함수인 foo는 상위 스코프인 즉시 실행 함수에 바인딩된 this를 가리킨다.
+(function () {
+  const foo = () => console.log(this);
+  foo();
+}).call({ a: 1}); // { a: 1}
+
+// bar는 화살표 함수를 반환하는 중첩 화살표 함수로, 화살표 함수는 this바인딩이 없으므로 결국 this바인딩을 가진 첫번째 상위 스코프인 즉시실행 함수의 this를 참조한다.
+(function () {
+  const bar = () => () => console.log(this);
+  bar()();
+}).call({ a: 1}); // { a: 1}
+
+// foo의 상위 스코프는 전역이므로 this는 전역객체
+const foo = () => console.log(this);
+foo();  // window
+
+// increase 프로퍼티에 할당한 화살표 함수의 상위 스코프는 "전역"이다
+// 따라서 increase에 할당된 화살표 함수의 this는 전역객체
+const counter = {
+  num: 1,
+  increaase: () => ++this.num;
+}
+console.log(counter.increase());  // NaN
+```
+
+- 화살표 함수는 this 바인딩을 갖지 않기때문에 Function.prototype의 `call`, `apply`, `bind` 메서드를 사용해도 내부의 this를 교체할 수 없다. 호출은 가능.
+```js
+window.x = 1;
+const arrow = () => this.x;
+console.log(arrow().call({ x: 10 })); // 1
+```
+
+- 메서드를 화살표 함수로 정의하는 것은 피해야한다. 메서드는 꼭 ES6 메서드 축약표현으로 정의하자.
+```js
+const person = {
+  name: 'motiveko',
+  sayHi: () => console.log(this.name);
+}
+// sayHi의 상위 스코프인 전역의 this는 전역객체이므로 화살표 함수 내부의 this.name은 window.name과 같다.
+person.sayHi(); // undefined
+```
+
+- 프로토타입 객체의 프로퍼티에 화살표 함수를 할당하는 경우도 동일한 문제가 발생한다. 일반 함수를 사용해야한다.
+```js
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.sayHi = () => console.log(this.name);
+
+const person = new Person('motiveko');
+
+// prototype 프로퍼티 sayHi의 상위 스코프인 전역의 this가 바인딩된다.
+person.sayHi(); // undefined
+```
+
+- 클래스 필드 정의 제안을 사용하여 클래스 필드에 화살표 함수를 할당할 수도 있다.
+```js
+class Person {
+  name = 'motiveko';
+  sayHi = () => console.log(this.name);
+}
+const p = new Person();
+p.sayHi();  // motiveko
+```
+- ❗️❗️ **어째서 이렇게 정상작동한것일까?** 이유는 위의 클래스 정의는 아래와 같기 때문이다.
+```js
+class Person {
+  constructor() {
+    // constructor 내부의 this는 생성한 인스턴스
+    this.name = name;
+    // 화살표 함수의 this에는 상위 스코프인 constructor 함수의 스코프의 this, 즉 생성한 인스턴스가 할당된다!
+    this.sayHi = () => console.log(this.name);
+  }
+}
+```
+- 하지만 클래스 필드에 할당한 화살표 함수는 프로토타입 메서드가 아니라 **인스턴스 메서드가 된다.** 따라서 ___메서드를 정의할 땐 ES6 메서드 축약 표현으로 정의하자.___
+
+<br>
+
+### 26.3.4 super
+- 화살표 함수는 자체의 super바인딩을 갖지 않으므로 this와 마찬가지로 상위 스코프의 super를 참조한다.
+```js
+class Base {
+  constructor (name) {
+    this.name = name;
+  }
+  sayHi() {
+    return this.name;
+  }
+}
+
+class Derived extends Base {
+  // 화살표 함수의 super는 상위 스코프인 constructor에서의 super를 가리킨다.
+  sayHi = () => super.sayHi();
+}
+```
+
+<br>
+
+### 26.3.5 arguments
+- this, super와 마찬가지로 화살표 함수는 자체 arugments 바인딩을 갖지 않으므로 사우이 스코프의 arguments를 참조한다.
+```js
+(function() {
+  // 화살표 함수 foo의 상위 스코프인 즉시실행 함수의 arguments 참조
+  const foo = () => console.log(arguments); // [Arguments] { '0': 1, '1': 2}
+  foo(3,4);
+}(1, 2))
+
+// foo의 상위 스코프는 전역인데 전역에는 arguments 객체가 존재하지 않는다.
+const foo = () => console.log(arguments);
+foo(1,2); // ReferenceError: arguments is not defined
+```
+- 상위 스코프의 arguments를 참조할 수 있지만 화살표 함수 자신에게 전달된 인수 목록을 확인할 수 없으므로 별로 유용하지 않다. 따라서 화살표 함수로 가변 인자 함수를 구현해야 할 때는 반드시 `Rest 파라미터`를 이용하자.
+
+<br>
+
+### 26.4 Rest 파라미터
+### 26.4.1 기본 문법
+- Rest 파라미터는 함수에 전달된 인수들의 목록을 배열로 전달받는다.
+```js
+function foo(param1, ...rest) {
+  // 매개변수 rest는 인수들의 목록을 배열로 전달받는 Rest 파라미터다
+  console.log(rest);  // [2, 3, 4, 5]
+}
+foo(1,2,3,4,5);
+```
+- Rest parameter는 나머지 파라미터이므로 ***반드시 마지막 파라미터여야한다.***
+- Rest parameter는 단 한번만 선언할 수 있다.
+- Rest parameter는 함수 정의 시 선언한 매개변수 개수를 나타내는 함수 객체의 **length 프로퍼티**에 영향을 주지
+않는다.
+
+```js
+function foo(x, y, ...rest) {}
+console.log(foo.length); // 2
+```
+<br>
+
+### 26.4.2 Rest 파라미터와 arguments 객체
+- ES6이전에는 가변 인자 함수의 경우 arguments객체를 사용했으나, 진짜가 아닌 유사 배열 객체이므로, Array.prototype 메서드를 사용하려면 `call`, `apply`, `bind`를 사용하여야 했다.
+- Rest파라미터는 진짜 배열이므로 Array protoype 메서드를 마음껏 사용할 수 있다.
+
+<br>
+
+### 26.5 매개변수 기본값
+- 인수가 전달되지 않은 매개변수의 값은 undefined가 되는데, 이는 문제의 소지가 있으므로, 기본값을 할당할 필요가 있다.
+- 매개변수 기본값은 인수를 전달하지 않거나 `undefined`를 전달한 경우에만 유효하다.
+```js
+function sum(x = 0, y = 0) {
+  return x + y;
+}
+console.log(sum(1));  // 1 (1+0)
+console.log(sum(1,undefined));  // 1 (1+0)
+```
+- Rest파라미터에는 기본값을 지정할 수 없다.
+- **매개변수 기본값도 함수 정의시 선언한 매개변수 개수를 나타내는 함수의 length property와 arguments 객체에 영향을 주지 않는다.**
+```js
+function sum(x, y = 0) {
+  console.log(arguments);
+}
+console.log(sum.length) // 1
+
+console.log(1);  // Arguments { '0': 1 }
+console.log(1, 2);  // Arguments { '0': 1, '1': 2}
+
+```
+
+
