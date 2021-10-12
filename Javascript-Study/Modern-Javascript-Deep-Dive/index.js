@@ -1,9 +1,3 @@
-class Person {
-  constructor() {
-    this.name = 'motiveko';
-    this.hi = () => console.log(this.name);
-  }
-  rm = this
-}
-const p = new Person();
-console.log(p.rm)
+const arr = [1,2,3,4,5,6];
+const res = arr.slice(-10,5);
+console.log(res);
