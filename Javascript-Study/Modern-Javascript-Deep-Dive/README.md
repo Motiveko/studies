@@ -3922,3 +3922,278 @@ console.log(Object.getOWnPropertyDescriptors(arr2));
 
 
 ### 27.4 배열 생성
+- 배열 리터럴
+- Array 생성자 함수
+  ```js
+  // 숫자 넣으면 길이 10의 empty array
+  const arr1 = new Array(10);
+  console.log(arr);  // [empty * 10]
+  console.log(arr.length);
+
+  const arr2 = new Array(1,2,3);  // [1, 2, 3]
+  const arr3 = new Array({}); // [{}]
+  ```
+- Array.of
+  - 전달된 인수를 요소로 갖는 배열을 생성한다.
+- Array.from
+  - ES6에서 도입된 `Array.from`은 유사 배열 객체 또는 이터러블 객체를 인수로 전달받아 배열로 반환한다.
+  ```js
+  // 유사 배열 객체를 변환하여 배열생성
+  Array.from({ length: 2, 0: 'a', 1: 'b' });  // ['a', 'b']
+  // 이터러블을 변환하여 배열을 생성, 문자열은 Iterable~
+  Array.from('Hello');  // [ 'H', 'e', 'l', 'l', 'o' ]
+  ```
+  - Array.from은 두 번째 인수로 `callback`도 전달할 수 있다. 첫 번째 인수에 의해 생성된 배열의 요소값과 인덱스를 순차적으로 콜백에 전달하고, callback 반환값들로 배열을 만들어 반환한다.
+  ```js
+  Array.from({ length: 3 });  // [undefined, undefined, undefined]
+  Array.from({ length: 3 }, (_, i) => i); // [ 0, 1, 2 ]
+  ```
+> ❗️`유사 배열 객체`(array-like-object)란 마치 배열처럼 `인덱스`로 프로퍼티 값에 접근할 수 있고, `length` 프로퍼티를 갖는 객체를 말한다.
+
+> ❗️ `이터러블 객체`(Iterable object)란 Symbol.iterator 메서드를 구현하여 for ...of 문으로 순회할 수 있으며, `스프레드 문법`과 `배열 디스트럭처링 할당`의 대상으로 사용할 수 잇는 객체를 말한다.
+
+<br>
+
+### 27.5 배열 요소의 참조
+- 배열 요소는 arr[index값]으로 참조하는데, index는 배열 객체의 키값으로, 없는 key를 참조시 undefined가 반환된다.
+
+### 27.6 배열 요소의 추가와 갱신
+- 현재 배열의 length 프로퍼티 값보다 큰 인덱스로 새로운 요소를 추가하면 `희소 배열`이 된다.
+```js
+arr = [0, 1];
+arr[100] = 100;
+console.log(arr); // [0, 1, empty * 98, 100]
+console.log(arr.length);  // 101
+```
+- 인덱스는 반드시 0 이상의 정수(또는 정수 형태의 문자열)을 사용하자. 정수 이외의 값을 인덱스처럼 사용하면 요소가 생성되는게 아니라 `프로퍼티`가 생성된다. 이 추가된 프로퍼티는 length 프로퍼티 값에 영향을 주지 않는다.
+```js
+const arr = [1];
+arr['1'] = [2];
+// 정수 외의 값 -> 프로퍼에 추가
+arr['foo'] = 3;
+arr[-1] = 4;
+
+console.log(arr); // [1,2, foo: 3, '-1': 4]
+// 인덱스 외 프로퍼티는 length에 영향을 주지 않는다.
+console.log(arr.length);  // 2
+```
+
+<br>
+
+### 27.7 배열 요소의 삭제
+- 배열은 사실 객체이기 때문에 `delete` 연산자로 특정 요소를 삭제할 수 있다.
+```js
+const arr = [1, 2, 3];
+
+delete arr[1];
+// 중간이 짤려 희소배열이 되었다.
+console.log(arr); // [1, empty, 3]
+
+// length 프로퍼티에 영향을 주지 않는다.
+console.log(arr.length);
+```
+- delete arr[1]과 같은 방법은 결과가 희소 배열이 되고 length값이 변하지 않아 **좋지 않은 방법이다.** 희소 배열을 만들지 않으며 요소를 **완전히** 삭제하고 싶으면 `Array.prototype.splice` 메서드를 자용하자.
+```js
+const arr = [1, 2, 3];
+
+// splice(삭제를 시작할 index, 삭제할 요소 수)
+arr.splice(1, 1);
+console.log(arr); // [1, 2]
+
+console.log(arr.length);  // 2
+```
+
+<br>
+
+### 27.8 배열 메서드
+- 배열 메서드에는 결과를 반환하는 패턴이 두가지가 있다. 둘을 구분하는것은 **매우 중요하다.**
+  1. **원본 배열(=배열 메서드 내부의 this)을 직접 변경하는 메서드(mutator method)**
+  2. ***원본 배열을 직접 변경하지 않고 새로운 배열을 생성하여 반환하는 메서드(anccessor method)***
+
+```js
+const arr = [1];
+
+// case 1. 원본 배열을 직접변경
+arr.push(2);
+console.log(arr); // [1, 2]
+
+// case 2. 원본 배열을 변경하지 않고 새로운 배열 생성후 반환
+const res = arr.concat(3);
+console.log(arr); // [1, 2]
+console.log(res); // [1, 2, 3]
+```
+- case1의 메서드는 원본 배열을 바꾸는 `부수 효과`가 있으므로 주의해야한다.
+
+<br>
+
+### 27.8.1 Array.isArray
+- Array 생성자 함수의 `static method`이다.
+- 전달된 인수가 배열이면 true, 아니면 false
+- 배열이라는 것은 배열 생성 방법에 의해 생성된 객체를 말한다.
+
+<br>
+
+### 27.8.2 Array.prototype.indexOf
+- 인수로 전달된 요소를 검색해 index를 반환한다(여러개면 첫 번째). 존재하지 않으면 -1
+- 주로 요소가 존재하는지 여부를 판단할 때 쓰는데, ES7에서 도입된 `Array.prototype.includes` 메서드를 사용하면 가독성이 더 좋다.
+
+<br>
+
+### 27.8.3 Array.prototype.push
+- 인수로 전달받은 **모든 값을** 배열의 마지막 요소로 추가하고 변경된 length 프로퍼티 값을 반환. `mutator method`이다.
+- **push는 성능 면에서 좋지 않다. push할 요소가 하나뿐이라면 length 프로퍼티로 직접 추가하는게 빠르다.**
+- 부수효과 없이 추가하려면 ES6 `스프레드 문법`을 사용해 새로운 배열을 생성하는 방식으로 추가 가능하다.
+```js
+const arr = [1, 2];
+// push 메서드로 추가
+arr.push(3);
+// length 프로퍼티로 추가
+arr[arr.length] = 4;
+
+// 스프레드 문법
+const newArr = [...arr, 3];
+```
+
+<br>
+
+### 27.8.4 Array.prototype.pop
+- 맨 마지막 요소를 제거하고 제거한 요소를 반환한다. `mutator method`이다.
+
+<br>
+
+### 27.8.5 Array.prototype.unshift
+- unshift는 인수로 전달받은 모든 값을 원본 배열의 선두에 요소로 추가하고 변경된 length를 반환한다. `mutator method`이다.
+- 부수효과 없이 추가하려면 ES6 스프레드 문법을 사용하자.
+
+```js
+const arr = [1, 2];
+
+const newArr = [3, ...arr];
+
+arr.unshift(3);
+console.log(newArr); // [3, 1, 2]
+console.log(arr);    // [3, 1, 2]
+```
+
+<br>
+
+### 27.8.6 Array.prototype.shift
+- shift 메서드는 원본 배열에서 첫 번째 요소를 제거하고 제거한 요소를 반환하다. Queue의 동작과 같다.  `mutator method`이다.
+
+<br>
+
+### 27.8.7 Array.prototype.concat
+- concat 메서드는 인수로 전달된 값을을 **원본 배열의 마지막 요소로 추가**한 **새로운 배열**을 반환한다. 인수로 전달된 값이 배열일 경우 해체하여 추가한다. `anccessor method`이다.
+- conat은 ES6 스프레드 문법으로 대체할 수 있다.
+
+```js
+const res1 = [1,2].concat([3,4]);
+const res2 = [...[1,2], ...[3,4]];
+```
+
+<br>
+
+### 27.8.8 Array.prototype.splice
+- push, pop, unshift, shift 메서드는 모두 원본 배열을 직접 변경하고 배열의 처음이나 마지막에 요소를 추가/제거한다.
+- 원본 배열의 **중간**에 요소를 추가/제거 하는 경우 `splice` 메서드를 사용한다. 제거한 요소의 배열을 반환한다. `mutator method`이다.
+- splice(start, deleteCount, ...items)로 총 3개의 매개변수가 있다.
+  - start : 요소를 제거하기 시작할 index. **start값만 있으면 start부터 모든 요소를 제거한다**. start가 **음수**면 배열의 끝에서부터 index를 나타낸다. -n 이면 끝에서 n번째라는 말.
+  - deleteCount: start부터 제거할 요소의 개수, 0 일경우 제거하지 않는다.
+  - items: 제거한 위치에 삽입할 요소들. 생략시 제거만 한다.
+- 아래는 예제, indexOf와 결합해 특정 요소를 찾아 첫 번째 하나만 제거한다.
+```js
+const arr = [1,2,3,1,2];
+function remove(array, item) {
+  const index = array.indexOf(item);
+  if( index !== -1 ) array.splice(index, 1);
+  return array;
+}
+
+console.log(remove(arr, 2));  // [1, 3, 1, 2]
+console.log(remove(arr, 10)); // [1, 3, 1, 2]
+```
+
+<br>
+
+### 27.8.9 Array.prototype.slice
+- slice 메서드는 인수로 전달된 범위의 **요소들을 복사하여 배열로 반환**한다. 원본 배열은 변경되지 않는 `anccessor method`이다.
+- slice(start, end)로 두개의 매개변수를 갖는다.
+  - start : 복사를 시작할 인덱스, 음수인 경우 배열의 끝에서의 인덱스를 나타냄. -2면 뒤에서 두번째(length - 2) 에서 시작한다는 말이다.
+  - end: 복사를 종료할 인덱스로 이 인덱스는 포함되지 않는다. end는 생략시 기본값은 length 프로퍼티 값이다.
+- 모든 요소 생략시 원본 배열의 복사본을 생성하여 반환한다.
+- 이 때, 복사본은 `얕은 복사`(shallow copy)를 통해 생성된다.
+
+>❗️11.2.1에서 봤듯 프로퍼티 값으로 객체를 가지는 객체는 한 단계까지 복사하는걸 **얕은 복사**, 중첩 객체까지 복사하는것을 **깊은 복사**라고 한다. slice, ES6 스프레드 문법, Object.assign은 모두 얕은 복사를 수행한다. 깊은 복사를 위해선 `Lodash` 라이브러리의 cloneDeep 메서드를 사용하자.
+
+
+- slice 메서드를 이용해 `arguments`, `HTMLCollection`, `NodeList` 같은 유사 배열 객체를 배열로 변환할 수 있다.
+```js
+function sum() {
+  // 유사 배열 객체를 배열로 복사
+  // Array.from(argurments), [...arguments]로 대체 가능
+  var arr = Array.prototype.slice.call(arguments);
+  console.log(arr); // [1, 2, 3]
+  return arr.reduce(function(pre, cur) {
+    return pre + cur;
+  }, 0);
+}
+console.log(sum(1,2,3));  // 6
+```
+- Array.from 메서드나 ES6스프레드 문법으로도 유사 배열 객체를 배열로 변환 가능하다.
+
+<br>
+
+### 27.8.10 Array.prototype.join
+- join 메서드는 원본 배열의 모든 요소를 문자열로 변환한 후 전달받은 구분자(separator)로 연결한 문자열을 반환한다. 구분자 기본값은 ','이다. 당연히
+`anccessor method`이다.
+```js
+const arr = [1,2,3,4];
+arr.join(); // '1,2,3,4'
+arr.join(''); // '1234'
+arr.join(':'); // '1:2:3:4'
+```
+
+<br>
+
+### 27.8.11 Array.prototype.reverse
+- reverse 메서드는 원본 배열의 순서를 반대로 뒤집는다. 이때 **원본 배열이 변경**되어 반환된다. `mutator method` 이다.
+
+<br>
+
+### 27.8.12 Array.prototype.fill
+- ES6에서 도입된 fill은 전달받은 값을 배열의 처음부터 끝까지 요소로 채운다. 원본 배열이 변경되는 `mutator method` 이다.
+- fill(element, start?, end?)
+  - elemet: 채울 요소
+  - start : 채우기를 시작할 index
+  - end : 채우기를 멈출 index, end는 포함되지 않는다.
+```js
+const arr = [1,2,3,4,5];
+arr.fill(0,1,3);
+console.log(arr); // [1, 0, 0, 4, 5]
+```
+- fill은 한가지 값으로만 채울 수 있는데, `Array.from`을 이용하면 콜백 함수로 요소를 만들며 채울 수 있다.
+
+```js
+// 전달 받은 정수만큼 요소를 생성하며 0~받은 수 로 요소를 채운다.
+const seq = (length = 0) => Array.from({ length }, (_, i) => i);
+console.log(seq(3));  // [0, 1, 2]
+```
+
+<br>
+
+### 27.8.13 Array.prototype.includes
+- ES7에 도입된 includes는 요소의 포함 여부를 검사한다.
+- includes(element, start?)
+  - element : 찾을 요소
+  - start: 시작할 index, 음수면 뒤에서 n번째 부터 찾는것
+
+<br>
+
+### 27.8.14 Array.prototype.flat
+- **ES10에 도입된 flat 메서드는 전달한 깊이만큼 재귀적으로 배열을 평탄화 한다.**
+```js
+// 인수 생략하면 기본값 1
+[1, [2, 3, 4, 5]].flat(); // [1,2,3,4,5]
+[1,[2,[3,[4]]]].flat(2);  // [1,2,3,[4]]
+[1,[2,[3,[4]]]].flat(Infinity);  // [1,2,3,4]
+```
