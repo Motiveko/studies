@@ -4008,7 +4008,7 @@ console.log(arr.length);  // 2
 ### 27.8 배열 메서드
 - 배열 메서드에는 결과를 반환하는 패턴이 두가지가 있다. 둘을 구분하는것은 **매우 중요하다.**
   1. **원본 배열(=배열 메서드 내부의 this)을 직접 변경하는 메서드(mutator method)**
-  2. ***원본 배열을 직접 변경하지 않고 새로운 배열을 생성하여 반환하는 메서드(anccessor method)***
+  2. ***원본 배열을 직접 변경하지 않고 새로운 배열을 생성하여 반환하는 메서드(accessor method)***
 
 ```js
 const arr = [1];
@@ -4083,7 +4083,7 @@ console.log(arr);    // [3, 1, 2]
 <br>
 
 ### 27.8.7 Array.prototype.concat
-- concat 메서드는 인수로 전달된 값을을 **원본 배열의 마지막 요소로 추가**한 **새로운 배열**을 반환한다. 인수로 전달된 값이 배열일 경우 해체하여 추가한다. `anccessor method`이다.
+- concat 메서드는 인수로 전달된 값을을 **원본 배열의 마지막 요소로 추가**한 **새로운 배열**을 반환한다. 인수로 전달된 값이 배열일 경우 해체하여 추가한다. `accessor method`이다.
 - conat은 ES6 스프레드 문법으로 대체할 수 있다.
 
 ```js
@@ -4116,7 +4116,7 @@ console.log(remove(arr, 10)); // [1, 3, 1, 2]
 <br>
 
 ### 27.8.9 Array.prototype.slice
-- slice 메서드는 인수로 전달된 범위의 **요소들을 복사하여 배열로 반환**한다. 원본 배열은 변경되지 않는 `anccessor method`이다.
+- slice 메서드는 인수로 전달된 범위의 **요소들을 복사하여 배열로 반환**한다. 원본 배열은 변경되지 않는 `accessor method`이다.
 - slice(start, end)로 두개의 매개변수를 갖는다.
   - start : 복사를 시작할 인덱스, 음수인 경우 배열의 끝에서의 인덱스를 나타냄. -2면 뒤에서 두번째(length - 2) 에서 시작한다는 말이다.
   - end: 복사를 종료할 인덱스로 이 인덱스는 포함되지 않는다. end는 생략시 기본값은 length 프로퍼티 값이다.
@@ -4145,7 +4145,7 @@ console.log(sum(1,2,3));  // 6
 
 ### 27.8.10 Array.prototype.join
 - join 메서드는 원본 배열의 모든 요소를 문자열로 변환한 후 전달받은 구분자(separator)로 연결한 문자열을 반환한다. 구분자 기본값은 ','이다. 당연히
-`anccessor method`이다.
+`accessor method`이다.
 ```js
 const arr = [1,2,3,4];
 arr.join(); // '1,2,3,4'
@@ -4197,3 +4197,161 @@ console.log(seq(3));  // [0, 1, 2]
 [1,[2,[3,[4]]]].flat(2);  // [1,2,3,[4]]
 [1,[2,[3,[4]]]].flat(Infinity);  // [1,2,3,4]
 ```
+<br>
+
+### 27.9 배열 고차 함수
+- 고차 함수는 **함수를 인수로 전달받거나 함수를 반환하는 함수**를 말한다.
+- 고차 함수는 외부 상태의 변경이나 가변(mutable) 데이터를 피하고 불변성(immutability)을 지향하는 함수형 프로그래밍 언어에 기반을 둔다.
+
+### 27.9.1 Array.protoype.sort
+- sort는 배열의 요소를 정렬한다. 기본적으로 `오름차순`으로 요소를 정렬한다.
+- 내림차순 하려면 sort후 `reverse`를 호출하면 된다.
+- 숫자 정렬시 주의가 필요하다. 기본적으로 유니코드의 포인트 순서를 따르므로, 요소를 일시적으로 문자열로 변환 후 유니코드 코드 포인트의 순서로 정렬하기 때문
+```js
+// 1은 U+0031, 2는 U+0032, 10은 U+0031U+0030 으로 한자리씩 비교해 정렬하므로 일종의 기수(radix)정렬이 된다.
+[1,2,10].sort(); // [1,10, 2]
+```
+- 따라서 숫자 요소 정렬시, **정렬 순서를 정의하는 비교함수를 인수로 전달해야한다.**
+```js
+// 숫자 정렬
+const points = [1,2,10];
+points.sort((a, b) => a - b);
+
+// 객체의 정렬
+const todos = [
+  { id: 4, contnet: 'JavaScript' }.
+  { id: 1, contnet: 'HTML' }.
+  { id: 2, contnet: 'CSS' }.
+];
+
+// key를 인자로 받아 key값을 기준으로 정렬
+function compare(key) {
+  return (a, b) => (a[key] > b[key] ? 1 : (a[key] < b[key]) ? -1 : 0);
+}
+
+todos.sort(compare('id'));  // [ {id: 1, ...}, { id: 2, ... }, { id: 4, ... }]
+```
+
+<br>
+
+### 27.9.2 Array.prototype.forEach
+- 조건문, 반복문은 로직의 흐름을 이해하기 어렵게 하고 for문은 변수를 선언해야 하는 등 함수형 프로그래밍이 추구하는 바와 맞지 않다.
+- forEach 메서드는 반복문을 추상화한 고차함수다.
+- forEach((element, index, arr) => {...}, thisArg?)
+  - 첫번째 요소는 콜백 함수
+    - element : 요소
+    - index : 요소의  index
+    - arr : 배열객체
+  - **두번째 요소는 콜백 함수 내의 this바인딩 객체**. 콜백은 일반함수로 호출되므로 thisArg가 없으면 전역객체다.
+- thisArg를 쓰는것보다 ES6 화살표 함수를 사용하는 편이 좋겠다.
+- forEach는 element를 통해 원본 배열을 건드리지 않으나 3번째 인자인 arr(this)를 조작하면 원본 배열을 바꿀 수 있다.
+```js
+const nums = [1,2,3];
+nums.forEach((item, i, arr) => { arr[i] = item ** 2;});
+console.log(nums);  // [1,4,9]
+```
+
+- forEach 메서드의 동작을 이해하기 위해 `폴리필`을 살펴본다.
+```js
+if(!Array.protootype.forEach) {
+  Array.prototype.forEach = function(callbac, thisArg) {
+    if( typeof callback !== 'function' ) {
+      throw new TypeError(callback + 'is not a function');
+    }
+
+    thisArg = thisArg || window;
+
+    for( var i = 0; i < this.length; i++) {
+      // thisArg 로 this바인딩을, 2~4요소는 callback함수의 인자로 전달
+      callback.call(thisArg, this[i], i, this);
+    }
+  }
+}
+```
+- forEach 메서드도 결국 내부적으로 for문을 돌리긴 하나 반복문을 추상화를 통해 메서드 내부로 은닉하여 로직의 흐름을 이해하기 쉽게 하고 복잡성을 줄인다.
+- `희소 배열`의 경우 **존재하지 않는 요소는 순회 대상에서 제외된다.** `map`, `filter`, `reduce`메서드 등도 마찬가지다.
+
+<br>
+
+### 27.9.3 Array.prototype.map
+- map은 배열 요소를 순회해 콜백 함수를 호출하여 콜백 함수의 반환값으로 구성된 새로운 배열을 반환한다. 즉 원본 배열을 변환하지 않는 `accessor method`이다.
+- map(callback, this?) 형태로 forEach와 형태가 같다.
+- **map 메서드가 반환하는 새로운 배열의 length 프로퍼티 값은 원본 배열의 length값과 반드시 일치한다. 즉 새로운 배열은 원본 배열을 1:1 매핑한다.**
+
+<br>
+
+### 27.9.4  Array.prototype.filter
+- filter는 배열 요소를 순회하며 콜백 함수를 호출하고 호출값이 true인 요소로만 구성된 **새로운 배열을 반환한다.** 즉 원본 배열을 변환하지 않는 `accessor method`이다.
+- map(callback, this?) 형태로 forEach와 형태가 같다.
+
+<br>
+
+### 27.9.5 Array.prototype.reduce
+- reduce는 배열 요소를 순회하며 콜백 함수를 실행하는데, 콜백 함수의 반환값을 다음 콜백 함수로 넘겨 최종적으로 **하나의 결과값을 반환한다.** 원본 배열을 변환하지 않는 `accessor method`이다.
+- reduce(callback, initialValue?)
+  - callback(accumulator, currValue, index, array)
+- 몇가지 예제를 살펴본다
+```js
+// 요소별 중복 횟수
+const arr1 = ['1','1','1','3','2','4','3','2'];
+const count = arr1.reduce((acc, cur) => {
+  // (acc[cur]이 없으면 0) + 1
+  acc[cur] = (acc[cur] || 0) + 1;
+  return acc
+}, {});
+
+// 중첩 배열 평탄화
+const arr2 = [1,[2,3],4,[5,6]];
+// concat은 mutator method다
+const flatten = arr2.reduce((acc, cur) => acc.concat(cur), [])
+
+// 중복 요소의 제거
+const arr3 = [1,2,3,4,4,2,3,5];
+const uniq1 = arr3.reduce((acc, cur, i, arr) => {
+   if(arr.indexOf(cur) === i) acc.push(cur);
+   return acc;
+}, []);
+;;;
+// 중복 요소의 제거는 아래 방법으로 하는게 최고다
+const uniq2 = [...new Set(arr3)];
+
+```
+- **reduce 사용시 항상 초기값을 전달하자. 그것이 안전한 코딩이다.**
+
+<br>
+
+### 27.9.6 Array.prototype.some
+- `some`은 배열 요소를 순회하며 콜백 함수를 호출하고, 콜백의 **반환값이 한번이라도 true면 true, 모두 false면 false를 반환한다.**
+- Java에서 Stream의 findAny().isPresent() 쯤 되는것이다.
+- **빈 배열에 대해서는 언제나 false를 반환한다.**
+- some(callback, thisArg) 형태다.
+
+<br>
+
+### 27.9.7 Array.prototype.every
+- `every`는 배열 요소를 순회하며 콜백 함수를 호출하고, **콜백의 반환값이 모두 true면 true, 하나라도 false면 false를 반환한다.**
+- ❗️**빈 배열의 경우 언제나 true를 반환한다.**
+- every(callback, thisArg) 형태다.
+
+<br>
+
+### 27.9.8 Array.prototype.find
+- ES6에서 도입된 find 메서드는 콜백 함수를 호출해 조건을 만족하는 **첫 번째 요소를 반환한다.**ㄴㄴ
+- find(callback(element, index, array), thisArg) 형태다.
+
+<br>
+
+### 27.9.9 Array.prototype.findIndex
+- ES6에서 도입된 findIndex 메서드는 배열 요소를 순회하며 콜백 함수를 호출하고 콜백 반환값이 true인 첫 번째 요소를 반환한다.
+- findIndex(callback(element, index, array), thisArg) 형태다
+
+<br>
+
+### 27.9.10 Array.prototype.flatMap
+- ES10에 도입된 flatMap은 map 메서드를 통해 생성된 새로운 배열을 평탄화한다. 즉 map + flat이다.
+- 단, flat처럼 인수를 전달해 평탄화 깊이를 설정하진 못하고 1단계만 평탄화 한다.
+- map을통해 생성된 **새로운 배열을 평탄화**한다. 즉 `accessor method`이다.
+
+<br><br>
+
+## 28. Number
