@@ -1,9 +1,5 @@
-class Person {
-  constructor() {
-    this.name = 'motiveko';
-    this.hi = () => console.log(this.name);
-  }
-  rm = this
-}
-const p = new Person();
-console.log(p.rm)
+const arr = [1];
+arr.length = 3;
+
+console.log(arr[2]);
+console.log(Object.getOwnPropertyDescriptors(arr));
