@@ -4355,3 +4355,78 @@ const uniq2 = [...new Set(arr3)];
 <br><br>
 
 ## 28. Number
+> 몰랐던 내용이나 헷갈렸던 내용만 정리한다.
+<br>
+
+### 28.1 Number 생성자 함수
+```js
+const n = new Number();
+console.log(n); // Number{[[PrimitiveValue]]: 0}
+```
+- 접근 불가한 [[Primitive]] 프로퍼티는 [[NumberData]] 내부 슬롯을 가리킨다.  이게 Number 객체가 갖는 값.
+- [[Primitive]]에 생성자에 인자로 보내주는 값이 저장되는데, 숫자가 아닌 값이 들어오면 9.3에서 본 `명시적 타입 변환`이 일어난다.
+
+<br>
+
+### 28.2 Number 프로퍼티
+- Number.EPSILON
+  - ES6에 도입된 `EPSILON`은 1과 1보다 큰 숫자 중에서 가장 작은 숫자와의 차이로 2.22.. x 10^-16이다.
+  - 다음과 같이 부동소수점 산술 연산은 정확한 결과를 기대하기 어렵다. 이런 부동소수점으로 인해 발생하는 오차를 해결하기 위해 EPSILON을 사용한다.
+```js
+0.1 + 0.2; // 0.3000...004
+0.1 + 0.2 === 0.3; // false
+
+function isEqual(a, b) {
+  // a와 b의 차가 EPSILON보다 작으면 같은 수다.
+  return Math.abs(a - b) < Number.EPSILON;
+}
+
+isEqual(0.1 + 0.2, 0.3);  // true
+```
+
+- 28.2.2 Number.MAX_VALUE
+  - js에서 표현 가능한 가장 큰 양수값(1.79...e+308)이다. 이보다 큰 숫자는 Infinity
+
+- 28.2.3 Number.MIN_VALUE
+  - js에서 표현 가능한 가장 작은 양수값(5e-324)이다. 이보다 작은 값은 0이다.
+
+- Number.MAX_SAFE_INTEGER
+  - js에서 **안전하게** 표현할 수 있는 가장 큰 정수값(9007...991)
+- Number.MIN_SAFE_INTEGER
+  - js에서 **안전하게** 표현할 수 있는 가장 작은 정수값(-9007...991)
+- Number.POSITIVE_INFINITY
+  - 양의 무한대 Infinity와 같다
+- Number.NEGATIVE_INFINITY
+  - 음의 무한대 -Infinity
+- Number.NaN
+
+<br>
+
+### 28.3 Number 메서드
+- Number.isFinite
+  - ES6에서 도입. 유한수인지 판별하여 boolean 을 반환한다. 인수를 ***암묵적 타입 변환***한다.
+  - **Infinity, -Infinity, NaN에 대해서만 false를 반환**
+  - 빌트인 전역 함수 isFinite은 암묵적 타입 변환을 하지 않아 숫자가 아니면 모두 false를 반환한다는 차이가 있다.
+- Number.isInteger
+  - ES6에서 도입. 인수가 정수인지 검사하여 결과값을 boolean으로 반환. ***암묵적 타입변환 하지 않는다.*** 숫자 아닌 값은 모두 false.
+- Number.isNaN
+  - ES6에서 도입. 인수가 NaN인지 여부를 boolean으로 반환. ***암묵적 타입 변환하지 않는다.*** 숫자 아닌 값은 모두 false다.
+  - 빌트인 전역 함수 isNaN은 암묵적 타입 변환을 한다. **isFinite과 반대다.**
+- Number.isSafeInteger
+  - ES6에서 도입. 안전한 정수값( -(2^53 - 1) ~ (2^53 - 1))인지 판별한다. 암묵적 타입 변환 하지 않는다.
+- Number.prototype.toExponential
+  - 숫자를 지수표기법으로(10의 n승 사용)나타낸다.
+- **숫자 리터럴 뒤에 메서드를 붙이는것은 에러가 난다.**  부동소수점인지 메서드인지 모호하기 때문이다. **그룹연산자 ()로 감싸서 사용하면 해결 가능하다.**
+- Number.prototype.toFixed
+- `toFixed`는 숫자를 반올림하여 **문자열**로 반환한다. 소수점 자릿수를 0~20의 인자로 전달 가능하다.
+- Number.prototype.toPrecision
+  - toPrecision은 인수로 전달한 자릿수만 남기고 나머진 반올림해서 문자열로 반환한다.
+  ```js
+  // 기본값은 0으로 그냥 전체 반환
+  (12345.6789).toPrecision(); // "12345.6789"
+  // 2자리 빼고 다 반올림
+  (12345.6789).toPrecision(2); // "1.2e+4"
+  ```
+- Number.prototype.toString
+   - 숫자를 문자열로 반환. 기본 10진법으로 반환하고 2~36 사이의 정수를 인수로 전달하면 2~36진수로 반환한다.
+
