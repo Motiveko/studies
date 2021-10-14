@@ -4452,4 +4452,129 @@ isEqual(0.1 + 0.2, 0.3);  // true
     Math.max.apply(null, [1,2,3]);  // 3
     Math.max(...[1,2,3]); // 3
     ```
-  - Math.min : 인수중 최소값을 반환한다. 인수가 전달되지 않으면 Infinity
+  - Math.min : 인수중 최소값을 반환한다. 인수가 전달되지 않으면 Infinity를 반환
+
+<br>
+
+## 30. Date
+- 표준 빌트인 객체 Date는 날짜와 시간을 위한 메서드를 제공하는 빌트인 객체이자 생성자 함수다.
+- 현재 날짜와 시간은 자바스크립트 **코드가 실행된 시스템의 시계에 의해 결정된다.**
+<br>
+
+### 30.1 Date 생성자 함수
+- 생성자 함수로 생성한 Date 객체는 내부적으로 날짜와 시간을 나타내는 정수값을 갖는다. 이 값은 1970년 1월 1일 00:00:00(UTC)를 기점으로 Date 객체가 나타내는 날짜와 시간까지의 ms를 나타낸다.
+- Date 생성자 함수로 객체를 생성하는 방법은 4가지가 있다.
+
+### 30.1.1 new Date()
+- 현재 날짜와 시간을 가지는 Date 객체를 반환한다.
+- Date 생성자 함수를 new 연산자 없이 호출하면 Date객체가 아닌 **날짜와 시간 정보를 나타내는 문자열을 반환한다.**
+```js
+Date(); // 'Thu Oct 14 2021 23:15:27 GMT+0900 (한국 표준시)'
+```
+
+### 30.1.2 new Date(millisec)
+- 생성자 함수 인자에 millisecond를 전달하면 1970.1.1 00:00:00 기점으로 전달된 밀리초 만큼 경과한 날짜와 시간을 나타내는 Date 객체르 반환한다.
+
+### 30.1.3 new Date(dateString)
+- 생성자 함수 인자에 날짜와 시간을 나타내는 문자열을 인수로 전달하면 지정된 날짜와 시간을 나타내는 Date 객체를 반환한다.
+- 전달할 문자열은 **Date.parse 메서드에 의해 해석 가능한 형식**이어야 한다.
+
+### 30.1.4 new Date(year,month[, day, hour, minute, second, millisec])
+- 생성자 함수에 연, 월, 일, 시, 분, 초, 밀리초를 의미하는 숫자를 전달하면 지정된 날짜와 시간을 나타내는 Date 객체를 반환한다. 이 생성자로 호출하려면 인수는 최소 2개(연,월)은 필수값이고 나머지 값들은 지정하지 않으면 0 또는 1로 초기화한다.
+
+| 인수 | 내용 |
+|:---:|---|
+| `year` | 연을 나타내는 1900 이후의 정수, 0~99는 1900부터 1999로 처리한다. |
+| `month` | 월을 나타내는 **0~11**의 정수, **0은 1월** |
+| `day` | 일을 나타내는 1~31의 정수 |
+| `hour` | 시를 나타내는 0~23의 정수 |
+| `minute` | 분을 나타내는 0~59의 정수 |
+| `second` | 초를 나타내는 0~59의 정수 |
+| `millisecond` | 밀리초를 나타내는 0~999의 정수 |
+
+<br>
+
+### 30.2 Date 메서드
+- Date.now
+  - 1970.1.1 00:00:00 기점으로 현재 시간까지 경과한 밀리초를 반환.
+- Date.parse
+  - 1970.1.1 00:00:00 기점으로 인수로 전달된 지정 시간(dateString) 까지의 밀리초를 숫자로 반환.
+- Date.UTC
+  - 인수로 new Date(year,month[, day, hour, minute, second, millisec]) 와 같은 인수를 전달
+  - 1970.1.1 00:00:00(UTC)를 기점으로 인수로 전달된 지정 시간까지의 밀리초를 숫자로 반환한다.
+  - 올바르지 않은 인수 전달지 NaN 반환
+- Date.prototype.getFullYear
+  - Date 객체의 연도를 나타내는 정수를 반환
+- Date.prototype.setFullYear
+  - Date 객체의 연도를 설정한다. 연도 이외에 옵션으로 월,일 설정가능
+  ```js
+  const today = new Date();
+
+  today.setFullYear(2000);
+  today.getFullYear();  // 2000
+
+  // 옵션으로 월,일까지 지정
+  today.setFullYear(1900, 0, 1);
+  today.getFullYear();  // 1900
+  ```
+- Date.prototype.getMonth
+  - Date 객체의 월을 나타내는 0~11의 정수를 반환
+- Date.prototype.setMonth
+  - Date 객체의 월을 설정. 옵션으로 일도 설정 가능하다.
+- Date.prototype.getDate
+  - Date 객체의 날짜를 나타내는 1~31의 정수를 반환
+- Date.prototype.setDate
+  - Date 객체의 날짜를 설정
+
+- Date.prototype.getDay
+  -  객체의 요일을 0~6의 정수로 반환한다. 일요일(0) ~ 토요일(6)순이다.
+- Date.prototype.getHours
+  - Date 객체의 시간을 0~23의 정수로 반환
+- Date.prototype.setHours
+  - Date 객체에 시간을 설정, 옵션으로 분, 초, 밀리초까지 설정할 수 있다.
+- Date.prototype.getMinutes
+  - Date 객체의 분(0~59)을 나타내는 정수를 반환
+- Date.prototype.setMinutes
+  - Date 객체의 분을 설정. 옵션으로 초, 밀리초 설정 가능하다.
+- Date.prototype.getSeconds
+  - Date 개체의 초(0~59)를 나타내는 정수를 반환
+- Date.prototype.setSecondes
+  - Date 개체의 초를 설정, 옵션으로 밀리초 설정 가능하다.
+- Date.prototype.getMillisecones
+  - Date 객체의 밀리초(0~999)을 나타내는 정수를 반환
+- Date.prototype.setMillisecones
+  - Date 객체의 밀리초 설정
+- Date.prototype.getTime
+  - 1970.1.1 00:00:00을 기점으로 객체의 시간까지 경과된 밀리초를 숫자로 반환.
+- Date.prototype.setTime
+  - 1970.1.1 00:00:00을 기점으로 경과된 밀리초를 설정한다.
+- Date.prototype.getTimezoneOffset
+  - UTC와 Date 객체에 지정된 Locale 시간과의 차이를 **분 단위로** 반환한다. KST는 UTC+9이므로 UTC = KST -9h이다.
+  ```js
+  const today = new Date();
+  today.getTimezoneOffset() / 60; // -9
+  ```
+- Date.prototype.toDateString
+  - 사람이 읽을 수 있는 형식의 문자열로 Date 객체의 날짜를 반환한다.
+- Date.prototype.toTimeString
+  - 사람이 읽을 수 있는 형식으로 Date 객체의 시간을 표현한 문자열을 반환한다.
+- Date.prototype.toISOString
+  - `ISO 8601` 형식으로 Date 객체의 날짜와 시간을 표현한 문자열을 반환한다.(회사 DB에서 쓰는 형태)
+- Date.prototype.toLocaleString
+  - 인수로 전달한 로캘(Locale)을 기준으로 Date 객체의 날짜와 시간을 표현한 문자열을 반환한다. 인수를 생략한 경우 브라우저가 동작중인 시스템의 로캘을 적용한다.
+- Date.prototype.toLocaleTimeString
+  - 인수로 전달한 로캘(Locale)을 기준으로 Date 객체의 시간을 표현한 문자열을 반환한다. 인수를 생략한 경우 브라우저가 동작 중인 시스템의 로캘을 적용한다.
+  ```js
+  const today = new Date();
+  today.toString(); // 'Thu Oct 14 2021 23:53:49 GMT+0900 (한국 표준시)'
+  today.toDateString(); // 'Thu Oct 14 2021'
+  today.toTimeString(); //'23:53:49 GMT+0900 (한국 표준시)'
+  today.toISOString(); // '2021-10-14T14:53:49.624Z'
+  today.toLocaleString('en-US');  //'10/14/2021, 11:53:49 PM'
+  today.toLocaleTimeString('en-US'); //'11:53:49 PM'
+  ```
+
+<br><br>
+
+## 31. RegExp
+
