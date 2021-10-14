@@ -4430,3 +4430,26 @@ isEqual(0.1 + 0.2, 0.3);  // true
 - Number.prototype.toString
    - 숫자를 문자열로 반환. 기본 10진법으로 반환하고 2~36 사이의 정수를 인수로 전달하면 2~36진수로 반환한다.
 
+<br><br>
+
+## 29.Math
+> 표준 빌트인 객체 Math는 생성자 함수가 아니다. static property와 static method만 제공한다.
+### 29.1 Math 프로퍼티
+- Math.PI : 원주율, 3.14..
+
+### 29.2 Math 메서드
+  - Math.abs : 인수의 절대값을 반환
+  - Math.roud : 인수의 소수점 이하를 반올림한 정수를 반환
+  - Math.ceil : 인수의 소수점 이하를 올림한 정수를 반환
+  - Math.floor : 인수의 소수점 이하를 내림한 정수를 반환
+  - Math.sqrt : 인수의 제곱근을 반환
+  - Math.random : 임의의 난수를 반환. 0이상 1미만의 실수로 1은 안나온다.
+  - Math.pow(x,y) : x^y를 반환한다. ES7 `지수연산자`(**)를 사용하는게 대세다.
+  - Math.max
+    - 인수중 최대값을 반환한다. 인수가 전달되지 않으면 -Infinity를 반환
+    - 인수로 배열을 사용하려면 Function.prototype.apply 또는 스프레드 문법을 사용한다.
+    ```js
+    Math.max.apply(null, [1,2,3]);  // 3
+    Math.max(...[1,2,3]); // 3
+    ```
+  - Math.min : 인수중 최소값을 반환한다. 인수가 전달되지 않으면 Infinity
