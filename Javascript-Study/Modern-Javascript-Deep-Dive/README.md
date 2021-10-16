@@ -4577,4 +4577,77 @@ Date(); // 'Thu Oct 14 2021 23:15:27 GMT+0900 (한국 표준시)'
 <br><br>
 
 ## 31. RegExp
+### 31.1 정규 표현식이란?
+- 정규 표현식은 일정한 패턴을 가진 문자열의 집합을 표현하기 위해 사용하는 형식 언어(formal language)다.
+- 자바스크립트는 펄(Perl)의 정규 표현식 문법을 ES3부터 도입했다.
+- 정규표현식을 사용하면 문자열을 반복문이나 조건문 없이 패턴을 정의하고 테스트 할 수 있다(패턴 매칭 기능).
+<br>
 
+### 31.2 정규 표현식의 생성
+- 정규 표현식은 **정규 표현식 리터럴**과 **RegExp 생성자 함수**로 생성할 수 있다.
+```js
+// 정규 표현식 리터럴
+/PATTERN/FLAG
+// RegExp 생성자 함수
+new RegExp(pattern[, flag]);
+
+// 예
+/is/i
+new RegExp('is'i);
+new RegExp(/is/,i);
+new RegExp(/is/i);  // ES6
+```
+<br>
+
+### 31.3 RegExp 메서드
+- RegExp.prototype.`exec`
+  - exec 메서드는 인수로 전달받은 문자열에 대해 정규 표현식의 패턴을 검색해 결과를 배열로 반환한다. 매칭결과가 없으면 null을 반환한다.
+  - exec 메서드는 플래그를 g로 설정해도 **첫 번째 매칭 결과만 반환**한다.
+- RegExp.prototype.`test`
+  - test 메서드는 인수로 전달받은 문자열에 대해 정규 표현식의 패턴을 검색하여 매칭 결과를 boolean 값으로 반환한다.
+- **String.prototype.match**
+  - String 표준 빌트인 객체가 제공하는 match 메서드는 대상 문자열과 인수로 전달받은 RegExp의 매칭 결과를 배열로 반환한다.
+  - RegExp의 exec와 달리 flag: g에 대해 매칭되는 모든 결과를 배열로 반환한다.
+  ```js
+  const target = 'Is this all there is?';
+  const regExp = /is/;
+
+  regExp.exec(target);
+  // ['is', index: 5, input: 'Is this all there is?', groups: undefined]
+
+  regExp.test(target);  // true
+
+  target.match(regExp); //['is', index: 5, input: 'Is this all there is?', groups: undefined]
+
+  const regExpG = /is/g;
+  target.match(regExpG);  //['is', 'is']
+
+  ```
+<br>
+
+### 31.4 플래그
+- 패턴과 함께 플래그는 정규 표현식의 **검색 방식을 설정하기 위해** 사용한다. 총 6개가 있는데 중요한 3개만 다룬다.
+
+| 플래그 | 의미 | 설명 |
+|:---:|:---|:---|
+| i | Ignore case | **대소문자를 구별하지 않고** 패턴을 검색한다. |
+| g | Global | 대상 문자열 내에서 **패턴과 일치하는 모든 문자열을 전역 검색**한다. |
+| m | Multi line | 문자열의 행이 바뀌더라도 패턴 검색을 계속한다. |
+
+- 플래그는 선택적으로 사용할 수 있고 ___순서와 상관없이 하나 이상의 플래그를 동시에 설정할 수 있다.___
+- 플래그가 없으면 **대소문자를 구분**하고 패턴 검색 매칭 대상이 1개 이상 존재해도 **첫 번째 매칭한 대상만 검색하고 종료**한다.
+
+```js
+const target = 'Is this all there is?';
+
+target.match(/is/);
+// ['is', index: 5, input: 'Is this all there is?', groups: undefined]
+target.match(/is/i);
+// ['Is', index: 0, input: 'Is this all there is?', groups: undefined]
+target.match(/is/g);
+// ['is', 'is']
+target.match(/is/ig);
+// ['Is', 'is', 'is']
+```
+
+### 31.5 패턴
