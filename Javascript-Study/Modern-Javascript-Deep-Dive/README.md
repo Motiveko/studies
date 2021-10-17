@@ -4875,4 +4875,102 @@ target.replace(/[^A-Za-z0-9]/gi, ''); // abc123
 <br><br>
 
 ## 32. String
+<!-- 몰랐던 내용만 정리한다. -->
+### 32.1 String 생성자 함수
+- String 생성자 함수로 String 객체를 생성하면 [[StringData]] 내부 슬롯에 빈 문자열을 할당한 **String 래퍼 객체**를 생성한다.
+- ES5에서는 [[StringData]]를 [[PrimitiveValue]]라 불렀다.
+- String 래퍼 객체는 length와 인덱스:value 형태로 값을 가지는 **유사 배열 객체이면서 이터러블**이다. 따라서 인덱스로 값에 접근 가능하다. 단, 문자열은 원시 값이므로 변경 불가능하다.
+```js
+const x = new String('x');
+console.log(x[0]);  // x
+// 참조만 할 뿐 변경 불가다!
+x[0] = 'y';
+console.log(x[0]);  // x
+```
+- 생성자 함수 인수로 문자열이 아닌 값을 전달하면 문자열로 강제 변환 후 [[StringData]] 내부 슬롯에 변환된 문자열을 할당한다.
+- "9.3 명시적 타입 변환"에서 봤든, new 연산자를 사용하지 않고 String 생성자 함수 호출시, **인스턴스가 아닌 문자열을 반환**한다. 이를 통해 명시적 타입 변환이 가능하다.
 
+<br>
+
+### 32.2 length 프로퍼티
+- 문자열의 길이를 반환한다.
+
+<br>
+
+### 32.3 String 메서드
+- **String 객체에는 원본 래퍼 객체를 직접 변경하는 메서드가 존재하지 않는다**. 문자열은 변경 불가능(immutable)한 원시 값이기 때문에 String 래퍼 객체도 읽기 전용(read only)객체로 제공된다.
+- 32.3.1 String.prototype.indexOf
+  - 인수로 전달받은 문자열의 첫 번째 인덱스를 반환한다.
+  - ES6에서 도입된 String.prototype.`includes` 메서드를 사용하면 가독성이 훨씬 좋다.
+- String.prototype.search
+  - 인수로 전달받은 **정규 표현식**과 매치하는 문자열을 검색하여 인덱스를 반환한다.(g플래그를 달아도 첫 번째 인덱스만 반환)
+- String.prototype.includes
+  - 인수로 전달받은 문자열 포함 여부를 반환한다. 두번째 인수로 검색시작할 인덱스 전달 가능.
+- String.prototype.startsWith
+  - ES6에서 도입, 인수로 전달받은 문자열로 시작하는지를 반환한다. 두번째 인수로 검색시작할 인덱스 전달 가능.
+- String.prototype.endsWith
+  - ES6에서 도입, 인수로 전달받은 문자열로 끝나는지를 반환한다. 두번째 인수로 검색시작할 인덱스 전달 가능.
+- String.prototype.charAt
+  - 인수로 전달한 인덱스의 문자열을 반환한다. 비슷한 메서드로 String.prototype.charCodeAt/coadPointAt이 있다.
+- String.prototype.substring
+  - 1,2번째 인자로 전달받은 인덱스 사이의 부분 문자열을 반환한다. 2번째 생략시 끝까지 반환.
+- String.prototype.slice
+  - substring과 동일하게 작동한다. 단, 인수로 음수를 전달할 경우 맨 뒤에서 n자리까지 반환한다.
+- String.prototype.toUpperCase/toLowerCase
+  - 대상 문자열을 대문자로 변경해 반환한다.
+- String.prototype.trim
+  - 문자열 앞뒤에 공백이 있을 경우 모두 제거한 문자열을 반환한다.
+  - String.prototype.trimStart/trimEnd로 앞이나 뒤의 공백 문자열을 선택해서 제거할 수 있다.
+  - replace 메서드에 정규 표현식을 전달해서도 가능하다.
+  ```js
+  const str = '   foo   ';
+
+  str.replace(/\s/g, ''); // 'foo'
+  str.replace(/^\s+/g, ''); // 'foo   '
+  str.replace(/\s+$/g, ''); // '   foo'
+  ```
+- String.prototype.repeat
+  - ES6에서 도입. 대상 문자열을 인수로 전달받은 횟수 만큼 반복해 연결한 문자열을 반환한다. 인수가 0이면 빈 문자를 반환한다. 생략시 기본값0 으로 빈 문자열 반환.
+- String.prototype.replace
+  - 첫 번째 인수로 전달받은 문자열 또는 정규표현식을 검색하여 두 번재 인수로 전달받은 문자열로 치환한다.
+  - 검색된 문자열이 여럿 존재할 경우 **첫 번째로 검색된 문자열만 치환**한다.
+  - **특수한 교체 패턴을 사용할 수 있다.** `$&`은 **검색된 문자열**을 의미한다. 교체 패턴은 **[MDN의 함수 설명](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace)** 을 참고하자. 유용할 듯 하다.
+  ```js
+  const str = 'Hello world';
+  str.replace('world', '<strong>$&</strong>')
+  ```
+  - 두 번째 인수로 `치환 함수`를 전달할 수 있다. 아래의 예는 카멜 케이스와 스네이크 케이스를 치환하는 함수들이다.
+  ```js
+  function camelToSnake(camelCase) {
+    // 임의의 한 문자와 대문자로 이뤄진 문자열 매치
+    return camelCase.replace(/.[A-Z]/g, match => {
+      return match[0] + '_' + match[1].toLowerCase();
+    })
+  }
+
+  const camelCase = 'helloWorld';
+  camelToSnake(camelCase);  // 'hello_world';
+
+  function snakeToCamel(snakeCase) {
+    return snakeCase.replace(/_[a-z]/g, match => {
+      return match[1].toUpperCase();
+    })
+  }
+
+  const snakeCase = 'hello_world';
+  camelToSnake(snakeCase);  // 'helloWorld';
+  ```
+- String.prototype.split
+  - split 메서드는 첫 번째 인수로 전달한 문자열 또는 정규 표현식을 검색하여 문자열을 구분한 후 분리된 각 문자열로 이뤄진 배열을 반환한다.
+  - 인수로 빈 문자 전달시 문자열을 한개씩 분해한다. 인수 생략시 대상 문자열을 통으로 단일 요소로 갖는 배열을 반환한다.(대충 length가 1이라는 소리)
+  - 두 번째 인수로 배열의 길이를 지정할 수 있다. 배열 길이 만큼만 보여준다.
+  - split은 배열을 반환하므로, Array.prototype.`reverse`/`join`을 섞어 문자열을 뒤집을 수도 있따.
+  ```js
+  function reverseString(str) {
+    return str.split('').reverse().join('');
+  }
+  ```
+
+<br><br>
+
+## 33. 7번째 데이터 타입 Symbol
