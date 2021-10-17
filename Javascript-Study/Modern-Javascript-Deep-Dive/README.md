@@ -2277,7 +2277,7 @@ console.log(Object.entries(person));  // [ ["name", "motiveko"], ["age", 13]]
 ### 20.1 strict mode란?
 - **strict mode**는 자바스크립트 언어의 문법을 좀 더 엄격히 적용해 오류를 발생시킬 가능성이 있거나 js 엔진의 최적화 작업에 문제를 일으킬 수 있는 코드에 대해 명시적인 에러를 발생시킨다.
 - 예를 들면, var, let, const키워드가 붙지 않은 변수는 암묵적으로 전역변수로 생성(implicit global)
-- **`ESLint`**를 사용하면 strict mode와 같은 검사를 할 수 있고 추가적으로 코드 컨벤션을 설정파일로 관리할 수 있어 무조건 사용해야한다.
+- `ESLint`를 사용하면 strict mode와 같은 검사를 할 수 있고 추가적으로 코드 컨벤션을 설정파일로 관리할 수 있어 무조건 사용해야한다.
 - ES6에서 도입된 class와 module은 기본적으로 strict mode적용
 
 <br>
@@ -2856,7 +2856,7 @@ console.log(x + y);
       - 함수 코드 평가 -> 실행 컨텍스트 스택에 함수 실행 컨텍스트 push
       - 함수 코드 실행 -> 종료 후 실행 컨텍스트 스택 pop()
   5. 다시 전역 코드 실행 -> 종료 후 실행 컨텍스트 스택 pop()
-- 실행 컨텍스트의 최상위에 존재하는 실행 컨텍스트를 **실행 중인 실행 컨텍스트(running execution context)**라 부른다.(pop하면 나올애)
+- 실행 컨텍스트의 최상위에 존재하는 실행 컨텍스트를 **실행 중인 실행 컨텍스트(running execution context)** 라 부른다.(pop하면 나올애)
 
 <br>
 
@@ -4336,7 +4336,7 @@ const uniq2 = [...new Set(arr3)];
 <br>
 
 ### 27.9.8 Array.prototype.find
-- ES6에서 도입된 find 메서드는 콜백 함수를 호출해 조건을 만족하는 **첫 번째 요소를 반환한다.**ㄴㄴ
+- ES6에서 도입된 find 메서드는 콜백 함수를 호출해 조건을 만족하는 **첫 번째 요소를 반환한다.**
 - find(callback(element, index, array), thisArg) 형태다.
 
 <br>
@@ -4651,3 +4651,184 @@ target.match(/is/ig);
 ```
 
 ### 31.5 패턴
+- 패턴은 /로 열고 닫으며 문자열 따음표는 생략한다. 따음표를 포함하면 따음표가 패턴에 포함된다.
+- 패턴은 특별한 의미를 가지는 메타문자(meta character)또는 기호로 표현할 수 있다.
+- 몇 가지 패턴을 살펴본다.
+
+### 31.5.1 문자열 검색
+- 패턴에 문자열을 지정하면 지정한 검색 대상에서 문자열을 검색한다.
+- flag가 없으면 대소문자 구분하여 첫번째 매칭 결과만, 플래그를 붙이면 플래그에 따라 검색한다.
+
+<br>
+
+### 31.5.2 임의의 문자열 검색
+- `.`은 **임의의 문자 한 개**를 의미한다. ... 은 문자의 내요오가 상관없이 3자리 문자열과 매치한다.
+```js
+const target = 'Is this all there is?';
+const regExp = /.../g;
+target.match(regExp);
+// ['Is ', 'thi', 's a', 'll ', 'the', 're ', 'is?']
+```
+<br>
+
+### 31.5.3 반복 검색
+- `{m,n}`은 **앞선 패턴이 최소 m번 최대 n번 반복되는 문자열**을 의미한다.
+- `{n}` 은 앞선 패턴이 n번 반복되는것, 즉 {n,n}을 의미한다.
+- `{n,}` 은 앞선 패턴이 최소 n번 이상 반복되는 문자열을 의미한다.
+- `+`는 **패턴이 최소 한번 이상 반복되는 문자열**을 의미한다. {1, } 과 같다.
+
+```js
+const target = 'A AA B BB Aa Bb AAA';
+
+const regExp1 = /A{1,2}/g;
+target.match(regExp1);
+// ['A', 'AA', 'A', 'AA', 'A']
+
+const regExp2 = /A{2}/g;
+target.match(regExp2);
+// ['AA', 'AA']
+
+const regExp3 = /A{2,}/g;
+target.match(regExp3);
+// ['AA', 'AAA']
+
+const regExp4 = /A+/g;
+target.match(regExp4);
+// ['A', 'AA', 'A', 'AAA']
+```
+- `?`은 앞선 **패턴이 최대 한번 이상(0번 포함) 반복되는 문자열을 의미**한다. 즉 ?는 `{0,1}`과 같다.
+- 책의 정의가 햇갈리는데 **그냥 앞선 패턴이 없으면 포함하지 않고 있으면 1번 포함하는것** 즉 {0, 1}이라고 생각하면 된다.
+```js
+const target1 = 'color colour';
+// colo 다음 u가 0~1번 반복되고 그 뒤 r이 붙는 문자열 검색
+const regExp = /colou?r/g;
+target1.match(regExp);
+// ['color', 'colour']
+
+const target2 = 'a1 b1 bbb1';
+const regExp = /b?1/g;
+target2.match(regExp);
+// ['1', 'b1', 'b1']
+```
+<br>
+
+### 31.5.4 OR 검색
+- `|`는 OR의 의미를 갖는다. /A|B/ 는 A또는 B을 의미한다.
+```js
+const target = 'A AA B BB Aa Bb'
+
+const regExp = /A|B/g;
+target.match(regExp);
+// ['A', 'A', 'A', 'B', 'B', 'B', 'A', 'B']
+```
+
+- 분해되지 않은 단어 레벨로 검색하기 위해서는 +를 함께 사용한다.
+```js
+const target = 'A AA B BB Aa Bb'
+const regExp = /A+|B+/g;
+target.match(regExp);
+// ['A', 'AA', 'B', 'BB', 'A', 'B']
+```
+
+- A+|B+ 를 간단히 `[AB]+`로 표현할 수 있다. []내의 문자는 or로 동작한다.
+- []내에 범위를 지정하려면 `-`를 사용한다. [A-B]는 A~Z의 알파벳을 OR로 동작한것을 의미한다.
+```js
+const target = 'A AZ B ZZ BB Aa Bb'
+const regExp1 = /[AB]+/g;
+target.match(regExp1);
+// ['A', 'A', 'B', 'BB', 'A', 'B']
+
+const regExp2 = /[A-Z]+/g;
+target.match(regExp2);
+// ['A', 'AZ', 'B', 'ZZ', 'BB', 'A', 'B']
+```
+
+- 대소문자를 구분하지 않고 알파벳을 검색하는 패턴은 `/[A-Za-z]+/`이다.
+```js
+const target = 'A abcD Ez AA 1ABe 13';
+const regExp = /[A-Za-z]+/g;
+target.match(regExp);
+// ['A', 'abcD', 'Ez', 'AA', 'ABe']
+```
+- 숫자를 검색하는 패턴은 `/[0-9]+/` 이다.
+- 통화 등에서 숫자에 ,이 들어가는데 이를 분리하지 않고 포함한 검색은 `/[0-9,]+/` 이다.
+```js
+const target = 'AA BB 12,345,000';
+
+const regExp1 = /[0-9]+/g;
+target.match(regExp1);
+// ['12', '345', '000']
+
+const regExp2 = /[0-9,]+/g;
+target.match(regExp2);
+// ['12,345,000']
+```
+- 숫자를 의미하는 [0-9]은 간단하게 `\d`로 표현 가능하다. `\D`는 \d와 반대로, **숫자가 아닌 문자**를 의미한다. 공백,콤마 등을 포함한다.
+```js
+const target = 'AA BB 12,345,000';
+
+const regExp1 = /[\d,]+/g;
+target.match(regExp1);
+// ['12,345,000']
+
+const regExp2 = /[\D]+/g;
+target.match(regExp2);
+// ['AA BB ', ',', ',']
+```
+- `\w`는 **알파벳, 숫자, 언더스코어**를 의미한다. 즉 [A-Za-z0-9_]를 의미한다. `\W`는 \w와 반대로, 알파벳, 숫자, 언더스코어가 아닌 문자를 의미한다.
+```js
+const target = 'Ab aa 12,345 +!@#_,$%^';
+
+const regExp1 = /[\w,]+/g;
+target.match(regExp1);
+// ['Ab', 'aa', '12,345', '_,']
+
+const regExp2 = /[\W]+/g;
+target.match(regExp2);
+// [' ', ' ', ',', ' +!@#', ',$%^']
+```
+<br>
+
+### 31.5.5 NOT 검색
+- `[] 내의 ^`는 **NOT의 의미**를 가진다. 예를 들어 [^0-9]는 숫자를 제외한 의미를 나타내 [^\d\]나 [\D]와 같다. 또, [\W]는 [^A-Za-z0-9] 와 같다.
+
+
+### 31.5.6 시작 위치로 검색
+- `[..] 밖의 ^`는 **문자열 시작**을 의미한다. **[] 내부와 외부에서의 의미가 완전히 다른것에 주의.**
+```js
+const target = 'https://naver.com';
+const regExp = /^https/;
+
+target.test(regExp);  // true
+```
+
+<br>
+
+### 13.5.7 마지막 위치로 검색
+- `$`는 **문자열 마지막**을 의미한다.
+```js
+const target = 'https://naver.com';
+const regExp = /com$/;
+
+regExp.test(target);  // true
+```
+
+<br>
+
+### 31.6 자주 사용하는 정규표현식
+### 31.6.1 특정 단어로 시작하는지 검사
+- [] 밖의 ^는 문자열 시작을 의미한다.
+- 다음 예제는 문자열이 '**http://**' 또는 '**https://**'로 시작하는지 검사한다.
+```js
+const url = 'https://naver.com';
+
+/^https?:\/\//.test(url); // true
+/^(http|https):\/\//.test(url); // true
+```
+<br>
+
+### 31.6.2 특정 단어로 끝나는지 검사
+- $는 문자열의 마지막을 의미한다. `/\.html$/`은 확장자가 html인지를 검사한다.
+
+<br>
+
