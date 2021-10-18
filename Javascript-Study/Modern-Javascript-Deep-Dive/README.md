@@ -4974,3 +4974,155 @@ console.log(x[0]);  // x
 <br><br>
 
 ## 33. 7번째 데이터 타입 Symbol
+### 33.1 심벌이란?
+- `Symbol`은 ES6에 도입된 7번째 데이터 타입으로 **변경 불가능한 원시 타입의 값**이다.
+- 심벌은 다른 값과 중복되지 않는 유일무이한 값으로 **이름 충돌 위험이 없는 유일한 프로퍼티 키를 만들기 위해 사용**한다.
+<br>
+
+### 33.2 심벌 값의 생성
+### 33.2.1 Symbol 함수
+- Symbol은 리터럴 표기법이 아닌 **Symbol 함수를 호출하여 생성해야 한다.** 이 때 생성된 심벌 값은 외부로 노출되지 않아 확인 불가하고, **다른 값과 절대 중복되지 않는 유일무이한 값**이다.
+- Symbol은 new연산자와 함께 생성자 함수로 호출하지 않는다. 왜냐면 심벌은 원시 값이기 때문.
+- Symbol함수의 인자로 문자열을 전달할 수 있다. 이는 심벌값에 대한 설명으로 디버깅 용도로만 사용하고 값에는 영향을 주지 않는다.
+```js
+const mySymbol = Symbol();
+// 심벌 값은 외부로 노출되지 않아 확인할 수 없다.
+console.log(mySymbol);  // Symbol()
+
+new Symbol(); // TypeError: Symbol is not a constructor
+```
+- 심벌 값도 string, number, boolean과 같이 객체처럼 접근하면 `래퍼 객체`를 생성한다.
+```js
+const mySymbol = Symbol('mySymbol');
+// Symbol.prototype의 프로퍼티들
+console.log(mySymbol.description);  // mySymbol
+console.log(mySymbol.toString());   // Symbol(mySymbol)
+```
+- 심벌은 boolean으로 암묵적 타입 변환은 가능하나 string, number 등으로 암묵적 타입 변환 되지 않는다.
+```js
+const mySymbol = Symbol('mySymbol');
+
+console.log(mySymbol + ''); //TypeError: Cannot convert a Symbol value to a string
+console.log(+mySymbol); // TypeError: Cannot convert a Symbol value to a number
+
+console.log(!!mySymbol);  // true
+```
+<br>
+
+### 33.2.2 Symbol.for/ Symbol.keyFor 메서드
+- `Symbol.for` 메서드는 인수로 전달받은 문자열을 키로 사용하여 **키와 심벌 값의 쌍들이 저장되어 있는 전역 심벌 레지스트리에서 해당 키와 일치하는 심벌 값을 검색한다.**
+- 검색 성공하면 검색된 심벌값을 반환, 검색 실패하면 메서드의 인수로 전달된 키로 전역 심벌 레지스트리에 저장한 후 생성된 심벌 값을 반환.
+```js
+const s1 = Symbol.for('mySymbol');
+const s2 = Symbol.for('mySymbol');
+
+console.log( s1 === s2 ); // true
+```
+- `Symbol` 함수는 호출시 유일무이한 값을 생성하는데, 이 때, 전역 심벌 레지스트리에서 심벌 값을 검색할 수 있는 `키`를 지정할 수 없으므로 레지스트리에서 등록되어 관리되지 않는다. 하지만 `Symbol.for` 메서드를 사용하면 애플리케이션 전역에서 중복되지 않는 유일무이한 상수인 심벌 값을 ***단 하나만 생성***하여 전역 심벌 레지스트리를 통해 공유할 수 있다.
+- Symbol.keyFor 메서드를 사용해 전역 심벌 레지스트리에 저장된 심벌 값의 키를 추출할 수 있다.
+```js
+// mySymbol은 전역 심벌 레지스트리에 등록된 key값이다.
+const s1 = Symbol.for('mySymbol');
+Symbol.keyFor(s1);  // mySymbol
+
+// foo는 key값이 아닌 그냥 설명이다.
+const s2 = Symbol('foo');
+Symbol.keyFor(s2);  // undefined
+```
+
+<br>
+
+### 33. 심벌과 상수
+- Java애서 enum을 생각해보자. js는 enum을 지원하지 않지만 enum과 같은 형태의 상수를 정의 할 때 Symbol을 사용할 수 있다.
+```js
+// 위, 아래, 왼쪽, 오른쪽 상수 정의
+const Directon = {
+  UP: Symbol('up'),
+  DOWN: Symbol('down'),
+  LEFT: Symbol('left'),
+  RIGHT: Symbol('right')
+};
+```
+- 위와 같이 Dirction.UP에 Symbol로 값을 정의하면 다른 1,2,3,4 등을 넣을때와 달리 중복될 가능성이 없는 상수값을 생성하게 된다.
+- Direction의 프로퍼티들의 값은 **변경 가능하다.** 즉 자바의 enum을 아직 제대로 흉내내진 못했다. "16.5.3 객체 동결"과 Symbol을 합치면 enum을 좀 더 정교하게 흉내낼 수 있다.
+```js
+const Direction = Object.freeze({
+  UP: Symbol('up'),
+  DOWN: Symbol('down'),
+  LEFT: Symbol('left'),
+  RIGHT: Symbol('right')
+})
+```
+> ❗️ `enum`은 명명된 숫자 상수(named numeric constant)의 집합으로 열거형(enumerated type) 이라고 부른다.
+<br>
+
+### 33.4 심벌과 프로퍼티 키
+- 객체의 프로퍼티 키로 심벌을 사용할 수 있고, 동적으로도 생성할 수 있다.("10.9.2 계산된 프로퍼티 이름")
+```js
+const obj = {
+  [Symbol.for('mySymbol')]: 1
+};
+obj[Symbol.for('mySymbol')];  // 1
+```
+<br>
+
+### 33.5 심벌과 프로퍼티 은닉
+- **심벌 값을 프로퍼티 키로 사용한 프로퍼티는 for ...in, Object.keys, Object.getOwnPropertyNames 메서드로 찾을 수 없다.** 즉 외부에 노출되지 않게해 프로퍼티를 은닉할 수 있는 것이다.
+- 하지만 ES6에 도입된 Object.getOwnPropertySymbols 메서드를 사용하면 키값이 심벌인 프로퍼티도 찾을 수 있게된다.
+```js
+const obj = {
+  [Symbol('mySymbol')]: 1
+};
+
+for( const key in obj) {
+  console.log(key); // undefined
+}
+console.log(Object.keys(obj));  // []
+console.log(Ojbect.getOwnPropertyNames(obj)); // []
+
+// 발견~
+console.log(Object.getOwnPropertySymbols(obj)); // [Symbol(mySymbol)]
+```
+<br>
+
+### 33.6 심벌과 표준 빌트인 객체 확장
+- 일반적으로 표준 빌트인 객체에 사용자 정의 프로퍼티(메서드)를 직접 추가하여 확장하는것은 권하지 않는다. 이유는 추후 표준 사양으로 추가될 프로퍼티 이름과 중복될 여지가 있기 때문이다.
+- 하지만 중복될 염려가 없는 **심벌 값으로 프로퍼티 키를 생성하여 표준 빌트인 객체를 확장**하면 이런 위험을 피해 확장 가능하다.
+```js
+// 배열의 프로토타입에 배열의 총 합을 구하는 메서드를 추가하여 확장
+Array.prototype[Symbol.for('sum')] = function() {
+  return this.reduce((acc, cur) => acc + cur, 0);
+}
+[1,2][Symbol.for('sum')](); // 3
+```
+<br>
+
+### 33.7 Well-known Symbol
+- 자바스크립트가 기본 제공하는 빌트인 심벌 값은 Symbol 함수의 프로퍼티에 할당되어 있다.(console.dir(Symbol)시 볼 수 있다)
+- 이 빌트인 심벌 값을 ECMAScript 사양에서는 **Well-known Symbol** 이라고 부른다. Well-known Symbol은 자바스크립트 엔진의 내부 알고리즘에 사용된다.
+- 예를들어 Array, String, Map...과 같은 Iterable은 Well-knwon Symbol인 `Symbol.iterator`를 키로 갖는 메서드를 가지고, 이를 호출하면 **Iterator를 반환**하도록 ECMAScript 사양에 규정되어 있다. 빌트인 이터러블은 이 규정 즉, **이터레이션 프로토콜**을 준수한다.
+- 일반 객체를 이터러블처럼 동작하게 하려면 이터레이션 프로토콜을 따르면 된다. 아래와 같다.
+```js
+const iterable = {
+  // Symbol.iterator 메서드를 구현하여 이터러블 프로토콜을 준수
+  [Symbol.iterator]() {
+    let cur = 1;
+    const max = 5;
+    return {
+      // Symbol.iterator 메서드는 next 메서드를 소유한 이터레이터를 반환한다.
+      next() {
+        return { value: cur++, done: cur > max + 1}
+      }
+    }
+  }
+}
+for(const num of iterable) {
+  console.log(num); // 1 2 3 4 5
+}
+```
+- 이 때 메서드의 키 Symbol.iterator는 기존 프로퍼티나 미래에 추가될 프로퍼티와 중복되지 않을 것이다.
+- 이처럼 심벌은 중복되지 않는 상수값을 생성하는 것은 물론 기존에 작성된 코드에 영향을 주지 않고 새로운 프로퍼티를 추가하기 위해, 즉 하위 호환성을 보장하기 위해 도입되었다.
+
+<br><br>
+
+## 34. 이터러블
