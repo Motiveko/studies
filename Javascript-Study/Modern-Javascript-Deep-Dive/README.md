@@ -5217,4 +5217,104 @@ for(item of arr) {
 <br>
 
 ### 34.5 이터레이션 프로토콜의 필요성
+- ES6 이전의 순회 가능한 데이터 컬렉션들은 각자의 방식으로 구현되어 각자의 방식으로 순회되었다.
+- ES6에서는 이것을 일원화해 이터레이션 프로토콜을 준수하면 for...of문, 스프레드 문법, 배열 디스트럭처링 할당 등 순회 가능한 모든 방법을 사용할 수 있게 했다.
+- 이 때, 순회문을 데이터 소비자이고 이터러블은 데이터 공급자 역할을 한다.
+- **이터러블은 이런 데이터 소비자와 데이터 공급자를 연결하는 `인터페이스` 역할을 한다.**
+<br>
+
+### 34.6 사용자 정의 이터러블
+### 34.6.1 사용자 정의 이터러블 구현
+- 간단하게 피보나치 수열을 구현하는 `이터러블`을 구현해보자.
+```js
+const fibonacci = {
+  [Symbol.iterator]() {
+    let [pre, cur] = [0, 1];
+    const max = 10;
+    return {
+      next() {
+        [per, cur] = [cur, pre + cur];
+        return {value: cur, done: cur >= max};
+      }
+    }
+  }
+}
+
+// iterable이므로 for...of문으로 순회 가능
+for( const num of fibonacci) {
+  console.log(num); // 1 2 3 5 8
+}
+
+// iterable이므로 스프레드 문법 사용 가능
+const arr = [...fibonacci];
+console.log(arr); // [1,2,3,5,8]
+
+// iterable이므로 배열 디스트럭처링 가능
+const [ first, second, ...rest] = fibonacci;
+console.log(first, rest, rest); // 1 2 [3,5,8]
+```
+<br>
+
+### 34.6.2 이터러블을 생성하는 함수
+- 위 예제는 max값이 고정이다. max를 인수로 받아 fibonacci 수열을 만드는 iterable을 반환하는 함수를 만들 수 잇다.
+```js
+const fibonacciFunc = function(max) {
+  let [pre, cur] = [0, 1];
+  return {
+    ...
+    // 위와 동일
+  }
+}
+
+for(const num of fibonacciFunc(10)) {
+  console.log(num); // 1 2 3 5 8
+}
+```
+<br>
+
+### 34.6.3 이터러블이면서 이터레이터인 객체를 생성하는 함수
+- 위의 fibonacciFunc 함수는 이터러블을 반환한다. 이터레이터를 생성하려면 어터러블의 Symbol.iterator 메서드를 호출해야 할 것이다.
+- 이번엔 이터레이터 이며 동시에 이터러블을 반환하는 객체로 만들어보자.
+```js
+// 이터러블이면서 이터레이터인 객체
+// next()메소드를 소유해 이터레이터이고, Symbol.iterator 메소드를 호출하면 이터레이터를 반환하는 이터러블이다.
+{
+  [Symbol.iterator]() { return this; },
+  next() {
+    return { value: any, done: boolean };
+  }
+}
+```
+<br>
+
+### 34.6.4 무한 이터러블과 지연 평가
+- 무한 이터러블(피보나치 수열)을 생성하는 함수를 만들어 본다.
+```js
+const fibonacciFunc = function() {
+  let [pre, cur] = [0, 1];
+  return {
+    [Symbol.iterator]() { return this; }
+    next() {
+      [pre, cur] = [cur, pre + cur];
+      return {value: cur, done: false}; // done 프로퍼티는 생략해도 된다.
+    }
+  };
+}
+
+// for...of에서 무한 이터러블의 값이 10000 이하인 것들만 가져온다.
+for(const num of fibonacciFunc()) {
+  if(num > 10000) break;
+  console.log(num); // 1 2 3 5 8 ... 6765
+}
+
+// 배열 디스트럭처링 할당으로 무한 이터러블의 앞 3개만 가져온다.
+const [f1, f2, f3] = fibonacciFunc();
+console.log(f1, f2, f3);  // 1 2 3
+```
+- 데이터 공급자 역할을 하는 이터러블은 일반적으로 모든 **데이터를 메모리에 미리 확보한 다음 데이터를 공급**한다. 하지만 위의 fibonacciFunc()는 `지연 평가`(lazy evaluation)를 통해 필요한 시점 이전까지는 데이터를 생성하지 않고, 필요한 시점에 데이터를 생성한다. 즉 **평가 결과가 필요할 때까지 평가를 늦추는 기법이 지연 평가다.**
+
+- 위의 무한 이터레이터는 for...of문이나 배열 디스트럭처링 할당에서 내부적으로 next() 메서드가 호출될 때 데이터가 생성된다. 이런 방식은 빠른 실행 속도를 기대할 수 있고, 불필요한 메모리를 소비하지 않으며 무한을 표현할 수 있는 장점이 있다.
+<br><br>
+
+## 35. 스프레드 문법
 
