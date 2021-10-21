@@ -5317,4 +5317,164 @@ console.log(f1, f2, f3);  // 1 2 3
 <br><br>
 
 ## 35. 스프레드 문법
+- ES6에서 도입된 스프레드 문법(spread syntax)은 하나로 뭉쳐 있는 여러 값들의 집합을 펼쳐 개별적인 값들의 목록으로 만든다.
+- 스프레드 문법 사용 가능 대상은 **이터러블**이다.
+- 스프레드 문법의 결과는 값이 아니라 값들의 목록이다. 따라서 **스프레드 문법의 결과는 변수에 할당할 수 없다.**
+- 스프레드 문법은 다음과 같이 쉼표로 구분한 값의 목록을 사용하는 문맥에서만 사용 가능하다.
+  - 함수 호출문의 인수 목록
+  - 배열 리터럴의 요소 목록
+  - 객체 리터럴의 프로퍼티 목록
+<br>
 
+### 35.1 함수 호출문의 인수 목록에사 사용하는 경우
+- Math.max()메서드를 예로 든다. 이 메서드는 갯수가 정해지지 않은 숫자 타입의 가변 인수를 전달받는다.
+```js
+const arr = [1, 2, 3];
+
+Math.max(1);  // 1
+Math.max(1,2);  // 2
+Math.max(1,2,3);  // 3
+
+// 인수로 배열을 받지 않는다.
+Math.max(arr);  // NaN
+
+// 스프레드 문법 이전의 방법
+// Function.prototype.apply를 사용해 배열을 인수로 전달할 수 있다.
+let max = Math.max.apply(null, arr);  // 3
+
+// 스프레드 문법, 가독성이 좋다.
+max = Math.max(...arr); // 3
+```
+- `Rest Parameter`와 형태가 비슷한데 기능은 정 반대다. ***스프레드 연산자는 값을 펼쳐 개별값들의 목록으로 만드는 것이고, Rest Parameter는 개별 값들의 목록을 합쳐서 Array로 만든다.***
+
+<br>
+
+### 35.2 배열 리터럴 내부에 사용하는 경우
+
+### 35.2.1 concat
+- ES5에서 2개의 배열을 1개로 합칠 때 concat 메서드를 사용했으나, ES6부턴 스프레드 연산자로 해결 가능하다.
+```js
+// ES5
+let arr = [1,2].concat([3,4]);
+console.log(arr); // [1,2,3,4]
+
+arr = [...[1,2],...[3,4]];
+console.log(arr); // [1,2,3,4]
+```
+
+<br>
+
+### 35.2.2 splice
+- ES5에서 배열의 중간에 다른 배열 요소를 추가하거나 제거하려면 splice 메서드를 사용해야했다. 스프레드 연산자로 해결해보자.
+```js
+let arr1 = [1,4];
+let arr2 = [2,3];
+
+// arr2를 해체해서 전달하지 않아서 배열이 통째로 들어간다.
+arr1.splice(1, 0, arr2);
+console.log(arr1);  // [1, [2, 3], 4]
+```
+- [1,2,3,4]를 만들기 위해서는 splice 함수에 1,0,2,3을 전달해줘야 한다. Function.prototype.apply를 활용한다.
+```js
+arr1.splice.apply(arr1, [1, 0].concat(arr2));
+console.log(arr1);  // [1,2,3,4]
+```
+- 아무래도 좀 직관적이진 않다. ES6 스프레드 문법을 활용하면 간결하게 표현 가능하다.
+```js
+arr1.splice(1, 0, ...arr2);
+console.log(arr1);  // [1,2,3,4]
+```
+
+<br>
+
+### 35.2.3 배열 복사
+- ES5에서 배열을 복사하려면 slice 메서드를 사용한다. 이를 스프레드 문법으로 표현 가능하다.
+```js
+const origin = [1,2];
+const copy1 = origin.slice();
+
+// 각 요소를 얕은 복사하였다.
+console.log(copy1); // [1,2]
+console.log(copy1 === origin); // false
+
+const copy2 = [...origin];
+console.log(copy2); // [1,2]
+console.log(copy2 === origin); // false
+```
+
+<br>
+
+### 35.2.4 이터러블을 배열로 변환
+- ES5에서 이터러블이나 유사 배열 객체를 배열로 변환하려면 Function.prototype.apply/call 메서드를 사용해서 slice를 호출해야 했다. 이를 스프레드 문법으로 표현 가능하다.
+```js
+// ES5
+function sum() {
+  // 이터러블이며 유사 배열 객체인 arguments를 해체하여 배열로 복사한다.
+  var args = Array.prototype.slice.call(arguments);
+
+  return args.reduce(function(pre, cur) {
+    return pre + cur;
+  }, 0);
+}
+console.log(sum(1,2,3));  // 6
+```
+- 위 sum 함수를 스프레드 문법으로 표현해본다.
+```js
+function sum() {
+  return [...arguments].reduce((pre, cur) => pre + cur, 0);
+}
+console.log(sum(1,2,3)); // 6
+```
+- 이 경우는 스프레드 문법보다 Rest Parameter가 좀 더 직관적이다.
+```js
+const sum = (...args) => args.reduce((pre, cur) => pre + cur, 0);
+console.log(sum(1,2,3)); // 6
+```
+- 단, ***이터러블이 아닌 유사 배열 객체는 스프레드 문법 대상이 될 수 없다.***
+```js
+// ES5, Function.prototype.call을 이용해 유사 배열 객체(not Iterable)을 배열로 변환
+const arrayLike = {
+  0: 1,
+  1: 2,
+  length: 3
+};
+
+let arr = Array.prototype.slice.call(arrayLike); // [1,2]
+console.log(Array.isArray(arr));  // true
+
+// ES6 스프레드 문법은 적용 불가능하다.
+
+arr = [...arrayLike]; // Type Error: object is not iterable(...)
+```
+- 이터러블이 아닌 유사 배열 객체를 배열로 변경하려면 ES6에서 도입된 `Array.from`메서드를 사용하자. 유사 배열 객체나 이터러블을 인수로 전달받아 배열로 바꿔준다.
+```js
+let arr = Array.from(arrayLike);  // [1,2]
+```
+
+<br>
+
+### 35.3 객체 리터럴 내부에서 사용하는 경우
+- Rest프로퍼티와 함께 TC39 프로세스 stage 4단계에 제안되어 있는 `스프레드 프로퍼티`를 사용하면 **객체 리터럴의 프로퍼티 목록에서도 스프레드 문법을 사용할 수 있다.** 스프레드 문법은 Iterable에만 사용 가능하지만, 스프레드 프로퍼티 제안은 일반 객체에도 스프레드 문법을 사용할 수 있다.
+- 스프레드 프로퍼티 이전에는 ES6에서 도입된 Object.assign 메서드를 사용해 여러 개의 객체를 병합하거나 특정 프로퍼티를 변경/추가했다.
+```js
+// ES6 객체 병합. 프로퍼티가 중복되는 경우 뒤에 들어오는 프로퍼티가 우선권을 갖는다.
+console.log(Object.assign({}, {x: 1, y: 2}, {y: 10, z: 3})); // {x: 1, y: 10, z: 3};
+```
+- 스프레드 문법은 Object.assign을 쉽게 대체 가능하다.
+```js
+console.log({...{x: 1, y: 2}, ...{y: 10, z: 3}}); // {x: 1, y: 10, z: 3};
+
+console.log({....{x: 1, y: 2}, y: 100});  // {x: 1, y: 100}
+```
+- 스프레드 프로퍼티로 객체 복사도 가능하다
+```js
+const obj = {x: 1, y: 2};
+const copy = {...obj};
+console.log(obj === copy);  // false
+```
+
+<br><br>
+
+## 36. 디스트럭처링 할당
+
+<br>
