@@ -5476,5 +5476,144 @@ console.log(obj === copy);  // false
 <br><br>
 
 ## 36. 디스트럭처링 할당
-
+- 디스트럭처링 할당(destructuring assignment, 구조 분해 할당)은 구조화된 배열과 같은 이터러블 또는 객체를 destructuring하여 1개 이상의 변수에 개별적으로 할당하는 것을 말한다.
 <br>
+
+### 36.1 배열 디스트럭처링 할당
+- ES6 배열 디스트럭처링 **할당은 디스트럭처링 대상이 `Iterable`이어야 하며**, 할당 기준은 배열의 인덱스로 순서대로 할당된다.
+```js
+const arr = [1, 2, 3];
+
+// arr[0], arr[1], arr[2] 가 순서대로 할당된다.
+const [one, two, three] = arr;
+
+console.log(one, two, three); // 1 2 3
+```
+- 디스트럭처링 대상이 이터러블이 아니면 에러가 발생한다.
+```js
+const [a, b] = {};  // TypeError: {} is not iterable
+```
+- 배열 디스트럭처링은 순서대로 디스트럭처링 되어 할당되는데, 변수의 개수와 이터러블의 요소 개수가 반드시 일치할 필요는 없다.
+```js
+const [a, b] = [1];
+console.log(a, b); // 1 undefined
+
+const [c, d] = [1, 2, 3];
+console.log(c, d);  // 1 2
+
+const [e, , f] = [1, 2, 3];
+console.log(e,f); // 1 3
+```
+- 배열 디스트럭처링 할당을 위한 변수에 기본값을 설정할 수 있다.
+```js
+const [a, b = 10, c = 3] = [1,2];
+console.log(a,b,c); // 1 2 3
+```
+- 다음 예제는 URL을 파싱하여 protocol, host, path 프로퍼티를 갖는 객체를 생성해 반환한다. 정규식의 [포획 괄호](https://beomy.tistory.com/21)를 사용한다.
+```js
+
+function parseURL(url = '') {
+  // 포획괄호 '()'는 매칭되는 값을 기억한다.
+  const parseURL = url.match(/^(\w+):\/\/([^/]+)\/(.*)$/);
+  console.log(parseURL);
+  /**
+   0: "https://github.com/Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive"
+   1: "https"
+   2: "github.com"
+   3: "Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive"
+   */
+
+  if(!parseURL) return {};
+
+  // parseURL 배열에서 protocol, host, path값만 추출한다.
+  const [, protocol, host, path] = parseURL;
+  return {protocol, host, path};
+}
+
+const parsedURL = parseURL('https://github.com/Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive');
+console.log(parsedURL);
+
+/**
+ host: "github.com"
+ path: "Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive"
+ protocol: "https"
+ */
+```
+<br>
+
+### 36.2 객체 디스트럭처링 할당
+- ES6 객체 디스트럭처링 할당은 객체의 각 프로퍼티를 추출하여 1개 이상의 변수에 할당한다. 디스트럭처링 대상은 객체여야 하며, **할당 기준은 프로퍼티 키**로 순서는 의미 없고 (값을 할당할)선언된 변수 이름과 프로퍼티 키가 일치하면 할당된다.
+
+```js
+const user = { firstName: 'Motive', lastName: 'Ko' }
+const { lastName, firstName } = user;
+
+console.log(firstName, lastName); // Motive Ko
+```
+- 값을 할당받기 위해 선언한 객체는 프로퍼티 축약 표현을 통해 선언한 것이다. 따라서 객체의 프로퍼티 키와 다른 변수 이름으로 프로퍼티 값을 할당받으려면 다음과 같이 변수를 선언한다.
+```js
+
+const user = { firstName: 'Motive', lastName: 'Ko' }
+// 프로퍼티 축약 표현을 사용하지 않으면 원래 이런 형태다.
+const { lastName: lastName, firstName: firstName } = user;
+
+// 프로퍼티 키를 기준으로 디스트럭처링 할당이 이뤄진다.
+// 프로퍼티 키가 lastName인 값을 ln, firstName인 값을 fn에 할당한다.
+const { lastName: ln, firstName: fn } = user;
+console.log(fn, ln);  // Motive Ko
+```
+- 객체 디스트럭처링 할당을 위한 변수에 기본값을 설정할 수 있다.
+```js
+const { firstName: fn = 'Motive', lastName: ln } = { lastName: 'Ko' };
+console.log(fn, ln);  // Motive ko
+```
+- 객체 디스트럭처링은 객체에서 프로퍼티 키로 필요한 프로퍼티 값만 추출할 때 사용하는 것이다.
+```js
+// !?!?
+const str = 'Hello';
+const { length } = str;
+console.log(length);  // 5
+```
+- 객체 디스트럭처링 할당은 **객체를 인수로 전달받은 함수의 매개변수에도 사용** 가능하다. 좀 더 간단하고 가독성 좋게 표현할 수 있다.
+```js
+// ES5
+function printTodoES5(todo) {
+  console.log(`할일 ${todo.content}은 ${todo.completed ? '완료' : '비완료'} 상태입니다.`)
+}
+printTodoES5({id: 1, content: 'HTML', completed: true}); // 할일 HTML은 완료 상태입니다.
+
+// ES6 객체 디스트럭처링 할당
+function printTodoES6({ content, completed }) {
+  console.log(`할일 ${content}은 ${completed ? '완료' : '비완료'} 상태입니다.`)
+}
+printTodoES6({id: 1, content: 'HTML', completed: true}); // 할일 HTML은 완료 상태입니다.
+```
+- 배열 요소가 객체인 경우 **배열 디스트럭처링 할당 + 객체 디스트럭처링 할당**을 사용할 수 있다.
+```js
+const todos = [
+  { id: 1, content: 'HTML', completed: true },
+  { id: 2, content: 'CSS', completed: false },
+  { id: 3, content: 'JS', completed: false }
+];
+
+const [ , { id }] = todos;
+console.log(id);  // 2
+```
+- 중첩 객체에도 사용 가능하다.
+```js
+const user = {
+  name: 'motiveko',
+  address: {
+    city: 'Seoul'
+  }
+};
+// address 프로퍼티 키로 객체를 추출하고 그 객체의 city 프로퍼티 키로 값을 추출, address는 할당되지 않는다.
+const { address: { city } } = user;
+console.log(city);  // Seoul
+console.log(address); // Uncaught ReferenceError: address is not defined
+```
+- 객체 디스트럭처링 할당을 위한 변수에 `Rest 프로퍼티`(...)를 사용할 수 있다. Rest 프로퍼티는 스프레드 프로퍼티와 함께 TC39 프로세스 stage 4에 제안되어있다.
+```js
+const { x, ...rest } = { x: 1, y: 2, z: 3 }
+console.log(x, rest); // 1  { y: 2, z: 3 }
+```
