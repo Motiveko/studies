@@ -5617,3 +5617,209 @@ console.log(address); // Uncaught ReferenceError: address is not defined
 const { x, ...rest } = { x: 1, y: 2, z: 3 }
 console.log(x, rest); // 1  { y: 2, z: 3 }
 ```
+<br><br>
+
+## 37. Set과 Map
+- `Set`은 중복되지 않는 유일한 값들의 집합이다.
+### 37.1.1 Set 객체의 생성
+- Set객체는 Set 생성자 함수로 생성한다. 인자로는 `Iterable`을 받고, Iterable 내 중복된 값은 Set객체에 요소로 저장되지 않는다.
+```js
+const set1 = new Set([1,2,3,3]);
+console.log(set1);  // Set(3) {1, 2, 3}
+
+const set2 = new Set('Hello');
+console.log(set2);  // Set(4) {'H', 'e', 'l', 'o'}
+```
+<br>
+
+### 37.1.2 요소 개수 확인
+- 요소 개수는 `Set.prototype.size` 프로퍼티로 확인 가능하다.
+- size 프로퍼티는 getter 함수만 존재하는 접근자(accessor) 프로퍼티다. 따라서 size프로퍼티는 직접 변경은 불가하다.
+```js
+Object.getOwnPropertyDescriptor(Set.prototype, 'size');
+// {set: undefined, enumerable: false, configurable: true, get: ƒ}
+```
+<br>
+
+### 37.1.3 요소 추가
+- 요소 추가는 `Set.prototype.add` 메서드를 사용한다.
+- add 메서드는 **요소가 추가된 Set 객체를 반환**하므로, method chaining 할 수 있다. 이 때 반환하는 객체는 `this`로 add 메서드는 원본 Set객체를 변경하는 `mutator method`이다.
+- Set객체는 객체, 배열, 함수 등 모든 값을 요소로 저장할 수 있다.
+```js
+const set = new Set();
+set.add(0)
+  .add(-0)  // -0은 0 과 같으므로 추가되지 않는다.
+  .add(NaN)
+  .add(NaN) // NaN === NaN 은 false지만 Set에서는 같은것으로 판단하고 저장하지 않는다.
+  .add(null)
+  .add(undefined)
+  .add(() => {});
+console.log(set);
+// Set(5) {0, NaN, null, undefined, () => {}}
+```
+<br>
+
+### 37.1.4 ~ 6
+- 요소 존재 확인은 `Set.prototype.has` 메서드로 가능하다.
+- 요소 삭제는 `Set.prototype.delete` 메서드로 가능하다. 존재하는 요소를 삭제했는지를 **boolean**으로 반환하므로, add 메서드처럼 **method chainig은 불가능하다.**
+- 요소 일괄 삭제는 `Set.prototype.clear` 메서드로 가능하다. 반환값은 항상 **undefined**이다.
+<br>
+
+### 37.1.7 요소 순회
+- 요소 순회는 `Set.prototype.forEach` 메서드를 사용한다. forEach의 인자는 콜백 함수로, 콜백함수는 1,2번째 인자로는 현재 순회중인 요소, 3번째 인자로 순회중인 Set 객체를 자체를 전달받는다.
+- 1,2번째는 같은 값인데, 굳이 이렇게 만든 이유는 Array.prototype.forEach와 인자 갯수를 통일하기 위함이다. Array의 forEach는 두번째 인자로 순회중인 요소의 index값을 전달받는다.
+```js
+const set = new Set([1,2,3]);
+
+set.forEach((v1, v2, set) => console.log(v1, v2, set));
+/*
+1 1 Set(3) {1, 2, 3}
+3 2 2 Set(3) {1, 2, 3}
+3 3 3 Set(3) {1, 2, 3}
+*/
+```
+- Set 객체는 `Iterable`로, for ... of문으로 순회할 수 있고, **스프레드 문법**, **배열 디스트럭처링**의 대상이 될 수 있다.
+- Set은 자체적으로 순서를 갖고 있지 않으나, 배열 디스트럭처링시에는 add한 순서대로 하당하게 된다. 이는 ECMAScript 사양에 규정된 내용은 아니지만, 다른 이터러블의 순회와 호환성을 유지하기 위함이다.
+
+```js
+const set = new Set([1,2,3]);
+
+// Set객체는 이터러블이다.
+console.log(Symbol.iterator in set);  // true
+console.log(const val of set) {
+  console.log(value); // 1 2 3
+}
+
+// 스프레드 문법
+console.log([...set]);  // [1, 2, 3]
+
+// 배열 디스트럭처링 할당
+const [f, ...rest] = set;
+console.log(f, rest); // 1, [2, 3]
+```
+<br>
+
+### 37.1.8 집합 연산
+- 집합 연산을 따로 제공해주진 않는다. 구현해보도록 하자.
+- 교집합(A n B)
+```js
+Set.prototype.intersection = function(set) {
+  const result = new Set();
+  // Set을 스프레드 문법으로 Array로 만든 후 Array.prototype.filter 메서드를 사용하였다.
+  return new Set([...this].filter(v => set.has(v)));
+}
+```
+- 합집합(A u B)
+```js
+Set.prototype.union = function(set) {
+  return new Set([...this, ...set]);
+}
+```
+- 차집합 (A - B)
+```js
+Set.prototype.difference = function(set) {
+  return new Set([...this].filter(v => !set.has(v)));
+}
+```
+<br>
+
+### 37.2 Map
+- Map 객체는 키와 값의 쌍으로 이루어진 컬렉션이다. **객체와 유사하지만 다음과 같은 차이가 있다.(상당히 큰 차이다)**
+
+| 구분 | 일반 객체 | Map 객체 |
+|---|---|---|
+| 키로 사용할 수 있는 값 | string, Symbol | **객체를 포함한 모든 값** |
+| 이터러블 | X | O |
+| 요소 개수 확인 | Object.keys(obj).length | map.size |
+<br>
+
+### 37.2.1 Map 객체의 생성
+- ***Map 객체는 Iterable을 인수로 전달하여 Map 객체를 생성한다. 이 때, 인수로 전달되는 이터러블은 키와 값의 쌍으로 이루어진 요소로 구성되어야 한다.***
+-  이 때 중복된 키를 갖는 요소가 존재하면 덮어써진다.
+```js
+const map1 = new Map([['key1', 'value1'], ['key2', 'value2']]);
+console.log(map1); // Map(2) {'key1' => 'value1', 'key2' => 'value2'}
+
+// key의 중복을 허용치 아니한다.
+const map2 = new Map([['key1', 'value1'], ['key1', 'value2']]);
+console.log(map2);  // Map(1) {'key1' => 'value2'}
+```
+<br>
+
+### 37.2.2 요소 개수 확인
+- 요소 개수 확인은 `Map.prototype.size` 프로퍼티를 사용한다.
+- size 프로퍼티는 getter만 존재하는 accessor 프로퍼티로 직접 변경은 불가능하다.
+<br>
+
+### 37.2.3 요소 추가
+- 요소 추가는 `Map.prototype.set` 메서드를 사용한다.
+- set 메서드는 새로운 요소가 추가된 Map 객체를 반환하므로 **method chainig** 할 수 있다. 이 때 this를 반환하는 것이므로 set은 원본 Map객체를 변경하는 `mutator method`이다.
+- map은 일반 객체와 달리 객체를 key로 가질 수 있다는 큰 차이점이 있다.
+```js
+const map = new Map();
+
+// 객체 타입의 key
+const lee = { name: 'lee' };
+const kim = { name: 'kim' };
+
+map.set(lee, 'developer');
+map.set(kim, 'designer');
+
+console.log(map)
+// Map(2) {{…} => 'developer', {…} => 'designer'}
+```
+<br>
+
+### 37.2.4-7
+- 요소 취득은 `Map.prototype.get`메서드를 사용한다. 값이 없으면 undefined
+- 요소 존재 여부는 `Map.prototype.has`메서드를 사용한다.
+- 요소 삭제는 `Map.prototype.delete`메서드를 사용한다. 삭제 결과를 boolean으로 반환하므로 mmethod chaining 할 수 없다.
+- 요소 일괄 삭제 `Map.prototype.clear`메서드를 사용한다. 반환값은 undefined
+<br>
+
+### 37.2.8 요소 순회
+- 요소 순회는 `Map.prototype.forEach` 메서드를 사용한다. forEach의 인자로 들어가는 callback 함수는 첫째 인수로 현재 순회중인 요소 value,  두 번째 인수로 현재 순회 중이 요소 key, 세 번째 인수로 순회 중인 Map 객체 자체를 받는다.
+```js
+const map = new Map();
+
+const lee = { name: 'lee' };
+const kim = { name: 'kim' };
+
+map
+  .set(lee, 'developer')
+  .set(kim, 'designer');
+
+map.forEach((v, k, map) => console.log(v, k, map));
+/*
+developer {name: 'lee'} Map(2) {{…} => 'developer', {…} => 'designer'}
+designer {name: 'kim'} Map(2) {{…} => 'developer', {…} => 'designer'}
+*/
+```
+- Map 객체는 Iterable로 for ... of문으로 순회할 수 있고, 스프레드 문법과 배열 디스트럭처링을 사용할 수 있다.
+```js
+for(const entry of map) {
+  console.log(entry); // [{name: 'lee'}, 'developer'] [{name: 'kim'} designer]
+}
+```
+- Map 객체는 **이터러블이면서 동시에 이터레이터인 객체**를 반환하는 메서드를 제공한다.
+  - Map.prototype.keys : Map객체의 key값들의 이터러블이며 이터레이터
+  - Map.prototype.values : Map객체의 value들의 이터러블이며 이터레이터
+  - Map.prototype.entries : Map객체의 {key => value} 값들의 이터러블이며 이터레이터
+```js
+const map = new Map([['key1', 'value1'], ['key2', 'value2']]);
+
+// map.keys()는 이터레이터이다
+for(const key of map.keys()) {
+  console.log(key); // key1 key2
+}
+
+// map.values()는 이터레이터 이며 동시에 이터러블이므로 이터레이터를 뽑아낼 수 있다. 무한 반복가능
+for(const value of map.values()[Symbol.iterator]()) {
+  console.log(value); // value1 value2
+}
+
+for(const entry of map.entries()) {
+  console.log(entry);// (2) ['key1', 'value1'] (2) ['key2', 'value2']
+}
+```
+<br><br>
