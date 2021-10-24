@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .red { color: red; }
+    .blue { color: blue; }
+  </style>
+</head>
+<body>
+  <ul id="fruits">
+    <li class="red">Apple</li>
+    <li class="red">Banana</li>
+    <li class="red">Orange</li>
+  </ul>
+  <script>
+    const $elems = document.getElementsByClassName('red');
+
+    console.log($elems);  // HTMLCollection(3) [li.red, li.red, li.red]
+
+    for(let i = 0; i < $elems.length; i++ ) {
+      $elems[i].className = 'blue';
+    }
+
+    console.log($elems);  // HTMLCollection(1) [li.red]
+  </script>
+</body>
+</html>

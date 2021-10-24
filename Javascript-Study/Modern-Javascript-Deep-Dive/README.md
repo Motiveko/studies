@@ -5933,3 +5933,188 @@ for(const entry of map.entries()) {
 - IE10 이상에서 지원한다.
 
 <br><br>
+
+## 39. DOM
+> ❗️ DOM은 HTML 문서의 계층적 구조와 정보를 표현하며, 이를 제어할 수 있는 API, 즉 프로퍼티와 메서드를 제공하는 트리 자료구조다.
+
+### 39.1 노드
+### 39.1.1 HTML 요소와 노드 객체
+- HTML 요소가 DOM의 요소 노드 객체로 변환되는데, HTML의 attribute는 `attribute node`로, text contents는 `text node`로 변환된다. HTML 요소는 중첩 관계를 가지는데, DOM 노드들은 이를 Tree로 표한다.
+
+### 39.1.2 노드 객체의 타입
+- DOM 노드 객체는 종류가 있고 상속 구조를 갖는다. 총 12종류의 노드 타입이 있는데, 이 중에서 중요한 노드 타입은 4가지다.
+
+**문서 노드(document node)**
+- DOM트리 최상위에 존재하는 root node로, `document` 객체를 가리킨다. root node이기때문에 DOM의 진입점(entry  point) 역할을 한다.
+- document 객체는 **렌더링한 HTML 문서 전체**를 가리키는 객체로, window의 document 프로퍼티에 바인딩 되어 있다. 즉 HTML 문서당 document객체는 유일하다.
+
+<br>
+
+**요소 노드(element node)**
+- HTML 요소를 가리킨다. 요소 노드는 문서의 구조를 표현한다.
+
+<br>
+
+**어트리뷰트 노드(attribute node)**
+- HTML 요소의 attribute를 가리킨다. 요소 노드와 연결되어 있다.
+- 어트리뷰트 노드는 부모가 없으므로 요소 노드의 형제(sibling) 노드는 아니다. 따라서 어트리뷰트 노드를 참조하거나 변경하려면 우선 요소 노드에 접근해야한다.
+
+<br>
+
+**텍스트 노드(text node)**
+- HTML 요소의 텍스트(컨텐츠)를 가리키는 객체다. 문서의 정보를 표현한다.
+- 텍스트 노드는 요소 노드의 **자식 노드**이며, 자식 노드를 가질 수 없는 `leaf node`이다. 텍스트 노드를 참조하려면 역시 요소 노드에 먼저 접근해야한다.
+
+<br>
+
+위 4가지 노드 타입 외에도 주석을 위한 `Comment`, DOCTYPE을 위한 `DocuementType`, 복수의 노드를 생성하여 추가할 때사용하는 `DocumentFragment` 노드 등 이 있다.
+
+<br>
+
+### 39.1.3 노드 객체의 상속 구조
+- DOM을 구성하는 노드 객체는 ECMAScript 사양에 정의된 표준 빌트인 객체가 아니라, **브라우저 환경에서 추가적으로 제공하는 호스트 객체다.** 노드 객체도 프로토타입에 의한 상속 구조를 가지는데 대충 아래와 같다.(책에 그림으로 잘나옴)
+  - 모든 노드 객체는 `Object`, `Event Target`, `Node` 인터페이스를 상속받는다.
+  - 추가적으로, 문서 노드는 `Document`, `HTMLDocument` 인터페이스를,
+  - 어트리뷰트 노드는 `Attr` 인터페이스를,
+  - 텍스트 노드는 `CharacterData` 인터페이스를,
+  - 요소 노드는 `Element` 를 상속받는 `HTMLElement` 인터페이스를 상속받는다. 요소 노드는 각 HTML 요소별로 HTMLHtmlElement, HTMLHeadElement, ...와 같은 인터페이스를 각각 상속받는다.
+
+- 예를 들어, input 요소를 파싱하여 객체화한 input 요소 노드 객체는 HTMLInputElement, HTMLElement, Element, Node, EventTarget, Object의 prototpye에 바인딩 되어 있는 프로토 타입 객체를 상속받는다.
+- input 요소 노드 객체는 다양한 특성을 갖는 객체이고, 이러한 특성을 나타내는 기능들을 아래와 같이 상속을 통해 제공받는다.
+
+| input 요소 노드 객체의 특성 | 프로토타입을 제공하는 객체 |
+|---|---|
+| 객체 | Object |
+| 이벤트를 발생시키는 객체 | EventTarget |
+| 트리 자료구조의 노드 객체 | Node |
+| 브라우저가 렌더링 할 수 있는 웹 문서의 요소(HTML< XML, SVG)를 표현하는 객체 | Element |
+| 웹 문서의 요소 중에서 HTML 요소를 표현하는 객체 | HTMLElement |
+| HTML 요소 중에서 input 요소를 표현하는 객체 | HTMLInputElement |
+
+- `DOM`은 HTML 문서의 계층적 구조와 정보를 표현하는 것은 물론, ***노드 타입에 따라 필요한 기능을 프로퍼티와 메서드의 집합인 DOM API로 제공한다.*** 이를 통해 HTML의 구조나 내용 또는 스타일 등을 동적으로 조작할 수 있는것이다.
+- FE 개발자에게 HTML은 단순히 태그와 어트리뷰트를 선언적으로 배치하여 뷰를 구성하는 것 이상의 의미를 갖는다. 즉 HTML을 DOM과 연관지어 바라보아야 한다.
+
+<br>
+
+### 39.2 요소 노드 취득
+### 39.2.1 id를 이용한 요소 노드 취득
+- Document.prototype.`getElementById` 메서드는 인수로 전달한 id 어트리뷰트 값을 갖는 하나의 요소 노드를 탐색하여 반환한다. 반드시 문서 노드인 `document`를 통해 호출해야한다.
+- HTML 요소에 id 어트리뷰트를 부여하면 ***id 값과 동일한 이름의 전역 변수가 암묵적으로 선언되고 해당 노드 객체가 할당되는 부수 효과가 있다.***
+```HTML
+<!DOCTYPE html>
+<html >
+<body>
+  <div id="foo"></div>
+  <script>
+    console.log(foo === document.getElementById('foo'));  // true
+
+    // 암묵적 전역으로 생성된 전역 프로퍼티는 삭제되지만 전역 변수는 삭제되지 않는다.
+    delete foo;
+    console.log(foo); // <div id="foo"></div>
+  </script>
+
+  <script>
+    // id값과 동일한 이름의 전역 변수가 선언되어 있으면 노드 객체가 재할당되지 않는다.
+    let foo = 1;
+    console.log(foo); // 1
+  </script>
+</body>
+</html>
+```
+
+<br>
+
+### 39.2.2 태그 이름을 이용한 요소 노드 취득
+- Document.prototype,`getElementsByTagName`, Element.prototype.`getElementsByTagName` 메서드는 인수로 전달한 태그 이름을 갖는 모든 요소 노드들을 탐색하여 반환한다. 반환되는 객체 타입은 DOM 컬렉션 객체인 `HTMLCollection`이다. 두 메서드의 차이는 루트 노드에서 전체를 탐색하느냐, 특정 요소 노드의 자식노드를 탐색하느냐의 차이다.
+- HTMLCollection 객체는 유사 배열 객체이면서, 이터러블이다.
+
+<br>
+
+### 39.2.3 class를 이용한 요소 노드 취득
+- Document.prototype.`getElementsByClassName`, Element.prototype.`getElementsByClassName` 메서드는 인수로 전달한 class 어트리뷰트 값을 갖는 모든 요소 노드를 탐색한다. 반환 타입과 메서드의 차이는 getELementsByTagName과 같다.
+
+<br>
+
+### 39.2.4 CSS 선택자를 이용한 요소 노드 취득
+- Document.prorotype.`querySelector`, Element.prototype.`querySelector` 메서드는 인수로 전달한 CSS Selector를 만족시키는 **하나의 요소 노드**를 탐색하여 반환한다.
+- `querySelectorAll`로 바꾸면 **모든 요소 노드** 를 반환한다. 반환 타입은 DOM 컬렉션 객체인 `NodeList`. NodeList는 유사 배열 객체이면서 이터러블이다.
+- Document / Element 의 차이는 이전과 같다.
+- querySelector 메서드는 일반적으로  getElementById 형태의 메서드보다 느리다고 알려져 있으나, CSS Selector를 사용해 좀 더 다양한 조건을 만들 수 있어, Id로 찾는게 아니라면 querySelector 사용이 권장된다.
+
+<br>
+
+### 39.2.5 특정 요소 노드를 취득할 수 있는지 확인
+- `Element.prototype.matches` 메서드는 인수로 전달한 CSS Selector를 통해 특정 요소 노드를 취득할 수 있는지 확인한다.
+```HTML
+<!DOCTYPE html>
+<html >
+<body>
+  <ul id="fruits">
+    <li class="apple">Apple</li>
+    <li class="orange">Apple</li>
+  </ul>
+  <script>
+    const $apple = document.querySelector('.apple');
+
+    // $apple 노드는 '#fruits > li.apple'로 취득 가능하다.
+    console.log($apple.matches('#fruits > li.apple'));  // true
+    // $apple 노드는 '#fruits > li.organe'로 취득 불가능하다.
+    console.log($apple.matches('#fruits > li.orange')); // false
+
+  </script>
+</body>
+</html>
+```
+- matchs 메서드는 이벤트를 위임할 때 유용하다. 추후에 다뤄보자.
+
+<br>
+
+### 39.2.6 HTMLCollection과 NodeList
+- `HTMLCollection`과 `NodeList`는 DOM API가 여러개의 결과값을 반환하기 위한 DOM 컬렉션 객체로 유사 배열 객체이며 이터러블이다.
+- 중요한 특징은 ***노드 객체의 상태를 실시간으로 반영하는 살아 있는(live) 객체라는 것이다.*** HTMLCollection은 언제나 live 객체로 동작하고, Nodelist는 보통은 non-live고 경우에 따라 live 객체로 작동한다.
+
+***HTMLCollection***
+- live 객체이기 때문에 주의해야할 점이 있다. 아래의 경우를 보자.
+```HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .red { color: red; }
+    .blue { color: blue; }
+  </style>
+</head>
+<body>
+  <ul id="fruits">
+    <li class="red">Apple</li>
+    <li class="red">Banana</li>
+    <li class="red">Orange</li>
+  </ul>
+  <script>
+    const $elems = document.getElementsByClassName('red');
+
+    console.log($elems);  // HTMLCollection(3) [li.red, li.red, li.red]
+
+    for(let i = 0; i < $elems.length; i++ ) {
+      $elems[i].className = 'blue';
+    }
+
+    console.log($elems);  // HTMLCollection(1) [li.red]
+  </script>
+</body>
+</html>
+```
+- '.red'인 요소 노드를 모두 가져와 '.blue'로 바꿔주는 script이다. 결과는 예상외로 2번째 Banana가 '.red' 상태 그대로 남아있다. 원인은 HTMLCollection이 live이기 때문.
+- for문이 돌며 i=0(Apple) 노드를 blue로 바꾸면 즉시 $elems의 상태에 반영돼 제거되고 2개의 노드만 남게 된다. 그 후 i=1 노드(Orange) 를 blue로 바꿔주고, 상태는 즉시 반영돼 $elems 의 길이는 1이되고, i=2에서 for문은 종료된다.
+- 이러한 종류의 문제 회피 방법으로는 for문을 역순으로 돌리거나, 스프레드 문법(...)으로 배열로 변환해, 배열의 고차 함수를 사용하는것이 있다.
+
+
+**NodeList**
+- HTMLCollection의 Live로 발생하는 문제 회피 방법으로는 querySelectorAll로 `NodeList`를 받아오는 방법이 있다. NodeList는 기본적으로 non-live 객체다.
+- 하지만 **`childNodes` 프로퍼티가 반환하는 NodeList 객체는 live 객체로 동작하므로 주의가 필요하다.**
+
+HTMLCollection과 NodeList 객체는 예상과 다르게 동작할 가능성이 있으므로, 안전하게 사용하기 위해 **이 객체들을 배열로 변환하여 사용하는 것을 권장한다.** 스프레드 문법이나 Array.from은 이럴때를 위해 존재하는것.
+
+<br>
+
+### 39.3 노드 탐색
