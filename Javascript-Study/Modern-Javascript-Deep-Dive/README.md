@@ -6118,3 +6118,313 @@ HTMLCollection과 NodeList 객체는 예상과 다르게 동작할 가능성이 
 <br>
 
 ### 39.3 노드 탐색
+- DOM트리 상의 노드 탐색을 위해 Node, Element 인터페이스는 `트리 탐색 프로퍼티`를 제공한다.
+- 제공하는 프로퍼티는 모두 getter없이 setter만 존재하는 접근자 프로퍼티로 `readonly` 프로퍼티다.
+
+<br>
+
+### 39.3.1 공백 텍스트 노드
+> ❗️ 이것(개행) 때문에 가끔 픽셀 수 계산 제대로 해서 그리드를 만들었는데도 element가 overflow되는 현상이 발생했던 것이다.
+- 다음 HTML을 보자.
+```js
+<!DOCTYPE html>
+<html>
+<body>
+  <ul id="fruits">
+    <li class="red">Apple</li>
+    <li class="red">Banana</li>
+    <li class="red">Orange</li>
+  </ul>
+</body>
+</html>
+```
+- 위 HTML을 파싱하여 DOM 트리 생성시 'bod -ul', 'ul-li', 'li-li', 사이에는 공백 텍스트(엔터, 탭, 스페이스 키)노드가 생성된다.
+- \</li>\<li> 와 같은 형태로 개행 없이 붙여쓰면 공백 텍스트 노드가 생성되지 않지만 가독성이 구려 권장하진 않는다. **픽셀이 딱 맞는데 overflow가 발생한다? 이걸 의심해보자.**
+
+<br>
+
+### 39.3.2 자식 노드 탐색
+- 다음과 같은 자식 노드 탐색 프로퍼티가 있다.
+
+| 프로퍼티 | 설명 |
+|---|---|
+| Node.prototype.childNodes | 자식노드 모두를 NodeList로 반환한다. **노드 뿐만 아니라 텍스트 노드도 포함되어 있을 수 있다.** |
+| Element.prototype.children | 자식 노드 중에 **요소 노드만** HTMLCollection으로 반환한다. 텍스트 노드가 포함되지 않는다. |
+| Node.prototype.firstChild | 첫 번째 자식 노드를 반환. 텍스트 노드일 수 있다. |
+| Node.prototype.lastChild | 마지막 자식 노드를 반환. 텍스트 노드일 수 있다. |
+| Element.prototype.firstElementChild | 첫 번째 자식 요소 노드를 반환. 요소 노드만 반환한다. |
+| Element.prototype.lastElementChild | 마지막 자식 요소 노드를 반환. 요소 노드만 반환한다. |
+
+- 즉 **Element.prototype의 자식 탐색 프로퍼티는 공백 텍스트 노드를 반환하지 않고, Node.prototype의 자식 탐색 프로퍼티는 공백 텍스트 노드를 포함한다.**
+
+<br>
+
+### 39.3.3 자식 노드 존재 확인
+- Node.prototype.hasChildNodes 메서드로 자식 노드 존재 여부를 파악한다. childNodes와 마찬가지로 **텍스트 노드를 포함하여 자식 노드의 존재를 확인한다.**
+- 자식 노드 중에 요소 노드만 확인하려면 Element.prototype.childElementCount를 사용한다.
+
+<br>
+
+### 39.3.4 요소 노드의 텍스트 노드 탐색
+- 텍스트 노드는 요소 노드의 젓번째 자식으로써 접근 가능하다. Node.prototype.firstChild로 접근한다.
+
+<br>
+
+### 39.3.6 형제 노드 탐색
+- Node.prototype.previousSibling 은 텍스트 노드 포함 형제 노드를, Element.prototype.previousElementSibling 요소 노드만 탐색한다.
+
+<br>
+
+### 39.4 노드 정보 취득
+- Node.prototype.nodeType_
+  - 노드 객체의 종류(타입)을 나타내는 상수값. Node 객체의 프로퍼티에 정의되어있다.
+  - Node.ELEMENT_NODE = 1, TEXT_NODE = 3 DOCUMENT_NODE = 9
+- Node.prototype.nodeName
+  - 노드의 이름을 문자열로 반환
+  - 요소 노드 : UL, LI 등 태그 이름을 대문자로 반환
+  - 텍스트 노드 : 문자열 #text 반환
+  - 문서 노드 : 문자열 #document 반환
+
+<br>
+
+### 39.5 요소 노드의 텍스트 조작
+### 39.5.1 nodeValue
+- Node.prototype.nodeValue는 getter, setter가 모두 있는 접근자 프로퍼티
+- nodeValue프로퍼티는 `텍스트 노드`의 값으로, 요소 노드나 문서 노드에서 nodeValue 프로퍼티 값은 null이다.
+- 따라서 아래와 같은 방법으로 접근해야 한다.
+  1. 텍스트 변경할 요소 노드 취득, 해당 노드에서 firstChild 프로퍼티로 해당 노드의 텍스트 노드를 참조한다.
+  2. 참조한 텍스트 노드의 nodeValue 프로퍼티의 getter/setter로 텍스트를 조작한다.
+
+```js
+// id=foo인 요소의 텍스트를 hi!로 수정한다.
+const $foo = document.getElementById('foo');
+$foo.firstChild.nodeValue = 'hi';
+```
+
+<br>
+
+### 39.5.2 textContent
+- `Node.prototype.textContent`프로퍼티는 getter, setter가 모두 있는 접근자 프로퍼티
+- 요소 노드의 텍스트와 자손 노드의 텍스트를 모두 취득/변경한다. 즉 요소 노드의 콘텐츠 영역(시작 태그와 종료 태그 사이) 내의 텍스트를 모두 반환한다. **HTML 마크업은 무시**된다.
+- 요소 노드 자체의 텍스트만 가지고 있는게 아니기 때문에 복잡하다. **자식 요소 노드가 없고 텍스트만 존재하는 노드에서 사용하자.**
+- 비슷하게 innerText 프로퍼티가 있다. innerText는 CSS에 의해 표시되지 않는 노드의 텍스트는 반환하지 않는 등, CSS 순종적으로, 느리다!
+
+<br>
+
+### 39.6 DOM 조작
+- DOM에 새로운 노드가 추가되거나 삭제되면 리플로우와 리페인트가 발생한다.
+
+### 39.6.1 innerHTML
+- Element.prototype.innerHTML은 요소 노드의 마크업을 취득하거나 변경한다. 참조시 요소 노드의 콘텐츠 영역 내에 포함된 모든 HTML 마크업을 **문자열**로 반환한다.
+- innerHTML 프로퍼티에 문자열을 할당하면 기존 마크업이 지워지고 문자열의 HTML마크업이 파싱되어 요소 노드의 자식 노드로 DOM에 반영된다.
+- innerHTML 프로퍼티는 쉽고 직관적이게 DOM을 조작할 수 있다는 장점이 있지만, XSS 공격에 취약하다는 단점이 있다.
+```js
+const foo = document.getElementById('foo');
+// HTML 5는 innerHTML로 삽입된 script 요소 내의 자바스크립트 코드를 실행하진 않는다.
+foo.innerHTML = `<script>alert(document.cookie)</script>`;
+
+// 에러 이벤트를 강제로 발생시켜 자바스크립트 코드가 실행되도록 한다.
+foo.innerHTML = `<img src="x" onerror="alert(document.cookie)">`;
+```
+> ❗️ HTML 새니티제이션(senitization)은 사용자로부터 입력받은 데이터에 의해 발생할 수 있는 XSS공격을 예방하기 위해 잠재적 위험을 제거하는 기능이다. 일반적으로 `DOMPurify` 라이브러리를 이용하는것을 권장한다. 다음과 같이 사용한다.
+```js
+DOMPurify.sanitize('<img src="x" onerror="alert(document.cookie)">');
+// => <img src="x">
+```
+- 또 다른 **단점**은 마크업 문자열을 할당할 경우, 자식 노드를 모두 제거하고 할당한 문자열을 파싱해 DOM을 변경한다는 것이다. 예로 `+=`으로 요소를 추가할 경우 기존 요소를 모두 제거하고 다시 생성한다. 비효율적이다.
+- 또 새로운 요소 삽입 시 삽입 위치를 지정할 수 없다.
+
+<br>
+
+### 39.6.2 insertAdjacentHTML 메서드
+- Element.prototype.insertAdjacentHTML( {Position}, {DOMString} ) 메서드는 기존 요소를 제거하지 않으면서 새로운 요소를 삽입한다.
+- 첫 번째 인자인 Position 값으로는 beforebegin, afterbegin, beforeend, afterend가 있다. 기억 안나면 책의 그림을 찾자!
+- 기존 요소에는 영항을 주지 않고, 새로운 노드만 생성해 삽입하므로 효율적이고 빠르다.
+
+<br>
+
+### 39.6.3 노드 생성과 추가
+- 다음과 같이 노드를 생성하고 추가할 수 있다. 설명은 주석으로 처리해본다.
+```HTML
+<!DOCTYPE html>
+<html>
+<body>
+  <ul id="fruits">
+    <li>Apple</li>
+  </ul>
+  <script>
+    const $fruits = document.getElementById('fruits');
+
+    /*
+      1. 요소 노드 생성
+     createElement(TAG_NAME) 메서드로 요소 노드를 생성할 수 있다.
+     생성된 요소 노드는 아직 DOM에 추가되지 않은 상태다.
+     */
+    const $li = document.createElement('li');
+
+    /*
+      2. 텍스트 노드 생성
+     createTextNode(TEXT) 메서드로 텍스트 노드를 생성할 수 있다.
+     */
+    const textNode = document.createTextNode('Banana');
+
+    /*
+      3. 텍스트 노드를 $li 요소 노드의 자식 노드로 추가
+     Node.prototype.appendChile(CHILD_NODE) 메서드로 호출한 노드의 마지막 자식 노드에 추가한다.
+     */
+    $li.appendChild(textNode);
+
+    /*
+      4. $li 요소 노드를 fruits 요소 노드의 마지막 자식 노드로 추가
+      DOM 요소에 추가되고 리플로우와 리페인트가 실행된다.
+     */
+    $fruits.appendChild($li);
+  </script>
+</body>
+</html>
+```
+
+<br>
+
+### 39.6.4 복수의 노드 생성과 추가
+- 위의 방식으로 복수의 노드를 추가한다고 생각해보자. $fruits.appendChild()가 여러번 호출돼, 리플로우/리페인트도 여러번 호출될 것이다. 구리다.
+- div 등으로 컨테이너를 만들고, 컨테이너에 추가할 노드를 모은 다음 DOM에 컨테이너를 추가하는 방법도 생각해 볼 수 있다. 하지만 불필요한 컨테이너 요소가 들어가는것은 역시나 구리다.
+- 해결책으로 `DocumentFragment` 노드를 사용할 수 있다. DocumentFragment 노드는 부모 노드가 없어서 기존 DOM과는 별도로 존재한다는 특징이 있다.
+- ***DocumentFragment 노드를 컨테이너로 추가할 복수 노드를 모으고, DocumentFragment 노드를 DOM에 추가하면 DocumentFragment 자신은 제거되고 자식 노드만 DOM에 추가된다.***
+```js
+const $fruits = document.getElementById('fruits');
+
+// DocumentFragment 생성
+const $fragment = document.createDocumentFragment();
+
+['Apple', 'Banana', 'Orange'].forEach((fruit) => {
+  const $li = document.createElement('li');
+  const textNode = document.createTextNode(fruit);
+
+  $li.appendChild(textNode);
+  $fragment.appendChild($li);
+});
+
+// DOM에 DocumentFragment 노드 추가, 리플로우/리페인트 발생
+$fruits.appendChild($fragment);
+```
+
+<br>
+
+### 39.6.5 노드 삽입
+- Node.prototype.appendChild(NODE)메서드는 맨 마지막 자식 노드로 인수로 받은 노드를 추가한다.
+- Node.prototype.insertBefore(NEW_NODE,CHILD_NODE) 메서드는 첫 번째 인수로 받은 노드를 두 번째 노드로 받은 노드 앞에 삽입한다. CHILD_NODE가 메서드 호출 노드의 자식 노드가 아니면 DOMException이 발생한다.
+
+<br>
+
+### 39.6.6 노드 이동
+- DOM에 **이미 존재하는 노드**를 appendChild 또는 insertBefore 메서드로 DOM에 다시 추가하면 노드가 이동한다.
+
+<br>
+
+### 39.6.7 노드 복사
+- Node.prototype.**cloneNode**([deep: true | false]) 메서드는 노드의 사본을 생성하여 반환한다. deep: true면 자식 노드까지, false면 노드 자신만 복사한다. 얕은 복사는 자식 노드를 복사하지 않으므로 텍스트 노드도 복사하지 않는다.
+
+<br>
+
+### 39.6.8 노드 교체
+- Node.prototype.**replaceChild**(NEW_CHILD, OLD_CHILD) 메서드는 자식 노드를 다른 노드로 교체한다. OLD_CHILD 노드는 DOM에서 제거된다.
+
+<br>
+
+### 39.6.9 노드 삭제
+- Node.prototype.**removeChild**(CHILD) 메서드는 CHILD 노드를 DOM에서 삭제한다. CHILD는 호출한 노드의 자식 노드여야 한다.
+
+<br>
+
+### 39.7 어트리뷰트
+### 39.7.1 어트리뷰트 노드와 attributes 프로퍼티
+- HTML 문서가 파싱될 때, HTML 요소의 어트리뷰트는 `어트리뷰트 노드`로 변환되어 요소 노드와 연결된다. 1개의 attribute에 attribute node하나가 생성된다.
+- 모든 attribute node는 `NamedNodeMap`객체에 담겨 요소 노드의 `attributes 프로퍼티`에 저장된다. 개발자 도구 - Elements의 우측 탭 Properties에서 attributes에서 NamedNodeMap을 찾을 수 있다.
+- attributes 프로퍼티는 getter만 존재하는 read only 접근자 프로퍼티다.
+
+<br>
+
+### 39.7.2 HTML 어트리뷰트 조작
+- attributes 프로퍼티는 getter만 존재해 조작이 불가능하다.
+- Element.prototype의 getAttribute(ATTR_NAME), setAttribute(ATTR_NAME, ATTR_VALUE) 메서드를 사용하면 요소 노드에서 직접 HTML을 취득/할당이 가능하다.
+- hasAttribute(ATTR_NAME) 메서드로 특정 어트리뷰트가 존재하는지 확인할 수 있다.
+- removeAttribute(ATTR_NAME) 메서드로 특정 어트리뷰트를 제거할 수 있다.
+
+<br>
+
+### 39.7.3 HTML 어트리뷰트 vs DOM 프로퍼티
+- 요소 노드 객체에는 **HTML 어트리뷰트**에 대응하는 **DOM 프로퍼티**가 존재한다.
+- DOM프로퍼티는 getter, setter 모두 존재해 참조/변경이 가능하다.
+```js
+const $input = document.getElementById('user');
+
+// 요소 노드의 value 프로퍼티 값을 변경
+$input.value = 'foo';
+```
+- 요소노드의 attributes 프로퍼티에서 관리하는 어트리뷰트 노드와 DOM 프로퍼티, 무슨 차이가 있을까?
+- **HTML 어트리뷰트의 역할은 HTML 요소의 `초기 상태`를 지정하는 것으로, 이는 변하지 않는다.**
+- 하지만 **요소 노드는 상태(state)를 가지고 있다.** 사용자가 input 태그의 값을 입력하면 상태가 변하는데, 이 **최신 상태**를 관리하면서 동시에 초기 상태를 가지고 있어야 refresh할 때 다시 초기 상태를 랜더링 할 수 있다.
+- ***이처럼 요소 노드는 초기/최신 상태를 관리해야해, 어트리뷰트 노드는 초기상태를, DOM 프로퍼티는 최신 상태를 관리한다.***
+
+```js
+// input 요소 노드 취득
+const $input = document.getElementById('user');
+
+// attributes 프로퍼티에 저장된 value 어트리뷰트 값. 결과는 언제나 동일한 초기 상태값이다.
+$input.getAttribute('value');
+
+// input 필드에 값이 변할 때마다 최신 값을 취득해 출력할 수 있다.
+$input.oninput = () => {
+  console.log(`value 프로퍼티 값 ${$input.value}`);
+}
+```
+- 단 모든 DOM 프로퍼티가 최신 상태를 관리하는 것은 아니다. id와 같이 사용자 입력에 의한 상태 변화와 관련 없는 프로퍼티는 **동일한** 값을 유지한다. **id 어트리뷰트 값이 변하면 id 프로퍼티 값도 변한다.**
+- 대부분의 HTML 어트리뷰트와 DOM 프로퍼티는 1:1로 대응하지만, 아닌 것도 있다. 또한 키가 다른 값들도 존재한다. 몇가지 예를 든다.
+  - id attr과 id property는 1:1로 대응하며 동일한 값으로 연동
+  - input의 value attr과 value property는 1:1로 대응하지만, attr은 초기값, property는 최신값을 가진다.
+  - class attr은 className, classList 프로퍼티와 대응한다.
+  - td 요소의 colspan attr은 대응하는 프로퍼티가 존재하지 않는다.
+  - textConent 프로퍼티는 대응하는 attr이 존재하지 않는다.
+  - 어트리뷰트 이름은 대소문자 구분을 안하지만, 프로퍼티 키는 camel case를 따른다.
+  - getAttribute 메서드로 취득한 값은 언제나 string이다. 하지만 DOM 프로퍼티로 취득한 값은 string이 아닐 수 있다.
+  - ... 즉 조낸 어렵다는 것이다. 대체 왜 이렇게 만들었을까?
+
+<br>
+
+### 39.7.4 data 어트리뷰트와 dataset 프로퍼티
+- data 어트리뷰트는 data-user-id, data-role과 같이 data- 접두사 다음에 임의의 이름을 붙여 사용한다.
+- data 어트리뷰트 값은 HTMLElement.dataset 프로퍼티로 취득할 수 있다. DOMStringMap 객체를 반환하는데, data- 뒤의 이름을 camelCase로 변환한 프로퍼티를 가지고 있다. 이 프로퍼티로 data 어트리뷰트 값을 취득/변경할 수 있다.
+```HTML
+<!DOCTYPE html>
+<html>
+<body>
+  <ul class="users">
+    <!-- // <li id="1" data-user-id="11" data-role="subscriber" data-last-name="motive">Ko</li> -->
+    <li id="1" data-user-id="11" data-role="admin">Ko</li>
+    <li id="2" data-user-id="22" data-role="subscriber">Kim</li>
+  </ul>
+  <script>
+    const users = [...document.querySelector('.users').children];
+
+    // user-id가 11인 요소 노드를 취득한다.
+    const user = users.find(user => user.dataset.userId === '11');
+
+    console.log(user.dataset.role); // admin
+
+    // data-role 값을 변경한다.
+    user.dataset.role = 'subscriber';
+
+    // 없던 dataset 프로퍼티를 추가한다. camel 케이스로 추가시 attribute에는 Kabab case로 변경되어 추가된다.
+    user.dataset.lastName = 'motive';
+
+    console.log(user.dataset); // DOMStringMap {userId: '11', role: 'subscriber', name: 'motive'}
+
+  </script>
+</body>
+</html>
+```
+
+<br>
+
+### 39.8 스타일

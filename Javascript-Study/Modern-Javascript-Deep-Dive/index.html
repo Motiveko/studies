@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <style>
-    .red { color: red; }
-    .blue { color: blue; }
-  </style>
-</head>
 <body>
-  <ul id="fruits">
-    <li class="red">Apple</li>
-    <li class="red">Banana</li>
-    <li class="red">Orange</li>
+  <ul class="users">
+    <!-- // <li id="1" data-user-id="11" data-role="subscriber" data-last-name="motive">Ko</li> -->
+    <li id="1" data-user-id="11" data-role="admin">Ko</li>
+    <li id="2" data-user-id="22" data-role="subscriber">Kim</li>
   </ul>
   <script>
-    const $elems = document.getElementsByClassName('red');
+    const users = [...document.querySelector('.users').children];
 
-    console.log($elems);  // HTMLCollection(3) [li.red, li.red, li.red]
+    // user-id가 11인 요소 노드를 취득한다.
+    const user = users.find(user => user.dataset.userId === '11');
 
-    for(let i = 0; i < $elems.length; i++ ) {
-      $elems[i].className = 'blue';
-    }
+    console.log(user.dataset.role); // admin
 
-    console.log($elems);  // HTMLCollection(1) [li.red]
+    // data-role 값을 변경한다.
+    user.dataset.role = 'subscriber';
+
+    // 없던 dataset 프로퍼티를 추가한다. camel 케이스로 추가시 attribute에는 Kabab case로 변경되어 추가된다.
+    user.dataset.lastName = 'motive';
+
+    console.log(user.dataset); // DOMStringMap {userId: '11', role: 'subscriber', name: 'motive'}
+
   </script>
 </body>
 </html>
