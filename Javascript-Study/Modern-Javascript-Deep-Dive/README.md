@@ -6488,3 +6488,59 @@ $div.style['background-color'] = 'yellow';
 <br><br>
 
 ## 40. 이벤트
+### 40.1 이벤트 드리븐 프로그래밍
+- 에플리케이션은 브라우저에서 특정 이벤트가 발생했을 때 호출될 함수를 브라우저에 알려 **호출을 위임**한다. 이때, 이벤트가 발생했을 때 호출될 함수를 **이벤트 헨들러(event handler)**라 하고, 브라우저에게 이벤트 핸들러의 호출을 위임하는 것을 **이벤트 핸들러 등록**이라고 한다.
+- 이처럼 이벤트와 그에 대응하는 함수(핸들러)를 사용해 프로그램의 흐름을 이벤트 중심으로 제어하는 프로그래밍 방식을 이벤트 드리븐 프로그래밍이라 한다.
+
+<br>
+
+### 40.2 이벤트 타입
+- 이벤트 타입은 200여가지가 있다. 이벤트 타입에 대한 상세 목록은 [MDN Event Reference](https://developer.mozilla.org/en-US/docs/Web/Events)에서 확인할 수 있다. 책에 많이 쓰이는 내용을 알려주는데, 몰랐던 내용에 대해서만 정리한다.
+
+### 40.2.1 마우스 이벤트
+  - `mouseenter` : 마우스 커서를 HTML 요소 안으로 이동했을 때. **버블링되지 않는다.**
+  - `mouseover` : 마우스 커서를 HTML 요소 안으로 이동했을 때. **버블링된다.**
+  - `mouseleave`: 마우스 커서를 HTML 요소 밖으로 이동했을 때. **버블링되지 않는다.**
+  - `mouseout`: 마우스 커서를 HTML 요소 밖으로 이동했을 때.  **버블링된다.**
+<br>
+
+### 40.2.2 키보드 이벤트
+  - `keydown`
+    - control, option, shift, tab, delete, enter, ... 모든 키를 눌렀을 때 발생한다. 단, 문자/숫자/특문/enter 키를 누를 때는 연속적으로 발생하지만 그 외는 한 번만 발생한다.
+  - `keypress` -> **deprecated**
+    - control, option, shift, tab, delete, 방향키 등에는 반응하지 않고, 문자/숫자/특문에만 발생한다. 쓰지말자.
+  - `keyup` : 누르고 있던 키를 놓았을 때 한 번만 발생
+
+### 40.2.3 포커스 이벤트
+  - `focus`: HTML 요소 포커스시, 버블링 되지 않는다.
+  - `blur`: HTML 요소 포커스 해제시, 버블링 되지 않는다.
+  - `focusin`: HTML 요소 포커스시, 버블링된다.
+  - `focusout`: HTML 요소 포커스 해제시, 버블링된다.
+
+### 40.2.4 폼 이벤트
+  - `reset` : reset 버튼 클릭시, 최근엔 사용 안한다.
+
+### 40.2.5 값 변경 이벤트
+  - `input` : input, select, textarea 요소의 값이 **입력되었을 때**
+  - `change`
+    - input, select, textarea 요소의 값이 **변경되었을 때**
+    - `input`은 사용자가 값을 입력하고 있을 때 발생하고, `change`는 값을 다 입력하고 **input이 포커스를 잃었을 때 발생한다**
+  - `readystatechange`
+    - HTML 문서의 로드와 파싱 상태를 나타내는 dobument.readyState 프로퍼티 값(loading, interactive, complete)이 변경될 때
+
+### 40.2.6 DOM 뮤테이션 이벤트
+  - `DOMContentLoaded`: HTML 문서의 로드와 파싱이 완료되어 **DOM 생성이 완료되었을 때**
+
+### 40.2.7 뷰 이벤트
+  - `resize` : window객체에서만 발생하는 이벤트로, 윈도우 크기를 리사이즈할 때 발생한다.
+  - `scroll` : HTML 요소를 스크롤 할 때 발생한다.
+
+### 40.2.8 리소스 이벤트
+  - `load` : `DOMContentLoaded` 이벤트가 발생한 이후, 모든 리소스의 로딩이 완료되었을 때 발생. 주로 window 객체에서 발생한다.
+  - `unload` : 리소스가 언로드될 때(페이지 이동시)
+  - `abort`: 리소스 로딩이 중단되었을 때
+  - `error`: 리소스 로딩이 실패했을 때
+
+<br>
+
+### 40.3 이벤트 핸들러 등록
