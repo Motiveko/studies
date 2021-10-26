@@ -6428,3 +6428,63 @@ $input.oninput = () => {
 <br>
 
 ### 39.8 스타일
+### 39.8.1 인라인 스타일 조작
+- HTMLElement.prototype.style 프로퍼티는 setter와 getter 모두 존재하는 접근자 프로퍼티로 인라인 스타일을 취득하거나 변경한다.
+- style 프로퍼티를 참조하면 `CSSStyleDeclaration` 타입의 객체를 반환한다. 이 객체는 다양한 CSS 프로퍼티에 대응하는 프로퍼티를 가지고, 값을 할당하면 프로퍼티가 inline style로 HTML 요소에 추가되거나 변경된다.
+- 주의할점은 일반 CSS 프로퍼티는 케밥 케이스인 반면, CSSStyleDeclaration 객체의 프로퍼티는 카멜 케이스로 되어 있다.
+```js
+// CSSStyleDeclaration 객체의 프로퍼티는 카멜 케이스로 되어 있다.
+$div.style.backgroundColor = 'yellow';
+
+// 대괄호 표기법을 사용하면 케밥 케이스로 참조 가능하다.
+$div.style['background-color'] = 'yellow';
+```
+
+<br>
+
+### 39.8.2 클래스 조작
+- CSS에 class selector로 스타일을 정의하고, 요소의 Element.prototype.className/classList를 조작해 클래스 어트리뷰트를 바꿔 새로운 클래스의 CSS가 적용되게 한다.
+- className 프로퍼티는 class 어트리뷰트 값을 문자열로 반환한다.
+- classList 프로퍼티는 class 어트리뷰트 정보를 담은 `DOMTokenList` 객체를 반환한다. DOMTokenList는 아래와 같은 메서드를 제공한다.
+  - add(...className)
+  - remove(...className)
+  - item(index)
+  - contains(className)
+  - replace(oldClassName, new ClassName)
+  - toggle(className[. forece])
+    - ❗️ toggle 메서드는 className에 해당하는 클래스가 존재하면제거하고 존재하지 않으면 추가한다.
+    - force는 boolean으로 평가되는 조건식을 전달한다. 조건식이 true면 강제로 추가, false면 강제로 제거한다.
+  - forEach, entries, keys, values, supports ...
+
+```HTML
+<style>
+.red { color : red;}
+.blue{ color : blue;}
+</style>
+<script>
+  // 요소 노드 취득
+  const $box = document.querySelector('.box');
+
+  // className 프로퍼티 조작
+  // .red 클래스를 .blue로 변경
+  $box.className = $box.className.replace('red', 'blue');
+
+  // classList 프로퍼티 조작
+  $box.classList.add()
+</script>
+```
+
+### 39.8.3 요소에 적용되어 있는 CSS 스타일 참조
+- style 프로퍼티는 **인라인 스타일만** 반환한다. 따라서 ***클래스를 적용한 스타일이나 상속을 통해 암묵적으로 적용된 스타일은 `style` 프로퍼티로 참조할 수 없다.***
+- HTML 요소에 적용되어 있는 모든 CSS 스타일을 참조해야 할 경우 `getComputedStyle` 메서드를 사용한다.
+- window.getComputedStyle(element[, pseudo]) 메서드는 elemnt 요소 노드에 적용되어 있는 평가된 스타일을 `CSSStyleDeclaration` 객체에 담아 반환한다. **평가된 스타일(computed style)** 이란 모든(링크, 임베딩, 인라인, 자바스크립트에서 적용된, 상속된, 기본 )스타일이 조합되어 **최종적으로 적용 된 스타일을 말한다.**
+- getComputedStyle 메서드의 두 번째 인수(pseudo)로 :after, :before와 같은 [의사 요소](https://tcpschool.com/css/css_selector_pseudoElement)를 지정하는 문자열을 전달할 수 있다. 의사 요소가 아닌 요소의 경우 두 번째 인자는 생략한다.
+
+<br>
+
+### 39.9 DOM 표준
+- HTML과 DOM 표준은 W3C와 WHATWG가 나름 협력하며 내놓았으나, 2018.4 이후로 WHATWG가 단일 표준을 내놓는다. DOM에는 4개의 표준 문서 버전이 존재한다.
+
+<br><br>
+
+## 40. 이벤트
