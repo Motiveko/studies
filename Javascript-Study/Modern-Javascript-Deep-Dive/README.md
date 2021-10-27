@@ -6544,3 +6544,239 @@ $div.style['background-color'] = 'yellow';
 <br>
 
 ### 40.3 이벤트 핸들러 등록
+- 이벤트 발생시 브라우저에 핸들러 오출을 위임하는 이벤트 핸들러 등록 방식에는 3가지가 있다.
+### 40.3.1 이벤트 핸들러 어트리뷰트 방식
+- HTML 요소의 어트리뷰트 중 이벤트에 대응하는 이벤트 핸들러 어트리뷰트에 함수 호출문 등의 문을 할당한다.
+
+```HTML
+<button onclick="sayHi('myname')">button</button>
+```
+- 이 때 **이벤트 핸들러 어트리뷰트의 값은 사실 암묵적으로 생성될 이벤트 핸들러의 함수 몸체를 의미한다.** 그 이유는 아래와 같이 이벤트 핸들러 프로퍼티에 할당하는데, 기본적으로 핸들러 프로퍼티의 함수의 인자는 event로 고정되어 있기 때문이다. 따라서 핸들러에 원하는 인수를 넣으려면 핸들러에 함수 호출문을 할당해야 하는 것이다.
+
+```js
+function onclikc(event) {
+  sayHi('myname');
+}
+```
+- 아래와 같이 여러개의 문을 동시에 할당할 수도 있다.
+```HTML
+<button onclick="sayHi('myname'); console.log('click event');">button</button>
+```
+- vanilla js에서는 **어트리뷰트 방식을 권하지 않는다**. js와 HTML의 관심사 분리 때문. 하지만 요즘 SPA 프레임워크들처럼 `CBD`(Component Based Development) 방식의 개발에서는 대부분 어트리뷰트로 이벤트를 처리한다.
+
+<br>
+
+### 40.3.2 이벤트 핸들러 프로퍼티 방식
+- `window`객체와 `Document`, `HTMLElement` 타입의 DOM 노드 객체는 이벤트에 대응하는 `이벤트 핸들러 프로퍼티`를 가지고 있다. 'on + 이벤트타입'로 이  프로퍼티에 함수를 바인딩하면 핸들러가 등록된다.
+```js
+const $button = docuemnt.querySelector('button');
+
+// EVENT_TARGET['ON' + 'EVENT_TYPE'] = EVENT_HANDLER
+$button.onclick = function() {
+  console.log('button click');
+}
+```
+- 이벤트 어트리뷰트 방식도 결국 프로퍼티에 등록된다는 점에서 비슷하나, 프로퍼티에 직접 등록하는 방식은 1개의 이벤트에 1개의 핸들러만 등록할 수 있다는 단점이 존재한다.
+
+<br>
+
+### 40.3.3 addEventListener 메서드 방식
+- DOM Level2에서 도입된 EventTarget.Prototype.addEventListener 메서드를 사용하여 이벤트 핸들러를 등록할 수 있다.
+```ts
+// useCapture는 capture/bubble 여부로, 기본값은 false로 bubbling이다.
+EventTarget.addEventListener(eventType: string, handler: function, [, useCapture: boolean]);
+```
+- `addEventListener`메서드 방식은 **이벤트 핸들러 프로퍼티에 아무런 영향을 주지 않는다.** 따라서 프로퍼티 할당 방식괴 addEventListener 메서드방식을 같이 쓰면 등록한 두개의 핸들러가 모두 호출된다.(순서는 등록한 순서대로) 단, 참조가 동일한 함수(똑같은 함수 객체)를 할당하면 하나만 등록된다.
+
+<br>
+
+### 40.4 이벤트 핸들러 제거
+- `addEventListener`로 등록한 이벤트 핸들러는 `removeEventListener` 메서드로 제거할 수 있다.
+- `addEventListener` 호출시 전달한 인수를 그대로 `removeEventListener`메서드에 전달해야 제거 가능하다. 따라서 무명함수를 핸들러로 등록하면 제거할 수 없다.
+```js
+const handleClick = () => console.log('button click');
+
+$button.addEventListenr('click', handleClick, true);
+
+$button.removeEventListener('click', handleClick);  // 실패
+$button.removeEventListener('click', handleClick, true);  // 성공
+
+// 등록한 이벤트 핸들러를 참조할 수 없으므로 제거할 수 없다.
+$button.addEventListenr('click', () => console.log('button click'));
+```
+- **단, `addEventListener`에 등록한 핸들러 내부에서는 제거가 가능하다.**
+```js
+$button.addEventListener('click', function foo() {
+  console.log('button click');
+  // 기명함수는 함수 이름으로 함수 몸체 내부에서 참조 가능하다!
+  $button.removeEventListener('click', foo);
+})
+
+$button.addEventListener('click', function () {
+  console.log('button click');
+
+  // 익명 함수를 등록할 경우 arguments.callee(함수 자신을 가리킨다.)로 참조하여 제거 가능하다.
+  // 단, arguments.callee는 최적화를 방해하므로 strict mode에서 금지되므로 사용하지 말자.
+  $button.removeEventListener('click', arguments.callee);
+}
+```
+- 프로퍼티 방식으로 등록한 이벤트 핸들러는 `removeEventListener`로 제거가 불가능하다. 그냥 프로퍼티에 null을 할당하면 된다.
+
+<br>
+
+### 40.5 이벤트 객체
+- 이벤트가 발생하면 이벤트에 관련한 다양한 정보를 담고 있는 `이벤트 객체`가 동적으로 생성되, **이벤트 핸들러의 첫 번째 인수로 전달된다.**
+- 이벤트 객체를 전달받으려면 핸들러 정의시 이벤트 객체를 전달받을 매개변수를 **명시적으로 선언해야한다.**
+- 어트리뷰트 방식으로 이벤트 핸들러 등록시 이벤트 객체를 받으려면 **인자를 반드시 `event`로 작성해야 한다** 어트리뷰트 방식으로 핸들러 등록시 실제 핸들러 프로퍼티가 function(event) 로 작성되고 몸체를 집어 넣는 것이기 때문!
+
+<br>
+
+### 40.5.1 이벤트 객체의 상속 구조
+- 이벤트는 기본적으로 아래의 상속 구조를 갖는다.
+![이미지](https://media.vlpt.us/images/niyu/post/1850cb91-ccbd-44d3-8b5e-a9c99436ed74/image.png)
+- Event, UIEvent, MouseEvent...는 모두 생성자 함수다. Event 인터페이스에는 DOM내에서 발생하는 모든 이벤트 객체의 공통 프로퍼티가 정의되어 있고, 밑으로 갈수록 세분화 될 것이다.
+
+### 40.5.2 이벤트 객체의 공통 프로퍼티
+- Event 객체의 공통 프로퍼티는 다음과 같다.
+
+| 공통 프로퍼티 | 설명 | 타입 |
+|---|---|---|
+| `type` | 이벤트 타입| string |
+| `target` | 이벤트를 발생시킨 DOM 요소 | DOM 요소 노드 |
+| `currentTarget` | 이벤트 핸들러가 바인딩된 DOM 요소 | DOM 요소 노드 |
+| `eventPhase` | 이벤트 전파 단계 <br> 0: 이벤트없음, 1: 캡처링 단계, 2: 타깃 단계, 3: 버블링 단계 | number |
+| `bubbles` | 이벤트를 버블링으로 전파하는지 여부. 다음 이벤트는 bubbles: false로 버블링하지 않는다. <br> - 포커스 이벤트 focus/blur <br> - 리소스 이벤트 load/unload/abort/error <br> - 마우스 이벤트 mouseenter/mouseleave <br> | boolean |
+| `cancelable` | preventDefault 메서드를 호출하여 이벤트의 기본 동작을 취소할 수 있는지 여부. 다음 이벤트는 cancelable:false 로 취소할 수 없다. <br> - 포커스 이벤트 focus/blur <br> - 리소스 이벤트 load/unload/abort/error <br> - 마우스 이벤트 dbclick/mouseenter/mouseleave <br>| boolean |
+| `defaultPrevented` | preventDefault 메서드를 호출하여 이벤트를 취소했는지 여부 | boolean |
+| `isTrusted` | 사용자의 행위에 의해 발생한 이벤트인지 여부. 예를들어 click 메서드 또는 dispatchEvent 메서드를 통해 인위적으로 발생시킨 경우 false다 | boolean |
+| `timeStamp` | 이벤트가 발생한 시각(밀리초) | number |
+
+<br>
+
+### 40.5.3 마우스 정보 취득
+- 마우스 관련한 `MouseEvent` 타입의 이벤트 객체는 아래와 같은 고유의 프로퍼티를 가진다.
+  - 마우스 포인터의 좌표 정보 프로퍼티 : screenX/Y, clientX/Y, pageX/Y, offsetX/Y
+  - 버튼 정보를 나타내는 프로퍼티 : altKey, ctrlKey, shiftKey, button
+- 간단하게 박스를 드래그해서 옮기는 로직을 짜보자.
+```HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .box {
+      width: 100px;
+      height: 100px;
+      background-color: coral;
+      border: 5px solid orange;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="box"></div>
+  <script>
+    const $box = document.querySelector('.box');
+    // offset : 드래그 시작시 포인터 위치와 박스 위치값의 상대거리
+    const offset = { x: 0, y: 0 };
+
+    // 박스 위치값
+    const boxPosition = { x: 0, y: 0 }
+
+    const move = e => {
+      boxPosition.x = e.clientX - offset.x;
+      boxPosition.y = e.clientY - offset.y;
+      // translate3d 는 GPU를 사용하므로 absolute의 top/left보다 빠르고, top/left는 레이아웃에 영향을 준다.
+      $box.style.transform = `translate3d(${boxPosition.x}px, ${boxPosition.y}px, 0)`;
+    }
+    $box.addEventListener('mousedown', e => {
+      offset.x = e.clientX - boxPosition.x;
+      offset.y = e.clientY - boxPosition.y;
+      // box에다가 핸들러를 등록하면 너무 빨리 움직일 때, 마우스가 박스밖으로 나가는 순간 멈춘다.
+      document.addEventListener('mousemove', move);
+    })
+
+    document.addEventListener('mouseup', () => {
+      // 핸들러 제거는 핸들러 등록과 똑같은 형태로 해줘야한다.
+      document.removeEventListener('mousemove', move);
+    })
+
+  </script>
+</body>
+</html>
+```
+<br>
+
+### 40.5.4 키보드 정보 취득
+- 키보드 관련 이벤트 객체인 `KeyboardEvent`는 altKey, ctrlKey, shiftKey, metaKey, `key`, ~~`keyCode`~~ 와같은 고유의 프로퍼티를 갖는다.
+> ❗️ keycode는 폐지되었으므로 key프로퍼티를 사용하자.
+- [https://keycode.info/](https://keycode.info/) 에서 입력한 키와 key 프로퍼티 값의 대응 관계를 확인할 수 있다.
+
+<br>
+
+### 40.6 이벤트 전파
+- DOM 요소 노드에서 발생한 이벤트는 DOM 트리를 통해 전파된다.(event propagation) 아래 그럼과 같은 구조에서 button을 클릭하면 이벤트를 발생시킨 target(button)을 중심으로 화살표 방향대로 이벤트가 전판된다.
+
+![이벤트 전파](https://blog.kakaocdn.net/dn/cCTcWX/btq4REyUQc1/TdGe7eAR1KzPYjjEUikJj0/img.png)
+
+  - 캡처링 단계(capturing phase): 이벤트가 상위->하위 요소 방향으로 전파(window -> button)
+  - 타깃 단계(target phase): 이벤트가 이벤트 타깃에 도달(button)
+  - 버블링 단계(bubbling phase): 이벤트가 하위->상위 요소 방향으로 전파(button -> window)
+- 이벤트 핸들러 어트리뷰트/프로퍼티 방식으로 등록한 핸들러는 `타깃 단계`와 `버블링 단계`의 이벤트만 캐치한다.
+- `addEventHandler`로 등록한 핸들러는 3번째 인수가 true면 `캡처링 단계`의 이벤트를 캐치할 수 있게된다.
+```js
+const $ul = document.querySelector('ul');
+const $li = document.querySelector('li');
+
+// li요소를 클릭한다고 가정한다.
+
+$ul.addEventListener('click', e => {
+  console.log(`phase : ${e.eventPhase}`); // 1 : 캡쳐링 단계
+  console.log(`target : ${e.target}`);  // HTMLLIElement
+  console.log(`current Target : ${e.currentTarget}`); // HTMLUListElement
+}, true); // 캡쳐링 여부 : true 로 캡쳐링 단계 이벤트만 캐치한다.
+
+$li.addEventListener('click', e => {
+  console.log(`phase : ${e.eventPhase}`); // 2 : 캡쳐링 단계
+  console.log(`target : ${e.target}`);  // HTMLLIElement
+  console.log(`current Target : ${e.currentTarget}`); // HTMLLIElement
+}); // 캡쳐링 여부 : 기본값 false 로 타깃, 버블링 단계 이벤트만 캐치한다.
+
+$ul.addEventListener('click', e => {
+  console.log(`phase : ${e.eventPhase}`); // 3 : 캡쳐링 단계
+  console.log(`target : ${e.target}`);  // HTMLLIElement
+  console.log(`current Target : ${e.currentTarget}`); // HTMLUListElement
+}); // 캡쳐링 여부 : 기본값 false 로 타깃, 버블링 단계 이벤트만 캐치한다.
+```
+- 전파되지 않는 이벤트가 있는데, 안되는 이유는 전파되는 이벤트를 잡을 일이 없기 때문이다.
+  - 포커스 이벤트: focus/blur
+  - 리소스 이벤트: load/unload/abort/error
+  - 마우스 이벤트: mouseenter/mouseleave
+- 굳이 상위요소에서 전파되는 이벤트를 잡고 싶다면, focusin/focusout, mouseover/mouseover 이벤트에 핸들러를 등록하면 잡을 수 있다. 주로 버블링 단계에서 잡게된다.
+
+<br>
+
+<!-- ### 40.7 이벤트 위임
+
+
+<br>
+
+### 40.8 DOM 요소의 기본 동작 조작
+### 40.8.1 DOM 요소의 기본 동작 중단
+### 40.8.2 DOM 이벤트 전파 방지
+
+<br>
+
+### 40.9 이벤트 핸들러 내부의 this
+### 40.9.1 이벤트 핸들러 어트리뷰트 방식
+### 40.9.2 이벤트 핸들러 프로퍼티 방식과 addEventListener 방식
+
+<br>
+
+### 40.10 이벤트 핸들러에 인수 전달
+
+<br>
+
+
+### 40.11 커스텀 이벤트
+### 40.11.1 커스텀 이벤트 생성
+### 40.11.2 커스텀 이벤트 디스패치 -->

@@ -1,26 +1,43 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <style>
+    .box {
+      width: 100px;
+      height: 100px;
+      background-color: coral;
+      border: 5px solid orange;
+      cursor: pointer;
+    }
+  </style>
+</head>
 <body>
-  <ul class="users">
-    <!-- // <li id="1" data-user-id="11" data-role="subscriber" data-last-name="motive">Ko</li> -->
-    <li id="1" data-user-id="11" data-role="admin">Ko</li>
-    <li id="2" data-user-id="22" data-role="subscriber">Kim</li>
-  </ul>
+  <div class="box"></div>
   <script>
-    const users = [...document.querySelector('.users').children];
+    const $box = document.querySelector('.box');
+    // offset : 드래그 시작시 포인터 위치와 박스 위치값의 상대거리
+    const offset = { x: 0, y: 0 };
 
-    // user-id가 11인 요소 노드를 취득한다.
-    const user = users.find(user => user.dataset.userId === '11');
+    // 박스 위치값
+    const boxPosition = { x: 0, y: 0 }
 
-    console.log(user.dataset.role); // admin
+    const move = e => {
+      boxPosition.x = e.clientX - offset.x;
+      boxPosition.y = e.clientY - offset.y;
+      // translate3d 는 GPU를 사용하므로 absolute의 top/left보다 빠르고, top/left는 레이아웃에 영향을 준다.
+      $box.style.transform = `translate3d(${boxPosition.x}px, ${boxPosition.y}px, 0)`;
+    }
+    $box.addEventListener('mousedown', e => {
+      offset.x = e.clientX - boxPosition.x;
+      offset.y = e.clientY - boxPosition.y;
+      // box에다가 핸들러를 등록하면 너무 빨리 움직일 때, 마우스가 박스밖으로 나가는 순간 멈춘다.
+      document.addEventListener('mousemove', move);
+    })
 
-    // data-role 값을 변경한다.
-    user.dataset.role = 'subscriber';
-
-    // 없던 dataset 프로퍼티를 추가한다. camel 케이스로 추가시 attribute에는 Kabab case로 변경되어 추가된다.
-    user.dataset.lastName = 'motive';
-
-    console.log(user.dataset); // DOMStringMap {userId: '11', role: 'subscriber', name: 'motive'}
+    document.addEventListener('mouseup', () => {
+      // 핸들러 제거는 핸들러 등록과 똑같은 형태로 해줘야한다.
+      document.removeEventListener('mousemove', move);
+    })
 
   </script>
 </body>
