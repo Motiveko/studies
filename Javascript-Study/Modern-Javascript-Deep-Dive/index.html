@@ -2,43 +2,47 @@
 <html>
 <head>
   <style>
-    .box {
+    #fruits {
+      display: flex;
+      list-style-type: none;
+      padding: 0;
+    }
+    #fruits li {
       width: 100px;
-      height: 100px;
-      background-color: coral;
-      border: 5px solid orange;
       cursor: pointer;
+    }
+    #fruits .active {
+      color: red;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="box"></div>
+  <nav>
+    <ul id="fruits">
+      <li id="apple">Apple</li>
+      <li id="banana">Banana</li>
+      <li id="orange">Orange</li>
+    </ul>
+  </nav>
+  <div>선택된 내비게인션 아이템 : <em class="msg">apple</em></div>
   <script>
-    const $box = document.querySelector('.box');
-    // offset : 드래그 시작시 포인터 위치와 박스 위치값의 상대거리
-    const offset = { x: 0, y: 0 };
+    const $fruits = document.getElementById('fruits');
+    const $msg = document.querySelector('.msg');
 
-    // 박스 위치값
-    const boxPosition = { x: 0, y: 0 }
 
-    const move = e => {
-      boxPosition.x = e.clientX - offset.x;
-      boxPosition.y = e.clientY - offset.y;
-      // translate3d 는 GPU를 사용하므로 absolute의 top/left보다 빠르고, top/left는 레이아웃에 영향을 준다.
-      $box.style.transform = `translate3d(${boxPosition.x}px, ${boxPosition.y}px, 0)`;
+    function activate(event) {
+      event.stopPropagation();
+      // 이벤트 요소가 #fruits 내부의 li 엘리먼트가 아니면 무시한다.
+      if(!event.target.matches('#fruits > li')) return;
+
+      [...$fruits.children].forEach($fruit => {
+        $fruit.classList.toggle('active', $fruit === event.target);
+        $msg.textContent = event.target.id;
+      })
     }
-    $box.addEventListener('mousedown', e => {
-      offset.x = e.clientX - boxPosition.x;
-      offset.y = e.clientY - boxPosition.y;
-      // box에다가 핸들러를 등록하면 너무 빨리 움직일 때, 마우스가 박스밖으로 나가는 순간 멈춘다.
-      document.addEventListener('mousemove', move);
-    })
-
-    document.addEventListener('mouseup', () => {
-      // 핸들러 제거는 핸들러 등록과 똑같은 형태로 해줘야한다.
-      document.removeEventListener('mousemove', move);
-    })
-
+    // 이벤트 위임: 상위 요소에서 하위 요소의 이벤트를 캐치한다.
+    $fruits.onclick = activate;
   </script>
 </body>
 </html>

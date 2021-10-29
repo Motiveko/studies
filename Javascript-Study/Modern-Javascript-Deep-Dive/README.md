@@ -6755,20 +6755,159 @@ $ul.addEventListener('click', e => {
 
 <br>
 
-<!-- ### 40.7 이벤트 위임
+### 40.7 이벤트 위임
+- 예를 들어 사용자가 내비게이션 아이템을(ul 내 li요소)클릭하면 선택된 아이템에 active클래스를 추가하고 나머지 아이템에서는 제거하는 기능을 만든다고 가정해본다. 아래와 같이 구현할 수 있을것이다.
+```HTML
+...
 
+<body>
+  <nav>
+    <ul id="fruits">
+      <li id="apple">Apple</li>
+      <li id="banana">Banana</li>
+      <li id="orange">Orange</li>
+    </ul>
+  </nav>
+  <div>선택된 내비게인션 아이템 : <em class="msg">apple</em></div>
+  <script>
+    const $fruits = document.getElementById('fruits');
+    const $msg = document.querySelector('.msg');
+
+
+    function activate({ target }) {
+
+      [...$fruits.children].forEach($fruit => {
+        // target에만 active를 추가하고 나머지에는 active를 제거한다.(toggle)
+        $fruit.classList.toggle('active', $fruit === target);
+
+        $msg.textContent = target.id;
+      })
+    }
+    document.getElementById('apple').onclick = activate;
+    document.getElementById('banana').onclick = activate;
+    document.getElementById('orange').onclick = activate;
+  </script>
+</body>
+```
+- 간단히 click 이벤트가 발생하는 li element에 핸들러를 등록하여 이벤트를 처리할 수 있다. 하지만 li가 여러개일 때 모든 li에 이렇게 일일이 핸들러를 등록하면 성능저하의 원인이 되고 유지보수에도 부적합한 코드를 생산하게 되는것이다.
+- 이 때, **이벤트 위임(event delegation)**을 적용해 하나의 element(ul)에서 이벤트를 처리하게 할 수 있다.
+```HTML
+<script>
+  const $fruits = document.getElementById('fruits');
+  const $msg = document.querySelector('.msg');
+
+
+  function activate({ target }) {
+    // 이벤트 요소가 #fruits 내부의 li 엘리먼트가 아니면 무시한다.
+    if(!target.matches('#fruits > li')) return;
+
+    [...$fruits.children].forEach($fruit => {
+      $fruit.classList.toggle('active', $fruit === target);
+      $msg.textContent = target.id;
+    })
+  }
+  // 이벤트 위임: 상위 요소에서 하위 요소의 이벤트를 캐치한다.
+  $fruits.onclick = activate;
+</script>
+```
+- 이벤트 위임에서 중요한것은, **이벤트를 실제 발생시킨 DOM 요소가 개발자가 기대한 DOM 요소가 아닐 수 있다는것이다. 따라서 event.target을 꼭 검사해야한다.** `Element.prototype.matches`는 인수로 전달된 선택자에 의해 특정 노드를 탐색 가능한지 확인한다.
 
 <br>
 
 ### 40.8 DOM 요소의 기본 동작 조작
 ### 40.8.1 DOM 요소의 기본 동작 중단
+- DOM 요소는 저마다 기본 동작이 있다. a 요소는 클릭시 href 어트리뷰트 값으로 이동하고, checkbox/radio 요소는 클릭시 체크/해제 된다. 이벤트 객체의 `preventDefault`메서드는 이런 **DOM 요소의 기본 동작을 중지시킨다.**
+```js
+document.querySelector('a').onclick = e => {
+  e.preventDefault();
+};
+
+document.querySelector('input[type=chcekbox]').onclick = e => {
+  e.preventDefault();
+}
+```
+
+<br>
+
 ### 40.8.2 DOM 이벤트 전파 방지
+- 이벤트 객체의 `stopPropagation`메서드는 이벤트의 전파를 중지시킨다. 전파를 중지하면 자신에게 바인딩된 이벤트 핸들러만 실행되도록 한다.
 
 <br>
 
 ### 40.9 이벤트 핸들러 내부의 this
 ### 40.9.1 이벤트 핸들러 어트리뷰트 방식
+- 이벤트 핸들러 어트리뷰트 방식으로 전달되는 함수는 핸들러에 의해 `일반 함수`로 호출되므로, this는 **전역 객체**를 가리킨다.
+- 단, **이벤트 핸들러를 호출할 때 인수로 전달하는 this는 이벤트를 바인딩한 DOM 객체를 가리킨다.**
+```HTML
+<body>
+  <button onclick="handleClick1()"> Clickme </button>
+  <button onclick="handleClick2(this)"> Clickme </button>
+  <script>
+    function handleClickAttr1() {
+      console.log(this); // window
+    }
+    function handleClickAttr2(button) {
+      console.log(button);  // 이벤트를 바인딩한 button 요소
+      console.log(this); // window
+    }
+  </script>
+</body>
+```
+<br>
+
 ### 40.9.2 이벤트 핸들러 프로퍼티 방식과 addEventListener 방식
+- 핸들러 프로퍼티 방식과 addEventListener방식으로 등록한 핸들러 내부의 this는 모두 **DOM 요소**를 가리킨다.
+- `화살표 함수`로 정의한 핸들러 내부의 this는 **상위 스코프**의 this를 가리킨다.
+```js
+const $button = document.querySelector('.btn1');
+$button.onclick = e => {
+  console.log(this); // window
+  console.log(e.currentTarget); // $button
+}
+$button.addEventListener('click', e => {
+  console.log(this); // window
+  console.log(e.currentTarget); // $button
+})
+```
+- **`Class`에서 이벤트 핸들러를 바인딩하는 경우 this를 주의해야한다.** 아래 케이스를 보자
+```js
+class App {
+  constructor() {
+    this.$button = document.querySelector('.btn');
+    this.count = 0;
+
+    this.$button.onclick = this.increase;
+  }
+  increase() {
+    // 이벤트 핸들러 increase 내부의 this는 App 인스턴스가 아닌 DOM요소(this.$button)을 가리킨다.
+    this.$button.textContent = ++this.count;  // TypeError: set propery 'textContent' of undefined
+  }
+}
+new App();
+```
+- 위 예제의 increase 메서드 내부의 this는 클래스의 인스턴스가 아닌 DOM 요소를 가리킨다. 따라서 `Function.prototype.bind`를 이용해 increase 내부의 this가 인스턴스를 가리키게 할 필요가 있다.
+```js
+...
+    this.$button.onclick = this.increase.bind(this);
+  }
+  increase() {
+    // 핸들러 등록시 bind()로 전달한 this는 인스턴스이므로 핸들러 호출 시 this에는 Class 의 인스턴스가 할당된다.
+    this.$button.textContent = ++this.count;
+  }
+```
+- 또는 클래스 필드에 화살표 함수를 할당하고 이를 핸들러로 등록하여 핸들러 내부의 thisrㅏ 인스턴스를 가리키도록 할 수 있다. 이 때 increase는 프로토타입 메서드가 아닌 인스턴스 메서드가 될 것이다.
+
+```js
+class App {
+  constructor() {
+    this.$button = document.querySelector('.btn');
+    this.count = 0;
+
+    this.$button.onclick = this.increase;
+  }
+  increase = () => this.$button.textContent = ++this.count;
+}
+```
 
 <br>
 
@@ -6779,4 +6918,4 @@ $ul.addEventListener('click', e => {
 
 ### 40.11 커스텀 이벤트
 ### 40.11.1 커스텀 이벤트 생성
-### 40.11.2 커스텀 이벤트 디스패치 -->
+### 40.11.2 커스텀 이벤트 디스패치
