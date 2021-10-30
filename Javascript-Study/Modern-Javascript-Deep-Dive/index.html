@@ -2,32 +2,33 @@
 <html lang="en">
 
 <body>
-  <button onclick="">dd</button>
+  <button onclick="get()">get button</button>
+  <button onclick="post()">post button</button>
+  <!-- <button onclick="get()">get button</button>
+  <button onclick="get()">get button</button> -->
+  <pre></pre>
   <script>
-    const sleep = (callback, delay) => {
-      const timer = Date.now() + delay;
-      while(timer >= Date.now()){};
-
-      callback();
+    const xhr = new XMLHttpRequest();
+    function get() {
+      xhr.open('GET', 'http://localhost:3000/todos');
+      xhr.send();
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          document.querySelector('pre').textContent = xhr.response;
+        }
+      };
     }
-
-    const x = Date.now();
-    console.log('start : ', );
-
-    setTimeout(() => console.log('setTimeout1', Date.now() - x), 1000);
-    setTimeout(() => console.log('setTimeout2', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout3', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout4', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout5', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout6', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout7', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout8', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout9', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout0', Date.now() - x), 999);
-    setTimeout(() => console.log('setTimeout-', Date.now() - x), 999);
-    sleep(() => console.log('sleep', Date.now() - x), 500);
-    sleep(() => console.log('sleep', Date.now() - x), 1500);
-    console.log('끝~')
+    function post() {
+      xhr.open('POST', 'http://localhost:3000/todos');
+      xhr.setRequestHeader('content-type', 'application/json')
+      xhr.send(JSON.stringify({id: 666,content: "HIHI",completed: false}));
+    }
+    xhr.onload = () => {
+        if (xhr.status === 201) {
+          document.querySelector('pre').textContent = xhr.response;
+        }
+    };
   </script>
+
 </body>
 </html>

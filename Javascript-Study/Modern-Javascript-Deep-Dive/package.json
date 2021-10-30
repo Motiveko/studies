@@ -4,7 +4,7 @@
   "description": "![표지](https://wikibook.co.kr/images/cover/m/9791158392239.png)",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "json-server --watch --port 3000 db.json"
   },
   "keywords": [],
   "author": "",
@@ -12,7 +12,11 @@
   "devDependencies": {
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-html": "^6.2.0",
-    "eslint-plugin-import": "^2.24.2"
-  }
+    "eslint-plugin-import": "^2.24.2",
+    "json-server": "^0.17.0",
+    "prettier": "^2.4.1"
+  },
+  "dependencies": {}
 }
