@@ -4,19 +4,30 @@
 <body>
   <button onclick="">dd</button>
   <script>
-    const $button = document.querySelector('button');
-    class App {
-      constructor() {
-        this.count = 0;
-      }
-      increase = () => {
-        console.log(this);
-        console.log(++this.count);
-      }
+    const sleep = (callback, delay) => {
+      const timer = Date.now() + delay;
+      while(timer >= Date.now()){};
+
+      callback();
     }
-    const x = new App();
-    x.increase();
-    $button.onclick = x.increase;
+
+    const x = Date.now();
+    console.log('start : ', );
+
+    setTimeout(() => console.log('setTimeout1', Date.now() - x), 1000);
+    setTimeout(() => console.log('setTimeout2', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout3', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout4', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout5', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout6', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout7', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout8', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout9', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout0', Date.now() - x), 999);
+    setTimeout(() => console.log('setTimeout-', Date.now() - x), 999);
+    sleep(() => console.log('sleep', Date.now() - x), 500);
+    sleep(() => console.log('sleep', Date.now() - x), 1500);
+    console.log('끝~')
   </script>
 </body>
 </html>
