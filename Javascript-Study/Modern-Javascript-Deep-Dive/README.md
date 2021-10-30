@@ -6912,10 +6912,68 @@ class App {
 <br>
 
 ### 40.10 이벤트 핸들러에 인수 전달
+- 기본적으로 **이벤트 핸들러 어트리뷰**트 방식은 함수 호출문을 사용할 수 있기때문에 인수 전달이 가능하지만, 나머지 방식은 이벤트 핸들러를 브라우저가 호출하기 때문에, 함수 자체를 등록해야 해서 인수를 전달할 수 없다.
+- 하지만 아래와 같이 두 가지 방법으로 인수 전달이 가능하다.
+  1. 이벤트 핸들러 내부에서 함수를 호출하면서 인수를 전달
+  ```js
+  const $input = document.querySelector('input[type=text]');
+  const $msg = document.querySelector('.message');
+
+  const checkUserNameLength = min => {
+    $msg.textContent =
+      $input.value.length < min ? `${min}자 이상 입력하시오.`
+  }
+
+  $input.onblur = () => {
+    checkUserNameLength(5);
+  }
+  ```
+  2. 이벤트 핸들러를 반환하는 함수를 호출하면서 인수를 전달.
+  ```js
+  ...
+  const checkUserNameLength = min => e => {
+    $msg.textContent =
+      $input.value.length < min ? `${min}자 이상 입력하시오.`
+  }
+  $input.onblur = checkUserNameLength(5);
+  ```
 
 <br>
 
-
 ### 40.11 커스텀 이벤트
 ### 40.11.1 커스텀 이벤트 생성
+- 이벤트 객체는 Event, UIEvent, MouseEvent, CustomEvent와 같은 이벤트 생성자 함수로 생성 가능하다.
+```js
+new Event(typeArg, eventInit?);
+```
+- 첫 번째 인자인 이벤트 타입은 기존에 존재하는걸 사용해도 되고, 커스텀 타입을 사용해도 되는데, 커스텀 타입 사용시 일반적으로 `CustomEvent` 객체로 이벤트를 생성한다.
+- 기본적으로 생성된 이벤트는 `bubbles`, `cancelable` 프로퍼티 값이 false다. `eventInit`에서 해당 프로퍼티 값을 true로 넘겨주면 bubbles/cancelable 을 true로 만들 수 있다.
+- `eventInit`에는 `MouseEvent`의 clientX/Y 등과 같이 이벤트 객체 고유의 프로퍼티의 값도 지정 가능하다.
+- 생성자 함수로 만든 이벤트 객체의 `isTrusted` 프로퍼티 값은 언제나 false고, 사용자 행위에 의해 발생한 이벤트는 true다.
+
+<br>
+
 ### 40.11.2 커스텀 이벤트 디스패치
+- `dispatchEvent` 메서드를 사용하면 커스텀 이벤트를 발생시킬 수 있다.
+- 일반적인 이벤트 핸들러는 `asynchronous`처리 방식으로 동작하지만, dispatchEvent 메서드는 이벤트 핸들러를 `synchronous` 처리 방식으로 호출한다. 즉 ***dispatchEvent 메서드를 호출하면 커스텀 이벤트에 바인딩된 이벤트 핸들러를 직접 호출하는 것과 같다.***(왜 쓰는걸까..?)
+- `CustomEvent`객체에서 이벤트와 함께 전달하고 싶은 정보를 `eventInit`의 `detail`프로퍼티에 담아서 전달하면 된다.
+- 커스텀 이벤트 핸들러 등록은 `addEventListener`메서드를 이용해야 한다. 커스텀 이벤트의 'on + 이벤트타입'으로 이워진 이벤트 헨들러 어트리뷰트/프로퍼티 요소 노드가 존재하지 않기 때문이다.
+```js
+const $button = document.querySelector('button');
+
+$button.addEventListener('foo', e => {
+  console.log(e.detail.message);
+});
+
+const customEvent = new CustomEvent('foo', {
+  detail: { message: 'Hello!' } // 이벤트와 함께 전달할 정보
+});
+
+// 이벤트 발생
+$button.dispatchEvent(customEvent);
+```
+
+<br><br>
+
+## 41. 타이머
+

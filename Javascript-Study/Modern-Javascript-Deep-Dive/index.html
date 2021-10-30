@@ -1,48 +1,22 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <style>
-    #fruits {
-      display: flex;
-      list-style-type: none;
-      padding: 0;
-    }
-    #fruits li {
-      width: 100px;
-      cursor: pointer;
-    }
-    #fruits .active {
-      color: red;
-      text-decoration: underline;
-    }
-  </style>
-</head>
+<html lang="en">
+
 <body>
-  <nav>
-    <ul id="fruits">
-      <li id="apple">Apple</li>
-      <li id="banana">Banana</li>
-      <li id="orange">Orange</li>
-    </ul>
-  </nav>
-  <div>선택된 내비게인션 아이템 : <em class="msg">apple</em></div>
+  <button onclick="">dd</button>
   <script>
-    const $fruits = document.getElementById('fruits');
-    const $msg = document.querySelector('.msg');
-
-
-    function activate(event) {
-      event.stopPropagation();
-      // 이벤트 요소가 #fruits 내부의 li 엘리먼트가 아니면 무시한다.
-      if(!event.target.matches('#fruits > li')) return;
-
-      [...$fruits.children].forEach($fruit => {
-        $fruit.classList.toggle('active', $fruit === event.target);
-        $msg.textContent = event.target.id;
-      })
+    const $button = document.querySelector('button');
+    class App {
+      constructor() {
+        this.count = 0;
+      }
+      increase = () => {
+        console.log(this);
+        console.log(++this.count);
+      }
     }
-    // 이벤트 위임: 상위 요소에서 하위 요소의 이벤트를 캐치한다.
-    $fruits.onclick = activate;
+    const x = new App();
+    x.increase();
+    $button.onclick = x.increase;
   </script>
 </body>
 </html>
