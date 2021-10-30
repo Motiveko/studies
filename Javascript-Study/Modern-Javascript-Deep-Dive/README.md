@@ -7095,3 +7095,94 @@ bar();
 <br>
 
 ### 43. Ajax
+### 43.1 Ajax란
+- Ajax(Asychronous Javascript and XML)란 자바스크립트를 사용해 브라우저가 서버에 비동기 방식으로 데이터를 요청하고 서버가 응답한 데이터를 수신하여 웹페이지를 동적으로 갱신하는 프로그래밍 방식을 말한다. Web API인 XMLHttpReqeust 객체를 기반으로 동작한다.
+- Ajax 이전에는 서버로부터 변경할 필요가 없는 부분까지 포함된 완전한 HTML 매번 받아서 통째로 다시 랜더링했다. 또한 클라이언트 <-> 서버의 통신이 동기 방식이어서 서버의 응답 완료까지 다음 처리는 블로킹되었다.
+
+<br>
+
+### 43.2 JSON
+- JSON(Javacript Object Notation)은 클라이언트 - 서버간 HTTP 통신을 위한 텍스트 데이터 포멧이다.
+- `JSON.stringify` 메서드는 객체를 JSON 포멧의 문자열로 변환한다. 이를 직렬화(serializing)이라 한다.
+```js
+JSON.stringify(value, replacer?, space?)
+```
+  - replacer는 직렬화 시 필터같은 역할을 한다. 함수, 배열, null을 인자로 전달 가능하다.
+  - 함수 사용시 함수가 undefined/null/함수 를 반환하면 해당 key에 대해 value는 null로 처리된다.
+  ```js
+  // replacer에 함수사용시 key,value를 받아 각각의 프로퍼티를 처리한다.
+  function replacer(key, value) {
+    if( typeof value === 'string') {
+      return undefined;
+    }
+    return value;
+  }
+  const foo = {foundation: "Mozilla", model: "box", week: 45, transport: "car", month: 7};
+  const jsonString = JSON.stringify(foo, replacer); // {"week":45,"month":7}
+
+  // replacer에 배열 사용시 배열에 있는 key값만 직렬화한다.
+  JSON.stringify(foo, ['week', 'month']); // {"week":45,"month":7}
+  ```
+  - space 매개변수는 문자열의 들여쓰기를 지정한다(json pretty). 숫자일 경우 ~10의 들여쓰기하고, 문자열인 경우 해당 문자열의 앞 10자까지 들여쓰기한다.
+
+- `JSON.parse` 메서드는 문자열을 객체로 변환한다. 이를 역직렬화(deserializing)이라 한다.
+```js
+JSON.parse(text, reviver?)
+```
+  - reviver는 '(key,value) => something' 형태의 함수로, stringify()의 replacer와 같이 값을 필터링해 변화시키는 역할을 하는 함수다. 예제는 생략해본다.
+
+<br>
+
+### 43.3 XMLHttpRequest
+- 자바스크립트를 사용해 HTTP 요청을 전송하려면 Web API인 XMLHttpRequest 객체를 사용한다.(Angular의 HttpClient 객체도 XMLHttpRequest를 사용한다)
+> ❗️ XMLHttpRequest를 객체 생성과 프로퍼티와 메서드는  [MDN](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest)을 참고하자.
+
+### 43.3.3 요청 전송
+- HTTP 요청을 전송하는 경우 다음 순서를 따른다.
+  1. XMLHttpRequest.prototype.open 메서드로 요청 초기화
+  2. XMLHttpRequest.prototype.setRequestHeader 메서드로 요청 헤더값 설정
+  3. XMLHttpRequest.prototype.send로 요청 전송
+
+- xhr.open(method, url[, async]);
+  - http 요청을 초기화한다. async는 기본값 true로, false로 할 일은 없을 것 같다.
+
+- xhr.send(body?)
+  - open 메서드로 초기화된 HTTP 요청을 전송한다.
+  - 인수로 request body를 받는다.
+  - **HTTP 요청 메서드가 GET인 경우 send 메서드에 페이로드로 전달한 인수는 무시되고 request body는 null로 설정된다.**
+
+- xhr.setRequestHeader(header, value)
+  - 반드시 open 메서드를 호출한 후 호출해야 한다.
+  - 예로, Content-type은 body에 담아 전송할 데이터의 MIME 타입 정보를 표현한다. Accept는 서버가 응답할 데이터의 MIME 타입을 지정할 수 있다.
+
+### 43.3.4 요청 전송
+- Http 응답을 처리하기 위해선 XMLHttpRequest 객체가 발생시키는 이벤트를 캐치해야한다. 두가지 방법을 살펴본다.
+```js
+const xhr = new XMLHttpRequest();
+
+xhr.open('GET', 'http://localhost:4200/todos/1;');
+
+xhr.send();
+
+// 응답 처리 1
+xhr.onreadystatechange = () => {
+  if(xhr.state !== XMLHttpRequest.DONE) return;
+
+  if(xhr.status === 200) {
+    console.log(JSON.parse(xhr.response));
+  } else {
+    console.error('Error', xhr.status, xhr.statusText);
+  }
+}
+
+// 응답 처리 2, onload는 HTTP 요청이 성공적으로 완료 된 경우에만 발생한다.
+xhr.onload = () => {
+  if(xhr.status === 200) {
+    console.log(JSON.parse(xhr.response));
+  } else {
+    console.error('Error', xhr.status, xhr.statusText);
+  }
+}
+```
+
+<br><br>
