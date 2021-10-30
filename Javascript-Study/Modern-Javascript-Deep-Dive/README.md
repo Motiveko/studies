@@ -6976,4 +6976,65 @@ $button.dispatchEvent(customEvent);
 <br><br>
 
 ## 41. 타이머
+### 41.1 호출 스케줄링
+- 함수를 명시적으로 호출하면 즉시 실행되는데, 함수를 명시적으로 호출하지 않고 일정 시간이 경과한 이후에 호출되도록 하려면 타이머 함수를 사용한다. 이를 **호출 스케줄링(scheduling a call)**이라 한다.
+- 자바스크립트는 타이머를 생성/제거할 수 있는 `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`을 제공하는데, 이는 ECMAScript 사양에 정의된 빌트인 함수가 아닌 `호스트 객체`다.
+- 자바스크립트 엔진은 단 하나의 **실행 컨텍스트 스택**을 갖는 **싱글 스레드**로 동작하기 때문에, 타이머 함수는 **비동기 처리 방식**으로 동작한다.
 
+<br>
+
+### 41.2 타이머 함수
+### 41.2.1 setTimeout / clearTimeout
+- 인수로 전달받은 delay만큼 지난 후 타이머가 만료되면어 콜백을 호출한다.
+- delay를 전달하지 않으면 기본값 0. 전달하면 4ms 이하는 최소값 4ms로 셋팅된다.
+```js
+const timeoutId = setTimeout(func|code[, delay, param1, param2, ...]);
+```
+- 반환값 timeoutId는 브라우저 환경에서는 `숫자`, Node.js환경에서는 `객체`다. clearTimeout()의 인수로 전달하여 타이머를 취소할 수 있다.
+
+### 41.2.2 setInterval / clearInterval
+- 인수로 전달받은 delay만큼 지난 후 타이머가 만료되어 콜백을 호출하고, 이를 타이머 취소시까지 반복한다.
+```js
+const timerId = setInterval(func|code[, delay, param1, param2, ...]);
+```
+- 반환값 timerId는 setTimeout과 같이 브라우저는 숫자, Node.js는 객체다.
+
+<br>
+
+### 41.3 디바운스와 스로틀
+- 디바운스와 스로틀은 짧은 시간에 연속으로 발생하는 이벤트를 `그룹화`헤서 과도한 이벤트 핸들러 호출을 방지하는 프로그래밍 기법이다. 구현은 아래와 같다.
+```js
+
+// debounce는 outer function
+const debounce = (callback, delay) => {
+  let timerId;
+  // 반환 되는 함수(핸들러)는 timerId에 대한 참조를 가지는 클로저다.(innter function)
+  return event => {
+    // timerId가 이미 존재하면 제거한다.
+    if(timerId) clearTimeout(timerId);
+    timerId = setTimeout(callback, delay, event);
+  }
+}
+
+// throttle은 outer function
+const throttle = (callback, delay) => {
+  let timerId;
+
+  // 반환 되는 함수(핸들러)는 timerId에 대한 참조를 가지는 클로저다.(innter function)
+  return event => {
+    // timer가 만료되어 callback이 실행된 상태가 아니면 실행될때까지 다른 event는 제거한다.
+    if(timerId) return;
+    timerId = setTimeout((event) => {
+      callback(event);
+      timerId = null;
+    }, delay, event);
+  }
+}
+```
+- 디바운스(`debounce`)는 이벤트를 일정 시간동안 그룹화해서 마지막에 한 번만 이벤트 핸들러가 호출되도록 한다.
+- 쓰로틀(`throttle`)은 최초 들어온 이벤트를 일정 기간동안 delay시켜 실행하고, 이 delay동안 들어온 다른 이벤트는 무시한다. 쓰로틀은 무한스크롤 UI 구현 등에 유용하다.
+- 위의 debounce와 throttle 구현은 완전하진 않다. 실무에서는 `Underscore`의 debounce/throttle함수나 `Lodash`의 debounce/throttle 함수를 사용하는것을 권장한다.
+
+<br><br>
+
+## 42. 비동기 프로그래밍
