@@ -2,32 +2,16 @@
 <html lang="en">
 
 <body>
-  <button onclick="get()">get button</button>
+  <button onclick="get('http://localhost:3000/todos/1')">get button</button>
   <button onclick="post()">post button</button>
   <!-- <button onclick="get()">get button</button>
   <button onclick="get()">get button</button> -->
   <pre></pre>
   <script>
-    const xhr = new XMLHttpRequest();
-    function get() {
-      xhr.open('GET', 'http://localhost:3000/todos');
-      xhr.send();
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          document.querySelector('pre').textContent = xhr.response;
-        }
-      };
-    }
-    function post() {
-      xhr.open('POST', 'http://localhost:3000/todos');
-      xhr.setRequestHeader('content-type', 'application/json')
-      xhr.send(JSON.stringify({id: 666,content: "HIHI",completed: false}));
-    }
-    xhr.onload = () => {
-        if (xhr.status === 201) {
-          document.querySelector('pre').textContent = xhr.response;
-        }
-    };
+    let g = 0;
+    setTimeout(() => {throw new Error('Error')}, 0);
+    setTimeout(() => {throw new Error('Error')}, 0);
+    console.log(g)
   </script>
 
 </body>
