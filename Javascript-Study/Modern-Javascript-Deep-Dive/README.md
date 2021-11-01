@@ -7757,3 +7757,88 @@ bar();
 - **비동기 함수**인 setTimeout, 프로미스 후속 처리 메서드의 콜백 함수는 **호출자가 없다**.(이미 콜 스택이 비어있는 상태에서 푸시되기 때문) 따라서 에러를 전파할 호출자가 존재하지 않는다.
 
 <br><br>
+
+## 48. 모듈
+### 48.1 모듈의 일반적 의미
+- `모듈(module)`이란 애플리케이션을 구성하는 개별적 요소로서 **재사용 가능한 코드 조각을 말한다.** 일반적으로 모듈은 기능을 기준으로 파일 단위로 분리하고, **자신만의 파일 스코프(모듈스코프)를 가질 수 있어야 한다.**
+- 이 때, 모듈은의 모든 자산은 캡슐화 되어 다른 모듈에서 접근 불가해, 애플리케이션과 분리되어 존재한다.
+- 접근 불가라면 모듈은 재사용이 불가능해지므로, **공개가 필요한 자산에 한정하여 명시적으로 선택적 공개가 가능하다. 이를 `export`라 한다.**
+- 모듈 사용자(consumer)가 공개(export)된 모듈의 자산을 일부/전체를 선택해 자신의 스코프 내로 불러들여 재사용할 수 있는데 이를 `import`라 한다.
+
+### 48.2 자바스크립ㅌ와 모듈
+- 자바스크립트는 태생적으로 모듈을 지원하지 않는다. \<script\> 태그로 여러개의 js 파일을 분리해서 로드해도 **결국 하나의 자바스크립트 내에 있는 것 처럼 동작한다.** 따라서 하나의 전역을 공유하여 여러 파일들의 전역 변수가 중복되는 등의 문제가 발생한다. 이러한 상황에서 제안된 것이 `CommonJS`와 `AMD`(Asynchronous Module Definition)다.
+- `Node.js`는 사실상 표준인 CommonJS를 채택했고, 약간 다르지만 기본적으로 CommonJS사양을 따라 모듈 시스템을 지원한다. 따라서 **Node.js환경에서는 파일별로 독립적인 파일 스코프(모듈 스코프)를 갖는다.**
+
+<br>
+
+### 48.3 ES6 모듈(ESM)
+- 이러한 상황에서 ES6에서는 Client Side JS에서도 동작하는 모듈 기능을 추가했다. IE를 제외한 대부분의 브라우저에서 지원한다.
+- 사용법은 \<script\> 태그에 type="module" 어트리뷰트를 추가하면 로드된 js파일은 모듈로 동작한다. 일반 자바스크립트가 아닌 ESM임을 명확히 하기 위해 확장자는 .mjs를 권장한다.
+
+<br>
+
+### 48.3.1 모듈 스코프
+- 모듈이 아닌 일반 js파일은 script 태그로 분리해도 독자적인 스코프를 가지지 않는다. 예를들어 `var`로 선언한 변수는 전역 변수로 처리돼 같은 변수명이 있다면 나중의 것으로 덮어씌어지고, window 객체의 프로퍼티가 된다.
+- `모듈`로 로드한 ESM은 독자적인 스코프를 가져, var로 선언한 변수는 모듈 내 지역 변수가 된다. 단 해당 변수는 모듈 외부에서 참조가 불가능하다.
+
+### 48.3.2 export 키워드
+- 모둘 내부에서 선언한 식별자를 외부에 공개하여 **다른 모듈**들이 재사용할 수 있게 하려면 `export` 키워드를 사용한다.
+- `export` 는 변수, 함수, 클래스 등 모든 ***식별자***를 export 할 수 있다.
+```js
+// lib.mjs
+const pi = Math.PI;
+
+function square(x) {
+  return x * x;
+}
+
+class Person{
+  constructor(name) {
+    this.name = name;
+  }
+}
+// 한번에 공개한다.
+export { pi, square, Person };
+```
+
+<br>
+
+### 48.3.3 import 키워드
+
+- 다른 모듈에서 공개(export)한 식별자를 **자신의 모듈 스코프** 내부로 로드하려면 `import`키워드를 사용한다.
+- 모듈이 export한 식별자 이름으로 import해야 하며, ESM의 경우 파일 확장자를 생략할 수 없다.
+```HTML
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+
+  <script type='module'>
+    import { pi, square, Person } from './lib.mjs'
+
+    console.log(pi);  // 3.14....
+    console.log(square(10)); // 100
+    console.log(new Person('motiveko'));  // Person {name: 'motiveko'}
+  </script>
+</body>
+</html>
+```
+- 모듈에서 하나의 값만 export 한다면 `default`키워드를 사용할 수 있다. `default`사용 시 `var`, `let`, `const` 키워드는 사용할 수 없다.
+- `default`키워드로 함께 export한 모듈은 **{} 없이 임의의 이름으로 import 한다.**
+```js
+// lib.mjs
+export default x => x * x;
+
+// const, let, var는 안되지만 함수 리터럴은 default 사용 가능하다.
+// export default function foo (x){ return x * x;}
+```
+```HTML
+<script type="module">
+  import bar from './lib.mjs';
+
+  console.log(bar(10)); // 100
+</script>
+```
+
+<br><br>
+
