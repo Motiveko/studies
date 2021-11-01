@@ -7842,3 +7842,259 @@ export default x => x * x;
 
 <br><br>
 
+## 49. Babel과 Webpack을 이용한 ES6+/ES.NEXT 개발 환경 구축
+- 대부분의 브라우저에서 ES6를 지원하나 IE11의 지원율응 11%다. 이외에 ES6+에 대해서는 브라우저별 지원율이 제각각이다. 따라서 ES6+와 ES.NEXT(제안 단계에 있는 ES 제안 사양)사양을 경우에 따라 IE를 포함한 구형 브라우저에서 동작시키기 위해서는 개발 환경을 구축하는것이 필요하다.
+- 또한 대부분의 프로젝트가 모듈을 사용하므로 `모듈 로더`가 필요하다. `ESM`은 대부분의 브라우저에서 지원하나 아래와 같은 이유로 **ESM보다는 별도의 모듈 로더를 사용하는 것이 일반적이다.**
+  1. IE를 포함한 구형 브라우저는 ESM을 지원하지 않는다.
+  2. ESM을 사용하더라도 트랜스파일링/번들링이 필요한 것은 변함이 없다.
+  3. ESM이 아직 지원하지 않는 기능(bare import 등)이 있고 이외 몇 가지 이슈가 존재한다.
+- Transpiler인 `Babel`과 Module Bundler인 `Webpack`을 이용하여 ES6+/ES.NEXT 개발 환경을 구축해본다.
+
+<br>
+
+### 49.1 Babel
+- 아래 코드는 ES6 화살표 함수와, ES7 지수 연산자를 사용한다.
+```js
+[1,2,3].map(n => n ** n);
+```
+- 너무 최신문법이라 IE같은곳에선 지원하지 않을 수 있다. `Babel`을 사용하면 아래와 같이 `ES5`사양으로 변환할 수 있다. 이를 **트랜스파일링(Transpiling)이라 한다.**
+```js
+"use strict";
+
+[1,2,3].map(function(n) {
+  return Math.pow(n, n);
+});
+```
+<br>
+
+### 49.1.1 Babel 설치
+- `@babel/core`, `@babel/cli` 를 설치한다.
+```
+npm i --save-dev @babel/core @babel/cli;
+```
+
+### 49.1.2 Babel 프리셋 설치와 babel.config.json
+- Babel을 사용하려면 `@babel/preset-env`를 설치해야 한다. @babel/preset-env는 함께 사용되어야 하는 Babel 플러그인을 모아 둔 것으로 `Babel 프리셋` 이라고 부른다. Babel이 제공하는 공식 Babel Preset은 아래와 같다.
+  - `@babel/preset-env`
+  - `@babel/preset-flow`
+  - `@babel/preset-react`
+  - `@babel/preset-typescript`
+- `@babel/preset-env`는 필요한 플러그인들을 **프로젝트 지원 환경에 맞춰 동적으로 결정해 준다.** 프로젝트 지원 환경은 `Browserlist`형식으로 `.browserlistrc` 파일에 상세히 설정 가능하다. 생략하면 기본값이다.
+```
+npm i --save-dev @babel/preset-env
+```
+- 설치 후 프로젝트 루트에 babel.config.json 설정 파일을 생성해 아래와 같이 작성한다. @babel/preset-env를 사용하겠다는 의미다.
+```json
+{
+    "presets": ["@babel/preset-env"]
+}
+```
+
+<br>
+
+### 49.1.3 트랜스파일링
+- ES6+/ES.NEXT 를 ES5로 트랜스파일링 한다. 기본적으로 Babel CLI 명령어로 하고, 이 명령어를 npm script에 등록한다. 
+
+```json
+// package.json
+...
+"scripts": {
+  "build": "babel src/js -w -d dist/js"
+}
+...
+```
+- src/js에 있는 모든 자바스크립트 파일을 트랜스파일링 한 후, 결과물을 dist/js 폴더에 저장한다. `-w`는 자동감지, `-d`는 output dir 지정 옵션이다.
+- 실제 트랜스파일링을 해본다. 아래와 같이 두개의 lib.js / main.js 파일을 작성하고 트랜스파일링 스크립트를 실행한다.
+```js
+export const pi = Math.PI;
+
+export function power(x, y) {
+  return x ** y; // ES7 지수연산자
+}
+
+// ES6 클래스
+export class Foo {
+  #private = 10; // state3: 클래스 필드 정의 제안
+
+  foo() {
+    // stage4: 객체 Rest/Spread 프로퍼티 제안
+    const { a, b, ...x } = { ...{ a: 1, b: 2 }, c: 3, d: 4 };
+    return { a, b, x };
+  }
+
+  bar() {
+    return this.#private;
+  }
+}
+```
+```js
+import { pi, power, Foo } from "./lib";
+
+console.log(pi);
+console.log(power(pi, pi));
+
+const f = new Foo();
+console.log(f.foo());
+console.log(f.bar());
+```
+
+```
+npm run build
+> esnext-project@1.0.0 build /Users/donggi/Desktop/Programing/studies/Javascript-Study/Modern-Javascript-Deep-Dive
+> babel src/js -w -d dist/js
+
+Successfully compiled 2 files with Babel (382ms).
+```
+- 책에서는 `#private` 부분에서 에러가 나는데, 아무래도 1년이 안되는 시간 사이에 `@bable/preset-env@7.16.0`가 해당 사양에 대한 플러그인을 지원하게 되었기 때문인 것 같다. 책과 같이 바벨 버전을 모두 7.10.3으로 낮추어도 동일하다.
+
+### 49.1.4 Babel 플러그인 설치
+- 책의 시점에서는 트랜스파일링시 class field 부분에서 에러가 발생했고, 해당 내용을 babel 홈페이지에서 검색하면 `@babel/plugin-proposal-class-properties`가 나오고 이를 설치하게 된다.
+- 플러그인 사용을 위해 babel.config.json 설정 파일을 아래와 같이 수정한다
+```json
+{
+    "presets": ["@babel/preset-env"],
+    "plugins": ["@babel/plugin-proposal-class-properties"]
+}
+```
+- 다시 `npm run build` 수행하면 결과가 잘 나온다.
+```
+$ node dist/js/main.js 
+3.141592653589793
+36.4621596072079
+{ a: 1, b: 2, x: { c: 3, d: 4 } }
+10
+```
+<br>
+
+### 49.1.5 브라우저에서 모듈 로딩 테스트
+- 변환된 결과는 Node.js환경에서는 잘 동작한다. 이는 Babel이 모듈을 트랜스파일링 한 것이 `CommonJS`방식의 모듈 로딩 시스템을 따랐기 때문이다.
+```js
+// dist/js/main.js
+...
+var _lib = require("./lib");
+...
+```
+- 브라우저는 `CommonJS`방식의 `require`함수를 지원하지 않으므로 위 결과를 브라우저에서 실행시 에러가 발생한다. 
+- 브라우저의 ES6 모듈(ESM)을 사용하도록 Babel을 설정할 수 있으나, ESM을 사용하는 것은 문제가 있다. 이는 `Webpack`을 통해 해결이 가능하다.
+
+<br>
+
+### 49.2 Webpack
+- `Webpack`은 **의존 관계에 있는 js, CSS, 이미지 등의 리소스들을 하나(또는 여러개)의 파일로 번들링하는 모듈 번들러다.** `Webpack`을 사용하면 ***의존 모듈이 하나의 파일로 번들링되므로 별도의 모듈 로더가 필요 없다.*** 또한 여러개의 js파일을 하나로 번들링하므로 HTML 파일에서 script 태그로 여러 개의 자바스크립트 파일을 로드해야 하는 번거로움도 사라진다.
+- Webpack + Babel로 ES6+/ES.NEXT 개발 환경을 구축해본다. Webpack이 번들링 하기 전 Babel을 로드하여 ES5 사양으로 트랜스파일링 하는 작업을 실행하도록 설정한다.
+
+### 49.2.1 Webpack 설치
+```
+npm install --save-dev webpack webpack-cli
+```
+
+### 49.2.2 babel-loader 설치
+- Webpack이 모듈을 번들링 할 때 Babel을 이용해 Babel로 ES6+/ES.NEXT 사양의 코드를 ES5로 트랜스파일링 하도록 `babel-loader`를 설치한다.
+
+```
+npm install --save-dev babel-loader
+```
+- npm script를 아래와 같이 수정해 Babel 대신 Webpack을 실행하도록 한다.
+```json
+// package.json
+...
+"scripts" : {
+  "build": "webpack -w"
+}
+...
+```
+### 49.2.3 webpack.config.js 설정 파일 작성
+- `webpack.config.js`은 **Webpack이 실행될 때 참조하는 설정 파일이다.** 프로젝트 루트 폴더에 webpack.config.js를 생성하고 아래와 같이 작성한다.
+```js
+const path = require("path");
+
+module.exports = {
+  // entry 파일
+  // https://webpack.js.org/configuration/entry-context/#entry
+  entry: "./src/js/main.js",
+  // 번들링 결과의 out dir,name 지정
+  output: {
+    path: path.resolve(__dirname, "dist/js"),
+    filename: "bundle.js",
+  },
+  // https://webpack.js.org/configuration/module
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        include: [path.resolve(__dirname, "src/js")],
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: ["@babel/preset-env"],
+            // plugins: ['@babel/plugin0proposal-class-properties']
+          },
+        },
+      },
+    ],
+  },
+  devtool: "source-map",
+  // https://webpack.js.org/configuration/mode/
+  mode: "development",
+};
+```
+- 아래 명령어로 Webpack을 실행하여 트랜스파일링 및 번들링을 실행한다. 트랜스파일링은 `Babel`이, 번들링은 `Webpack`이 수행한다.
+```
+$ npm run build;
+...
+asset bundle.js 7.89 KiB [emitted] (name: main) 1 related asset
+...
+  ./src/js/main.js 147 bytes [built] [code generated]
+  ./src/js/lib.js 4.38 KiB [built] [code generated]
+webpack 5.61.0 compiled successfully in 634 msv
+
+```
+- bundle.js가 잘 생성되었다. 이제 index.html에 아래와 같이 bundle.js를 로드하게 script 태그 작성 후 브라우저에서 실행시킨다.
+
+```HTML
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <script src="./dist/js/bundle.js"></script>
+</body>
+</html>
+```
+
+```js
+/* 브라우저 콘솔창에 출력되는 결과값
+  3.141592653589793
+  main.js:4 36.4621596072079
+  main.js:7 {a: 1, b: 2, x: {…}}
+  main.js:8 10
+*/
+```
+- 'main.js', 'lib.js' 모듈이 하나로 번들링된 bundle.js가 브라우저에서 잘 실행됨을 확인할 수 있다.
+
+### 49.2.4 babel-polyfill 설치
+- `Babel`을 사용해 ES6+/ES.NEXT 코드를 ES5 사양으로 트랜스파일링 해도 브라우저에서 지원하지 않는 코드가 남을 수 있다. ES6의 Promise, Object.assign, Array.from 등은 **ES5 사양에 대체할 기능이 없기 때문에 트랜스파일링 되지 못하고 그대로 남는다.** 이를 해결하는것이 polyfill이다.
+- 아래 명령어로 `@babel/polyfill`을 설치한다.
+
+```
+npm install @babel/polyfill
+```
+- @babel/polyfill 은 운영 환경에서도 사용하므로 개발 옵션을 지정하지 않았다.
+- **ES6 import 사용하는 경우 진입점 선두에서 먼저 폴리필을 로드하도록 한다.**
+```js
+// src/js/main.js
+import "@babel/polyfill"
+import { pi, power, Foo } frmo'./lib'
+...
+```
+- 그러나 `Webpack`을 사용하는 경우 위 방법 대신 `webpack.config.js`파일의 `entry` 배열에 폴리필을 추가한다.
+
+```js
+...
+module.exports = {
+  entry: ['@babel/polyfill', './src/js/main.js'],
+  ...
+}
+```
+- 스크립트 실행 후 bundle.js파일을 확인해 보면 polyfill이 추가되어 있음을 확인할 수 있다.
+
+-끝-

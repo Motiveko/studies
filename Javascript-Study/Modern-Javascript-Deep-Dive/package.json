@@ -1,22 +1,22 @@
 {
-  "name": "modern-javascript-deep-dive",
+  "name": "esnext-project",
   "version": "1.0.0",
   "description": "![표지](https://wikibook.co.kr/images/cover/m/9791158392239.png)",
   "main": "index.js",
   "scripts": {
-    "start": "json-server --watch --port 3000 db.json"
+    "build": "webpack -w"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-html": "^6.2.0",
-    "eslint-plugin-import": "^2.24.2",
-    "json-server": "^0.17.0",
-    "prettier": "^2.4.1"
+    "@babel/cli": "^7.10.3",
+    "@babel/core": "^7.10.3",
+    "@babel/preset-env": "^7.10.3",
+    "babel-loader": "^8.2.3",
+    "webpack": "^5.61.0",
+    "webpack-cli": "^4.9.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@babel/polyfill": "^7.12.1"
+  }
 }
