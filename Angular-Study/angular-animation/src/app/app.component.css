@@ -1,0 +1,19 @@
+.example-sidenav-conetent {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+.example-container {
+  height: 100%
+}
+mat-drawer {
+  height: 100vh;
+  width: 20%;
+  background-color: #fafafa;
+}
+.example-sidenav {
+  /* padding: 20px; */
+  /* width: 20%; */
+  /* height: 100vh; */
+}

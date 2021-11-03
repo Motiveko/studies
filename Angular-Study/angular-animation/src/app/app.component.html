@@ -1,1 +1,32 @@
-<app-open-close></app-open-close>
+<mat-toolbar color="primary" class="example-toolbar">
+  <mat-toolbar-row>
+    <h2 class="title" style="text-align: center;">Angular Animation 데모</h2>
+    <button mat-icon-button class="example-icon">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </mat-toolbar-row>
+  <mat-toolbar-row>
+    하이루
+  </mat-toolbar-row>
+</mat-toolbar>
+
+
+<mat-drawer-container class="example-container" >
+  <mat-drawer #drawer class="example-sidenav" opened mode="side">
+    <ng-template ngFor let-item [ngForOf]="navs" let-i="index" >
+      <a class="menu-content" mat-list-item [routerLink]="[item.url]">
+        <span class="label">{{item.label}}</span>
+      </a>
+    </ng-template>
+  </mat-drawer>
+
+  <div class="example-sidenav-content">
+
+    컨텐츠는 여기
+    <router-outlet></router-outlet>
+
+  </div>
+
+</mat-drawer-container>
+
+
