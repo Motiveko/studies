@@ -8,8 +8,8 @@ import { Component } from '@angular/core';
 export class AppComponent {
   navs = [
     {
-      url: '/cards',
-      label: 'CARDS',
+      url: '/btn-shake',
+      label: 'Button Shake',
     },
   ];
 }
