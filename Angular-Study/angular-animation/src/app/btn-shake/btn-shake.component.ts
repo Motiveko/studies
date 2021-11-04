@@ -22,6 +22,12 @@ const ShakeAnimation = [
     trigger('queryShake', [
       transition('0 <=> 1', [query('.card', ShakeAnimation)]),
     ]),
+    trigger('enterCard', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(30px)' }),
+        animate('300ms', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
   ],
 })
 export class BtnShakeComponent {

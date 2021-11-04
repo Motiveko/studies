@@ -1,7 +1,7 @@
 
 
-<div class="container"[@queryShake]="shake ? 1 : 0">
-  <mat-card *ngFor="let num of cards" class="card"  (click)="toggle()">
+<div class="container"[@queryShake]="shake ? 1 : 0"  >
+  <mat-card *ngFor="let num of cards" class="card"  @enterCard (click)="toggle()">
     <mat-card-title-group>
       <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" >
       <mat-card-title>title</mat-card-title>
@@ -9,6 +9,4 @@
     </mat-card-title-group>
     <mat-card-content>컨텐츠 {{ num }}</mat-card-content>
   </mat-card>
-  <div class="card">adfadsfasd</div>
 </div>
-
