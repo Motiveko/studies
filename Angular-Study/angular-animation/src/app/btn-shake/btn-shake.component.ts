@@ -15,7 +15,7 @@ import { shakeTrigger } from './shake.animation';
   animations: [shakeTrigger],
 })
 export class BtnShakeComponent {
-  cards = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  cards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   shakeState = '';
   constructor() {}
 

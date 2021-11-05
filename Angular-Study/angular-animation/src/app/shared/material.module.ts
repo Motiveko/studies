@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatGridListModule } from '@angular/material/grid-list';
 
 @NgModule({
   declarations: [],
@@ -18,6 +19,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
     MatCardModule,
     MatExpansionModule,
     MatListModule,
+    MatGridListModule,
   ],
 })
 export class MaterialModule {}

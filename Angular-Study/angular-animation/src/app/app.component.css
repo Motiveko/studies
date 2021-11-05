@@ -10,8 +10,7 @@
 }
 
 .example-sidenav-content {
-  display: flex;
-
+  /* display: flex; */
   height: 99%;
   width: 98%;
   padding: 1%;
