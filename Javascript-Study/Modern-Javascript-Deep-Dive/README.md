@@ -3946,6 +3946,8 @@ console.log(Object.getOWnPropertyDescriptors(arr2));
   - Array.from은 두 번째 인수로 `callback`도 전달할 수 있다. 첫 번째 인수에 의해 생성된 배열의 요소값과 인덱스를 순차적으로 콜백에 전달하고, callback 반환값들로 배열을 만들어 반환한다.
   ```js
   Array.from({ length: 3 });  // [undefined, undefined, undefined]
+  
+  // 콜백은 (element, index) => {...} 인 mapFn이다.
   Array.from({ length: 3 }, (_, i) => i); // [ 0, 1, 2 ]
   ```
 > ❗️`유사 배열 객체`(array-like-object)란 마치 배열처럼 `인덱스`로 프로퍼티 값에 접근할 수 있고, `length` 프로퍼티를 갖는 객체를 말한다.

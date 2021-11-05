@@ -1,6 +1,6 @@
 
 
-<div class="container"[@queryShake]="shake ? 1 : 0"  >
+<div class="container"[@queryShake]="shakeState" (@queryShake.done)="shakeState = ''"  >
   <mat-card *ngFor="let num of cards" class="card"  @enterCard (click)="toggle()">
     <mat-card-title-group>
       <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" >

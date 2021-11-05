@@ -14,26 +14,29 @@
 
   <mat-drawer-container class="example-container" >
     <mat-drawer #drawer class="example-sidenav" opened mode="side">
-      <ng-template ngFor let-item [ngForOf]="navs" let-i="index" >
-        <ng-container *ngIf="!item.hasChilren; else hasChilren">
-          <a class="menu-content" mat-list-item [routerLink]="[item.url]">
-            <span class="label">{{item.label}}</span>
-          </a>
-        </ng-container>
-        <ng-template #hasChilren >
+
+      <mat-nav-list>
+        <ng-template ngFor let-item [ngForOf]="navs" let-i="index" >
+          <ng-container *ngIf="!item.hasChilren; else hasChilren">
+            <a class="menu-content" mat-list-item [routerLink]="[item.url]">
+              <span class="label">{{item.label}}</span>
+            </a>
+          </ng-container>
+          <ng-template #hasChilren >
           <mat-expansion-panel (opened)="item.panelOpenState = true"
-          (closed)="item.panelOpenState = false">
-        <mat-expansion-panel-header>
-        <mat-panel-title>
-          {{item.label}}
-        </mat-panel-title>
-        </mat-expansion-panel-header>
-          <a *ngFor="let child of item.children" mat-list-item class="menu-content" [routerLink]="item.url +child.url">
-            {{child.label}}
-          </a>
-        </mat-expansion-panel>
+            (closed)="item.panelOpenState = false">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{item.label}}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+              <a *ngFor="let child of item.children" mat-list-item class="menu-content" [routerLink]="item.url +child.url">
+                <span class="label">{{item.label}}</span>
+              </a>
+          </mat-expansion-panel>
+          </ng-template>
         </ng-template>
-      </ng-template>
+      </mat-nav-list>
     </mat-drawer>
 
     <div class="example-sidenav-content">
