@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { slideInAnimation } from './router-animation';
+import { routeAnimationUsingChilds } from './router-animation';
 
 @Component({
   selector: 'app-wrapper',
   templateUrl: './wrapper.component.html',
   styleUrls: ['./wrapper.component.css'],
-  animations: [slideInAnimation],
+  animations: [routeAnimationUsingChilds],
 })
 export class WrapperComponent {
   flag = 0;

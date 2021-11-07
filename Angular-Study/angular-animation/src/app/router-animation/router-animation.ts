@@ -42,10 +42,28 @@ export const componentInOutAnimation = [
     ]),
     transition(':leave', [
       query(
-        'mat-grid-list',
+        'mat-grid-tile',
         animate('600ms', style({ opacity: 0, transform: 'translateY(80px)' })),
         { optional: true }
       ),
+    ]),
+  ]),
+];
+
+/**
+ * 자식 요소의 :enter, :leave animation을 사용하는 라우트 에니메이션
+ */
+export const routeAnimationUsingChilds = [
+  trigger('routeAnimation', [
+    transition('* => *', [
+      query(':enter, :leave', style({ position: 'absolute', width: '100%' }), {
+        optional: true,
+      }), // translate를 사용하기 위해 필요한 옵션
+      group([
+        // 이게 핵심이다. 이걸 걸어줘야 leave 하는 컴포넌트(<app-component1/2>)가 DOM에서 즉시 사라지지 않아, animateChild()가 작동할 수 있게 된다.
+        query(':leave', [animate('1s', style({}))]),
+        query('@*', animateChild(), { optional: true }),
+      ]),
     ]),
   ]),
 ];
@@ -71,7 +89,7 @@ const initComponents = [
     }),
   ]),
 ];
-export const slideInAnimation = [
+export const routeAnimation = [
   trigger('routeAnimation', [
     transition('* => *', [
       ...initComponents,
