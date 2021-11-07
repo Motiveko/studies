@@ -84,3 +84,17 @@ export const routeAnimationUsingChilds = [
 ];
 ```
 ![routeAnimation](./images/route-animation.gif)
+
+<br>
+
+- ❗️ ***추가적으로 router animation구성시 아래와 같은 문제가 있다.***
+  -  @routerAnimation의 프로퍼티(상태) 값을 아래와 같이 정의한다.`prepareRoute(outlet)`
+  ```ts
+  // angular animation in-depth guide에서 이런식으로 함수를 정의한다. naviate시 값은 언제나 true다.
+  prepareRoute(outlet: RouterOutlet) {
+    return outlet?.isActivated || '';
+  }
+  ```
+  - 상태는 항상 true -> true로 변하는데, 이 때 `query()` 메서드로 `:leave`와 `:enter`를 쿼리하면 결과가 empty다. 즉 애니메이션을 위한 position 값 등을 설정할 수가 없다.
+  - true -> true 외에도 undefined -> undefined와 같은 형태에서도 똑같이 query할 수 없는 문제가 발생하는데 디버깅이 안돼 원인을 알 수가 없다. 고수가 되면 알게되리..
+  - 따라서 에니메이션은 트리거를 `* => *`로 정의해도 상태의 원시값이 변하도록 해서 애니메이션을 트리거 하도록 구성해야한다.

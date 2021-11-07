@@ -9,11 +9,8 @@ import { routeAnimationUsingChilds } from './router-animation';
   animations: [routeAnimationUsingChilds],
 })
 export class WrapperComponent {
-  flag = 0;
-
   prepareRoute(outlet: RouterOutlet) {
-    console.log(outlet?.activatedRouteData?.animation);
+    // return outlet?.isActivated || '';  // 이렇게하면 :leave, :enter를 쿼리로 잡을수가 없다.
     return outlet?.activatedRouteData?.animation;
-    // return outlet?.isActivated || '';
   }
 }

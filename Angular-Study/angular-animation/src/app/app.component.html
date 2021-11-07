@@ -39,10 +39,10 @@
       </mat-nav-list>
     </mat-drawer>
 
-    <div class="example-sidenav-content">
+    <div class="example-sidenav-content" [@routeAnimation]="prepareRoute(outlet)">
 
 
-      <router-outlet></router-outlet>
+      <router-outlet #outlet="outlet"></router-outlet>
 
     </div>
 

@@ -61,7 +61,7 @@ export const routeAnimationUsingChilds = [
       }), // translate를 사용하기 위해 필요한 옵션
       group([
         // 이게 핵심이다. 이걸 걸어줘야 leave 하는 컴포넌트(<app-component1/2>)가 DOM에서 즉시 사라지지 않아, animateChild()가 작동할 수 있게 된다.
-        query(':leave', [animate('1s', style({}))]),
+        query(':leave', [animate('1s', style({}))], { optional: true }),
         query('@*', animateChild(), { optional: true }),
       ]),
     ]),
