@@ -5,7 +5,7 @@ import { componentInOutAnimation } from '../router-animation';
   selector: 'app-component2',
   templateUrl: './component2.component.html',
   styleUrls: ['./component2.component.css'],
-  animations: [componentInOutAnimation],
+  // animations: [componentInOutAnimation],
 })
 export class Component2Component implements OnInit {
   constructor() {}
