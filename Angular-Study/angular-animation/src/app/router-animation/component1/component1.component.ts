@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { routerAnimation } from '../router-animation';
+import { componentInOutAnimation } from '../router-animation';
 
 @Component({
   selector: 'app-component1',
   templateUrl: './component1.component.html',
   styleUrls: ['./component1.component.css'],
-  animations: [routerAnimation],
+  // animations: [componentInOutAnimation],
 })
 export class Component1Component implements OnInit {
   constructor() {}

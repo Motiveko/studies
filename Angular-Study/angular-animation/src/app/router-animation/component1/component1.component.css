@@ -2,3 +2,8 @@ mat-grid-tile {
   background-color: orange;
   border-radius: 30px;
 }
+
+.container {
+  /* position: absolute; */
+  /* overflow: visible; */
+}

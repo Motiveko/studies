@@ -10,8 +10,16 @@ const routes: Routes = [
     component: WrapperComponent,
     children: [
       { path: '', redirectTo: 'component1', pathMatch: 'full' },
-      { path: 'component1', component: Component1Component },
-      { path: 'component2', component: Component2Component },
+      {
+        path: 'component1',
+        component: Component1Component,
+        data: { animation: 'component1' },
+      },
+      {
+        path: 'component2',
+        component: Component2Component,
+        data: { animation: 'component2' },
+      },
     ],
   },
 ];

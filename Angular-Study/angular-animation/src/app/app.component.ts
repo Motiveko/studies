@@ -16,7 +16,7 @@ export class AppComponent {
       url: '/router-animation',
       label: 'Router Animation',
       hasChilren: true,
-      panelOpenState: false,
+      panelOpenState: true,
       children: [
         {
           url: '/component1',
