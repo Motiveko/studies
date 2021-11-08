@@ -107,4 +107,89 @@ fromEvent(inputText, 'keyup')
 ```
 - keyup 이벤트 발생시 1초간 기다리고 sendRequest()로 http request를 보내 반환되는 Observable을 구독한다. 응답이 오기전 keyup 이벤트 발생하면 sendRequest 구독을 취소하고 다시 1초간 기다리고, 응답이 오면 응답을 console에 출력한다. ***즉 소스와 맵핑 Observable의 구독을 switching 하는것이다.***
 
+<br>
+
 ## 5.2 중첩 옵저버블 처리하기
+- `Observable<Observable<T>>` 형태의 옵저버블을 중첩 옵저버블이라고 한다. 기존의 `merge`, `concat` 혹은 `map` operator는 Observable이 아닌 스칼라 값을 받기 때문에 이를 적절히 처리할 수 없다.
+- 이런 중첩 옵저버블을 평탄화해 처리하는 연산자를 조인 연산자(join operator)라고 한다.
+- 아래 예시는 `input`에서 사용자 입력 이벤트를 구독해 ajax 요청을 날리는 예시다. 
+```ts
+  const searchBox = document.querySelector("input");
+  const notEmpty = (input: string) => !!input && input.trim().length > 0;
+
+  fromEvent(searchBox, "keyup").pipe(
+    pluck("target", "value"),
+    debounceTime(500),
+    filter(notEmpty),
+    tap(console.log),
+    map((query) => URL + query),
+    mergeMap((query) =>
+      ajax(query).pipe(
+        // Creation - ajax
+        pluck("response", "query", "search"),
+        defaultIfEmpty([]) // AJAX 호출 결과가 빈 값이면 빈 배열로 반환
+      ),
+    ),
+  ).subscribe(console.log);
+```
+
+<br>
+
+## 5.3 비동기 스트림 마스터하기
+- `mergeMap` 연산자를 응용하여 주식 시세 표시기를 구현해본다. 여러 옵저버블을 `mergeMap`연산자로 체이닝하는 예제다.
+```ts
+
+const csv = (str: string) => str.split(/,\s*/); // CSV 문자열에서 배열을 만드는 핼퍼함수
+
+// 야후 파에낸스 REST API 링크와 출력 형식 요청
+const webservice =
+  "http://download.finance.yyahoo.com/d/queotes.csv?s=$symbol&f=sa&e=.csv";
+
+const requestQuote$ = (symbol: string) =>
+  ajax(webservice.replace(/\%symbol/, symbol)).pipe(
+    pluck("response"),
+    map((response) => response.replace(/"/g, "")),
+    tap(console.log),
+    map(csv) // 출력을 정리하고 csv 파싱
+  );
+
+const twoSecond$ = interval(2000); // 2초마다 값 방출
+
+// symbol => 2초마다 방출되는 값을 symbol의 API 요청 응답(Observable)로 평탄화, 
+// 타입은 (symbol) => Observable
+const fetchDataInterval$ = (symbol: string) =>
+  twoSecond$.pipe(mergeMap(() => requestQuote$(symbol)));
+
+const symbols$ = of('FB', 'APPL', 'TESLA'); // symbol의 Observable
+
+// symbol의 Observable을 fetchDataInterval 옵저버블에 맵핑 + 평탄화
+const ticks$ = symbols$.pipe(
+  mergeMap(fetchDataInterval$)
+);
+
+ticks$.subscribe(
+  ([symbol, price]) => {
+    // DOM 랜더링...
+  }
+)
+```
+
+- 매 2초마다 symbol들에 대해 http request를 날리고 최종 구독부분에서 결과를 랜더링한다.
+- symbol에 대한 결과가 이전과 동일하다면 굳이 랜더링하지 않는것이 성능상 좋을것이다. 이를 위해 `distinctUntilChanged` operator를 적용할 수 있다. symbol 단위로 일치여부를 평가해야하므로 `fetchDataInterval$`의 pipe에 적용한다.
+```ts
+const fetchDataInterval$ = (symbol: string) =>
+  twoSecond$.pipe(
+    mergeMap(() => requestQuote$(symbol)),
+    distinctUntilChanged(([symbol, price]) => price)  // 주가를 기준으로 비교한다. 주가가 변경될때만 DOM을 갱신하게된다.
+  );
+```
+- ***기본적으로 3가지 join 연산자가 있다. 각각 아래와 같다.***
+  - `mergeMap` : 함수를 반환하는 옵저버블을 소스 옵저버블의 각 항목 값에 매핑하고 출력 옵저버블을 평탄화한다.
+  - `concatMap` : mergeMap과 비슷하게 병합이 연속적으로 발생한다. **각 옵저버블은 이전 옵저버블이 완료될 때까지 대기한다.**
+  - `switchMap` : mergeMap과 비슷하지만 최근에 매핑된 옵저버블 값만 표시한다. 즉 **가장 최근 값을 방출하는 맵핑된 옵저버블로 전환하여 이전의 내부 옵저버블을 취소한다.** 이전 옵저버블의 구독을 취소하는것은 매우 유용햐게 사용할 수 있다.
+
+<br>
+
+## 5.4 `concatMap`으로 드래그 앤 드롭 구현하기
+
+

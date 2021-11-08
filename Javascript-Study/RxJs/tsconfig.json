@@ -1,8 +1,13 @@
 {
-  "files": ["index.ts"],
   "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
     "moduleResolution": "node",
-    "target": "esnext",
-    "lib": ["es2015", "dom", "dom.iterable"],
+    "strict": false,
+    "allowSyntheticDefaultImports": true
   }
 }
