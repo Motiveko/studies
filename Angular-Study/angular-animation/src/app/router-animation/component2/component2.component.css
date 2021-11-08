@@ -2,3 +2,7 @@ mat-grid-tile {
   background-color:cadetblue;
   border-radius: 30px;
 }
+
+.container {
+  padding: 1%;
+}

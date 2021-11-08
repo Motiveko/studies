@@ -1,0 +1,15 @@
+<div class="container" @componentInOut>
+  <div class="btn-row">
+    <button *ngFor="let i of [0,1,2,3]" type="button" mat-raised-button>buttons{{i}}</button>
+
+  </div>
+  <div class="card-container" @cardStagger>
+    <mat-card *ngFor="let i of [0,1,2,3,4,5,6,7]">
+      <mat-card-header>
+        <div mat-card-avatar class="header-image"></div>
+        <mat-card-title>Shiba Inu</mat-card-title>
+        <mat-card-subtitle>SHIBA INU NO. {{i}}</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+  </div>
+</div>

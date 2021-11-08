@@ -12,8 +12,8 @@
 .example-sidenav-content {
   /* display: flex; */
   height: 99%;
-  width: 98%;
-  padding: 1%;
+  /* width: 98%; */
+  /* padding: 1%; */
   background-color: oldlace;
 }
 

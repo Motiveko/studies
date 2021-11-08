@@ -17,12 +17,12 @@
 
       <mat-nav-list>
         <ng-template ngFor let-item [ngForOf]="navs" let-i="index" >
-          <ng-container *ngIf="!item.hasChilren; else hasChilren">
+          <ng-container *ngIf="!item.hasChildren; else hasChildren">
             <a class="menu-content" mat-list-item [routerLink]="[item.url]" routerLinkActive="activeRouter">
               <span class="label">{{item.label}}</span>
             </a>
           </ng-container>
-          <ng-template #hasChilren >
+          <ng-template #hasChildren >
           <mat-expansion-panel [expanded]="item.panelOpenState" (opened)="item.panelOpenState = true"
             (closed)="item.panelOpenState = false">
             <mat-expansion-panel-header>

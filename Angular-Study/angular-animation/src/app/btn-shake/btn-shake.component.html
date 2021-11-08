@@ -1,7 +1,7 @@
-<div class="container"[@queryShake]="shakeState" (@queryShake.done)="shakeState = ''"  >
+<div class="container" @enterCard [@queryShake]="shakeState" (@queryShake.done)="shakeState = ''"  >
   <mat-grid-list cols="2" rowHeight="150px" >
     <mat-grid-tile *ngFor="let num of cards">
-      <mat-card class="card" @enterCard (click)="toggle()">
+      <mat-card class="card" (click)="toggle()">
         <mat-card-title-group>
           <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" >
           <mat-card-title>title</mat-card-title>
@@ -12,11 +12,3 @@
     </mat-grid-tile>
   </mat-grid-list>
 </div>
-<!-- <mat-card *ngFor="let num of cards" @enterCard (click)="toggle()">
-  <mat-card-title-group>
-    <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" >
-    <mat-card-title>title</mat-card-title>
-    <mat-card-subtitle>subtitle {{ num }}</mat-card-subtitle>
-  </mat-card-title-group>
-  <mat-card-content>컨텐츠 {{ num }}</mat-card-content>
-</mat-card> -->

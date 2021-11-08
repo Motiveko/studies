@@ -16,12 +16,12 @@ export class AppComponent {
     {
       url: '/btn-shake',
       label: 'Button Shake',
-      hasChilren: false,
+      hasChildren: false,
     },
     {
       url: '/router-animation',
       label: 'Router Animation',
-      hasChilren: true,
+      hasChildren: true,
       panelOpenState: true,
       children: [
         {
@@ -33,6 +33,11 @@ export class AppComponent {
           label: 'Component 2',
         },
       ],
+    },
+    {
+      url: '/stagger-in',
+      label: 'Stagger In Animation',
+      hasChildren: false,
     },
   ];
 }
