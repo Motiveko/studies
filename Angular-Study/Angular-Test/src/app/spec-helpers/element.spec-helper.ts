@@ -48,10 +48,27 @@ export function setFieldValue<T>(
 }
 
 /**
+ * Checkbox에 checked 설정
+ * @param fixture
+ * @param testid
+ * @param checked
+ */
+export function checkField<T>(
+  fixture: ComponentFixture<T>,
+  testid: string,
+  checked: boolean
+): void {
+  const { nativeElement } = findEl(fixture, testid);
+  nativeElement.checked = checked;
+  // fake event를 dispatch하여 Angular form binding에서 이를 인지할 수 있게 해준다.
+  dispatchFakeEvent(nativeElement, 'change');
+}
+
+/**
  * Form Field(Input, TextArea, Select)에 value를 채운다.
  * 그 후 Angular 가 value change를 detect할 수 있게 적절한 event를 dispatch한다.
  * 'input' => Input, TextArea, 'select' => 'select'
- * 
+ *
  * @param element form field
  * @param value form field value
  */
@@ -59,10 +76,14 @@ export function setFieldElementValue(
   element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
   value: string
 ): void {
-    element.value = value;
+  element.value = value;
 
-    const isSelect = element instanceof HTMLSelectElement;
-    dispatchFakeEvent(element, isSelect ? 'select' : 'input', isSelect ? false : true);
+  const isSelect = element instanceof HTMLSelectElement;
+  dispatchFakeEvent(
+    element,
+    isSelect ? 'change' : 'input',
+    isSelect ? false : true
+  );
 }
 
 /**
@@ -73,22 +94,22 @@ export function setFieldElementValue(
  * @param bubbles Whether the event bubbles up in the DOM tree
  */
 export function dispatchFakeEvent(
-    element: EventTarget,
-    type: string,
-    bubbles: boolean = false
+  element: EventTarget,
+  type: string,
+  bubbles: boolean = false
 ): void {
-    const event = document.createEvent('Event');
-    event.initEvent(type, bubbles, false);
-    element.dispatchEvent(event);
+  const event = document.createEvent('Event');
+  event.initEvent(type, bubbles, false);
+  element.dispatchEvent(event);
 }
 
 /**
  * fixture에서 selector로 원하는 Component를 찾는다.
- * @param fixture 
- * @param selector 
- * @returns 
+ * @param fixture
+ * @param selector
+ * @returns
  */
-export function findComponent<T> (
+export function findComponent<T>(
   fixture: ComponentFixture<T>,
   selector: string
 ): DebugElement {

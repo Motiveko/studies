@@ -9,6 +9,9 @@ import { HomeComponent } from './components/home/home.component';
 import { ServiceCounterComponent } from './components/service-counter/service-counter.component';
 import { NgrxCounterComponent } from './components/ngrx-counter/ngrx-counter.component';
 import { SignupFormComponent } from './components/signup-form/signup-form.component';
+import { ControlErrorsComponent } from './components/signup-form/control-errors/control-errors.component';
+import { ErrorMessageDirective } from './components/signup-form/directives/error-message.directive';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -17,14 +20,17 @@ import { SignupFormComponent } from './components/signup-form/signup-form.compon
     HomeComponent,
     ServiceCounterComponent,
     NgrxCounterComponent,
-    SignupFormComponent
+    SignupFormComponent,
+    ControlErrorsComponent,
+    ErrorMessageDirective,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    ReactiveFormsModule,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
