@@ -8,7 +8,7 @@ import { findFormControl } from 'src/app/utils/findFormControl';
   selector: '[appErrorMessage]',
 })
 export class ErrorMessageDirective implements OnInit {
-  @HostBinding('.attrr.aria-invalid')
+  @HostBinding('attr.aria-invalid')
   get ariaInvalid(): true | null {
     return this.isActive() ? true : null;
   }
@@ -31,7 +31,7 @@ export class ErrorMessageDirective implements OnInit {
 
   constructor(@Optional() private controlContainer?: ControlContainer) {}
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.control = findFormControl(
       this.formControl,
       this.formControlName,
@@ -39,8 +39,12 @@ export class ErrorMessageDirective implements OnInit {
     );
   }
 
-  isActive(): boolean {
+  private isActive(): boolean {
     const { control } = this;
-    return !!control?.invalid && control.touched && control.dirty;
+    return (
+      control !== undefined &&
+      control.invalid &&
+      (control.touched || control.dirty)
+    );
   }
 }

@@ -130,7 +130,6 @@ export class SignupFormComponent {
 
   public onSubmit(): void {
     if (!this.form.valid) {
-      console.log(this.form);
       return;
     }
     this.signupService.signup(this.form.value).subscribe(

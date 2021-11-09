@@ -23,7 +23,7 @@ export interface SignupData {
 export interface PasswordStrength {
   score: number;
   warning: string;
-  suggestion: string[];
+  suggestions: string[];
 }
 
 export type Plan = 'personal' | 'business' | 'non-profit';
