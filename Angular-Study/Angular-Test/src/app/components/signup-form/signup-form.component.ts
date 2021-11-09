@@ -24,7 +24,7 @@ import {
 const { email, maxLength, pattern, required, requiredTrue } = Validators;
 
 /**
- * Wait for this time before sending async validation requests to the server.
+ * async validator들에서 외부 api 요청시 debounce time
  */
 const ASYNC_VALIDATION_DELAY = 1000;
 

@@ -14,6 +14,7 @@ import { SignupFormComponent } from './signup-form.component';
 import { PasswordStrength } from '../../services/signup/signup.service';
 import {
   checkField,
+  expectText,
   findEl,
   setFieldValue,
 } from 'src/app/spec-helpers/element.spec-helper';
@@ -95,17 +96,32 @@ describe('SignupFormComponent', () => {
     checkField(fixture, 'tos', true);
   };
 
+  // fakeAsync로 함수를 감싸면 함수는 fakeAsync zone에서 실행. timer들은 모두 synchronous하게 변하고 tick()으로 시간 경과를 simulate 할수있다.
   it('submits the form successfully', fakeAsync(async () => {
     await setup();
     fillForm();
     fixture.detectChanges();
 
+    // async validator가 username/email/pw 를 검사하기 전까지는 form이 invalid므로 submit 버튼은 disabled
+    const submitButton = findEl(fixture, 'submit');
+    expect(submitButton.properties.disabled).toBe(true);
+
     // 1초간 기다리는것을 simulation한다.
     tick(1233);
+    fixture.detectChanges();
+
+    expect(submitButton.properties.disabled).toBe(false);
 
     // find form and emit submit event
     findEl(fixture, 'form').triggerEventHandler('submit', {});
+    fixture.detectChanges();
 
+    // signup 성공시 성공 메시지 화면에 출력
+    expectText(fixture, 'status', 'Sign-up successful!');
+
+    expect(signupService.isUsernameTaken).toHaveBeenCalledWith(username);
+    expect(signupService.isEmailTaken).toHaveBeenCalledWith(email);
+    expect(signupService.getPasswordStrength).toHaveBeenCalledWith(password);
     expect(signupService.signup).toHaveBeenCalledWith(signupData);
   }));
 });
