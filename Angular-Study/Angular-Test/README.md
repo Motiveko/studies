@@ -770,7 +770,6 @@ describe('ServiceCounterComponent: unit test with minimal logic', () => {
 - fake객체 메소드의 호출 테스트를 해야하는데, spyOn()을 사용하면 실제 호출은 되지 않는다.
 ```js
   // service-counter.component.spec.ts
-
     spyOn(fakeCounterService, 'getCount').and.callThrough();
     spyOn(fakeCounterService, 'increment').and.callThrough();
     spyOn(fakeCounterService, 'decrement').and.callThrough();
@@ -801,4 +800,446 @@ Faking Service에는 많은 방법이 있고 정답은 없다. 전부 장단점�
 
 <br><br>
 
-## 13. Testing complex forms
+## 13. [Testing complex forms](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Test/src/app/components/signup-form)
+
+
+### 13.1 Test Plan
+> form 에서 아래와 같은 동작을 테스트한다. 테스트 방식은 `Component`, `ChildComponent`, `Directive` 의 상호작용을 한번에 테스트하는 `Integration` 테스트를 수행한다. 단, `Service`의 동작은 stubbing한다.
+- Form Submission
+  - submit 성공
+  - invalid form은 submit하지 않는다.
+  - submit 실패
+- `reuqired` 필드는 validation 통과하지 못하면 관련된 에러 표시
+- username, email, password에 적용된 Asyc Validation 동작 테스트
+- validation 등이 동적으로 적용되는 필드 테스트
+- Password type 토글 테스트
+- 웹 접근성(accessibility) 테스트
+
+<br>
+
+### 13.2 Test setup
+- Test Module
+  - Interation Test이므로 Componet와 Directive는 모두 실제 객체를 사용하고, Service는 Fake 객체를 주입한다. 
+  - Reactive Form을 사용하므로 `ReactiveFormsModule`를 import한다. 
+  - `SignupService`는 **호출 여부**를 테스트하므로 `jasmine.createSpyObj()`로 생성하고, 각 메서드에 대한 동작을 메 spec마다 동적으로 정의해줘야 하므로 ***setup시 Service의 동작을 인수로 받아 동적으로 overriding*** 할 수 있게 구성한다.
+  ```ts
+  let fixture: ComponentFixture<SignupFormComponent>;
+  let signupService: jasmine.SpyObj<SignupService>;
+
+  // setup은 SignupService의 동작을 Dynamic하게 정의할 수 있어야하므로 beforeach()로 실행하지 않는다.
+  const setup = async (
+    signupServiceReturnValues?: jasmine.SpyObjMethodNames<SignupService>
+  ) => {
+    // Spy SignupService 셋팅, 기본값은 모두 success되는것으로 설정되어있다.
+    signupService = jasmine.createSpyObj<SignupService>('SignupService', {
+      isUsernameTaken: of(false),
+      isEmailTaken: of(false),
+      getPasswordStrength: of(strongPassword),
+      signup: of({ success: true }),
+      // setup시 인자로 받은 값으로 SignupService의 동작의 일부를 overriding 한다.
+      ...signupServiceReturnValues,
+    });
+    await TestBed.configureTestingModule({
+      imports: [ReactiveFormsModule],
+      declarations: [
+        SignupFormComponent,
+        ControlErrorsComponent,
+        ErrorMessageDirective,
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+      providers: [
+        {
+          provide: SignupService,
+          useValue: signupService,
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SignupFormComponent);
+
+    fixture.detectChanges();
+  };
+  ```
+
+<br>
+
+### 13.3 Successful form submission
+- form submission을 수행하기에 앞서, `required` validator가 붙은 폼에 대해 유효한 값을 채워주는 helper method `fillForm`을 정의한다.
+```ts
+// signup-data.spec-helper.ts
+export const username = 'quickBrownFox';
+export const password = 'dog lazy the over jumps fox brown quick the';
+export ...
+...
+
+export const signupData: SignupData = {
+  plan: 'personal',
+  username,
+  email,
+  password,
+  address: {
+    name, addressLine1, addressLine2,
+    city, postcode, region, country
+  },
+  tos: true,
+};
+
+
+// signup-form.component.spec.ts
+const fillForm = () => {
+  setFieldValue(fixture, 'username', username);
+  setFieldValue(fixture, 'email', email);
+  ...
+};
+```
+- `submit()`이 성공하기 위해서는 `FormGroup`이  validation 로직을 모두 통과해 valid 상태가 되어야 한다. Angular의 기본 제공 validator들(`required`, `email`, ...) 모두 `Synchronous`로 동작하나 username, email, password에 적용한 custom `AsycValidator`는 비동기로 동작한다. 여기서는 RxJs `timer()`로 1초의 `debounce`를 갖고 외부 validation API를 호출하도록 설정되어 있다.
+```ts
+// signup-form.component.ts
+
+// ASYNC_VALIDATION_DELAY : 1000
+private validateUsername(username: string): Observable<ValidationErrors> {
+  return timer(ASYNC_VALIDATION_DELAY).pipe(
+    switchMap(() => this.signupService.isUsernameTaken(username)),
+    map((usernameTaken) => (usernameTaken ? { taken: true } : {}))
+  );
+}
+```
+- 따라서 `fillForm()`후 `submit()` 동작까지 1초의 시간이 필요한데, 이를 `setTimeout`을 통해 해결할 수 있으나, **이런 방식은 spec의 실행 속도를 늦어지게 만든다.**
+- Angular에서 제공하는 [fakeAsync]('https://angular.io/api/core/testing/fakeAsync')를 사용하면, 타이머 관련 함수의 호출 스케줄링을 동기적으로 처리할 수 있게 해준다.
+- 여기서는 `tick()` 메서드로 비동기 처리에서 시간의 흐름(asynchronous passage of time)을 simulation한다.
+- spec 작성은 아래와 같다.
+```ts
+
+it('submits the form successfully', fakeAsync(async () => {
+  await setup();
+
+  fillForm();
+  fixture.detectChanges();
+
+  // async validator가 username/email/pw 를 검사하기 전까지는 form이 invalid므로 submit 버튼은 disabled
+  const submitButton = findEl(fixture, 'submit');
+  expect(submitButton.properties.disabled).toBe(true);
+
+  // 1초간 기다리는것을 simulation한다. simulation이므로 실제로 기다리는게 아니다.
+  tick(1000);
+  fixture.detectChanges();
+
+  expect(submitButton.properties.disabled).toBe(false);
+
+  // find form and emit submit event
+  findEl(fixture, 'form').triggerEventHandler('submit', {});
+  fixture.detectChanges();
+
+  // signup 성공시 성공 메시지 화면에 출력
+  expectText(fixture, 'status', 'Sign-up successful!');
+
+  expect(signupService.isUsernameTaken).toHaveBeenCalledWith(username);
+  expect(signupService.isEmailTaken).toHaveBeenCalledWith(email);
+  expect(signupService.getPasswordStrength).toHaveBeenCalledWith(password);
+  expect(signupService.signup).toHaveBeenCalledWith(signupData);
+}));
+
+```
+
+<br>
+
+### 13.4 Invalid Form
+- 값을 채우지 않고 `submit` 이벤트 발생시, `AsyncValidator`는 호출되지 않고, `signupService.signup()`도 호출되지 않을것이다.
+```ts
+it('does not submit an invalid form', fakeAsync(async () => {
+  await setup();
+
+  // Wait for async validators
+  tick(1000);
+
+  findEl(fixture, 'form').triggerEventHandler('submit', {});
+
+  expect(signupService.isUsernameTaken).not.toHaveBeenCalled();
+  expect(signupService.isEmailTaken).not.toHaveBeenCalled();
+  expect(signupService.getPasswordStrength).not.toHaveBeenCalled();
+  expect(signupService.signup).not.toHaveBeenCalled();
+}));
+```
+
+<br>
+
+### 13.5 Form submission failure
+- form을 정상적으로 채워 `signupService.signup()` 메서드 호출까지 했을 때, 응답은 `200 ok`가 아닐 수 있다. 네트워크 에러, server-side validation 등의 이유가 있을것이다. 
+- 이 때 `signupService.signup()`의 반환값 Observable은 `error`를 방출할텐데, RxJs에서는 `throwError`로 error를 방출하는 Observable을 생성할 수 있다. 이 spec에서는 `signupService.signup()`의 동작을 동적으로 할당한다.
+- 최종 spec은 아래와 같다.
+```ts
+// signup-form.component.ts
+...
+import { throwError } from 'rxjs';
+...
+
+it('handles signup failure', fakeAsync(async () => {
+  await setup({
+    // throwError로 생성한 Observable은 무조건 인수로 전달받은 Error를 던진다.
+    signup: throwError(new Error('Validation failed')),
+  });
+
+  fillForm();
+
+  // Wait for async validators
+  tick(1000);
+
+  findEl(fixture, 'form').triggerEventHandler('submit', {});
+  fixture.detectChanges();
+
+  expectText(fixture, 'status', 'Sign-up error');
+
+  expect(signupService.isUsernameTaken).toHaveBeenCalledWith(username);
+  expect(signupService.getPasswordStrength).toHaveBeenCalledWith(password);
+  expect(signupService.signup).toHaveBeenCalledWith(signupData);
+}));
+```
+
+<br>
+
+### 13.6 Required fields
+- `required`가 적용된 폼 필드는 아래와 같은 특성을 가진다
+  - `aria-required` 어트리뷰트를 가진다.
+  - validation 실패시, `aria-errormessage`를 가진다.(ErrorMessage 디렉티브에 의해 동적 생성)
+  - validation 실패시, tos를 제외한 필드는 '… must be given'의 에러 메시지가 표시된다.
+
+- 테스트 전 `required`가 적용되 필드명을 array로 선언하고, 이를 하나의 spec에서 `forEach()`로 순회하여 테스트한다.
+- validation을 체크하기 위해서는 field가 `touched` 상태가 되어야하는데, Angular 내부적으로 폼 필드의 `blur` 이벤트를 listen하여 상태를 변경한다. 테스트에서는 이를 명시적으로 수행해줘야 하므로 메서드를 선언한다.
+```ts
+const markFieldAsTouched = (element: DebugElement) => {
+  dispatchFakeEvent(element.nativeElement, 'blur');
+};
+```
+
+- validation 실패시 `aria-errormessage` 어트리뷰트에 error message 요소의 id값이 표시된다. 따라서 `aria-errormessage`에 id값이 있고, `document.getElementById(id)`로 찾은 HTML 요소의 innerText값이 원하는 에러 메시지로 출력되는가를 테스트한다.
+- 최종 spec은 아래와 같이 작성된다.
+
+```ts
+it('handles signup failure', fakeAsync(async () => {
+  await setup({
+    // throwError
+    signup: throwError(new Error('Validation failed')),
+  });
+  fillForm();
+
+  tick(1000);
+
+  findEl(fixture, 'form').triggerEventHandler('submit', {});
+  fixture.detectChanges();
+
+  expectText(fixture, 'status', 'Sign-up error');
+
+  expect(signupService.isUsernameTaken).toHaveBeenCalled();
+  expect(signupService.isEmailTaken).toHaveBeenCalled();
+  expect(signupService.getPasswordStrength).toHaveBeenCalled();
+}));
+
+// ==== Required fields ====
+it('marks fields as required', fakeAsync(async () => {
+  await setup();
+
+  // Mark required fields as touched
+  requiredFields.forEach((testId) => {
+    markFieldAsTouched(findEl(fixture, testId));
+  });
+  fixture.detectChanges();
+
+  requiredFields.forEach((testId) => {
+    const el = findEl(fixture, testId);
+    
+    // required인 요소에는 aira-requried 어트리뷰트가 true다.
+    expect(el.attributes['aria-required'])
+      .withContext(`${testId} must be marked as aria-required`) // expect 실패시 에러 메시지에 출력될 내용
+      .toBe('true');
+
+    expect(el.attributes['aria-invalid'])
+      .withContext(
+        `${testId} 요소의 aria-invalid 어트리뷰트 값은 true여야 합니다.`
+      )
+      .toBe('true');
+
+    const errormessageId = el.attributes['aria-errormessage'];
+    if (!errormessageId) {
+      throw new Error(`Error message id for ${testId} not present`);
+    }
+    const errormessageEl = document.getElementById(errormessageId);
+    if (!errormessageEl) {
+      throw new Error(`Error message element for ${testId} not found`);
+    }
+    // // Terms and Service만 에러메시지가 다르다
+    if (errormessageId === 'tos-errors') {
+      expect(errormessageEl.textContent).toContain(
+        'Please accept the Terms and Services'
+      );
+    } else {
+      expect(errormessageEl.textContent).toContain('must be given');
+    }
+  });
+}));
+```
+
+<br>
+
+### 13.7 Asynchronous validators
+- Form의 AsycValidor는 SignupService의 `isUsernameTaken`, `isEmailTaken`, `getPasswordStrength`을 비동기로 호출하여 외부 API를 통해 validation을 체크한다. 
+- 체크 결과 오류가 있으면 form의 `submit`이벤트 발생시 `signupService.signup`메서드는 호출되지 않아야 한다. 그리고 각각의 error에 대한 메시지를 화면에 출력해야한다.
+- username에 대한 spec은 아래와 같다. 나머지도 모두 거의 비슷하다.
+```ts
+it('fails if the username is takne', fakeAsync(async () => {
+  await setup({
+    isUsernameTaken: of(true),
+  });
+
+  fillForm();
+  tick(1000);
+  fixture.detectChanges();
+
+  expect(findEl(fixture, 'submit').properties.disabled).toBe(true);
+
+  findEl(fixture, 'form').triggerEventHandler('submit', {});
+
+  const errormessageId = findEl(fixture, 'username').attributes[
+    'aria-errormessage'
+  ];
+  if (!errormessageId) {
+    throw new Error(`Error message id for username not present`);
+  }
+
+  const errormessageEl = document.getElementById(errormessageId);
+  if (!errormessageEl) {
+    throw new Error(`Error message element for username not found`);
+  }
+
+  expect(errormessageEl.textContent).toContain(
+    'User name is already taken. Please choose another one.'
+  );
+  expect(signupService.isUsernameTaken).toHaveBeenCalledWith(username);
+  expect(signupService.isEmailTaken).toHaveBeenCalledWith(email);
+  expect(signupService.getPasswordStrength).toHaveBeenCalledWith(password);
+  expect(signupService.signup).not.toHaveBeenCalled();
+}));
+```
+
+<br>
+
+### 13.8 Dynamic Field Relations
+- sign-up form의 `plan`필드 값에 따라 `addressLine1` 필드의 `label`값과 `required`validatoor 적용 여부가 결정된다. 
+  - plan => "Person" 이면 `label`은 "Address line 1"이고 required는 false
+  - plan => "Business" 이면 `label`은 "Company"이고 required는 true
+  - plan => "Education & Non-profit" 이면 `label`은 "Organization"이고 required는 true 
+- `plan`의 각 필드에 대해 check시 `fixture.detectChanges()`를 호출해 템플릿에서 form의 값의 변화를 인지하게 한 후 테스트한다.
+- spec은 아래와 같이 작성된다.
+
+```ts
+it('requires address line 1 for business and non-profit plans', async () => {
+  await setup();
+
+  // plan => personal
+  const addressLine1El = findEl(fixture, 'addressLine1');
+  expect('ng-invalid' in addressLine1El.classes).toBe(false);
+  expect('aria-required' in addressLine1El.attributes).toBe(false);
+
+  // plan => business
+  checkField(fixture, 'plan-business', true);
+  fixture.detectChanges();
+
+  expect(addressLine1El.attributes['aria-required']).toBe('true');
+  expect(addressLine1El.classes['ng-invalid']).toBe(true);
+
+  // plan => non-profit
+  checkField(fixture, 'plan-non-profit', true);
+  fixture.detectChanges();
+
+  expect(addressLine1El.attributes['aria-required']).toBe('true');
+  expect(addressLine1El.classes['ng-invalid']).toBe(true);
+});
+```
+
+<br>
+
+### 13.9 Password type toggle
+- `showPassword` 버튼을 누르면 Component의 showPassword 상태가 toggle되고 이에 따라 password input의 type이 toggle된다.
+- 버튼을 click하고 `fixture.detectChanges()`를 호출해 Component 상태 변화를 template이 알아차리게 한다.
+- spec은 아래와 같이 작성한다.
+```ts
+it('toggles the password display', async () => {
+  await setup();
+
+  setFieldValue(fixture, 'password', 'top secret');
+  const passwordEl = findEl(fixture, 'password');
+  expect(passwordEl.attributes.type).toBe('password');
+
+  click(fixture, 'show-password');
+  fixture.detectChanges();
+
+  expect(passwordEl.attributes.type).toBe('text');
+
+  click(fixture, 'show-password');
+  fixture.detectChanges();
+
+  expect(passwordEl.attributes.type).toBe('password');
+});
+```
+
+<br>
+
+### 13.10 Testing form accessibility
+- `aria-` 어트리뷰트는 웹 접근성관련한 어트리뷰트로, 스크린 리더 등에서 이 값을 읽는다고 한다. 이외에 여러 요소가 있는데 `pa11y`, `pa11y-ci`를 이용해 웹 접근성이 올바른지 테스트 할 수 있다.
+
+1. pa11y
+- cli로 페이지 단위로 테스트한다. 웹서버로 프로젝트를 실행하고, 명령어로 해당 페이지 주소를 알려주면 테스트해준다.
+
+```
+// 설치
+npm install -g pa11y
+
+// localhost:4200/ 에 대해 접근성 테스트를 실행한다.
+pa11y http://localhost:4200/
+
+```
+- 웹 접근성을 어기면 아래와 같은 에러메시지를 볼 수 있다.
+
+![errormessage](./readme-assets/Pa11y_error_example.png)
+
+2. pa11y-ci
+- 설정 파일을 읽어서 자동으로 웹 접근성 검사를 수행한다. 설정 파일에 여러 url을 넣어 한꺼번에 검사할 수 있다. `.pa11yci`라는 설정파일을 프로젝트 루트에 아래와 같은 형태로 작성한 후 명령어를 실행한다.
+
+```json
+// .pa11yci 
+{
+  "defaults": {
+    "runner": [
+      "axe",
+      "htmlcs"
+    ]
+  },
+  "urls": [
+    "http://localhost:4200"
+  ]
+}
+```
+```
+// pa11y-ci 설치
+npm install pa11y-ci
+
+// pa11y-ci 실행
+npx pa11y-ci
+```
+
+3. start-server-and-test
+- `start-server-and-test`는 node 패키지로, 웹 서버를 실행한 후 실행이 완료되면 원하는 `npm script`를 실행할 수 있다. 이를 이용하면 명령어 하나로 웹서버 띄우기 + 웹접근성 테스트를 수행할 수 있다.
+```
+// 설치
+npm install start-server-and-test
+```
+- package.json에 아래 script를 추가한다.
+```json
+{
+  "scripts": {
+    "a11y": "start-server-and-test start https-get://localhost:4200/ pa11y-ci",
+    "pa11y-ci": "pa11y-ci"
+  },
+}
+```
+
+<br>

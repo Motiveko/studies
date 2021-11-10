@@ -14,6 +14,7 @@ import { SignupFormComponent } from './signup-form.component';
 import { PasswordStrength } from '../../services/signup/signup.service';
 import {
   checkField,
+  click,
   dispatchFakeEvent,
   expectText,
   findEl,
@@ -33,6 +34,7 @@ import {
   username,
 } from 'src/app/spec-helpers/signup-data.spec-helper';
 import { DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
+import { find } from 'rxjs/operators';
 
 // required validator가 붙은 formControl의 testId
 const requiredFields = [
@@ -44,10 +46,17 @@ const requiredFields = [
   'postcode',
   'tos',
 ];
-const strongPassword: PasswordStrength = {
-  score: 4,
+
+const weakPassword: PasswordStrength = {
+  score: 2,
   warning: 'too short',
   suggestions: ['try a longer password'],
+};
+
+const strongPassword: PasswordStrength = {
+  score: 4,
+  warning: '',
+  suggestions: [],
 };
 
 describe('SignupFormComponent', () => {
@@ -112,6 +121,7 @@ describe('SignupFormComponent', () => {
     dispatchFakeEvent(element.nativeElement, 'blur');
   };
 
+  // ==== Successful form submission ====
   // fakeAsync로 함수를 감싸면 함수는 fakeAsync zone에서 실행. timer들은 모두 synchronous하게 변하고 tick()으로 시간 경과를 simulate 할수있다.
   it('submits the form successfully', fakeAsync(async () => {
     await setup();
@@ -141,6 +151,7 @@ describe('SignupFormComponent', () => {
     expect(signupService.signup).toHaveBeenCalledWith(signupData);
   }));
 
+  // ==== Invalid form ====
   it('does not submit an invalid form', fakeAsync(async () => {
     await setup();
 
@@ -155,6 +166,7 @@ describe('SignupFormComponent', () => {
     expect(signupService.signup).not.toHaveBeenCalled();
   }));
 
+  // ==== Form submission failure ====
   it('handles signup failure', fakeAsync(async () => {
     await setup({
       // throwError
@@ -174,15 +186,16 @@ describe('SignupFormComponent', () => {
     expect(signupService.getPasswordStrength).toHaveBeenCalled();
   }));
 
+  // ==== Required fields ====
   it('marks fields as required', fakeAsync(async () => {
     await setup();
 
+    // Mark required fields as touched
     requiredFields.forEach((testId) => {
       markFieldAsTouched(findEl(fixture, testId));
     });
     fixture.detectChanges();
 
-    // Mark required fields as touched
     requiredFields.forEach((testId) => {
       const el = findEl(fixture, testId);
       // required인 요소에는 aira-requried attr이 true다.
@@ -216,4 +229,133 @@ describe('SignupFormComponent', () => {
       }
     });
   }));
+
+  // ==== Asynchronous validators ====
+
+  it('fails if the username is takne', fakeAsync(async () => {
+    await setup({
+      isUsernameTaken: of(true),
+    });
+
+    fillForm();
+    tick(1000);
+    fixture.detectChanges();
+
+    expect(findEl(fixture, 'submit').properties.disabled).toBe(true);
+
+    findEl(fixture, 'form').triggerEventHandler('submit', {});
+
+    const errormessageId = findEl(fixture, 'username').attributes[
+      'aria-errormessage'
+    ];
+    if (!errormessageId) {
+      throw new Error(`Error message id for username not present`);
+    }
+
+    const errormessageEl = document.getElementById(errormessageId);
+    if (!errormessageEl) {
+      throw new Error(`Error message element for username not found`);
+    }
+
+    expect(errormessageEl.textContent).toContain(
+      'User name is already taken. Please choose another one.'
+    );
+    expect(signupService.isUsernameTaken).toHaveBeenCalledWith(username);
+    expect(signupService.isEmailTaken).toHaveBeenCalledWith(email);
+    expect(signupService.getPasswordStrength).toHaveBeenCalledWith(password);
+    expect(signupService.signup).not.toHaveBeenCalled();
+  }));
+
+  // email taken 테스트는 username takne과 거의 비슷하므로 조금 생략해본다.
+  it('fails if the email is taken', fakeAsync(async () => {
+    await setup({
+      isEmailTaken: of(true),
+    });
+
+    fillForm();
+    tick(1000);
+    fixture.detectChanges();
+
+    expect(findEl(fixture, 'submit').properties.disabled).toBe(true);
+
+    findEl(fixture, 'submit').triggerEventHandler('submit', {});
+
+    expect(signupService.isEmailTaken).toHaveBeenCalledWith(email);
+    expect(signupService.signup).not.toHaveBeenCalled();
+  }));
+
+  it('fails if the password is too weak', fakeAsync(async () => {
+    await setup({
+      getPasswordStrength: of(weakPassword),
+    });
+
+    fillForm();
+    tick(1000);
+    fixture.detectChanges();
+    const submitBtn = findEl(fixture, 'submit');
+    expect(submitBtn.properties.disabled).toBe(true);
+
+    submitBtn.triggerEventHandler('submit', {});
+
+    expect(signupService.signup).not.toHaveBeenCalled();
+
+    const errormessageId = findEl(fixture, 'password').attributes[
+      'aria-errormessage'
+    ];
+    if (!errormessageId) {
+      throw new Error('password의 errormessageId가 없습니다.');
+    }
+    const errormessageEl = document.getElementById(errormessageId);
+    if (!errormessageEl) {
+      throw new Error('password의 에러메시지 Element가 존재하지 않습니다.');
+    }
+
+    expect(errormessageEl.textContent).toContain('❗  Password is too weak. ');
+  }));
+
+  // ==== Dynamic field relations ====
+  it('requires address line 1 for business and non-profit plans', async () => {
+    await setup();
+
+    const addressLine1El = findEl(fixture, 'addressLine1');
+
+    // 기본 : plan = PERSONAL
+    // form field가 invalid면 angular에서 자동으로 설정하는 값
+    expect('ng-invalid' in addressLine1El.classes).toBe(false);
+    expect('aria-required' in addressLine1El.attributes).toBe(false);
+
+    // plan = BUSINESS
+    checkField(fixture, 'plan-business', true);
+    fixture.detectChanges();
+
+    expect('ng-invalid' in addressLine1El.classes).toBe(true);
+    expect('aria-required' in addressLine1El.attributes).toBe(true);
+
+    // plan = NON-PROFIT
+    checkField(fixture, 'plan-non-profit', true);
+    fixture.detectChanges();
+
+    expect('ng-invalid' in addressLine1El.classes).toBe(true);
+    expect('aria-required' in addressLine1El.attributes).toBe(true);
+  });
+
+  // ==== Password type toggle ====
+  it('toggles the password display', async () => {
+    await setup();
+
+    const passwordEl = findEl(fixture, 'password');
+    expect(passwordEl.attributes['type']).toBe('password');
+
+    click(fixture, 'show-password');
+    fixture.detectChanges();
+
+    expect(passwordEl.attributes['type']).toBe('text');
+
+    click(fixture, 'show-password');
+    fixture.detectChanges();
+
+    expect(passwordEl.attributes.type).toBe('password');
+  });
+
+  // ==== Testing form accessibility ====
 });

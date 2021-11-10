@@ -48,7 +48,7 @@ export function setFieldValue<T>(
 }
 
 /**
- * Checkbox에 checked 설정
+ * Checkbox, Radio에 checked 설정
  * @param fixture
  * @param testid
  * @param checked
