@@ -12,6 +12,7 @@ import { SignupFormComponent } from './components/signup-form/signup-form.compon
 import { ControlErrorsComponent } from './components/signup-form/control-errors/control-errors.component';
 import { ErrorMessageDirective } from './components/signup-form/directives/error-message.directive';
 import { ReactiveFormsModule } from '@angular/forms';
+import { FullPhotoComponent } from './components/flickr-search/full-photo/full-photo.component';
 
 @NgModule({
   declarations: [
@@ -23,6 +24,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     SignupFormComponent,
     ControlErrorsComponent,
     ErrorMessageDirective,
+    FullPhotoComponent,
   ],
   imports: [
     BrowserModule,

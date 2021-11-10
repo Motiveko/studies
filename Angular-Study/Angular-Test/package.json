@@ -18,6 +18,8 @@
     "@angular/platform-browser": "~12.1.0-",
     "@angular/platform-browser-dynamic": "~12.1.0-",
     "@angular/router": "~12.1.0-",
+    "@ngrx/effects": "^12.5.1",
+    "@ngrx/store": "^12.5.1",
     "ng-mocks": "^12.1.0",
     "pa11y-ci": "^2.4.2",
     "rxjs": "~6.6.0",

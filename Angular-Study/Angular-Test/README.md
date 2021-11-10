@@ -554,7 +554,7 @@ TestBed의 Module설정에 { schemas: [NO_ERRORS_SCHEMA] }를 추가해주면 �
 
 FakeComponent를 선언하고 TestBed의 Module에 등록한다.
 
-FakeComponent는 **Partial<CounterComponent>** 를 구현하고, selector가 같고, Input,Output이 동일하며, **아무것도 랜더링하지 않아도 된다.**(template은 empty)
+FakeComponent는 **Partial\<CounterComponent>** 타입이고, selector가 같고, Input,Output이 동일하며, **아무것도 랜더링하지 않아도 된다.**(template은 empty)
 
 ```ts
 // home.component.fake-child.spec.ts
