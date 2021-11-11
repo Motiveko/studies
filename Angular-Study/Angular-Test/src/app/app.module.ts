@@ -13,6 +13,10 @@ import { ControlErrorsComponent } from './components/signup-form/control-errors/
 import { ErrorMessageDirective } from './components/signup-form/directives/error-message.directive';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FullPhotoComponent } from './components/flickr-search/full-photo/full-photo.component';
+import { FlickrSearchComponent } from './components/flickr-search/flickr-search/flickr-search.component';
+import { PhotoListComponent } from './components/flickr-search/photo-list/photo-list.component';
+import { SearchFormComponent } from './components/flickr-search/search-form/search-form.component';
+import { PhotoItemComponent } from './components/flickr-search/photo-item/photo-item.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +29,10 @@ import { FullPhotoComponent } from './components/flickr-search/full-photo/full-p
     ControlErrorsComponent,
     ErrorMessageDirective,
     FullPhotoComponent,
+    FlickrSearchComponent,
+    PhotoListComponent,
+    SearchFormComponent,
+    PhotoItemComponent,
   ],
   imports: [
     BrowserModule,

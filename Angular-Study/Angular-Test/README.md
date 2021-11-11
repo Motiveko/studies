@@ -1242,4 +1242,156 @@ npm install start-server-and-test
 }
 ```
 
+<br><br>
+
+## 14. Testing Components with Spectator
+> 기존 Anuglar의 테스팅 툴을 이용해 작성하던 코드들을 `Spectator` 라이브러리를 이용해 작성한다.
+
 <br>
+
+기존 Angular에서 제공하는 테스팅 툴(`TestBed`, `ComponentFixture`, `DebugElement`, `HttpClientTestingModule`, `RouterTestingModule`, ...)을 직접 사용하여 테스트 코드 작성시 아래와 같은 문제점이 있다.
+- 기본 **setup에 들어가는 boiler plate코드**가 너무 많다.
+- `DebugElement`는 추상화 되어 있어 직접 NativeDOM을 조적하는 형테의 테스트가 많아진다.(이는 결국 type safe하지 않다.)
+- 기본 제공되는 안전한 객체의 **faking solution이 없다.**
+- 이벤트 트리거, DOM 접근등의 많은 동작에 **반복적인 코드가 많이 발생**한다. 이는 결국 helper library를 직접 만들어 해결하게된다.
+
+<br>
+
+`Spectator`는 이런 문제를 해결해주는 Angular 테스트 라이브러리다. [flickr search](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Test/src/app/components/flickr-search) 컴포넌트를 테스트한다.
+Spectator를 사용한 테스트 코드는 `spectator.spec.ts`로 끝나는 파일에 작성한다.
+
+<br>
+
+### 14.1 Component with an Input
+Spectator를 이용한 테스트 모듈 설정 및 테스트 컴포넌트 생성은 `Component factory`를 이용한다.
+
+```ts
+export declare function createComponentFactory<C>(typeOrOptions: Type<C> | SpectatorOptions<C>): SpectatorFactory<C>;
+```
+```ts
+import { createComponentFactory } from '@ngneat/spectator';
+
+describe('FullPhotoComponent with spectator', () => {
+  /* … */
+
+  const createComponent = createComponentFactory({
+    component: FullPhotoComponent,  // 테스트 컴포넌트
+    shallow: true,  // shallow rendering한다.(자식컴포넌트는 렌더링 하지 않는다)
+  });
+
+  /* … */
+});
+```
+
+<br>
+
+`createComponentFactory` 메서드 인자로 `SpectatorOptions`를 전달한다. 이 메서드는 내부적으로 `beforeEach` 블록을 만들고 `TestBed.configureTestingModule`와 `TestBed.compileComponents`를 실행한다. Spectator를 사용하기 전에 반복적으로 작성하던 코드를 그대로 작성해주는 것이다.
+
+<br>
+
+컴포넌트 생성은 아래와 같이 작성한다.
+
+```ts
+// types
+export declare type SpectatorFactory<C> = (options?: SpectatorOverrides<C>) => Spectator<C>;
+/**
+ * @publicApi
+ */
+export interface SpectatorOverrides<C> extends BaseSpectatorOverrides {
+    detectChanges?: boolean;
+    props?: Partial<C>;
+}
+```
+
+```ts
+let spectator: Spectator<FullPhotoComponent>;
+
+beforeEach(() => {
+  spectator = createComponent({ props: { photo: photo1 } });
+});
+```
+인자로 `SpectatorOverrides`타입 객체를 전달해 컴포넌트의 내부 프로퍼티를 정의할 수 있다. 반환 타입은 `Spectator`로 랩핑된 컴포넌트 객체로, 테스트시 필요한 여러 유틸 메서드를 제공한다. 예를 들면 `Spectator.query()` 메서드는 이전 `debugElement.query()` 와 같이 컴포넌트 템플릿 내 DOM을 쿼리한다. <br> [Spectator: Queries](https://github.com/ngneat/spectator#queries)
+
+```ts
+spectator.query(byTestId('full-photo-title'))
+```
+
+<br>
+
+Spectator의 `DOMSelectorFactory`인 `byTestId`는 DOM객체중 `data-testid` 어트리뷰트 값을 검색해 일치하는 객체를 가져온다.
+
+<br>
+
+`Spectator` 설치시 `Jasmine matchers`에 몇몇 Custom matcher가 추가되는데, 이는 기존 jasmine matcher만 이용했을 때 발생했던 여러 boilerplate 코드를 줄여준다. 예를들어, 예전엔 HTMLElement 객체의 textContent를 검사하기 위해서는 `DebugElement.nativeElement.textContent`를 검사했었는데 Specator를 사용하면 아래와 같이 단순화된다. <br>
+
+[Spectator: Custom matchers](https://github.com/ngneat/spectator#custom-matchers)
+
+```ts
+expect(
+  spectator.query(byTestId('full-photo-title'))
+).toHaveText(photo1.title);
+```
+
+<br>
+
+HTMLElement의 attribute 검사는 아래와 같이 단순화된다.
+
+```ts
+const img = spectator.query(byTestId('full-photo-image'));
+expect(img).toHaveAttribute('src', photo1.url_m);
+```
+
+<br>
+
+이런 방식은 DebugElement를 사용해서 작성했던 코드보다 훨씬 직관적이고 짧으며 안전하다.
+
+<br>
+
+### 14.2 Component with children and Service dependency
+
+Spectator는 `Container Component`를 테스트 할 때 특히 편해진다. [FlickrSearchComponent](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Test/src/app/components/flickr-search/flickr-search)는 `FlickrService`에 의존하고, 자식컴포넌트를 가진다.
+
+<br>
+
+테스트 모듈은 아래와 같이 설정한다. 
+
+```ts
+import {
+  createComponentFactory, mockProvider, Spectator
+} from '@ngneat/spectator';
+
+describe('FlickrSearchComponent with spectator', () => {
+  /* … */
+
+  const createComponent = createComponentFactory({
+    component: FlickrSearchComponent,
+    shallow: true,
+    declarations: [
+      MockComponents(
+        SearchFormComponent, PhotoListComponent, FullPhotoComponent
+      ),
+    ],
+    providers: [mockProvider(FlickrService)],
+  });
+
+  /* … */
+});
+```
+
+
+
+<!-- 
+
+
+
+<br><br><br><br><br><br><br>
+
+- 기존 방식의 문제점
+  - boilerplate 넘 많음
+  - Native Dom 이 아닌 DebugElement로 추상화 된 객체를 가지고 테스트해야해서 성가신 부분이 많음
+  ==============================================================================
+  - 사용자 지정 테스트 도우미가 있는 버전과 비교하여 Spectator 버전이 반드시 더 짧은 것은 아닙니다. 그러나 일관된 추상화 수준 에서 작동 합니다 .
+
+  - TestBed, ComponentFixture, DebugElement그리고 도우미 함수를 마구 섞는 대신 createComponentFactory함수와 하나의 Spectator인스턴스가 있습니다.
+
+  - Spectator는 DOM 요소 래핑을 피하지만 일반적인 DOM 기대치를 위한 편리한 Jasmine 매처를 제공합니다. -->
