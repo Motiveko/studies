@@ -1251,7 +1251,7 @@ npm install start-server-and-test
 
 기존 Angular에서 제공하는 테스팅 툴(`TestBed`, `ComponentFixture`, `DebugElement`, `HttpClientTestingModule`, `RouterTestingModule`, ...)을 직접 사용하여 테스트 코드 작성시 아래와 같은 문제점이 있다.
 - 기본 **setup에 들어가는 boiler plate코드**가 너무 많다.
-- `DebugElement`는 추상화 되어 있어 직접 NativeDOM을 조적하는 형테의 테스트가 많아진다.(이는 결국 type safe하지 않다.)
+- `DebugElement`는 DOM을 래핑한 추상화된 객체로, 테스트시 번거롭고 Type Safe 하지 않다.
 - 기본 제공되는 안전한 객체의 **faking solution이 없다.**
 - 이벤트 트리거, DOM 접근등의 많은 동작에 **반복적인 코드가 많이 발생**한다. 이는 결국 helper library를 직접 만들어 해결하게된다.
 
@@ -1377,13 +1377,134 @@ describe('FlickrSearchComponent with spectator', () => {
   /* … */
 });
 ```
+위 코드에서 모듈 설정시, shallow rendring을 하였고, 테스트를 위해 자식 객체는 `ng-mocks`의 `MockComponents` 메서드를 이용해 Fake Component를 만들어 모듈에 선언했다. 테스트시 자식 컴포넌트는 컴포넌트 클래스 타입으로 참조하고 사용 가능하다.
+
+<br>
+
+또한 `Spectator`의 `mockProvider`를 사용해 컴포넌트가 의존하는 `FlickrService` 객체의 Fake 객체를 주입했다. beforeEach 문은 아래와 같이 작성한다.
+
+```ts
+
+import {
+  createComponentFactory, mockProvider, Spectator
+} from '@ngneat/spectator';
+
+describe('FlickrSearchComponent with spectator', () => {
+  let spectator: Spectator<FlickrSearchComponent>;
+
+  let searchForm: SearchFormComponent | null;
+  let photoList: PhotoListComponent | null;
+  let fullPhoto: FullPhotoComponent | null;
+
+  const createComponent = createComponentFactory(/* … */);
+
+  beforeEach(() => {
+    spectator = createComponent();
+
+    spectator.inject(FlickrService).searchPublicPhotos.and.returnValue(of(photos));
+
+    searchForm = spectator.query(SearchFormComponent);
+    photoList = spectator.query(PhotoListComponent);
+    fullPhoto = spectator.query(FullPhotoComponent);
+  });
+
+  /* … */
+});
+```
+
+`spectator.inject` 메서드는 `TestBed.inject()` 메서드와 같은 역할을 한다. 메서드 실행 결과는 `SpyObject<FlickrService>`로, 바로 체이닝하여 동작을 spy한다. 
+
+<br>
+
+자식 컴포넌트에 대한 접근은 `spectator.query`메서드를 이용한다. 인자로는 접근하려는 자식 컴포넌트의 타입이다. 반환 타입은 인자로 넣은 컴포넌트타입 or null로 이렇게 가져온 컴포넌트는 `DebugElemnt`와 달리 원본과 같은 프로퍼티를 가지므로 Type Safe하게 사용 가능하다.
+
+<br>
+ 
+그런데, 이 때 문제가 있는데 Union type으로 null이 있으므로 .에 의한 참조시 타입스크립트에서는 에러나 발생한다. Spectator에서 자식 컴포넌트가 null이 아닌지 테스트하는 코드는 아래와 같다.
+```ts
+expect(photoList).not.toBe(null)
+```
+
+그런데 `expect`는 [Typescript Type Guard](https://www.typescriptlang.org/docs/handbook/advanced-types.html)가 아니므로 이 코드 이후에도 자식 컴포넌트 변수의 타입은 `R | null`(R은 컴포넌트 타입)이 된다. 이를 해결하기 위해서는 **자식 컴포넌트가 null일경우 명시적으로 Error를 던져줘야한다.** ~~Type Guard에 대한 지식이 없어서 도대체 어떻게 해야 하는건지 늘 궁금했는데, 해결..~~
+
+<br>
+
+```ts
+if (!(searchForm && photoList)) {
+  throw new Error('searchForm or photoList not found');
+}
+// 이후 typscript는  searchForm과 photoList가 null이 아니라고 판단한다.
+```
+
+<br>
+
+이러한 Spectator의 특성을 이용한 테스트 코드는 [여기](https://github.com/Motiveko/studies/blob/master/Angular-Study/Angular-Test/src/app/components/flickr-search/flickr-search/flickr-search.component.spectator.spec.ts)를 참고하자.
+
+<br>
+
+### 14.3 Event handling with Spectator
+
+`DebugElement`를 사용한 테스트시 컴포넌트의 이벤트 발생은 `DebugElement.triggerEventHandler`를 사용하였다. 이는 실제 DOM 이벤트를 발생시키는게 아닌 **이벤트 바인딩으로 표시된 헨들러**를 호출하는 것이다. 반면 Spectator에서는 `Synthetic DOM Event`를 발생시키는 방식으로 테스트하는데, 이 이벤트는 이벤트는 실제 DOM 트리상에서 버블링되므로 좀 더 실제 동작에 가까운 이벤트 테스트가 가능하다.
+
+<br>
+
+Spectator에서는 `click`이나 `blur`, `focus` 등의 몇몇 이벤트는 기본 메서드로,이외에는 `Spectator.dispatchFakeEvent`로 distpatch 할 수 있다. 예를 들면 클릭 이벤트는 아래와 같이 발생시킬 수 있다.
+
+```ts
+spectator.click(byTestId('photo-item-link'));
+```
+
+<br>
+
+폼 관련 처리는 훨씬 복잡했었던것을 매우 간소하게 바꿀 수 있다. 먼저 폼에 값을 채우는 것을 생각해보자. `DebugElement`를 사용했을 때 아래와 같은 과정으로 폼에 값을 채웠다.(이 과정을 결국 헬퍼 메서드로 정의한다.)
+
+```ts
+const el = fixture.query(By.css('[data-testid="input"]')).nativeElement;
+
+el.value = 'value'; // 값 설정
+
+// 값 설정 후 컴포넌트에서 값 변화를 알 수 있도록 적절한 이벤트를 발생시켜줘야한다.
+const type = (el instanceof HTMLSelectElement) ? 'change' : 'input';
+const event = document.createEvent('Event');
+event.initEvent(type, false, false);
+el.dispatchEvent(event);
+```
+
+<br> 
+
+이렇게나 복잡하고 직관적이지 않은 동작을 `Spectator.typeInElement` 메서드 하나로 해결 가능하다. 또한 submit event(`ngSubmit`) 이벤트 역시 `Spectator.dispatchFakeEvent` 메서드로 간단하게 dispatch 할 수 있다. 적용된 spec은 아래와 같다. <br>
+[Spectator: Events API](https://github.com/ngneat/spectator#events-api)
+
+```ts
+describe('SearchFormComponent with spectator', () => {
+  /* … */
+
+  it('starts a search', () => {
+    let actualSearchTerm: string | undefined;
+
+    spectator.component.search.subscribe((otherSearchTerm: string) => {
+      actualSearchTerm = otherSearchTerm;
+    });
+
+    // input에 값을 채운다.
+    spectator.typeInElement(searchTerm, byTestId('search-term-input'));
+
+    // ngSubmit 이벤트 발생
+    spectator.dispatchFakeEvent(byTestId('form'), 'submit');
+
+    expect(actualSearchTerm).toBe(searchTerm);
+  });
+});
+```
+
+<br>
+
+
+
 
 
 
 <!-- 
-
-
-
 <br><br><br><br><br><br><br>
 
 - 기존 방식의 문제점
