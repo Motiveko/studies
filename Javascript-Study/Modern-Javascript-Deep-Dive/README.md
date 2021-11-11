@@ -1114,8 +1114,24 @@ foo();
 console.log(foo); // ReferenceError
 ```
 
-### 14.3.2 네임스페이스 객체
-유용하지 않은 방법이므로 넘어간다.
+### 14.3.2 네임스페이스(name space) 객체
+- 전역에 namespace 역할을 담당할 객체를 생성하고, 전역 변수처럼 사용하고 싶은 변수를 프로퍼티로 추가하는 방법.
+- 
+```js
+var MYAPP = {}; // 전역 namespace 객체
+
+MYAPP.name = 'Motiveko';
+
+MYAPP.person = {
+  nickname: 'nick',
+  address: 'Seoul'
+};
+
+console.log(MYAPP.name);  // Motiveko
+console.log(MYAPP.person);  // { nickname: 'nick', address: 'Seoul' }
+
+```
+<br>
 
 ### 14.3.3 모듈 패턴
 **모듈 패턴은 변수와 함수를 모아 즉시 실행 함수로 감싸 하나의 모듈을 만든다.** 모듈 패턴은 자바스크립트의 강력한 기능인 **_클로저를_** 기반으로 동작한다.
@@ -4918,6 +4934,16 @@ console.log(x[0]);  // x
   - 1,2번째 인자로 전달받은 인덱스 사이의 부분 문자열을 반환한다. 2번째 생략시 끝까지 반환.
 - String.prototype.slice
   - substring과 동일하게 작동한다. 단, 인수로 음수를 전달할 경우 맨 뒤에서 n자리까지 반환한다.
+
+  ```js
+  const str = 'The quick brown fox jumps over the lazy dog.';
+
+  console.log(str.slice(31)); //"the lazy dog."
+  console.log(str.slice(4, 19)); //"quick brown fox"
+  console.log(str.slice(-4)); //expected output: "dog."
+  console.log(str.slice(-9, -5)); // "lazy"
+  ```
+
 - String.prototype.toUpperCase/toLowerCase
   - 대상 문자열을 대문자로 변경해 반환한다.
 - String.prototype.trim
