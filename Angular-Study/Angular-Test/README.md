@@ -1499,20 +1499,10 @@ describe('SearchFormComponent with spectator', () => {
 
 <br>
 
+### 15. Testing Services
 
+Angular에서 싱글톤으로 생성되는 서비스는 일반적으로 아래와 같은 역할을 가진다.
+- 값을 반환하는 public method를 가진다.
+- 상태값을 가진다.
 
-
-
-
-<!-- 
-<br><br><br><br><br><br><br>
-
-- 기존 방식의 문제점
-  - boilerplate 넘 많음
-  - Native Dom 이 아닌 DebugElement로 추상화 된 객체를 가지고 테스트해야해서 성가신 부분이 많음
-  ==============================================================================
-  - 사용자 지정 테스트 도우미가 있는 버전과 비교하여 Spectator 버전이 반드시 더 짧은 것은 아닙니다. 그러나 일관된 추상화 수준 에서 작동 합니다 .
-
-  - TestBed, ComponentFixture, DebugElement그리고 도우미 함수를 마구 섞는 대신 createComponentFactory함수와 하나의 Spectator인스턴스가 있습니다.
-
-  - Spectator는 DOM 요소 래핑을 피하지만 일반적인 DOM 기대치를 위한 편리한 Jasmine 매처를 제공합니다. -->
+<!-- 따라서 서비 -->
