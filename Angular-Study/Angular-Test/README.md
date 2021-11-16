@@ -1501,3 +1501,10 @@ describe('SearchFormComponent with spectator', () => {
 
 <br>
 
+### 15. Testing Services
+
+Angular에서 싱글톤으로 생성되는 서비스는 일반적으로 아래와 같은 역할을 가진다.
+- 값을 반환하는 public method를 가진다.
+- 상태값을 가진다.
+
+<!-- 따라서 서비 -->
