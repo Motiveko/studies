@@ -1287,6 +1287,8 @@ describe('FullPhotoComponent with spectator', () => {
 
 `createComponentFactory` 메서드 인자로 `SpectatorOptions`를 전달한다. 이 메서드는 내부적으로 `beforeEach` 블록을 만들고 `TestBed.configureTestingModule`와 `TestBed.compileComponents`를 실행한다. Spectator를 사용하기 전에 반복적으로 작성하던 코드를 그대로 작성해주는 것이다.
 
+> ❗️ `createComponentFactory`는 내부적으로 `beforeEach`블록을 만들기 때문에 반드시 `describe` 코드 블록 내에서 사용해야한다.
+
 <br>
 
 컴포넌트 생성은 아래와 같이 작성한다.
@@ -1499,20 +1501,3 @@ describe('SearchFormComponent with spectator', () => {
 
 <br>
 
-
-
-
-
-
-<!-- 
-<br><br><br><br><br><br><br>
-
-- 기존 방식의 문제점
-  - boilerplate 넘 많음
-  - Native Dom 이 아닌 DebugElement로 추상화 된 객체를 가지고 테스트해야해서 성가신 부분이 많음
-  ==============================================================================
-  - 사용자 지정 테스트 도우미가 있는 버전과 비교하여 Spectator 버전이 반드시 더 짧은 것은 아닙니다. 그러나 일관된 추상화 수준 에서 작동 합니다 .
-
-  - TestBed, ComponentFixture, DebugElement그리고 도우미 함수를 마구 섞는 대신 createComponentFactory함수와 하나의 Spectator인스턴스가 있습니다.
-
-  - Spectator는 DOM 요소 래핑을 피하지만 일반적인 DOM 기대치를 위한 편리한 Jasmine 매처를 제공합니다. -->
