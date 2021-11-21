@@ -4623,7 +4623,7 @@ new RegExp(/is/i);  // ES6
   - exec 메서드는 플래그를 g로 설정해도 **첫 번째 매칭 결과만 반환**한다.
 - RegExp.prototype.`test`
   - test 메서드는 인수로 전달받은 문자열에 대해 정규 표현식의 패턴을 검색하여 매칭 결과를 boolean 값으로 반환한다.
-- **String.prototype.match**
+- **String.prototype.`match`**
   - String 표준 빌트인 객체가 제공하는 match 메서드는 대상 문자열과 인수로 전달받은 RegExp의 매칭 결과를 배열로 반환한다.
   - RegExp의 exec와 달리 flag: g에 대해 매칭되는 모든 결과를 배열로 반환한다.
   ```js
@@ -4680,7 +4680,7 @@ target.match(/is/ig);
 <br>
 
 ### 31.5.2 임의의 문자열 검색
-- `.`은 **임의의 문자 한 개**를 의미한다. ... 은 문자의 내요오가 상관없이 3자리 문자열과 매치한다.
+- `.`은 **임의의 문자 한 개**를 의미한다. ... 은 문자의 내용과 상관없이 3자리 문자열과 매치한다.
 ```js
 const target = 'Is this all there is?';
 const regExp = /.../g;
