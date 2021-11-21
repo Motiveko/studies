@@ -1,0 +1,21 @@
+{
+  "name": "effective-typescript",
+  "version": "1.0.0",
+  "description": "읽은 아이템 적는중.. 2번째 읽을때부터 각 아이템 정리 예정",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/.bin/webpack serve",
+    "build": "webpack --watch --mode=none",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.2",
+    "webpack": "^5.64.2",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.5.0"
+  }
+}
