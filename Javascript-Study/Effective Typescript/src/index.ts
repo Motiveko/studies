@@ -1,5 +1,3 @@
-import { map } from "lodash";
-
 const days = ["월", "화", "수", "목", "금", "토", "일"] as const;
 
 type FirstEntity<T extends readonly unknown[]> = T[0];
@@ -44,3 +42,32 @@ assertType<number>(
     return name.length;
   })
 );
+
+document.querySelector("#123")?.attachShadow({ mode: "open" });
+document.querySelector("#123")!.innerHTML = "<p></p>";
+class X extends HTMLElement {}
+customElements.define("custom-input", X);
+
+const obj = {
+  one: "1",
+  two: "2",
+};
+let key: keyof typeof obj;
+for (key in obj) {
+  console.log(obj[key]);
+}
+
+function addDragHandler(el: HTMLElement) {
+  el.addEventListener("mousedown", (eDown) => {
+    const dragStart = [eDown.clientX, eDown.clientY];
+    const handleUp = (eUp: MouseEvent) => {
+      el.classList.remove("dragging");
+      el.removeEventListener("mouseup", handleUp);
+      const dragEnd = [eUp.clientX, eUp.clientY];
+    };
+  });
+}
+const div = document.getElementById("surface");
+if (div) {
+  addDragHandler(div);
+}
