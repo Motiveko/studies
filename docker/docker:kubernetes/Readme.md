@@ -225,31 +225,287 @@ ubuntu        14.04     7304c635fe52   5 weeks ago     187MB
 ```
 - commit-first가 ubuntu의 레이어를 공유하고, commit-second가 commit-first 의 레이어를 공유한다.
 - 이 말은 **이미지를 커밋할 때 컨테이너에서 변경된 사항만 새로운 레이어로 저장하고 그 레이어를 포함한 이미지를 생성한다는 것이다.** 저장공간 역시 중복되는 레이어는 한개만 저장되어 있기 때문에 레이어를 공유하는 이미지가 여러개가 생겨도 디스크 공간 차지는 (원본 이미지 크기 + 컨테이너들에 추가된 레이어들의 크기) 정도만 한다. 
-- commit-second는 commit-first의 레이어를 공유하기때문에, commit-second 컨테이너가 사용중인 동안은 commit-first를 지울 수 없다.
+- commit:second는 commit:first의 레이어를 공유하기때문에, commit:second 컨테이너가 사용중인 동안은 commit:first를 지울 수 없다.
 ```bash
 # docker rmi commit_test:first
 
 ======
 Error response from daemon: conflict: unable to remove repository reference "commit_test:first" (must force) - container 0be2e9e2f7e8 is using its referenced image 12a60b0b321c
 ```
-- `-f`옵션을 추가해 강제로 지울 수 있으나, 이미지 레이어 파일이 실제로 삭제되지 않고 이름만 삭제되므로 의미는 없다. 지우려면 아래와 같이 컨테이너 실행정지 후 지워야한다 지워야한다.
+- `-f`옵션을 추가해 강제로 지울 수 있으나, 이미지 레이어 파일이 실제로 삭제되지 않고 이름만 삭제되므로 의미는 없다. commit:second 컨테이너를 정지/제거하고 commit:first 이미지를 제거하면 아래와 같은 메시지를 받는다.
 ```bash
 # docker stop commit_test2 && docker rm commit_test2
 # docker rmi commit_test:first
 ======
 Untagged: commit_test:first
 ```
-> 못지우는 이미지를 강제로 지우면 목록에서 `<none>`으로 보이는데, dangling image라고 한다. 이런 이미지들은 docker rmi $(docker images -f "dangling=true" q)로 지운다.
 
+- Untagged의 의미는 실제 레이어 파일을 삭제하지 않고 레이어에 부여된 이름만 삭제했음을 의미한다. 삭젤하려는 레이어를 참조중인 이미지가 존재하기 때문. 결국 하위 이미지를 지우지 않고 상위 이미지는 완전히 지울수는 없다. 아래와 같이 commit:second를 지우면 비로소 실제 이미지를 제거할 수 있게된다.
+
+```bash
+# docker rmi commit_test:second
+
+======
+Untagged: commit_test:second
+Deleted: sha256:fb82fecec95ca0dc4d48fe691c2872f56b48b44920658940a9f10e690f6448fd
+Deleted: sha256:2926df9220caf50085fdd614a98bba217e78e56e4475b0720b1d3edbd616a726
+Deleted: sha256:12a60b0b321c7f9c7ab4ad47311d7b63ba47ca73f253a6d0d43ddc45a3d7db3d
+Deleted: sha256:bdccd66a95b7fd62f8e06c1f26cb51f18b1f7f6c36ff3b4dbbad0e4dff8fa764
+```
+
+
+> 못지우는 이미지를 강제로 지우는 등 이미지 생성/삭제에서 오류가 발생하면 해당 이미지는 목록에서 `<none>`으로 보이는데, `dangling image`라고 한다. 이런 이미지들은 `docker rmi $(docker images -f "dangling=true" q)`로 지울 수 있다.
+
+> ❗️ `docker image prune`으로 더 쉽게 지울수 있다.
+
+<br>
 
 ### 2.3.3 이미지 추출
+- `save` 명령어를 이용하면 이미지를 추출해 파일로 저장할 수 있다. `-o` 옵션은 추출할 파일명이된다.
+```bash
+# docker save -o ubuntu_14_04.tar ubuntu:14.04
+```
+- 추출된 이미지는 `load` 명령어로 다시 도커에 로드할 수 있다. 파일에는 추출한 이미지의 모든 메타데이터가 포함되므로 **이전 이미지와 완전히 동일한 이미지가 도커 엔진에 생성된다.**
+```bash
+# docker load -i ubuntu_14_04.tar
+```
+- 비슷한 명령어로 **컨테이너를 추출/저장** 하는 `export`, `save`가 있다.  `commit`으로 컨테이너를 이미지로 만들면 컨테이너 변경사항 외 컨테이너 생성시 설정한 커맨드같은 컨테이너 설정이 포함되는데, `export`는 컨테이너 및 이미지에 대한 설정 정보를 저장하지 않는다. 이 말은 ***기존 이미지의 나눠진 레이어를 하나로 통합한다는 말이다.*** 추출된 이미지를 `import`로 다시 저장하면서 이미지 이름을 새로 설정할 수 있다.
+
+```bash
+# docker run --name test ubuntu:14.04
+
+# docker export -o test.tar test
+# docker import test.tar test
+
+# docker inspect test
+
+======
+...
+"Layers": [
+    "sha256:86c4a57a558b5672935b23c1a6c43c5f205ce40654bc072110409b869e94b1e3"
+]
+...
+```
+- 이미지를 파일로 관리하는것은 별로 좋은방법이 아니다.
+
+<br>
+
 ### 2.3.4 이미지 배포
+- 브라우저로 docker hub에 접속하여 Repository를 만든다. 여기서는 **my-image-name** 으로 생성했다.
+- 도커허브에 배포하는 법만 알아본다. 우선 `commit`으로 배포할 이미지를 생성한다
+```bash
+# docker run -it  --name commit_container1 ubuntu:14.04
+# echo first push >> test
+
+# docker commit commit_container1 my-image-name:0.0
+```
+
+- `tag` 명령어로 이미지의 이름을 추가할 수. `docker tag [기존이미지먕] [새로운이미지명]`. **기존 이름이 사라지진 않고 같은 이름을 가리키는 새로운 이름이 추가되는 것이다.** 이름은 [사용자이름]/[저장소이름]:버전 으로 만든다ㅏ.
+```bash
+# docker tag my-image-name:0.0 rhehdrla/my-image-name:0.0
+```
+- `login`으로 로그인을 할 수 있다.
+```bash
+# docker login
+
+... username/pw 를 입력한다.
+```
+
+- `push` 명령어로 이미지를 저장소에 올린다. my-image-name Repo로 알아서 업로드한다.
+```bash
+# docker push rhehdrla/my-image-name:0.0
+```
+- 브라우저에서 레포지토리를 들어가 업로드를 확인해보거나 아래 명령어로 docker hub에 올라갔는지 확인 가능하다.
+```bash
+# docker search rhehdrla 
+
+======
+NAME                     DESCRIPTION                STARS     OFFICIAL   AUTOMATED
+rhehdrla/my-image-name   image for testing docker   0     
+```
+
+- 업로드한 이미지는 이제 어디서든 자유롭게 `pull`로 받아 사용 가능하다.
+
+<br><br>
 
 ### 2.4 Dockerfile
 ### 2.4.1 이미지를 생성하는 방법
-### 2.4.2 Dockerfile 생성
+- `Dockerfile`은 앞서 이미지를 생성하는 "**컨테이서 생성 - 에플리케이션 설치, 설정변경 - 컨테이너 커밋**"의 작업을 파일로 만들어 `build`명령어 하나로 생성할 수 있게 하는 파일이다. 
+- 보통 Dockerhub에 이미지를 보면 대부분 해당 이미지를 빌드하는 Dockerfile도 함께 제공한다. Dokerfile을 이용하면 애플리케이션에 필요한 패키지 설치 등을 명확히하고 이미지 생성을 자동화해, 배포를 쉽게 할수 있게된다.
+
+<br>
+
+### 2.4.2 Dockerfile 작성
+### 2.4.3.1 이미지 생성
+- 간단한 Dockerfile을 작성하고 명령어에 대해 알아본다. 
+```bash
+생성할 이미지에 넣을 html 파일 생성
+# mkdir dockerfile && cd dockerfile
+# echo test >> test.html
+
+# vi Dockerfile
+```
+```Dockerfile
+# Dockerfile
+
+FROM ubuntu:14.04
+MAINTAINER rhehdrla
+LABEL "purpose"="practice"
+RUN apt-get update
+RUN apt-get install apache2 -y
+ADD test.html /var/www/html
+WORKDIR /var/www/html
+RUN ["/bin/bash", "-c", "echo hello >> test.html"]
+EXPOSE 80
+CMD apachectl -DFOREGROUND
+```
+- Dockerfile로 실행된 이미지는 ubuntu 컨테이너에 apache를 설치해 test.html을 호스팅한다. 또한 80포트를 외부에 공개하는 설정이다.
+- `FROM` : 생성할 이미지의 베이스 이미지
+- `MAINTAINER` : 이미지를 생성한 개발자 정보. 현재 deprecated상태로 아래와 같이 LABEL에 작성할 수 있다.
+    - LABEL maintainer "rhehdrla <rhehdrla@naver.com>"
+- `LABEL`: 이미지에 메타데이터를 추가한다. '키:값' 형태로 여러개 추가할 수 있으며 `inspect`명령어로 확인 가능하다.
+- `RUN` 
+    -  컨테이너 내부에서 명령어를 실행한다. 빌드 과정에서 추가적으로 별도 명령어를 받을수 없어, -y 와 같은 옵션을 설정해준다. 별도 명령어를 입력받아야 하는 상황이 되면 에러가 나며 빌드가 실패한다.
+    - "RUN ["실행 가능한 파일", "명령줄 인자 1", "명령줄 인자 2",...] 형태로 작성한다.
+- `ADD` : 파일을 이미지에 추가한다. 추가하는 파일은 Dockerfile이 위치한 컨텍스트에서 가져온다. 배열형태로 "[파일1,파일2,... , "추가할 컨테이너위치"]" 형태로 여러개의 파일을 한번에 옮길수도 있다.
+- `WORKDIR`: 명령어를 실행할 디렉터리를 나타낸다. cd 와 같다고 생각해도 무방한듯하다.
+- `EXPOSE` : 빌드할 이미지에서 노출할 포트를 설정한다. 컨테이너를 생성하는 `run`에서 모든 노출된 컨테이너의 포트를 호스트에 퍼블리시하는 `-P` 플래그와 함께 사용된다.
+- `CMD`
+    - **컨테이너가 시작될 때마다 실행할 명령어로 Dockerfile에서 한 번만 사용할 수 있다.** 여기서는 아파치 웹서버를 실행하는데, 아파치 웹서버는 하나의 터미널을 차지하는 포그라운드 모드로 실행되므로, 컨테이서 생성시 `-d`를 이용해 detached 모드로 컨테이너를 생성해야 한다.
+    - CMD는 run 뒤의 명령줄과 같은데, 결국 컨테이너 생성시 커맨드 명령줄 인자를 입력하면 CMD는 덮어써진다.
+    - CMD 입력은 ["실행 가능한 파일", "명령줄인자 1", "2", ]의 배열 형태로도 사용할 수 있고, `ENTRYPOINT`의 명령줄 인자로 사용될 수도 있다.
+
+<br>
+
 ### 2.4.3 Dockerfile 빌드
+- `build` 명령어를 이용해 Dockerfile을 빌드할 수 있다. `-t` 옵션은 생성될 이미지의 이름을 지정한다.
+```bash
+빌드
+# docker build -t mybuild:0.0 ./
+
+실행
+# docker run -d -P --name myserver mybuild:3.0
+```
+- label로 지정한 내용을 이용해 `--filter` 옵션으로 필터링 할 수 있다.
+```bash
+# docker images --filter "label=purpose=practice"
+```
+
+<br>
+
+### 2.4.3.2 빌드 과정 살펴보기
+- 2.4.3.1 의 빌드 실행시 출력되는 내용중 아래의 내용이 있다.
+```
+Sending build context to Docker daemon 3.584kb
+...
+```
+- 빌드 과정에서 Dockerfile에서 빌드시 경로를 ./로 지정했는데, 이 디렉토리는 빌드 컨텍스트로 지정되어 해당 위치의 모든 파일을 Docker demon으로 모두 전송한다. 따라서 루트폴더 등을 빌드 컨텍스트로 지정하면 큰일날 수 있다.
+- 이를 방지하기 위해 `.dockerignore`파일을 작성할 수 있다. `.gitignore`과 거의 비슷하고, 반드시 Dockerfile 과 같은곳에 위치해야한다.
+- Dockerfile은 각 명령어를 Step으로 나눠 한 단계씩 실행하고, 이를 이미지로 커밋한다. 해당 이미지로 intermediate container를 생성하고, Step 이 지날때마다 이전단계의 intermediate container를 제거한다.
+
+- Dockerfile의 빌드 과정중 이전과 동일한 빌드 과정이 있으면 매 Step의 캐시 이미지를 이용한다. 빌드시 이전과 같은 내용까지는 캐시를 이용해 생성하고 차이가 있는 부분부터 새로 빌드한다. Cache는 편리하지만 문제가 될 수 있는데, 예를들면 `RUN git clone ...` 같은 명령어에서 그렇다. 같은 명령어를 수행하므로 도커엔진은 캐시로 빌드를 하지만 실제 원격지의 내용이 바뀌어 다시 clone해야 할 수 있기 때문이다. 이럴땐 빌드에 `--no-cache` 옵션을 이용한다
+```bash
+# docker build --no-cache -t mybuild:0.0 .
+```
+- 또한 캐시로 사용할 이미지를 지정할 `--cache-from [이미지]`옵션으로 지정할 수 있다. 다음은 docker hub의 nginx:latest 이미지를 캐시로 사용하는 Dockerfile 빌드 명령어다.
+```bash
+# docker build --cache-from nginx -t my_extend_nginx:0.0 .
+```
+
+<br>
+
+### 2.4.3.3 멀티 스테이지를 이용한 Dockerfile 빌드
+- 17.05 버전 이상을 사용하는 도커 엔진이라면, 이미지의 크기를 줄이기 위해 멀티 스테이지(Multi-stage) 빌드 방법을 사용할 수 있다. **멀티 스테이지 빌드는 하나의 Dockerfile 안에 여러개의 FROM 이미지를 정의**함으로써, 완료시 최종적으로 **생성될 이미지의 크기를 줄이는 역할**을 한다.
+```Dockerfile
+FROM golang
+ADD main.go /root
+WORKDIR /root
+RUN go build -o /root/mainApp /root/main.go
+
+FROM alpine:latest
+WORKDIR /root
+COPY --from=0 /root/mainApp .
+CMD ["./mainApp"]
+```
+- 1번째 `FROM`에서는 golang 이미지에 main.go 파일을 넣고  go파일의 빌드를 수행하는 이미지를 생성한다.. 2번째 `FROM`에서는 `COPY`를 이용해 첫 번째 이미지의 go파일 빌드 결과물을 root 디렉토리에 넣는다. 이렇게하면 golang 이미지를 사용했을때보다 최종 결과물이 alpine 이미지를 사용했으므로 빌드 결과물의 용량이 800Mb -> 6Mb로 줄어들게 된다.
+- `--from=0`에서 0는 참조할 `BUILD`문 이미지의 순서다. `FROM`에 as로 alias를 지정하면 지정한 문자로 참조 가능하다.
+```Dockerfile
+FROM golang as buildr
+ADD main.go /root
+WORKDIR /root
+RUN go build -o /root/mainApp /root/main.go
+
+FROM alpine:latest
+WORKDIR /root
+COPY --from=builder /root/mainApp .
+CMD ["./mainApp"]
+```
+
+<br>
+
 ### 2.4.4 기타 Dockerfile 명령어
+### 2.4.4.1 `ENV`, `VOLUME`, `ARG`, `USER`
+### 1\. `ENV` 
+- Dockerfile에서 상될 환경변수를 지정. 설정한 환경변수는 ${ENV_NAME} / $ENV_NAME으로사용 가능하다. 아래는 test라는 환경변수에 /home을 적용한 예제다
+```Dockerfile
+FROM ubuntu:14.04
+ENV test /home
+WORKDIR $test
+RUN touch $test/mytouchfile
+```
+- `run`으로 실행시 `-e`옵션으로 같은 이름으로 환경변수가 들어오면 덮어씌워진다.
+- 환경변수는 컨테이너 내부에서도 사용 가능하다. 
+```bash
+# docker build -t envtest ./
+# docker run -it --name test -e test=myvalue envtest
+# echo $test
+myvalue
+```
+- 환경변수 사용시 참조하는 환경변수 값의 설정 여부에 따라 기본값을 설정할 수 있다. `${env_name:-value}`, `${env_name:+value}`로, 중간에 `-`면 `env_name` 미설정시 `value`를 기본값으로 사용하고, `+`면 `env_name` **설정시** `value`를 기본값으로 사용한다. 
+```Dockerfile
+FROM ubuntu:14.04
+ENV env env_value
+RUN echo ${env:-value} / ${env:+value} / ${env2:-value} / ${env2:+value}
+
+==> env_value / value / value / 
+```
+
+<br>
+
+### 2. VOLUME
+- 빌드된 이미지로 컨테이너 생성 시 **호스트와 공유할 컨테이너 내부의 디렉터리를 설정**한다. 배열을 사용해 여러개를 한꺼번에 설정 가능하다. 다음은 컨테이너의 /home/volume 디렉터리를 호스트와 공유하게한다.
+```Dockerfile
+FROM ubuntu:14.04
+RUN mkdir /home/volume
+RUN echo test >> /home/volume/testfile
+VOLUME /home/volume
+```
+
+```bash
+# docker build -t myvolume
+# docker run -itd --name volume_test myvolume
+
+# docker volume ls
+
+======
+DRIVER   VOLUME NAME
+local    3d26fa42......
+```
+- 어떻게 사용하는지는 아직 잘 모르겠다..ㅎㅎ
+
+<br>
+
+### 3. ARG
+
+
+
+
+### 2.4.4.2 `Onbuild`, `Stopsignal`, `Healthcheck`, `Shell`
+### 2.4.4.3 `ADD`, `COPY`
+### 2.4.4.4 `ENTRYPOINT`, `CMD`
+
+
+
 ### 2.4.5 Dockerfile로 빌드할 때 주의할 점
 
 ### 2.5 도커 데몬
