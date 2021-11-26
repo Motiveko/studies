@@ -26,6 +26,145 @@
 <br>
 
 ## 3. 코드 생성과 타입이 관계없음을 이해하기
+타입스크립트 컴파일러는 두 가지 역할을 수행한다.
+- 타입스크립트/자바스크립트를 브라우저에서 동작가능한 버전의 자바스크립트로 **트랜스파일**
+- 코드의 타입 오류를 체크
+
+<br>
+
+중요한점은, 두개의 역할이 완전히 독립적으로 이뤄진다는 것이다. **타입 오류가 있는 코드도 컴파일 가능한데,** 이는 C, JAVA와 비교해보면 황당한 일이다. 단, `tsconfig.json`에 `noEmitOnError`를 설정하거나 빌드 도구에 동일한 설정을 하면 오류가 있을 때 컴파일 하지 않게 할 수 있다.
+
+또한 자바스크립트로 컴파일 되는 과정에서 **타입스크립트의 인터페이스, 타입, 타입구문 등이 모두 제거되므로 런타임에서는 타입 체크가 불가능하다.** 단, 런타임에도 접근 가능한 타입 정보를 저장하는 기법이 있는데, 대표적으로 `태그 기법`이 있다.
+```ts
+// ts
+interface Square {
+  kind: "square"; 
+  width: number;
+}
+
+interface Rectangle {
+  kind: "rectangle";
+  height: number;
+  width: number;
+}
+// Shape와 같은 형태를 tagged union이라고 한다!
+type Shape = Square | Rectangle;
+
+function calculaterArea(shape: Shape) {
+  if (shape.kind === "rectangle") {
+    return shape.width * shape.height;
+  } else {
+    return shape.width * shape.width;
+  }
+}
+```
+```js
+// js
+function calculaterArea(shape) {
+    if (shape.kind === "rectangle") {
+        return shape.width * shape.height;
+    }
+    else {
+        return shape.width * shape.width;
+    }
+}
+```
+
+`Squre`와 `Rectangle`을 class로 선언한 후 instanceof를 사용해서 분기처리 할 수도 있다. 
+```ts
+// ts
+class Square {
+  constructor(public width: number) {}
+}
+
+class Rectangle {
+  constructor(public width: number, public height: number) {}
+}
+
+type Shape = Square | Rectangle;
+
+function calculaterArea(shape: Shape) {
+  if (shape instanceof Rectangle) {
+    return shape.width * shape.height;
+  } else {
+    return shape.width * shape.width;
+  }
+}
+```
+```js
+// js, target: es5
+// 클래스는 컴파일되면서 생성자 함수 형태로 변환된다.
+var Square = /** @class */ (function () {
+    function Square(width) {
+        this.width = width;
+    }
+    return Square;
+}());
+var Rectangle = /** @class */ (function () {
+    function Rectangle(width, height) {
+        this.width = width;
+        this.height = height;
+    }
+    return Rectangle;
+}());
+
+// instanceof로 생성자 함수의 형태를 확인한다.
+function calculaterArea(shape) {
+    if (shape instanceof Rectangle) {
+        return shape.width * shape.height;
+    }
+    else {
+        return shape.width * shape.width;
+    }
+}
+```
+Squqre, Rectangle을 클래스로 선언한 파일을 target = `es5` 설정으로 컴파일한 결과 클래스는 생성자 함수로 바뀌었지만 instanceof로 타입을 검사함을 확인할 수 있다.
+
+`interface`는 타입으로만 사용 가능하지만 `class`는 타입과 값으로 모두 사용 가능하므로 타입 체크시에도, 런타임시에도 오류가 없다. 참고로 `instanceof`는 자바스크립트 연산자로 연산자 뒤에는 인터페이스같은 `타입`이 아닌 `값`이 와야한다.
+
+<br>
+
+런타임에서의 타입은 타입스크립트에서 선언된 타입과 다를 수 있다. 아래와 같은 예를 생각해보자.
+```ts
+function setLightSwitch(value: boolean) {
+  switch(value) {
+    case true:
+      turnLightOn();
+      break;
+    case false:
+      turnLightOff();
+      break;
+    default:
+      console.log('이게 실행되나?');
+  }
+}
+```
+함수의 인자인 value는 boolean 타입이므로 `default`의 `console.log`는 타입스크립트상에서는 실행될 수 없을것으로 판단된다. 하지만 외부 api등을 호출해 결과값을 인자로 `setLightSwitch()`함수를 호출하는 경우와 같이, 런타임에서 예상하지 못한 boolean이 아닌 값이 들어와도 함수 호출을 막을 방법은 없다. 결국 `console.log`는 호출되고 말 것이다. ***선언된 타입이 언제든지 달라질 수 있다는것을 명심하자.***
+
+<br>
+
+**타입스크립트 타입으로는 함수를 오버로드 할 수 없다.** 이유는 타입스크립트에서는 ***타입과 런타임의 동작이 무관하기 때문.*** 따라서 하나의 함수에 대해 여러개의 선언문을 작성할 수 있지만 구현체는 오직 하나뿐이다.
+```ts
+// ts
+function add(a: number, b:number): number;
+function add(a: string, b: string): string;
+function add(a: any, b: any): any {
+  return a+b;
+}
+```
+```ts
+// js
+function add(a, b) {
+    return a + b;
+}
+```
+타입스크립트에서 함수를 두번 선언하고 한번 구현했는데 컴파일 결과 결국 남는건 하나뿐이다.
+
+<br>
+
+**타입스크립트의 타입은 런타임 성능에 영향을 주지 않는다.** 당연하다. 런타임에서는 죄다 사라져버리기 때문이다. 타입스크립트는 런타임 오버헤드가 없는 대신 빌드타임 오버헤드가 있다. 개발자들이 잘만들어서 성능이 참 좋다고 전해진다.
+
+<br><br>
 
 ## 4. 구조적 타이핑에 익숙해지기
 ## 5. any 타입 지양하기
