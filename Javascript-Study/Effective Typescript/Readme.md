@@ -1,3 +1,19 @@
+# 이펙티브 타입스크립트 학습하기 프로젝트
+
+![img](https://image.aladin.co.kr/product/27319/31/cover500/8966263135_1.jpg)
+
+<br>
+
+## 목차
+---
+### [1. 타입스크립트와 자바스크립트의 관계 이해하기](#1.-타입스크립트와-자바스크립트의-관계-이해하기)
+
+### [2. 타입스크립트 설정 이해하기](2.-타입스크립트-설정-이해하기)
+### [3. 코드 생성과 타입이 관계없음을 이해하기](3.-코드-생성과-타입이-관계없음을-이해하기)
+### [4. 구조적 타이핑에 익숙해지기](4.-구조적-타이핑에-익숙해지기)
+
+<br><br>
+
 # 1장. 타입스크립트 알아보기
 ## 1. 타입스크립트와 자바스크립트의 관계 이해하기
 - 타입스크립트는 자바스크립트의 상위집합(superset)으로, 모든 유효한 자바스크립트 프로그램은 타입스크립트 프로그램이다. 그러나 타입스크립트는 자바스크립트에 더해 자체적인 추가 문법을 가지므로 역은 거짓일 수 있다.
@@ -167,6 +183,93 @@ function add(a, b) {
 <br><br>
 
 ## 4. 구조적 타이핑에 익숙해지기
+
+자바스크립트는 본질적으로 `덕 타이핑`기반이다. 타입스크립트도 이런 ***매개변수 값이 요구사항을 만족한다면 타입이 무엇인지 신경 쓰지 않는 동작***을 그대로 모델링한다. 이를 `구조적 타이핑`이라 하는데, 이를 잘 이해하는것이 매우 중요하다고 할 수 있다.
+
+아래 예제를 보자. `Vector`를 다룬다.
+```ts
+interface Vector2D {
+  x: number
+  y: number
+}
+
+function calculateLength(v: Vector2D) {
+  return Math.sqrt(v.x * v.x + v.y * v.y);
+}
+
+interface NamedVector {
+  name: string
+  x: number
+  y: number
+}
+```
+`calculateLength`의 인자는 `Vector2D`타입이지만 구조적 타이핑에 의해 `NamedVector`타입의 변수로도 호출 가능하다. x, y 요소가 모두 존재하기 때문이다.
+```ts
+const v: NamedVector = { x: 3, y: 4, name: 'motiveko'};
+calculateLength(v); // 5
+```
+
+언뜻보면 편리해 보이기도 하지만 문제가 될 때도 있다. `Vector3D`를 아래와 같이 선언하고 함수를 다시 호출해본다.
+
+```ts
+interface Vector3D {
+  x: number
+  y: number
+  z: number
+}
+const v: Vector3D = { x:3, y: 4, z: 5};
+calculateLength(v); // 5
+```
+사실 3D Vector의 길이는 더 긴데, 2D Vector의 길이를 구하는 방식으로 계산되어버렸다. z 요소가 있음에도 구조적 타이핑에 의해 함수 호출이 가능했기 때문에 발생한 문제다. 이는 타입에 상표를 붙여 해결 가능한데, 37장에서 다룬다.
+
+함수 작성시, 매개변수가 매개변수에 정의된 타입에 선언된 속성만 가질거라 생각하기 쉽다. 이러한 타입을 봉인된(sealed) 타입 혹은 정확한(precise) 타입이라고 하는데, ***타입스크립트에서는 표현 불가능하다*** 타입스크립트의 타입은 모두 열린 타입이다.
+
+<br>
+
+구조적 타이핑은 문제가 될 때도 있지만, 테스트를 작성할 땐 매우 유리해진다. 테스트 작성시, mocking을 하게 되는데, 구조적 타이핑을 활용하면 필요한 부분만 mocking하면 되므로 작성이 간편해진다. 아래 코드는 PostgreDb를 이용해 쿼리를 날려 Author타입의 데이터를 가져오는 메서드다. 이를 테스트한다고 생각해보자.
+```ts
+interface Author {
+  string: string;
+  last: string
+}
+
+function getAuthors( database: PostgresDB): Author[] {
+  const authorRows = databse.runQuery(`SELECT FIRST, LAST FROM AUTHORS`);
+  return authorRows.map(row => ({first: row[0], last: row[1]}));
+}
+```
+
+`getAuthor` 함수를 작성했고 인자로 `PostgresDB`를 받고 있다. `PostgresDB`는 여러 프로퍼티를 가질텐데, 여기서 실제로 사용되는건`runQuery`뿐이다. **구조적 타이핑을 활용하면 더 간단하고 구체적인 인터페이스를 정의할 수 있다.**
+
+```ts
+interface DB {
+  runQuery: (sql: string) => any[];
+}
+function getAuthors( database: DB): Author[] {
+  const authorRows = databse.runQuery(`SELECT FIRST, LAST FROM AUTHORS`);
+  return authorRows.map(row => ({first: row[0], last: row[1]}));
+}
+```
+이제 테스트를 작성할 때 더 간단한 객체를 매개변수로 사용할 수 있다.
+
+```ts
+test('getAuthors', () => {
+  // DB를 객체 리터럴로 만들어 함수 호출 인자에 넣어줬다.
+  const authors = getAuthors({
+    runQuery(sql: string) {
+      return [['motive', 'ko'], ['ko', 'donggi']];
+    }
+  })
+  expect(authors).toEqual({
+    {first: 'motive', last: 'ko'},
+    {first: 'ko', last: 'donggi'},
+  })
+})
+```
+테스트 코드에서는 실제 환경의 DB에 대한 정보가 필요하지 않고, mocking 라이브러리도 필요 없다.(java에서는 mockito등을 쓰지 않으면.. 할 수 있나?). 그냥 필요한 속성만 원하는데로 정의하면 된다.
+
+<br><br>
+
 ## 5. any 타입 지양하기
 
 # 2장. 타입스크립트의 타입 시스템
