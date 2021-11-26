@@ -123,11 +123,11 @@ docker run -it -p 7777:80 ubuntu:14.04
 - DockerHub은 Public Repository는 무료, Privat Repository는 무료계정은 1개까지 가능하다.
 - `docker search` 명령어로 도커 허브의 이미지를 검색할 수 있다.
 ```bash
-# docker search rhehdrla
+$ docker search rhehdrla
 
 ======
-NAME                     DESCRIPTION                STARS     OFFICIAL   AUTOMATED
-rhehdrla/my-image-name   image for testing docker   0  
+# NAME                     DESCRIPTION                STARS     OFFICIAL   AUTOMATED
+# rhehdrla/my-image-name   image for testing docker   0  
 ```
 <br>
 
@@ -136,54 +136,54 @@ rhehdrla/my-image-name   image for testing docker   0
 - ubuntu 공식 이미지를 이용해 직접 커스텀 이미지를 생성해보자.
 1. 도커 컨테이너 실행 및 환경셋팅
 ``` bash
-# docker run -it --name commit_test ubuntu:14.04
+$ docker run -it --name commit_test ubuntu:14.04
 # echo test_first! >> first
 # exit
 ```
 
 2. `docker commit`으로 이미지 생성
 ```bash
-# docker commit [OPTIONS] CONTAINER [REPOSITORY:[TAG]]
+$ docker commit [OPTIONS] CONTAINER [REPOSITORY:[TAG]]
 ```
 ```bash
-# docker commit \
+$ docker commit \
 -a "rhehdrla" -m "first commit" \
 commit_test \
 commit_test:first
 
 ======
-sha256:12a60b0b321c7f9c7ab4ad47311d7b63ba47ca73f253a6d0d43ddc45a3d7db3d
+# sha256:12a60b0b321c7f9c7ab4ad47311d7b63ba47ca73f253a6d0d43ddc45a3d7db3d
 ```
 - `-a`옵션은 author를 뜻하고, `-m` 은 커밋 메시지다
 
 3. `docker images`로 이미지 확인
 ```bash
-# docker iamges
+$ docker iamges
 
 ======
-REPOSITORY    TAG       IMAGE ID       CREATED          SIZE
-commit_test   first     12a60b0b321c   10 seconds ago   187MB
-ubuntu        14.04     7304c635fe52   5 weeks ago      187MB
+# REPOSITORY    TAG       IMAGE ID       CREATED          SIZE
+# commit_test   first     12a60b0b321c   10 seconds ago   187MB
+# ubuntu        14.04     7304c635fe52   5 weeks ago      187MB
 ```
 
 4. `commit_test:first`를 실행시키고 변경 후 다시 이미지로 커밋한다.
 ```bash
-# docker run -i -t --name commit_test2 commit_test:first
+$ docker run -i -t --name commit_test2 commit_test:first
 # echo test_second! >> second
 # exit
 
-# docker commit \
+$ docker commit \
 -a "rhehdrla" -m "second commit" \
 commit_test2 \
 commit_test:second
 
-# docker images
+$ docker images
 
 ======
-REPOSITORY    TAG       IMAGE ID       CREATED         SIZE
-commit_test   second    fb82fecec95c   7 seconds ago   187MB
-commit_test   first     12a60b0b321c   2 minutes ago   187MB
-ubuntu        14.04     7304c635fe52   5 weeks ago     187MB
+# REPOSITORY    TAG       IMAGE ID       CREATED         SIZE
+# commit_test   second    fb82fecec95c   7 seconds ago   187MB
+# commit_test   first     12a60b0b321c   2 minutes ago   187MB
+# ubuntu        14.04     7304c635fe52   5 weeks ago     187MB
 ```
 - ubuntu -> commit_tst:first -> commit_test:second 순으로 잘 생성된것이 확인된다. 각 이미지는 거의 차이가 없어 SIZE는 동일하다.
 
@@ -193,9 +193,9 @@ ubuntu        14.04     7304c635fe52   5 weeks ago     187MB
 - 이미지는 어떻게 만들어지는걸까? `docker inspect`로 이미지를 확인해보자
 > ! docker inspect [IMAGE] 실행 시 이미지 명과 동일한 컨테이너명이 있으면 컨테이너에 대해 명령어를 수행한다. `--type`옵션을 붙이면 이미지에 대해 먼저 실행
 ```bash
-# docker inspect ubuntu:14.04
-# docker inspect commit_test:first
-# docker inspect commit_test:second
+$ docker inspect ubuntu:14.04
+$ docker inspect commit_test:first
+$ docker inspect commit_test:second
 ```
 
 - 실행 후 결과 중 Layer 보면 아래와 같다
@@ -227,30 +227,30 @@ ubuntu        14.04     7304c635fe52   5 weeks ago     187MB
 - 이 말은 **이미지를 커밋할 때 컨테이너에서 변경된 사항만 새로운 레이어로 저장하고 그 레이어를 포함한 이미지를 생성한다는 것이다.** 저장공간 역시 중복되는 레이어는 한개만 저장되어 있기 때문에 레이어를 공유하는 이미지가 여러개가 생겨도 디스크 공간 차지는 (원본 이미지 크기 + 컨테이너들에 추가된 레이어들의 크기) 정도만 한다. 
 - commit:second는 commit:first의 레이어를 공유하기때문에, commit:second 컨테이너가 사용중인 동안은 commit:first를 지울 수 없다.
 ```bash
-# docker rmi commit_test:first
+$ docker rmi commit_test:first
 
 ======
-Error response from daemon: conflict: unable to remove repository reference "commit_test:first" (must force) - container 0be2e9e2f7e8 is using its referenced image 12a60b0b321c
+# Error response from daemon: conflict: unable to remove repository reference "commit_test:first" (must force) - container 0be2e9e2f7e8 is using its referenced image 12a60b0b321c
 ```
 - `-f`옵션을 추가해 강제로 지울 수 있으나, 이미지 레이어 파일이 실제로 삭제되지 않고 이름만 삭제되므로 의미는 없다. commit:second 컨테이너를 정지/제거하고 commit:first 이미지를 제거하면 아래와 같은 메시지를 받는다.
 ```bash
-# docker stop commit_test2 && docker rm commit_test2
-# docker rmi commit_test:first
+$ docker stop commit_test2 && docker rm commit_test2
+$ docker rmi commit_test:first
 ======
-Untagged: commit_test:first
+# Untagged: commit_test:first
 ```
 
 - Untagged의 의미는 실제 레이어 파일을 삭제하지 않고 레이어에 부여된 이름만 삭제했음을 의미한다. 삭젤하려는 레이어를 참조중인 이미지가 존재하기 때문. 결국 하위 이미지를 지우지 않고 상위 이미지는 완전히 지울수는 없다. 아래와 같이 commit:second를 지우면 비로소 실제 이미지를 제거할 수 있게된다.
 
 ```bash
-# docker rmi commit_test:second
+$ docker rmi commit_test:second
 
 ======
-Untagged: commit_test:second
-Deleted: sha256:fb82fecec95ca0dc4d48fe691c2872f56b48b44920658940a9f10e690f6448fd
-Deleted: sha256:2926df9220caf50085fdd614a98bba217e78e56e4475b0720b1d3edbd616a726
-Deleted: sha256:12a60b0b321c7f9c7ab4ad47311d7b63ba47ca73f253a6d0d43ddc45a3d7db3d
-Deleted: sha256:bdccd66a95b7fd62f8e06c1f26cb51f18b1f7f6c36ff3b4dbbad0e4dff8fa764
+# Untagged: commit_test:second
+# Deleted: sha256:fb82fecec95ca0dc4d48fe691c2872f56b48b44920658940a9f10e690f6448fd
+# Deleted: sha256:2926df9220caf50085fdd614a98bba217e78e56e4475b0720b1d3edbd616a726
+# Deleted: sha256:12a60b0b321c7f9c7ab4ad47311d7b63ba47ca73f253a6d0d43ddc45a3d7db3d
+# Deleted: sha256:bdccd66a95b7fd62f8e06c1f26cb51f18b1f7f6c36ff3b4dbbad0e4dff8fa764
 ```
 
 
@@ -263,28 +263,28 @@ Deleted: sha256:bdccd66a95b7fd62f8e06c1f26cb51f18b1f7f6c36ff3b4dbbad0e4dff8fa764
 ### 2.3.3 이미지 추출
 - `save` 명령어를 이용하면 이미지를 추출해 파일로 저장할 수 있다. `-o` 옵션은 추출할 파일명이된다.
 ```bash
-# docker save -o ubuntu_14_04.tar ubuntu:14.04
+$ docker save -o ubuntu_14_04.tar ubuntu:14.04
 ```
 - 추출된 이미지는 `load` 명령어로 다시 도커에 로드할 수 있다. 파일에는 추출한 이미지의 모든 메타데이터가 포함되므로 **이전 이미지와 완전히 동일한 이미지가 도커 엔진에 생성된다.**
 ```bash
-# docker load -i ubuntu_14_04.tar
+$ docker load -i ubuntu_14_04.tar
 ```
 - 비슷한 명령어로 **컨테이너를 추출/저장** 하는 `export`, `save`가 있다.  `commit`으로 컨테이너를 이미지로 만들면 컨테이너 변경사항 외 컨테이너 생성시 설정한 커맨드같은 컨테이너 설정이 포함되는데, `export`는 컨테이너 및 이미지에 대한 설정 정보를 저장하지 않는다. 이 말은 ***기존 이미지의 나눠진 레이어를 하나로 통합한다는 말이다.*** 추출된 이미지를 `import`로 다시 저장하면서 이미지 이름을 새로 설정할 수 있다.
 
 ```bash
-# docker run --name test ubuntu:14.04
+$ docker run --name test ubuntu:14.04
 
-# docker export -o test.tar test
-# docker import test.tar test
+$ docker export -o test.tar test
+$ docker import test.tar test
 
-# docker inspect test
+$ docker inspect test
 
 ======
-...
-"Layers": [
-    "sha256:86c4a57a558b5672935b23c1a6c43c5f205ce40654bc072110409b869e94b1e3"
-]
-...
+# ...
+# "Layers": [
+#     "sha256:86c4a57a558b5672935b23c1a6c43c5f205ce40654bc072110409b869e94b1e3"
+# ]
+# ...
 ```
 - 이미지를 파일로 관리하는것은 별로 좋은방법이 아니다.
 
@@ -294,34 +294,34 @@ Deleted: sha256:bdccd66a95b7fd62f8e06c1f26cb51f18b1f7f6c36ff3b4dbbad0e4dff8fa764
 - 브라우저로 docker hub에 접속하여 Repository를 만든다. 여기서는 **my-image-name** 으로 생성했다.
 - 도커허브에 배포하는 법만 알아본다. 우선 `commit`으로 배포할 이미지를 생성한다
 ```bash
-# docker run -it  --name commit_container1 ubuntu:14.04
+$ docker run -it  --name commit_container1 ubuntu:14.04
 # echo first push >> test
 
-# docker commit commit_container1 my-image-name:0.0
+$ docker commit commit_container1 my-image-name:0.0
 ```
 
 - `tag` 명령어로 이미지의 이름을 추가할 수. `docker tag [기존이미지먕] [새로운이미지명]`. **기존 이름이 사라지진 않고 같은 이름을 가리키는 새로운 이름이 추가되는 것이다.** 이름은 [사용자이름]/[저장소이름]:버전 으로 만든다ㅏ.
 ```bash
-# docker tag my-image-name:0.0 rhehdrla/my-image-name:0.0
+$ docker tag my-image-name:0.0 rhehdrla/my-image-name:0.0
 ```
 - `login`으로 로그인을 할 수 있다.
 ```bash
-# docker login
+$ docker login
 
 ... username/pw 를 입력한다.
 ```
 
 - `push` 명령어로 이미지를 저장소에 올린다. my-image-name Repo로 알아서 업로드한다.
 ```bash
-# docker push rhehdrla/my-image-name:0.0
+$ docker push rhehdrla/my-image-name:0.0
 ```
 - 브라우저에서 레포지토리를 들어가 업로드를 확인해보거나 아래 명령어로 docker hub에 올라갔는지 확인 가능하다.
 ```bash
-# docker search rhehdrla 
+$ docker search rhehdrla 
 
 ======
-NAME                     DESCRIPTION                STARS     OFFICIAL   AUTOMATED
-rhehdrla/my-image-name   image for testing docker   0     
+# NAME                     DESCRIPTION                STARS     OFFICIAL   AUTOMATED
+# rhehdrla/my-image-name   image for testing docker   0     
 ```
 
 - 업로드한 이미지는 이제 어디서든 자유롭게 `pull`로 받아 사용 가능하다.
@@ -346,7 +346,7 @@ rhehdrla/my-image-name   image for testing docker   0
 # vi Dockerfile
 ```
 ```Dockerfile
-# Dockerfile
+$ dockerfile
 
 FROM ubuntu:14.04
 MAINTAINER rhehdrla
@@ -381,14 +381,14 @@ CMD apachectl -DFOREGROUND
 - `build` 명령어를 이용해 Dockerfile을 빌드할 수 있다. `-t` 옵션은 생성될 이미지의 이름을 지정한다.
 ```bash
 빌드
-# docker build -t mybuild:0.0 ./
+$ docker build -t mybuild:0.0 ./
 
 실행
-# docker run -d -P --name myserver mybuild:3.0
+$ docker run -d -P --name myserver mybuild:3.0
 ```
 - label로 지정한 내용을 이용해 `--filter` 옵션으로 필터링 할 수 있다.
 ```bash
-# docker images --filter "label=purpose=practice"
+$ docker images --filter "label=purpose=practice"
 ```
 
 <br>
@@ -405,11 +405,11 @@ Sending build context to Docker daemon 3.584kb
 
 - Dockerfile의 빌드 과정중 이전과 동일한 빌드 과정이 있으면 매 Step의 캐시 이미지를 이용한다. 빌드시 이전과 같은 내용까지는 캐시를 이용해 생성하고 차이가 있는 부분부터 새로 빌드한다. Cache는 편리하지만 문제가 될 수 있는데, 예를들면 `RUN git clone ...` 같은 명령어에서 그렇다. 같은 명령어를 수행하므로 도커엔진은 캐시로 빌드를 하지만 실제 원격지의 내용이 바뀌어 다시 clone해야 할 수 있기 때문이다. 이럴땐 빌드에 `--no-cache` 옵션을 이용한다
 ```bash
-# docker build --no-cache -t mybuild:0.0 .
+$ docker build --no-cache -t mybuild:0.0 .
 ```
 - 또한 캐시로 사용할 이미지를 지정할 `--cache-from [이미지]`옵션으로 지정할 수 있다. 다음은 docker hub의 nginx:latest 이미지를 캐시로 사용하는 Dockerfile 빌드 명령어다.
 ```bash
-# docker build --cache-from nginx -t my_extend_nginx:0.0 .
+$ docker build --cache-from nginx -t my_extend_nginx:0.0 .
 ```
 
 <br>
@@ -456,8 +456,8 @@ RUN touch $test/mytouchfile
 - `run`으로 실행시 `-e`옵션으로 같은 이름으로 환경변수가 들어오면 덮어씌워진다.
 - 환경변수는 컨테이너 내부에서도 사용 가능하다. 
 ```bash
-# docker build -t envtest ./
-# docker run -it --name test -e test=myvalue envtest
+$ docker build -t envtest ./
+$ docker run -it --name test -e test=myvalue envtest
 # echo $test
 myvalue
 ```
@@ -482,31 +482,168 @@ VOLUME /home/volume
 ```
 
 ```bash
-# docker build -t myvolume
-# docker run -itd --name volume_test myvolume
+$ docker build -t myvolume
+$ docker run -itd --name volume_test myvolume
 
-# docker volume ls
+$ docker volume ls
 
 ======
-DRIVER   VOLUME NAME
-local    3d26fa42......
+# DRIVER   VOLUME NAME
+# local    3d26fa42......
 ```
 - 어떻게 사용하는지는 아직 잘 모르겠다..ㅎㅎ
 
 <br>
 
 ### 3. ARG
+- `build` 명령어 실행시 추가로 입력받아 **Dockerfile 내에서 사용될 변수**의 값을 설정. '[키]=[값]'의 형태로 받으며, `build` 명령어 실행시 `--build-arg` 옵션 뒤에도 설정할 수 있다. 이때 Dockerfile 내부의 ARG와 키값이 같으면 역시 덮어써진다.
+```Dockerfile
+FROM ubuntu:14.04
+ARG my_arg
+ARG my_arg2=value2
+RUN touch ${my_arg}/mytouch
+```
+```bash
+$ docker build --build-arg my_arg3=motiveko -t myarg:0.0 .
+```
 
+<br>
 
+### 4. USER
+- `USER` 로 컨테이너 내에서 사용될 사용자 이름이나 UID를 설정하면 그 아래의 명령어는 해당 사용자의 권한으로 실행된다. 일반적으로 `RUN`으로 사용자의 그룹/계정 생성 후 사용한다. 없으면 root권한으로 실행한다.
 
+> ❗️ **컨테이너 내부에서 root 권한을 사요하지 않는것이 좋다**. 컨테이너 내에서 root권한을 가지면 호스트의 root 권한을 가진다는것을 의미하기 때문. 컨테이너가 호스트와 volume등을 공유하면 컨테이너 내부에서 공유된 root소유의 디렉터리를 맘대로 조작할 수 있게된다.
+
+<br>
 
 ### 2.4.4.2 `Onbuild`, `Stopsignal`, `Healthcheck`, `Shell`
+### 1. ONBUILD
+- 빌드된 이미지를 기반으로 하는 다른 이미지가 Dockerfile로 실행될 때 실행할 명령어를 추가한다. 즉, **`ONBUILD`가 있는  Dockerfile로 이미지를 빌드한 후, 이 이미지를 바탕으로 다른 이미지를 빌드할 때 실행된다.**
+```Dockerfile
+# vi Dockerfile 1
+FROM ubuntu:14.04
+RUN echo "this is onbuild test"
+ONBUILD RUN echo "onbuild" >> /onbuild_file
+```
+```bash
+$ docker build ./ -t onbuild_test:0.0
+
+# ...
+# Step 3/3 : ONBUILD run echo "onbuild" >> /onbuild_file
+# ...
+```
+- 이 이미지는 컨테이너로 띄워서 들어가도 onbuild_file을 찾을 수 없다. 이 이미지를 기반으로 새로운 이미지를 빌드해야만한다.
+```Dockerfile
+# vi Dockerfile2
+FROM onbuild_test:0.0
+RUN echo "this is child img!"
+```
+```bash
+$ docker build -f ./Dockerfile2 ./ -t onbuild_test:0.1
+
+# ... 
+# Step 1/1 : RUN echo "onbuild" >> /onbuild_file
+# ...
+```
+- `ONBUILD` 에 정의된 명령어가 실행됬음을 확인할 수 있다. 컨테이너를 띄우고 들어가면 root 디렉토리에 onbuild_file이 생겼음을 확인할 수 잇다.
+- `ONBUILD`는 결국 자식 이미지가 사용할 명령어를 추가하는 명령언데, 활용법 중 하나는 이미지가 빌드시 활용할 소스코드를 `ONBUILD ADD` 명령어로 추가해 좀 더 깔끔하게 Dockerfile을 사용하게 하는것이다.  예를 들면 도커 이미지중 Maven 이미지는 아래와 같이 ONBUILD를 활용한다.
+
+```Dockerfile
+# ONBUILD가 적용된 메이븐 이미지
+FROM maven:3-jdk-8-alpine
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+ONBUILD ADD . /usr/src/app
+ONBUILD RUN mvn install
+```
+
+<br>
+
+### 2. STOPSIGNAL 
+- 컨테이너가 정지될 때 사용될 시스템 콜의 종류를 지정한다. 다루진 않는다.
+
+<br>
+
+### 3. HEALTHCHECK
+- 이미지로부터 생성된 컨테이너에서 동작하는 어플리케이션의 상태를 체크하도록 설정한다. 
+- 다음 예시는 1분마다 curl -f를 실행해 nginx 앱의 상태를 체크하고, 3초 이상이 소요되면 이를 실패로 간주해 컨테이너를 `unhealthy` 상태로 만든다. 이를 위해 컨테이너에 curl을 먼저 설치해야한다.
+```Dockerfile
+FROM nginx
+RUN apt-get update -y && apt-get install curl -y
+HEALTHCHECK --interval=1m --timeout=3s --retries=3 CMD curl -f http://localhost || exit 1
+```
+- `--interval`은 헬스 체크 주기, `--timeout`는 타임아웃 설정, `--retries`는 헬스체크 실패시 반복실행할 횟수고, CMD 뒤 명령어는 헬스체크 명령어다. 이미지 빌드 후 컨테이너를 실행하면 컨테이너 STATUS 정보에 헬스체크가 추가된다. `docker inspect`에서 State - Health - Log 항목에서 확인 가능하다.
+
+<br>
+
+### 4. SHELL
+- Dockerfile에서는 기본적으로 리눅스는 `/bin/sh-c`, 위도우에서는 `cmd /S /C` 쉘을 사용한다. 사용하려는 쉘을 따로 지정하려고 할 때 `SHELL`을 사용할 수 있다. 아래의 예제는 `node`를 기본 쉘로 사용하는 설정이다
+```Dockerfile
+FROM node
+RUN echo hello, node!
+SHELL ["/user/local/bin/node"]
+RUN -v
+```
+- -v는 결국 `node -v` 를 실행한것과 같은 결과를 출력한다.
+
+<br>
+
+
 ### 2.4.4.3 `ADD`, `COPY`
+- `COPY`는 로컬 디렉토리의 컨텍스트에서 이미지로 파일을 복사하는 역할을한다. 형식은 `ADD`와 같다. 
+- 둘의 차이는, `COPY`는 로컬 파일만 이미지에 추가 가능하지만, `ADD`는 외부 URL 및 tar 파일에서도 파일을 추가할 수 있다는 점. `git clone`을 사용하면 원하는 프로젝트를 바로 땡겨올 수 있게된다.
+
+<br>
+
 ### 2.4.4.4 `ENTRYPOINT`, `CMD`
+- `ENTRYPOINT`는 `CMD`에 설정된 명령어를 인자로 명령어를 실행한다. 예시로 본다.
+``` bash
+# entrypoint : 없음, cmd: /bin/bash
+$ docker run -it ubuntu:14.04 /bin/bash
+root@00b0bb5b13210:/#
+```
+```bash
+# entrypoint: echo, cmd: /bin/bash
+$ docker run -it --entrypoint="echo" ubuntu:14.04 /bin/bash
 
+/bin/bash
+```
+- `entrypoint`에 echo를 넣은 결과 `cmd`에 설정한 /bin/bash 를 화면에 출력하도록 실행되었다.
+- `entrypoint`는 일반적으로 스크립트 파일을 entrypoint 인자로 사용해 컨테이너가 시작될 때 해당 스크립트 파일을 실행하도록 설정한다. 이 때, script파일은 컨테이너 내에 존재해야하는데 이를 위해 `COPY`, `ADD`를 사용한다. 예를들면 아래와같이 구성할 수 있겠다.
+```sh
+# vi entrypoint.sh
+echo $1 $2
+apachectl -DFOREGROUND
+```
+```Dockerfile
+FROM ubuntu:14.04
+ADD entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+```
+```sh
+$ docker build -t entrypoint_image:0.0 ./
+# ...
 
+$ docker run -d entrypoint_apache_server entrypoint_image:0.0 first second
+# ...
+
+$ docker logs entrypoint_apache_server
+# first second
+# ...
+```
+- 참고로 `ENTRYPOINT`인자를 배열로 사용하지 않으면, 암묵적으로 앞에 `/bin/sh -c`가 추가된다. 따라서 `ENTRYPOINT`에 설정하려는 명령어가 `/bin/sh`를 사용하지 않는다면 배열로 전달해줘야만한다.
+
+<br>
 
 ### 2.4.5 Dockerfile로 빌드할 때 주의할 점
+- RUN 명령어가 길어지면 `\`로 줄을 나눠 가독성을 높인다.
+    - 예를들어 파일을 만들고 삭제하는 명령어를 `RUN`을 여러개 작성해 나누면, 각각이 레이어로 분리되게된다. 이 때, 파일은 삭제했지만 삭제하기 전의 레이어가 남아있으므로 파일 크기만큼의 레이어가 삭제되지 않고 디스크를 차지하게 된다.
+- `.dockerignore`를 작성해 불필요한 파일이 빌드 컨텍스트에 포함되지 않도록 한다.
+- 캐시를 사용해 기존에 사용했던 이미지 레이어를 재사용한다.
+- 도커의 레이어를 사용해, 여러개의 컨테이너에서 공통된 라이브러리 등은 분리해 하나의 레이어로 만들어 여러 컨테이너에서 이를 공유하도록 한다.(이 말은 ***Dockerfile의 앞부분을 최대한 통일하자는 말***)
+
+<br><br>
 
 ### 2.5 도커 데몬
 ### 2.5.1 도커의 구조
