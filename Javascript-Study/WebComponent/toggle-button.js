@@ -2,17 +2,28 @@ class ToggleButton extends HTMLElement {
 
   constructor() {
     super();
+
     this._isHidden = true;
+    this._buttonName = 'toggle btn';
     this._content = document.createElement('div');
     this._content.innerHTML = `<slot></slot>`
+
     this.attachShadow({mode: 'open'});
 
   }
   connectedCallback() {
+
     const button = document.createElement('button');
-    button.innerText = 'toggle button';
+    this._buttonName = this.getAttribute('buttonName') ?? 'toggle btn';
+    button.innerText = this._buttonName;
     button.addEventListener('click', this._toggleContent.bind(this))
+    
     this.shadowRoot.appendChild(button)
+
+    if(this.getAttribute('show') === 'true') {
+      this.shadowRoot.appendChild(this._content);
+      this._isHidden = false;
+    }
   }
 
   _toggleContent() {  
