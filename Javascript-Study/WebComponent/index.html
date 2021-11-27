@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Components</title>
+  <style>
+    div {
+      border: 2px solid orange
+    }
+  </style>
+  <script src="tooltip.js"></script>
+  <script src="confirm-link.js"></script>
+  <script src="toggle-button.js"></script>
+</head>
+<body>
+  <p> 
+    <uc-tooltip text="Web Components is a set of standards.">Web Components</uc-tooltip>
+    are awesome
+  </p>
+  <uc-tooltip></uc-tooltip>
+  <div>웹 컴포넌트의 속성에 영향받지 않는 div</div>
+  <a is="uc-confirm-link" href="https://google.com">Google</a>
+  <br><br><br>
+  <uc-toggle-button>
+    <p>More infos!</p>
+  </uc-toggle-button>
+</body>
+</html>
