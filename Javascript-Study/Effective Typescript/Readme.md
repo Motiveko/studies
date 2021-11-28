@@ -425,19 +425,95 @@ type NonZeroNums = Exclude<number, 0>;  // type: number, 0을 제외한 숫자�
 
 <br><br>
 
-
-타입이 집합이라는 점에서 배열과 튜플의 관계는 명확하게 갈라진다. 튜플은 유사 배열 객체로 모델링되어 length 값이 마치 태그처럼 작용한다.
-
-한편 타입스크립트 타입이 되지 못하는 값이 있다. 정수타입,  xy만 가지는 타입 등. Exclue는 
-
-타입스크립트 용어와 집합 용어
-
-
-
-
-
-
 ## 8. 타입 공간과 값 공간의 심벌 구분하기
+타입스크립트의 심벌(symbol)은 타입 공간이나 값 공간 중 한 곳에 존재한다. 아래 처럼 이름이 같지만 다른 공간에 속할수도 있다.
+```ts
+// 타입
+interface Cylinder {
+  radius: number;
+  height: number;
+}
+// 값
+const Cylinder = (radius: number, height: number) => ({radius, height});
+```
+선언되는 위치에 따라서, 일반적으로 `type`, `interface` 다음에 오는 심벌은 `타입`이고, `const`나 `let`선언에 쓰이는 것은 `값`이다. 타입은 타입스크립트에만 존재하기 때문에, 컴파일 후에는 모두 사라지고 값은 남아있다.
+
+사용되는 위치에 따라서는 일반적으로 타입 선언(`:`) 혹은 타입 단언문(`as`) 다음에 나오는 심벌은 타입, `=` 다음에 나오는 심벌은 값이다.
+
+***`class`와 `enum`은 상황에 따라 타입과 값 두 가지 모두 가능한 예약어이다.*** 아래의 경우 `Cylinder`는 `값`으로 쓰인다.
+
+```ts
+class Cylinder {
+  radius = 1;
+  height = 1;
+}
+function calculateVolume(shape: unkown) {
+  if( shape instanceof Cylinder) {  // instanceof 연산자는 자바스크립트 연산자로, Cylinder는 값으로 쓰인다.
+    shape         // 타입은 Cylinder
+    shape.radius  // 타입은 number
+  }
+}
+```
+***클래스가 타입으로 쓰이면 형태(속성, 메서드)가 사용되고, 값으로 쓰이면 생성자가 사용된다.*** 생성자가 사용된다는게 무슨말일까?
+
+```ts
+type t = typeof Cylinder;   // 타입이 typeof Cylinder
+```
+t는 `typeof Cylinder`이다.  Cylinder는 인스턴스타입이 아니다. 이는 `new`키워드를 사용할 때 볼수 있는 **생성자 함수**타입인 것이다. 우리가 갖고 싶은 인스턴스 타입 `Cylinder`는 유틸리티 타입 `InstanceType`을 사용해서 얻는다.
+
+```ts
+type C = InstanceType<typeof Cylinder>; // 타입이 Cylinder
+```
+
+한편, `typeof` 연산자와 같이 타입에서 쓰일때와 값에서 쓰일 때 다른 기능을 하는 것들이 있다. 아래와 같이 다르다.
+  1. 타입에 관점에서 `typeof`는 **타입스크립트의 타입을 반환**한다. 
+  2. 값의 관점에서 `typeof`는 **자바스크립트 런타임의 typeof 연산자**가 된다. 이는 런타임 타입을 가리키는 문자열을 반환하게된다.
+
+아래의 경우 typeof는 const로 선언된 변수에 값을 할당하는데 사용되어, 값의 관점에서 사용되었다.
+```ts
+type v = typeof Cylinder;   // 값이 "function"
+type t = typeof Cylinder;   // 타입이 typeof Cylinder
+```
+
+<br>
+
+속성 접근자 `[]`는 **타입으로 쓰일때와 값으로 쓰일때 모두 동일하게 동작한다.**
+```ts
+const first: Person['first']  // 타입
+  = p['first']                // 값
+
+type Tuple = [string, number, Date];  
+type TupleEl = [number];  // string | number | Date
+```
+
+타입스크립트 코드가 잘 작동하지 않는다면 타입 공간과 값 공간을 혼동해서 잘못 작성했는지 한번 생각해봐야한다. 아래의 경우, 디스트럭처링 할당과 관련한 타입스크립트 오류다.
+
+```ts
+function email(options: {person: Person, subject: string, body: string}) {}
+
+// 자바스크립트에서는 아래와 같은 디스트럭처링이 가능하다.
+function email({person, subject, body}) {}
+
+// 타입스크립트에서는 오류가 발생한다.
+function email({
+  person: Person,   // 바인딩된 요소 'Person'에 암시적으로 any 형식이 있습니다.
+  subject: string,  // 바인딩된 요소 'string'에 암시적으로 any 형식이 있습니다.
+  body: string      // 바인딩된 요소 'string'에 암시적으로 any 형식이 있습니다.
+})
+```
+이는 ***값의 관점에서 Person과 string이 해석되었기 때문이다.*** 코드 에디터의 색깔만 봐도 값으로 사용될때와 타입으로 사용될때 색깔이 다르다. Vscode는 매우 똑똑하다.
+
+따라서 이를 해결하려면 타입과 값을 구분해서 아래와 같이 사용해야한다. 사실 좀 번거롭다.
+
+```ts
+function email (
+  {person, subject, body}: {person: Person, subject: string, body: string}
+){}
+```
+
+<br><br>
+
+
 ## 9. 타입 단언보다는 타입 선언을 사용하기
 ## 10. 객체 래퍼 타입 피하기
 ## 11. 잉여 속성 체크의 한계 인지하기
