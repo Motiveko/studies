@@ -92,3 +92,61 @@ customElements.define('uc-confirm-link', ConfirmLink, { extends: 'a' });
 ```
 - 상속한 a 태그에 is 어트리뷰트에 정의한 웹컴포넌트의 이름을 쓰면 된다.
 이렇게 하면 빌트인 엘리먼트의 스타일과 기능을 모두 가진채 Shadow DOM을 넣거나 추가 기능을 넣거나 할 수 있다.
+
+<br>
+---
+<br >
+
+## 41. Understanding Shadow DOM Projection
+- Shadow DOM에 slot을 랜더링 할 때, slot이 Shadow DOM에 직접적으로 추가되는것은 아니다.(개발자 도구에서 분석해보면 DOM에서 WebComponent에 projection한 내용은 Shadow DOM내 slot태그 안에 존재하지 않는다, #text reveal만 있다.)
+- 이 말은 projection한 컨텐츠는 light DOM(일반 DOM)에서 스타일링 등이 가능하다는 것
+
+<br>
+
+## 42. Styling slot content Outside the the Shadow DOM
+- 그냥 일반적인 element styling 하듯이 하면 된다.
+
+<br>
+
+## 42. Styling slot content Inside the the Shadow DOM
+- Shadow DOM 의 `<style>` 내 pseudo-selector `::slotted(selector)`를 이용해서 스타일링 할 수 있다.
+- selector는 기본적으로 최상단 element만 선택할 수 있고 그의 자식 element는 선택 불가라고 한다.
+- 우선권은 ligthDOM 에 있기때문에 ShadowDOM 에서 스타일링한것은 LigthDOM에 같은게 있으면 덮어쓴다.
+
+## 43. Styling Host element
+- Shadow DOM의 `<style>`내에서의 `:host`는 WebComponent를 의미한다. 이를 이용해서 Host Element의 Style을 지정할 수 있다.
+- slot과 마찬가지로 LightDOM에서의 스타일이 우선권을 가진다.
+
+## 46. Conditional Host Styling
+- host 요소에 특정 class가 있을 때 스타일링을 다르게 한다고 생각해보자. 
+  - `:host.className`은 안먹는다. 
+  - `:host(slector)` 와 같은 형태로 한다. -> `:host(.className)`
+
+
+## 47 Styling with Host Content in Mind
+- host요소의 주변 환경에 따라 스타일링을 다르게 하고싶다면. 예를 들어 host element가 `p` 요소로 둘러 쌓였을 때 특정 스타일을 지정하고 싶다고 가정해보자.
+- `:host-context(selector)`와 같은 형태로 저장할 수 있다. 매개변수 selector는 host 요소의 부모요소라고 보면 된다. 단, selector에 `body`같은걸 넣으면 모든 컴포넌트에 전부 적용될것이다.
+
+## 48. Smart Dynamic Styling with CSS Variables
+- (CSS Variable)[https://developer.mozilla.org/ko/docs/Web/CSS/Using_CSS_custom_properties] 로 primary color를 정의하고 Component 내부에서 이를 읽어 적용해보자.
+```HTML
+<!-- Ligth DOM -->
+<style>
+/* document의 root요소를 선택한다. html요소일것이다. */
+:root {
+  --color-primary: #a4fcda;
+}
+</style>
+
+...
+<uc-tooltip class="important"></uc-tooltip>
+
+<!-- Shadow DOM -->
+<style>
+  :host(.important) {
+    background-color: var(--color-primary, #ccc);
+  }
+</style>
+```
+- 
+- 변수 선언은 `--some-variable` 형태로 선언하고, `var(변수명, 기본값)` 형태로 사용 가능하다.
