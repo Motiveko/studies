@@ -2,8 +2,9 @@ class Tooltip extends HTMLElement {
   constructor() {
     super();
     // field 초기화
-    this._tooltipContainer;
+    this._tooltipVisible;
     this._tooltipText = 'Dummy Text';
+    this._tooltipIcon;
     // mode : closed면 접근 불가다. 랜더링도 안되는걸 언제쓰는걸까?
     this.attachShadow({mode: 'open'});
 
@@ -15,18 +16,29 @@ class Tooltip extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         div {
+          font-weight: normal;
           background-color: black;
           color: white;
           position: absolute;
-          z-index: 10
+          top: 1.5rem;
+          left: 0.75rem;
+          z-index: 100;
+          padding: 0.15rem;
+          border-radius: 3px;
+          box-shadow: 1px 1xp 6px rgba(0,0,0,0.26);
+        }
+        
+        :host {
+          position: relative
         }
         
         :host-context(p) {
           font-weight: bold;
+          padding: 0.15rem
         }
         
         :host(.important) {
-          background-color: lightgrey;
+          background-color: var(--color-primary, #cccb );
         }
 
         ::slotted(.highlight) {
@@ -40,7 +52,7 @@ class Tooltip extends HTMLElement {
       </style>
       <slot>Some Default</slot> 
       <span class="icon">(?)</span>
-    `;
+      `;
   }
   
   // LifeCycle : Element Attacched to DOM
@@ -48,31 +60,58 @@ class Tooltip extends HTMLElement {
     if(this.hasAttribute('text')) {
       this._tooltipText = this.getAttribute('text');
     }
-    const tooltipIcon = this.shadowRoot.querySelector('span'); 
+    this._tooltipIcon = this.shadowRoot.querySelector('span'); 
     // const tooltipIcon = document.createElement('span');
     // tooltipIcon.textContent = ' (?)';
-    tooltipIcon.addEventListener('mouseenter', this._showTooltip.bind(this))
-    tooltipIcon.addEventListener('mouseleave', this._hideTooltip.bind(this))
+    this._tooltipIcon.addEventListener('mouseenter', this._showTooltip.bind(this));
+    this._tooltipIcon.addEventListener('mouseleave', this._hideTooltip.bind(this));
 
-    this.shadowRoot.appendChild(tooltipIcon)
+    this.shadowRoot.appendChild(this._tooltipIcon)
 
-    this.style.position = 'relative'
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    // name은 어트리뷰트 명
+    if(oldValue === newValue){
+      return 
+    }
+
+    if(name === 'text') {
+      this._tooltipText = newValue;
+
+    }
+  }
+
+  // 변화를 감지할 attribute명을 배열로 반환해야한다.
+  static get observedAttributes() {
+    return ['text', 'class'];
+  }
+  
+  disconnectedCallback() {
+    
+  }
+
+  _render() {
+    let tooltipContainer = this.shadowRoot.querySelector('div');
+    if(this._tooltipVisible) {
+      tooltipContainer = document.createElement('div');
+      tooltipContainer.textContent = this._tooltipText;
+      this.shadowRoot.appendChild(tooltipContainer);
+    } else {
+      if(tooltipContainer) {
+        this.shadowRoot.removeChild(tooltipContainer);
+      }
+    }
   }
 
   _showTooltip() {
-    this._tooltipContainer = document.createElement('div');
-    this._tooltipContainer.textContent = this._tooltipText;
-
-    // style
-    // this._tooltipContainer.style.backgroundColor = 'black';
-    // this._tooltipContainer.style.color = 'white';
-    // this._tooltipContainer.style.position = 'absolute'; 
-    // this._tooltipContainer.style.zIndex = 10;
-    this.shadowRoot.appendChild(this. _tooltipContainer);
+    this._tooltipVisible = true;
+    this._render();
   }
   
   _hideTooltip() {
-    this.shadowRoot.removeChild(this._tooltipContainer);
+    this._tooltipVisible = false;
+    this._render();
   }
 }
 
