@@ -1,6 +1,7 @@
 # ESLint, Prettier 정리하기
 > 매번 대충 복붙해서 설정하니 할때마다 오류나고 헷갈려서 정리하는 ESLint, Prettier!
 
+
 <br>
 
 # [ESLint](https://eslint.org/docs/user-guide/getting-started)
@@ -181,7 +182,7 @@ ESLint는 자바스크립트 파일을 파싱, 분석하고 정의된 rule에 �
 <br>
 
 ### 2.3 Rules
-ESLint Rule에는 `Formatting Rules`과 `Code-Qualitiy Rules`가 있다. Lint 자체에서는 따로 나누진 않는 것 같고, 추후 Prettier 적용시 Prettier에서 이렇게 분류하여 `Formatting Rules`는 모두 disabled 시킨다고 한다. [Prettier](#[Prettier](https://prettier.io/))에서 다시 설명한다.
+ESLint Rule에는 `Formatting Rules`과 `Code-Qualitiy Rules`가 있다. 추후 Prettier 적용시 Plugin을 통해 부딪히는 Lint의 rule을 끌 수 있다. [Prettier](#[Prettier](https://prettier.io/))에서 다시 설명한다.
 
 각각의 Rule들은 독립적으로 아래의 값으로 설정할 수 있다.
 - `off` or `0` : 룰 끔
@@ -351,7 +352,7 @@ ESLint는 named code block을 발견한 뒤 overrides의 files와 경로가 맞�
 ## 3.  ESLint + Typescript
 [TypeScript ESLint](https://typescript-eslint.io/docs/)를 참고하여 작성한다.
 
-### 3.1 기본 설정
+### 3.1 Basic Setting
 
 1. 아래 명령어로 `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin` 패키지를 설치한다.
     ```
@@ -422,7 +423,7 @@ ESLint는 named code block을 발견한 뒤 overrides의 files와 경로가 맞�
 
 <br>
 
-### 3.2 추가 설정
+### 3.2 Advanced Setting
 ### 3.2.1 Community Configs
 유명한 ESLint configuration packages를 사용해보자.
   - Airbnb's ESLint config: [`eslint-config-airbnb-typescript`](https://www.npmjs.com/package/eslint-config-airbnb-typescript).
@@ -460,4 +461,75 @@ ESLint Plugin들은 ESLint 위에 추가 rule과 기능을 제공한다. 몇가�
 <br><br>
 
 # [Prettier](https://prettier.io/)
+
+## 1. Prettier란 무엇일까?
+
+`Prettier`는 코드의 스타일을 일관되게 만드는것이 목적으로, 코드의 `AST`(Asynchronous Syntax Tree)에는 영향을 끼치지 않고, 파싱된 `AST`를 re-printing 할 뿐이다. 이 말은 코드의 동작에는 전혀 영향을 미치지 않는다는 것!
+
+Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아래와 같다.
+- `Javascript`, `JSX`, `Angular`, `Vue`, `Flow`, `Typescript`, `CSS`, `SCSS`, `HTML`, `Markdown`, `YAML`, `Graphql`, `JSON`
+
+정말 다양한 언어를 예쁘게 코딩할 있는것이다!
+<br>
+
+`Prettier`는 코드 스타일 가이드를 만들고 이를 팀원 전체가 이를 자동으로 따르게 만든다. 룰을 완전히 알지 못해도 Prettier가 자동으로 다 알아서 맞춰준다. 또 코드베이스가 바뀌면 단지 설정 몇줄만 바꾸면 프로젝트 전체의 코드 스타일을 원하는 방식으로 바꿀 수 있다! 
+
+<br>
+
+그런데 이미 `Linter`를 사용하는 상태라면 `Linter` 역시도 기본적인 코드 스타일을 개선해 주기 때문에 `Prettier`에 설정한 룰과 `Linter`의 룰이 부딪힐 수 있다. `Linter`의 rule은 아래와 같이 두가지로 나뉜다.
+  -  `Formatting rules` 
+      - `max-len`, `no-mixed-spaces-and-tabs`, `keyword-spacing` ...
+  - `Code-quality rules`
+    -  `no-unused-vars`, `no-extra-bind`, `no-implicit-globals`, `prefer-promise-reject-errors`
+  
+이 때 `Prettier`를 쓰면 필요없거나 부딪히는 `Formatting rules`은 Plugin을 통해 끌 수 있다. 
+  - [`eslint-config-prettier`](https://github.com/prettier/eslint-config-prettier)
+  - [`tslint-config-prettier`](https://github.com/prettier/tslint-config-prettier)
+  - [`stylelint-config-prettier`](https://github.com/prettier/stylelint-config-prettier)
+
+`tslint`는 `Deprecated`되었고 `stylelint`는 뭔지 모르니까, 첫번째 `eslint-config-prettier`를 사용하자!
+
+
+<br>
+
+## 2. Prettier 적용하기
+### 2.1 Basic Settings
+1. 설치하기
+    ```
+    npm install --save-dev --save-exact prettier
+    ```
+2. `.prettierrc.json` 설정파일 생성 및 원하는 설정을 작성한다.
+    ``` 
+    echo {}> .prettierrc.json
+    ```
+3. `.prettierignore`파일도 생성하고 빌드 파일 등을 포함시킨다.
+4. `ESLint`와 함께 잘 작동하도록 `eslint-plugin-prettier` 설치
+    ```
+    npm install --save-dev eslint-plugin-prettier
+    ```
+5. `.eslintrc`에 아래 설정을 추가한다.
+    ```json
+    // .eslintrc.json
+    {
+      "plugins": ["prettier"],
+      "rules": {
+        "prettier/prettier": "error",
+        "arrow-body-style": "off",
+        "prefer-arrow-callback": "off"
+      },
+      "extends": ["plugin:prettier"]
+    }    
+    ```
+    - `extends`: eslint-config-prettier configuration을 사용한다. **`ESLint`의 `Prettier`와 부딪히는 속성이 off된다.**
+
+    - `plugins`: `prettier` 플러그인 등록
+    - `rules.prettier/prettier : error`: plugin이 제공하는 rule을 모두 킨다. `ESLint` 내에서 `Prettier`가 동작하게 되는것이다.
+    - `arrow-body-style`, `prefer-arrow-callback` off : 안타깝게도 이 두가지 설정은 플러그인이 off해주지 못해 수동으로 해줘야 한다고 한다. 만약 `extends`에 `plugin:prettier/recommended`를 설정해주면 해주는 모양이다.
+6. [`.prettierrc`](https://github.com/prettier/eslint-plugin-prettier#options) 작성법은 링크 타고 들어가서 한번 보자.
+
+<br>
+
+### 2.2 Editor Integration
+- 언젠가 정리해서 작성예정
+
 
