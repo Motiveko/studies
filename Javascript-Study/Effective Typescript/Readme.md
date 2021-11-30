@@ -544,7 +544,7 @@ const bob = {
 
 <br>
 
-`화살표 함수` 사용시 추론된 타입이 원하는데로 동작하지 않는 경우가 있다. 
+`화살표 함수`에도 타입 선언을 사용해야 한다. 아래 코드처럼 `화살표 함수` 사용시 추론된 타입이 원하는데로 동작하지 않는 경우가 있다. 
 ```ts
 const people = ['motiveko', 'doggiko'].map(name => ({name})); // 타입은 Person[]이 아닌 { name: string }[]
 ```
@@ -559,7 +559,7 @@ const people = ['motiveko', 'doggiko'].map(
 
 <br>
 
-**타입 단언이 꼭 필요한 경우**가 있다. 대표적인것은 **DOM 엘리먼트**에 대한 내용이다.
+타입 선언을 가급적 사용하되, **타입 단언이 꼭 필요한 경우**가 있다. 대표적인것은 **DOM 엘리먼트**에 대한 내용이다.
 
 ```ts
 document.querySelector('#myButton').addEventListener('click', e => {
@@ -568,9 +568,9 @@ document.querySelector('#myButton').addEventListener('click', e => {
   button; // 타입은 HTMLButtonElement
 })
 ```
-위와 같이 DOM 관련해서는 `EventTarget`이나 `HTMLElement`와 같이 상위 객체가 반환되는 경우가 많다. 타입 스크립트는 DOM에 직접 접근하는것이 아니기때문에 구체적인 객체를 알 수 없기 때문이다. 사용자는 해당 객체를 상속하는 하위 객체의 고유 속성을 사용해야 하는데, 이 때 단언문을 사용한다.
+위와 같이 DOM 관련해서는 `EventTarget`이나 `HTMLElement`와 같이 상위 객체가 반환되는 경우가 많다. 타입 스크립트는 DOM에 직접 접근하는것이 아니기때문에 구체적인 객체를 알 수 없기 때문이다. 사용자는 해당 객체를 상속하는 하위 객체의 고유한 속성(예를들면 `input.value`)을 사용해야 하는 경우가 많은데, 이 때 단언문을 사용해야 한다.
 
-또 접미사에 `!`를 이용하여 null이 아님을 단언하는 경우가 있다. null이 아님을 확신할 때 사용하자.
+또 접미사에 `!`를 이용하여 null이 아님을 단언하는 경우가 있다. 접미사 `!`는 ***null이 아님을 확신할 때에만 사용하자***.
 ```ts
 const elNull = document.getElementById('id'); // HTMLElement | null
 const el = document.getElementById('id')!;    // HTMLElement
