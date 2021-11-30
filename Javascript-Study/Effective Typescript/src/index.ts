@@ -1,7 +1,7 @@
 interface Person {
-  first: string;
+  name: string;
 }
-const p: Person = {
-  first: "r",
-};
-const first: typeof p["first"] = "1";
+
+const body = document.body;
+
+// body as Person;

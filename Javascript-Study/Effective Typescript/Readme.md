@@ -515,6 +515,91 @@ function email (
 
 
 ## 9. 타입 단언보다는 타입 선언을 사용하기
+타입스크립트에서 변수에 타입슬 부여하는 방법은 `타입 선언`과 `타입 단언` 두가지가 있다.
+```ts
+interface Person {
+  name: string
+};
+
+const alice: Person = { name: 'Alice' };  // 타입 선언
+const bob = { name: 'Bob' };              // 타입 단언
+```
+둘은 비슷한듯 보여도 다른데, 문제는 아래와 같이 타입 단언에 있다.
+```ts
+const alice: Person = {};  // 'name' 속성이 '{}' 형식에 없지만 'Person' 형식에서 필수입니다.
+const bob = {} as Person; // 오류 없음
+
+const alice: Person = {
+  name: 'alice',
+  foo: 'bar' // { name: string; foo: string; }' 형식은 'Person' 형식에 할당할 수 없습니다...
+}
+const bob = {
+  name: 'bob',
+  foo: 'bar'
+} as Person;
+```
+`타입 선언`의 경우 할당되는 값이 인터페이스를 만족하는지 `잉여 속성 체크`를 수행하고, 만족하지 않으면 에러를 반환하지만, 타입 단언은 강제로 타입을 지정해 타입 체커에게 오류를 무시하도록 한다.
+
+> 종종 보이는 `const bob = <Person>{}` 과 같은 형태의 문법은 `{} as Person`과 동일한 옛날 단언문법이다. tsx에서 해당 문법이 다른 의미로 사용돼, 잘 사용하지 않는다고 함
+
+<br>
+
+`화살표 함수` 사용시 추론된 타입이 원하는데로 동작하지 않는 경우가 있다. 
+```ts
+const people = ['motiveko', 'doggiko'].map(name => ({name})); // 타입은 Person[]이 아닌 { name: string }[]
+```
+이를 타입 단언을 사용해 `(name => ({name} as Person))`으로 해결하고 싶을 수도 있으나, 역시 name에 문제가 생겨도 타입은 `Person`이 되어 에러를 무시하게 되므로 좋지못한 해결책이다. 아래와 같이 해결하자.
+
+```ts
+const people = ['motiveko', 'doggiko'].map(
+  (name): Person => ({name})
+);  // 타입은 Person[]
+```
+`(name): Person`은 반환타입이 `Person`인 화살표 함수를 명시하는것이다. 이를 `(name: Person)`으로 쓰면 화살표 함수에 반환 타입을 지정하지 않은것이 되어 오류가 발생하므로 주의하자.
+
+<br>
+
+**타입 단언이 꼭 필요한 경우**가 있다. 대표적인것은 **DOM 엘리먼트**에 대한 내용이다.
+
+```ts
+document.querySelector('#myButton').addEventListener('click', e => {
+  e.currentTarget;  // 타입은 Event Target
+  const button = e.currentTarget as HTMLButtonElement;
+  button; // 타입은 HTMLButtonElement
+})
+```
+위와 같이 DOM 관련해서는 `EventTarget`이나 `HTMLElement`와 같이 상위 객체가 반환되는 경우가 많다. 타입 스크립트는 DOM에 직접 접근하는것이 아니기때문에 구체적인 객체를 알 수 없기 때문이다. 사용자는 해당 객체를 상속하는 하위 객체의 고유 속성을 사용해야 하는데, 이 때 단언문을 사용한다.
+
+또 접미사에 `!`를 이용하여 null이 아님을 단언하는 경우가 있다. null이 아님을 확신할 때 사용하자.
+```ts
+const elNull = document.getElementById('id'); // HTMLElement | null
+const el = document.getElementById('id')!;    // HTMLElement
+```
+
+<br>
+
+***타입 단언문으로 임의의 타입 간에 변환을 할 수는 없다. A와 B가 부분집합 관계인 경우에만 사용 가능하다.***
+`HTMLElement`는 `HTMLElement | null`의 서브타입이고, `Person`은 `{}`의 서브타입 이기 때문에 단언이 가능했다. `Person`과 `HTMLElement`는 서브타입 관계가 아니기 때문에 단언이 불가능하다.
+
+``` ts
+interface Person { name: string };
+const body = document.body;
+const el = body as Person;
+/* 
+'HTMLElement' 형식을 'Person' 형식으로 변환한 작업은 실수일 수 있습니다. 두 형식이 서로 충분히 겹치지 않기 때문입니다. 의도적으로 변환한 경우에는 먼저 'unknown'으로 식을 변환합니다.
+'name' 속성이 'HTMLElement' 형식에 없지만 'Person' 형식에서 필수입니다.
+*/
+```
+
+이 오류는 `unkmown`을 사용해 해결 가능하다. 모든 타입은 `unknown`의 서브타입이기 때문이다.
+
+```ts
+const person = document.body as unkonw as Person
+```
+
+<br><br>
+
+
 ## 10. 객체 래퍼 타입 피하기
 ## 11. 잉여 속성 체크의 한계 인지하기
 ## 12. 함수 표현식에 타입 적용하기
