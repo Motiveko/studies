@@ -537,7 +537,10 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
 <br><br>
 
 # 실전 설정 
-### @typescript-eslint/unbound-method rule 관련 이슈해결
+### @typescript-eslint/unbound-method rule 관련 이슈
+
+> 참고 : https://github.com/typescript-eslint/typescript-eslint/blob/v4.32.0/packages/eslint-plugin/docs/rules/unbound-method.md
+
 `@typescript-eslint` 사용시 extends에 `plugin:@typescript-eslint/recommended-requiring-type-checking`,를 적용하면 관련 config들이 적용되는데, 이중 [`unbound-method`](https://github.com/typescript-eslint/typescript-eslint/blob/v4.32.0/packages/eslint-plugin/docs/rules/unbound-method.md) 룰이 있다.
 
 method reference 사용시, `bind(this)`와 같이 this바인딩을 할당해주지 않으면 에러메시지를 보여준다.(메서드 내부에서 this를 사용하는지는 판단하지 앟는다).
