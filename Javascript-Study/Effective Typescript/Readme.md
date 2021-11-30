@@ -522,7 +522,7 @@ interface Person {
 };
 
 const alice: Person = { name: 'Alice' };  // 타입 선언
-const bob = { name: 'Bob' };              // 타입 단언
+const bob = { name: 'Bob' } as Person;    // 타입 단언
 ```
 둘은 비슷한듯 보여도 다른데, 문제는 아래와 같이 타입 단언에 있다.
 ```ts
