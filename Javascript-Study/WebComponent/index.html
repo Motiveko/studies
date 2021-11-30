@@ -6,10 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Web Components</title>
   <style>
-    div {
-      border: 2px solid orange
+    * {
+      box-sizing: border-box;
     }
-    
+
+    html {
+      --color-primary: #a4fcda;
+      font-family: sans-serif;
+    }
  
   </style>
   <script src="tooltip.js"></script>
@@ -26,9 +30,13 @@
     are awesome
   </p>
   <uc-tooltip></uc-tooltip>
-  <div>웹 컴포넌트의 속성에 영향받지 않는 div</div>
+
   <a is="uc-confirm-link" href="https://google.com">Google</a>
+  
+  
   <br><br><br>
+  --- Practice ---
+  <br>
   <uc-toggle-button buttonName="토글버튼" show="true">
     <p>More infos!</p>
   </uc-toggle-button>

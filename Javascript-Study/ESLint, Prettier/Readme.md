@@ -57,18 +57,18 @@ ESLint는 자바스크립트 파일을 파싱, 분석하고 정의된 rule에 �
 린트 설정의 상속에서도, 우선순위가 있는데 아래와 같다. 각각 우선순위 높은것 -> 낮은것 순이다.
 
 1. 인라인 설정
-    - /*eslint-disable*/ and /*eslint-enable*/
-    - /*global*/
-    - /*eslint*/
-    - /*eslint-env*/
+    - `/*eslint-disable*/` and `/*eslint-enable*/`
+    - `/*global*/`
+    - `/*eslint*/`
+    - `/*eslint-env*/`
 2. CLI 옵션
-    - --global
-    - --rule
-    - --env
-    - -c, --config
+    - `--global`
+    - `--rule`
+    - `--env`
+    - `-c`, `--config`
 3. 프로젝트 레벨 설정
-    - .eslintrc.* or package.json 
-    -  상위 디렉토리의 .eslintrc.* and package.json 파일
+    - `.eslintrc.*` or `package.json`
+    -  상위 디렉토리의 `.eslintrc.*` and `package.json` 파일
 
 <br>
 
