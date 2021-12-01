@@ -23,6 +23,16 @@
 ### [9. 타입 단언보다는 타입 선언을 사용하기](#9-타입-단언보다는-타입-선언을-사용하기-1)
 ### [10. 객체 래퍼 타입 피하기](#10-객체-래퍼-타입-피하기-1)
 ### [11. 잉여 속성 체크의 한계 인지하기](#11-잉여-속성-체크의-한계-인지하기-1)
+### [12. 함수 표현식에 타입 적용하기](#12-함수-표현식에-타입-적용하기-1)
+### [13. 타입과 인터페이스의 차이점 알기](#13-타입과-인터페이스의-차이점-알기-1)
+### [14. 타입 연산과 제너릭 사용으로 반복 줄이기](#14-타입-연산과-제너릭-사용으로-반복-줄이기-1)
+### [15. 동적 데이터에 인덱스 시그니처 사용하기](#15-동적-데이터에-인덱스-시그니처-사용하기-1)
+### [16. number 인덱스 시그니처보다는 Array, 튜플, ArrayLike를 사용하기](#16-number-인덱스-시그니처보다는-Array,-튜플,-ArrayLike를-사용하기-1)
+### [17. 변경 관련된 오류 방지를 위해 readonly 사용하기](#17-변경-관련된-오류-방지를-위해-readonly-사용하기-1)
+### [18. 매핑된 타입을 사용하여 값을 동기화하기](#18-매핑된-타입을-사용하여-값을-동기화하기-1)
+
+
+
 
 <br><br>
 
@@ -599,9 +609,117 @@ const person = document.body as unkonw as Person
 
 <br><br>
 
-
 ## 10. 객체 래퍼 타입 피하기
+자바스크립트에는 7가지 원시타입(`stirng`, `number`, `boolean`, `symbol`, `bigint`, `null`, `undefined`)이 있고 이중 앞의 5개는 래퍼 객체(Wrapper Object)가 존재한다.
+
+래퍼객체는 `string`과 같은 원시타입의 값에 대해 **객체처럼 접근하면 생성되는 임시 객체**를 말한다. 래퍼 객체의 동작은 prototype 프로퍼티를 다음과 같이 몽키 패치하면 관찰해볼 수 있다.
+
+```js
+const originalCharAt = String.prototype.charAt;
+String.prototype.charAt = function(pos) {
+  console.log(this, typeof this, pos);
+  return originalCharAt.call(this, pos);
+};
+console.log('primitive'.charAt(3));
+// [String : 'primitive'] 'object' 3
+m
+```
+원시값은 래퍼 객체에 의해 객체처럼 동작할 수 있지만 원시값과 래퍼 객체는 동일하지 않다.
+```js
+const x = 'test';
+String.prototype.checkEq = function() { return this === x;}
+x.checkEq();  // false
+```
+
+래퍼 객체 타입 값에는 원시값을 할당할 수 있으나, 원시값 타입에는 래퍼 객체 타입 값을 할당할 수 없다.
+```ts
+const test1: String = 's';             // 정상
+const test2: string = new String('s'); // 'String' 형식은 'string' 형식에 할당할 수 없습니다.
+```
+이런 점들은 헷갈리기 쉽기 때문에 원시타입으로 통일해서 쓰는것이 바람직하다.
+
+<br>
+
 ## 11. 잉여 속성 체크의 한계 인지하기
+타입 체크에는 구조적 타이핑에 의한 검사 외에 `잉여 속성 체크`가 있다. 잉여 속성 체크란 타입이 명시된 변수에 ***객체 리터럴을 할당할 때 객체에 해당 타입의 속성이 있는지, 그리고 그 외의 속성은 없는지 확인하는 작업이다.***
+
+```ts
+interface Person {
+  name: string;
+  age: number;
+}
+
+const p: Person = {
+  name: 'motiveko',
+  age: 31,
+  foo: 'bar'  
+    // '{ name: string; age: number; foo: string; }' 형식은 'Person' 형식에 할당할 수 없습니다.
+    // 개체 리터럴은 알려진 속성만 지정할 수 있으며 'Person' 형식에 'foo'이(가) 없습니다.
+}
+```
+구조적 타이핑은 부분 집합을 할당 가능한 타입으로 보지만, 잉여 속성에서는 그렇지 않다. 왜 이런걸 도입한걸까? 이유는 당연히 여러가지 오류를 방지하기 위해서다! 아래 경우를 보자.
+```ts
+interface Options { 
+  title: string;
+  darkMode?: boolean
+}
+
+function createWindow(options: Options) {
+  if(options.darkMode) {
+    setDarkMod();
+  }
+  // ..
+}
+createWindow({
+  title: 'title',
+  darkmode: true
+    // '{ title: string; darkmode: boolean; }' 형식의 인수는 'Options' 형식의 매개 변수에 할당될 수 없습니다.
+    // 개체 리터럴은 알려진 속성만 지정할 수 있지만 'Options' 형식에 'darkmode'이(가) 없습니다. 'darkMode'을(를) 쓰려고 했습니까?
+})
+```
+`Options`타입의 속성`darkMode`를 `darkmode`로 잘못 작성했고, 잉여 속성 체크는 오류 메시지를 보여준다. 구조적 타이핑이었다면 `darkMode`는 선택적 속성이기때문에 해당 속성이 없어도 에러가 발생하지 않았을 것이고, 이는 결국 런타임에서 잘못된 동작을 하는 코드가 되었을 것이다. `Options`와 같은 선택적 속성을 포함하는 타입은 그 범위가 매우 넓기때문에(`title: string`만 포함하면 뭐든 된다.), 원치 않는 할당이 이뤄질 수 있고, 이를 검사하기 위해 잉여 속성 체크가 있는것. 잉여 속성 체크는 `엄격한 객체 리터럴 체크`라고도 불린다.
+
+<br>
+
+하지만 잉여속성체크를 하지 않고 구조적 타이핑을 하길 원할 수도 있다. 이럴 땐 `임시 변수`나 `타입 단언문`을 사용하자.
+```ts
+const intermediate = { darkmode: true, title: 'Skii' }; // 임시 변수
+const o: Options = intermediate;                        // 정상. 임시변수는 객체 리터럴이 아니다.
+
+const o = { darkmode: true, title: 'Skii' } as Options; // 정상. 타입 단언문은 잉여속성체크 하지 않는다.
+```
+`인덱스 시그니처`를 사용해서 타입스크립트가 추가적인 속성을 예상하도록 해 잉여속성체크를 통과시킬수도 있다.
+```ts
+interface Options {
+  darkMode?: booleanl;
+  [otherOptions: string]: unknown;
+}
+const o: Options = { darkmode: true };  // 정상
+```
+이런 방법으로 데이터를 모델링 하는것이 반드시 적합한 것은 아니다. 아이템 15에서 다룰 예정.
+
+<br>
+
+선택적 속성만 가지는 `약한(weak)타입`에는 `공통 속성 체크`라는 약간 다른 타입체크가 적용된다.
+```ts
+interface XYZ {
+  x?: string;
+  y?: number;
+  z?: boolean;
+}
+
+const tmp = { k: 'k' }; 
+const fail: XYZ = tmp;            // '{ k: string; }' 유형에 'XYZ' 유형과 공통적인 속성이 없습니다.ts(2559)
+const success: XYZ = tmp as XYZ;  // 정상수
+```
+`공통 속성 체크`는 할당시 공통 속성이 한개라도 존재하는지 여부를 체크한다. 임시 변수나 객체 리터럴에 모두 적용되고, ***타입 단언문에는 적용되지 않는다.***
+
+<br>
+
+잉여 속성 체크는 선택적 필드를 포함하는 `Options`같은 타입에 매우 유용하지만, 객체리터럴 할당시에만 적용된다는 특성이 있기 때문에 이런 특성을 잘 이해하고 사용한다면 오류를 많이 잡을 수 있을것이다.
+
+<br><br>
+
 ## 12. 함수 표현식에 타입 적용하기
 ## 13. 타입과 인터페이스의 차이점 알기
 ## 14. 타입 연산과 제너릭 사용으로 반복 줄이기
