@@ -771,7 +771,94 @@ const success: XYZ = tmp as XYZ;  // 정상수
 
 <br><br>
 
+
 ## 12. 함수 표현식에 타입 적용하기
+자바스크립트 함수 정의 방식에는 `함수 선언문(statement)`방식과 `함수 표현식(expression)`방식이 있다. ***가급적 함수 선언문보다 함수 표현식을 쓰자.***
+
+함수 표현식을 사용하면 함수 전체 시그니처를 ***하나의 함수 타입으로 선언***하여 함수 표현식에 재사용 가능하다는 장점이 있다.
+```ts
+// 함수 선언문
+function rollDiceStmnt(sides: number): number { /*...*/ };
+
+// 함수 표현식
+type DiceRollFn = (sides: number) => number;
+const rollDice: DiceRollFn = sides => { /*...*/ };
+```
+
+함수 타입을 선언하면 시그니처가 동일한 여러개의 함수 타입을 통합하여 불필요한 코드 반복을 줄일 수 있다.
+
+```ts
+function add1(a: number, b: number) { return a + b };
+function sub1(a: number, b: number) { return a - b };
+// ...
+
+// 함수 타입 선언으로 코드 간소화
+type BinaryFn = (a: number, b: number) => number;
+const add2: BinaryFn = (a, b) => a + b;
+const sub2: BinaryFn = (a, b) => a - b;
+// ...
+```
+함수 타입 선언으로 여러 함수의 매개변수와 반환 타입을 따로 작성하지 않아도 타입스크립트 타입 체크 시스템이 알아서 추론할 수 있게 되었다.
+여러 타입 제공 라이브러리들은 공통 함수 시그니처를 타입으로 제공한다. 만약 내가 라이브러리를 만들면 ***공통 함수의 시그니처를 타입으로 정의하려고 노력해야한다.***
+
+<br>
+
+시그니처가 일치하는 다른 함수가 있을 때도, 함수 표현식에 타입을 적용하면 좋다. 이건 고민을 해야 적용할 수 있는건데, 아래예제는 `fetch`를 사용해 HTTP 요청을 날려 response body를 json으로 받아오는 예제다.
+
+```ts
+async function getQuote() {
+  const resposeP = await fetch('/quote?by=Mark+Twain'); // 타입 : Prmoise<Response>
+  const quote = await response.json();
+  return quote;
+}
+```
+
+이 함수에는 버그가 있는데, **fetch 실패에 대한 고려**가 없는것이다. 예를들어 `fetch`가 호출한 주소가 존재하지 않으면, `response.json()`은 `Rejected Promise`를 반환할 것이고, 이는 예상한 getQuote 함수가 예상하는 반환값이 아니다. 
+
+우선 fetch 함수의 정의는 아래와 같다. fetch함수 자체에도 딱히 에러처리가 없다.
+
+```ts
+declare function fetch(input: RequrestInfo, init?: RequestInit): Promise<Response>;
+```
+
+위 버그를 고려하여 `fetch`가 정상응답이 아닐 경우 에러를 던지고, 정상 응답인 경우 json body를 돌려주는 함수를 작성해본다.
+
+```ts
+async function checkedFetch(input: RequestInfo, init?: RequestInit) {
+  const response = await fetch(input, init);
+  if(!response.ok) {
+    throw new Error('Request failed: ' + response.status);
+  }
+  return response;
+}
+```
+`checkedFetch()`를 잘 생각해보면 `fetch()` 함수와 시그니쳐가 같다는 것을 알 수 있다. 여기서 `checkedFetch`를 개선할 수 있는 여지가 생긴다. `checkedFetch` 아래와 같이 함수 표현식으로 정의할 수 있다.
+
+```ts
+const checkedFetch: typeof fetch = async (input, init) => {
+  const response = await fetch(input, init);
+  if(!response.ok) {
+    throw new Error('Request failed: ' + response.status);
+  }
+  return response;
+}
+```
+나는 솔직히 위에 `async`가 붙어서 뭔가 타입이 다르다고 생각이 들었다. `async`-`await`에 대한 이해가 낮아서 그런 생각이 들었다. 그래서 그런 바보들을 위해 아래와 같이 async를 쓰지 않는 방식으로 함수를 정의할 수도 있겠다.
+```ts
+const checkedFetch: typeof fetch = (input, init) => {
+  return fetch(input, init)
+    .then((response) => response.json())
+    .catch((err) => new Error(err.status));
+};
+```
+'(input, init)' 앞에 `async`가 붙지 않아 `fetch`와 비슷하게 생겨졌다. `Promise`의 `then`이나 `catch`를 쓰는것보다 `async`, `await`을 쓰는것이 권장된다는것은 알고 있어야 한다.
+
+어쨋든 위와 같이 다른 함수의 시그니처를 참조하려면 `typeof fn`을 사용하면 된다. 함수 내부에 로직 구현에 문제가 있을 때 타입 시스템이 에러를 알려줄 가능성이 커져 한층 안전한 코딩이 가능해진다.
+
+<br><br>
+
+
+
 ## 13. 타입과 인터페이스의 차이점 알기
 ## 14. 타입 연산과 제너릭 사용으로 반복 줄이기
 ## 15. 동적 데이터에 인덱스 시그니처 사용하기
