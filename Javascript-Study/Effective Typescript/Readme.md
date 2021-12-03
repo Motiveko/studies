@@ -857,9 +857,115 @@ const checkedFetch: typeof fetch = (input, init) => {
 
 <br><br>
 
-
-
 ## 13. 타입과 인터페이스의 차이점 알기
+타입스크립트에서 명명된 타입(named type)을 정의하는 방법은 `interface`와 `type` 두가지가 있다. `class`도 가능하지만, 이는 값으로도 쓰이기 때문에 다루지 않는다.
+```ts
+type TState = {
+  name: string;
+  capital: string;
+};
+
+interface IState {
+  name: string;
+  capital: string;
+}
+```
+대부분의 경우 타입과 인터페이스 어떤걸 써도 무방하다. 둘 다 같은 방법으로 타입 체크 시스템이 작동하고, 제너릭도 적용 가능하다. 클래스 구현시 타입, 인터페이스 모두 구현 가능하다. 또한 인터페이스는 타입을 확장할 수 있고 타입은 인터페이스를 확장할 수 있다.
+```ts
+// 인터페이스의 타입 확장 : extends
+interface IStateWithPop extends TState {
+  population: number;
+}
+// 타입의 인터페이스 확장 : &
+type TStateWithPop = IState & { population: number };
+```
+
+그럼 둘 사이에 어떤 차이점이 있을까?
+
+**1. 인터페이스는 유니온 타입 같은 복잡한 타입을 확장하지 못한다.**
+타입을 정의하다 보면 유니온 타입을 확장해야하는 경우가 발생하는데, 인터페이스로는 불가능하다. 
+```ts
+// 불가능하다
+interface IAB extends (A | B) {/* ... */}
+// 인터페이스는 선택적 형식 인수가 포함된 식별자/정규화된 이름만 확장할 수 있습니다.ts(2499)
+type TAB = (A | B) & {/* ... */}
+```
+아래 예제는 `Input`과 `Output`이라는 두가지 타입의 `Union Type`을 확장하는 타입을 변수명으로 매핑하는 `NamedVariableMap` 타입을 정의한다.
+```ts
+type Input = { /*...*/ }
+type Output = { /*...*/ }
+type NamedVariable = (Input | Output) & { name: string }
+interface NamedVariableMap {
+  [name: string]: NamedVariable
+}
+```
+<br>
+
+**2. 튜플과 배열 타입은 `type`을 이용하는게 훨씬 낫다.**
+튜플, 배열타입은 아래와같이 type으로 만드는게 낫다.
+```ts
+type Pair = [number, number];
+type StringList = string[];
+type NamedNums = [string, ...number[]];
+```
+튜플을 인터페이스로 아래와 같이 구현할 수 있기도 하다.(유사배열객체)
+```ts
+interface Tuple {
+  0: number;
+  1: number;
+  length: 2;
+}
+const t: Tuple = [1,2];
+```
+책에서는 이렇게 하면 배열의 프로토타입 메서드를 쓸 수 없다는 단점이 있다고 한다. 하지만 나는 방법을 찾았다. `Array`를 확장하면 간단히 해결된다. 
+```ts
+interface Tuple extends Array<number | string> {
+  0: string;
+  1: number;
+  length: 2;
+}
+const t: Tuple = ['1', 2];
+t.forEach((val) => console.log(val)); // '1' 2
+```
+책을 맹신하진 말자.
+
+<br>
+
+**3. 인터페이스에는 보강(augment)기법을 사용할 수 있다.**
+인터페이스는 보강 기법을 이용해 속성을 확장할 수 있는데 이런 방식을 `선언 병합`(declaration merging)이라고 한다.
+```ts
+interface IState {
+  name: string;
+  capital: string;
+}
+interface IState {
+  population: number;
+}
+const Korea = {
+    name: 'korea',
+    capital: 'Seoul',
+    population: 50_000_000
+};  // 정상
+```
+
+타입스크립트의 라이브러리나 기본 타입들은 많은 곳에서 선언 병합을 사용한다. 예를들어 `Array`인터페이스는 기본적으로 `lib.es5.d.ts`에 정의되어 있는걸 사용하는데 만약 `tsconfig.target` ES2015을 추가하면 `lib.es2015.d.ts`에 선언된 인터페이스를 병합한다. 
+
+```ts
+// lib.es2015.core.d.ts
+interface Array<T> {
+  find<S extends T>(predicate: (this: void, value: T, index: number, obj: T[]) => value is S, thisArg?: any): S | undefined;
+  find(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): T | undefined;
+  findIndex(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): number;
+  fill(value: T, start?: number, end?: number): this;
+  copyWithin(target: number, start: number, end?: number): this;
+}
+```
+인터페이스를 병합했기 때문에 `find`, `findIndex`등의 메소드를 사용할 수 있게 되는것이다.
+
+<br>
+
+타입 선언에는 사용자가 채워야 하는 빈틈이 있을 수 있는데, 이 때 보강을 사용할 수 있도록 `인터페이스`로 타입을 선언하면 좋다. 그런데 API를 공개하는것이 아닌 프로젝트 내부적으로 선언되는 타입에 대해 선언 병합이 발생하는 것은 잘못된 설계다. 이럴땐 내가 타입을 잘 선언한게 맞는지 다시한번 생각해보고 `type`을 사용하도록 하자.
+
 ## 14. 타입 연산과 제너릭 사용으로 반복 줄이기
 ## 15. 동적 데이터에 인덱스 시그니처 사용하기
 ## 16. number 인덱스 시그니처보다는 Array, 튜플, ArrayLike를 사용하기
