@@ -2,6 +2,260 @@
 
 > 서적 [RxJS 반응형 프로그래밍] 을 정리하려고 만든 프로젝트였으나 책이 무슨말하는지 하나도 못알아듣겠어서 스스로 자료찾아 학습후 정리한다. 매번 쓸때마다 차이점이 조금씩 헷갈리는 operator나 Subject를 정리한다!
 
+<br><br>
+
+## Overview
+### Introduction
+> RxJs는 Observable Sequence를 사용하여 비동기, 이벤트 기반 프로그램을 구성하는 라이브러리다.
+<br>
+
+### Observable
+`Observable`은 **Lazt Push** 방식으로 동작하는 데이터를 생산하는 `Producer`이다.
+
+Push - Pull 방식의 차이는 아래와 같다.
+
+| | PRODUCER | COSUMER |
+|---|---|---|
+| `PULL` | Passive: 데이터 요청이 오면 생상한다 | Active: 데이터를 원하는 때 요청한다 |
+| `PUSH` | Active: 데이터 요청이 없어도 그냥 생산해서 보낸다 | Passive: Producer가 주는 데이터에 반응한다. |
+
+자바스크립트에서 일반적인 함수 호출은 `PULL`방식으로 작동한다고 할 수 있다. Consumer가 데이터를 원할때 함수를 호출하고, 함수는 호출된 시점에 데이터를 생산해서 반환한다.
+
+`Observable`은, `Promise`등과 마찬가지로 구독만 이뤄지면 데이터를 생산하고, 생산 되는데로 소비자에게 PUSH하는 방식으로 작동한다. 소비자(Observable)은 구독만 했을 뿐, 데이터가 언제 넘어올지 모르고, 넘어오는 데이터에 반응할 뿐이다. 이런 방식의 프로그래밍을 **반응형 프로그래밍(Reactive Programming) 이라고도 한다.**
+
+<br>
+
+`Observable`은 종종 `EventEmiiter`와 비슷하게 동작한다고 생각되는데, 기본적으로 `Observable`은 구독 해야만 데이터를 생산하고, 구독하는 소비자마다 다른 Observable Stream을 공유하고 부수효과를 따로 가진다(`Unicast`)는 점에서 `EventEmiiter`와는 다르게 작동한다.
+
+<br>
+
+`Observable`의 동작은 총 4가지 단계로 나뉜다.
+- 생산(creating)
+- 구독(subscribing)
+- 실행(executing)
+- 폐기(disposing)
+
+1. Creating Observable
+Observable은 기본적으로 constructor로 생성하는데, 이 때 매개변수로 `Subscriber` 객체를 받는다. `Subscriber`는 기본적으로는 `next`, `error`, `complete`메서드를 가지는 객체로, 각각 값 방출, 에러 방출, 완료를 뜻한다.
+<br>
+
+2. Subscribing to Observables
+`Observable.subscribe()` 메서드를 통해 옵저버블을 구독하고 실행하도록 할 수 있다. 매개변수로는 기본적으로 `Partial<Observer>` 타입을 받는데, `Observer`는 `Subscriber`의 `next`, `error`, `complete`메서드에 대한 콜백 메서드를 가진다.(콜백 메서드명도 next, error, complete)
+
+<br>
+
+3. Executing Observables
+`Observable`의 구독은 곧 실행을 의미한다. 생성시 전달한 `Subscriber`가 실행되며 `next`, `error`, `complete`가 호출될것이다. 옵저버블의 동작은 유한할수도, 무한할수(예를들면 `interval()`로 생성된 옵저버블)도 있다. 
+
+
+4. Disposing Observable Executions
+옵저버블의 동작이 무한하다면, 구독자가 어느시점에 실행을 종료해줘야한다. `Observable.subscribe()`의 결과로 받는 `Subscription` 객체의 `unsubscribe()`메서드를 호출하면 실행을 종료하고 필요한 자원을 알아서 정리해준다.
+
+<br>
+
+### Observer
+`Observer`는 `Observable`이 전달하는 데이터의 소비자(Consumer)이다. 옵저버는 `next`, `error`, `complete`콜백을 가지고 옵저버블 스트림을 처리한다. 
+
+<br>
+
+### Operators
+`Operator`는 옵저버블의 동작을 제어하는 함수로, 두가지 종류가 있다.
+1. `Pipeable Operators`는 `Observable.pipe()`의 매개변수로 전달되어 체이닝 될 수 있는 operator이다. `순수 함수`이기 때문에 ***기존 옵저버블을 변경하지 않고 새로운 옵저버블을 방출한다.***
+
+2. `Creation Operators`는 보통 단독으로 호출될 수 있는 형태의 함수로, **새로운 옵저버블을 생성한다.**
+
+계속 다룰 예정
+
+<br>
+
+### Subscription
+`Subscription`은 Disposable Resource를 가리키는 객체로, 옵저버블의 실행을 말한다. `unsubscribe()`라는 메서드를 가지는데, 이는 리소스를 해제하는 역할을 하는 메서드다. 예전에는 `Subscription`을 `Disposable`이라고 불렀다고 한다.
+
+`unsubscribe`가 구독을 취소한다는 것은 알고 있는데 어떻게 취소하는걸까? 우선 옵저버블은 `pipe`에 의해 여러개가 체이닝 되거나 `subscribtion.add()`로 여러개의 구독을 묶을 수 있는데, 이 때 마지막으로 전달받은 `Subscription` 객체의 `unsubscribe()`를 호출하면 알아서 연결된 모든 구독을 취소해준다. 
+```ts
+import { interval, merge } from "rxjs";
+import { finalize } from "rxjs/operators";
+
+const observable1 = interval(1000).pipe(
+  finalize(() => console.log("observable 1 구독완료"))
+);
+const observable2 = interval(1000).pipe(
+  finalize(() => console.log("observable 2 구독완료"))
+);
+
+// 두개의 옵저버블을 operator로 합쳐서 하나의 Subscription 객체를 받았다.
+const subscription = merge(observable1, observable2).subscribe();
+
+setTimeout(() => subscription.unsubscribe(), 1800);
+// observable 1 구독완료
+// observable 2 구독완료
+```
+```ts
+const subscription1 = observable1.subscribe();
+const subscription2 = observable2.subscribe();
+// Subscription.add 로 두개의 구독을 묶었다.
+subscription1.add(subscription2);
+
+setTimeout(() => subscription1.unsubscribe(), 1800);
+// observable 1 구독완료
+// observable 2 구독완료
+```
+이렇게 편리하게 동작하는 이유는 구독결과 반환되는 Subscription객체는 부모(연결된) Subscription을 상호 참조하고있는데, 이를 이용해 연결된 모든 Subscription의 구독취소 로직(리소스 정리)을 실행하기 때문이다.
+```ts
+// Subscription.ts
+export class Subscription implements SubscriptionLike {
+  // ...
+
+  unsubscribe(): void {
+    // ...
+
+    // Remove this from it's parents.
+    const { _parentage } = this;
+    if (_parentage) {
+      this._parentage = null;
+      if (Array.isArray(_parentage)) {
+        for (const parent of _parentage) {
+          parent.remove(this);
+        }
+      } else {
+        _parentage.remove(this);
+      }
+    }
+    // ...
+```
+명시적으로 `unsubscribe()`를 호출하지 않아도 구독하면 알아서 리소스를 정리까지 수행하는 Observable도 많다. 하지만 구독 취소가 필요한 옵저버블을 구독해놓고 구독취소하지 않으면 메모리 누수의 원인이 될 수 있으므로 주의해야한다.
+
+<br>
+
+### Subjects
+기본 Observable은 `Unicast`방식으로 동작하는데 반해 `Subject`는 ***`Multicast`방식으로 작동될 수 있는 타입의 옵저버블이면서 동시에 옵저버인 객체다.*** 아래 예제는 `Subject`를 `Observable`/`Observer`로 써 사용한다.
+```ts
+import { from, Subject } from "rxjs";
+import { tap } from "rxjs/operators";
+
+const subject = new Subject<number>();
+
+// Subject를 Observable로 사용
+subject.subscribe((v) => console.log(`Observer1 : ${v}`));
+subject.subscribe((v) => console.log(`Observer2 : ${v}`));
+
+const observable = from([1, 2]).pipe(tap(() => console.log("SIDE EFFECT")));
+
+// Subject를옵저버로 사용
+observable.subscribe(subject);
+/**
+ * RESULT
+ * "SIDE EFFECT"
+ * Observer1 : 1
+ * Observer2 : 1
+ * "SIDE EFFECT"
+ * Observer1 : 2
+ * Observer2 : 2
+ */
+```
+위 예제는 `Subject`를 활용해 `Observable`을 `Multicast`로 동작하게 만들었다. 옵저버블이면서 옵저버란 개념은 잘 와닿지 않는데, 이 예제를 보면 확실히 알 수 있다. 
+
+RxJS에는 다음 4가지 종류의 `Subject`가 있다.
+- [Subject](#Subject)
+- [BehaviorSubject](#BehaviorSubject)
+- [ReplaySubject](#ReplaySubject)
+- [AsyncSubject](#AsyncSubject)
+
+<br>
+
+### Subject
+기본적인 Subject 객체다. ***초기값이 없고, 값 방출 후 구독한 옵저버들은 값을 받을 수 없다.***
+```ts
+import { Subject } from "rxjs";
+const sub = new Subject();
+sub.next(1);
+sub.subscribe((x) => {
+  console.log("Subscriber A", x);
+});
+sub.next(2);
+sub.subscribe((x) => {
+  console.log("Subscriber B", x);
+});
+sub.next(3);
+/**
+ * Subscriber A 2
+ * Subscriber A 3
+ * Subscriber B 3
+ */
+```
+<br>
+
+### BehaviorSubject
+`BehaviorSubject`는 ***초기값이 있고, 나중에 구독한 옵저버들도 마지막으로 방출한 값은 받을 수 있다.***
+
+<br>
+
+### Example
+---
+1. 다음 예제는 `document`에 `click`이벤트 발생 지점에 원을 랜더링하고, 랜더링 되는 원들이 하나의 Subject에서 방출되는 최근값을 랜더링 하도록 하는 예제다. [여기](https://stackblitz.com/edit/rxjs-behaviorsubject-mouseclicks?file=index.ts)에 가면 거의 비슷한 코드가 실행되는것을 확인할 수 있다.
+```ts
+import { BehaviorSubject, fromEvent, interval, merge } from "rxjs";
+import { map, mergeMap, tap } from "rxjs/operators";
+
+const subject = new BehaviorSubject(0);
+
+type Coords = { id: number; x: number; y: number };
+
+const addContent = (id: number | string, content: number) => {
+  document.getElementById(`${id}`)!.innerText = String(content);
+};
+
+const addHtmlElement = (coords: Coords) => {
+  document.body.innerHTML += `  <div 
+    id=${coords.id}
+    style="
+      position: absolute;
+      height: 30px;
+      width: 30px;
+      text-align: center;
+      top: ${coords.y}px;
+      left: ${coords.x}px;
+      background: silver;
+      border-radius: 80%;"
+    >
+  </div>`;
+};
+
+const interval$ = interval(1000).pipe(
+  tap((v) => subject.next(v)),
+  tap((v) => addContent("intervalValue", v))
+);
+
+const click$ = fromEvent(document, "click").pipe(
+  map((e) => e as MouseEvent),
+  mergeMap((e) => {
+    const id = Math.random();
+    addHtmlElement({ id: id, x: e.clientX, y: e.clientY });
+    return subject.pipe(tap((value) => addContent(id, value)));
+  })
+);
+
+merge(interval$, click$).subscribe();
+```
+<br>
+
+### ReplaySubject
+<!-- TODO : 여기서부터 작성하면 된다. -->
+
+<br>
+
+### AsyncSubject
+
+
+
+<br>
+
+### Scheduler
+
+
+<br><br>
+
+
 ## Hot/Cold Observable, Unit/Multicast
 RxJS 옵저버블은 기본적으로 구독 전까지 동작하지 않는데, 이런 특성을 갖는 Observable은 `Cold Observable`이라고 한다. 
 
@@ -169,19 +423,6 @@ setTimeout(() => lastUrl.subscribe(console.log), 1000);
  */
 ```
 
-<br>
-
-## Subjects
-`Subject`는 옵저버블이면서 옵저버로 작동하는 특수한 옵저버블로, 여러 옵저버들에게 하나의 실행을 공유한다. RxJS에는 다음 4가지 종류의 `Subject`가 있다.
-- [Subject](#Subject)
-- [BehaviorSubject](#BehaviorSubject)
-- [ReplaySubject](#ReplaySubject)
-- [AsyncSubject](#AsyncSubject)
-
-### Subject
-### BehaviorSubject
-### ReplaySubject
-### AsyncSubject
 
 <br><br>
 
