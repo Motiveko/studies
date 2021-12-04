@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "noImplicitAny": true,
+    // "noImplicitAny": false,
     "module": "es6",
     // "target": "es5", // Promise를 못쓴다.
     "target": "es6",

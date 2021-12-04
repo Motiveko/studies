@@ -122,7 +122,7 @@ export class Subscription implements SubscriptionLike {
       }
     }
     // ...
-```o
+``` 
 명시적으로 `unsubscribe()`를 호출하지 않아도 구독하면 알아서 리소스를 정리까지 수행하는 Observable도 많다. 하지만 구독 취소가 필요한 옵저버블을 구독해놓고 구독취소하지 않으면 메모리 누수의 원인이 될 수 있으므로 주의해야한다.
 
 <br>
@@ -381,7 +381,20 @@ setTimeout(() => {
 <br>
 
 ### Scheduler
+정리중..
+task를 scheduling할때 쓴다.
 
+### queueScheduler
+### asapScheduler
+- 동작을 defer시킬때 쓴다. 이 말은 setTimeout(task, 0)와 거의 같다. 단, 이것보다 빠르다고 하는데 자세한건 좀 더살펴보자
+
+### asyncScheduler
+- setTimeout 과 같이 비동기로 동작하게 만들 때 쓴다.
+
+### animationFrameScheduler 
+- delay=0일 때 window.requestAnimationFrame 이 발생하면 task를 실행한다. 이 말은 repaint 되기 직전에 실행된다는 말이라고함. 찾아보자.
+- 이를 이용해 smooth browser animation이 구현 가능하다.
+- delay 있으면 asyncScheduler화 되므로 0으로 써야할듯
 
 <br><br>
 
