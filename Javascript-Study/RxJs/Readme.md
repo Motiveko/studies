@@ -122,7 +122,7 @@ export class Subscription implements SubscriptionLike {
       }
     }
     // ...
-```
+```o
 명시적으로 `unsubscribe()`를 호출하지 않아도 구독하면 알아서 리소스를 정리까지 수행하는 Observable도 많다. 하지만 구독 취소가 필요한 옵저버블을 구독해놓고 구독취소하지 않으면 메모리 누수의 원인이 될 수 있으므로 주의해야한다.
 
 <br>
@@ -187,6 +187,7 @@ sub.next(3);
 
 ### BehaviorSubject
 `BehaviorSubject`는 ***초기값이 있고, 나중에 구독한 옵저버들도 마지막으로 방출한 값은 받을 수 있다.***
+참고로 `Subject`의 `complete()` 호출 이후에 구독하면 값을 받을수 없다.
 
 <br>
 
@@ -240,13 +241,142 @@ merge(interval$, click$).subscribe();
 <br>
 
 ### ReplaySubject
-<!-- TODO : 여기서부터 작성하면 된다. -->
+`ReplaySubject`는 `BehaviorSubject`와 비슷하게 나중에 구독한 옵저버에게 버퍼된 값을 돌려준다. 
+
+```ts
+export class ReplaySubject<T> extends Subject<T> {
+  //...
+  constructor(bufferSize?: number, windowTime?: number, scheduler?: SchedulerLike);
+}
+```
+`BufferSize`는 버퍼할 값의 갯수, `windowTime`은 버퍼할 시간이다. BufferSize 크기 windowTime 내에 방출된 값의 개수 중 작은 값만큼 버퍼한다. 옵저버가 구독하는 시점에 버퍼된 값으 개수만큼 일시에 `next()`로 방출한다.
+
+참고로 `Subject`의 `complete()` 이후에도 **버퍼에 남아있는 값은 받을 수 있다.**(`BehaviorSubject`는 못받음)
+
+---
+Example
+1. BufferSize가 100이지만 windowTime이 150ms이므로 최근 150ms동안 방출된 값만 캐시한다. 따라서 300ms 뒤에 구독하는 observerB가 받을 수 있는 값은 1부터다.
+```ts
+import { interval, ReplaySubject } from "rxjs";
+import { take, tap } from "rxjs/operators";
+const subject = new ReplaySubject(100, 150 /* windowTime */);
+
+subject.subscribe({
+  next: (v) => console.log(`observerA: ${v}`),
+});
+
+interval(100)
+  .pipe(
+    take(3),
+    tap((v) => subject.next(v))
+  )
+  .subscribe();
+
+setTimeout(() => {
+  subject.subscribe({
+    next: (v) => console.log(`observerB: ${v}`),
+  });
+}, 300);
+
+// observerA : 0
+// observerA : 1
+// observerA : 1
+// observerA : 2
+// observerA : 2
+```
 
 <br>
 
 ### AsyncSubject
+`AsyncSubject`는 Subject의 `complete()`가 호출되는 시점에 마지막으로 방출된(`next`) 값을 방출한다.
+구현 코드는 대략 아래와 같이 생겼다. `complete()` 호출 이후에 구독해도 값을 받을 수 있다.
+```ts
+// AsyncSubject
+export class AsyncSubject<T> extends Subject<T> {
 
+  // ...
 
+  next(value: T): void {
+    // 값을 방출하지 않고 _value에 저장한다.
+    if (!this.isStopped) {
+      this._value = value;
+      this._hasValue = true;
+    }
+  }
+
+  complete(): void {
+    // super.next(_value) 로 값을 방출한다!
+    const { _hasValue, _value, _isComplete } = this;
+    if (!_isComplete) {
+      this._isComplete = true;
+      _hasValue && super.next(_value!);
+      super.complete();
+    }
+  }
+}
+```
+<br>
+
+---
+Example
+1. `Subscriber`들은 `complete()`호출전 마지막으로 방출한 3만 받을 수 있고, 1,2는 유실된다. 또한 `Subject.complete()`이후 구독해도 값을 똑같이 받을 수 있다.
+```ts
+import { AsyncSubject } from "rxjs";
+const subject = new AsyncSubject();
+
+subject.subscribe({
+  next: (v) => console.log(`observerA: ${v}`),
+});
+
+subject.next(1);
+subject.next(2);
+
+subject.subscribe({
+  next: (v) => console.log(`observerB: ${v}`),
+});
+
+subject.next(3);
+subject.complete();
+
+subject.subscribe((v) => console.log(`observerC: ${v}`));
+// observerA: 3
+// observerB: 3
+// observerC: 3
+```
+
+<br>
+
+2. Http Request Cache [(참고)](https://indepth.dev/reference/rxjs/subjects/async-subject)
+```ts
+import { AsyncSubject, BehaviorSubject, Observable, ReplaySubject } from "rxjs";
+
+interface Cache {
+  [url:string]: AsyncSubject<unknown>
+}
+const cache: Cache = {};
+
+function getResource(url: string): Observable<unknown> {
+  if(!cache[url]) {
+    cache[url] = new AsyncSubject();
+    fetch(url)
+      .then((response) => response.json)
+      .then((data) => {
+        cache[url].next(data);
+        cache[url].complete();
+      })
+  }
+  return cache[url].asObservable();
+}
+
+const url = 'https://api.mock.com/v1/cedfd'
+// 최초요청
+getResource(url).subscribe((data) => console.log(data));
+
+// 캐시된 내용이 나올것이다.(요청후 완료까지 3초가 안걸린다면)
+setTimeout(() => {
+  getResource(url).subscribe((data) => console.log(data));
+}, 3000);
+```
 
 <br>
 

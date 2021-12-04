@@ -1,68 +1,28 @@
-import { BehaviorSubject, fromEvent, interval, merge, of, Subject } from "rxjs";
-import {
-  catchError,
-  map,
-  mergeMap,
-  take,
-  takeUntil,
-  tap,
-} from "rxjs/operators";
+import { AsyncSubject, BehaviorSubject, Observable, ReplaySubject } from "rxjs";
 
-const subject = new BehaviorSubject(0);
-const unsubscriber = new Subject();
-type Coords = { id: number; x: number; y: number };
+interface Cache {
+  [url: string]: AsyncSubject<unknown>;
+}
+const cache: Cache = {};
 
-const addContent = (id: number | string, content: number) => {
-  document.getElementById(`${id}`)!.innerText = String(content);
-};
+function getResource(url: string): Observable<unknown> {
+  if (!cache[url]) {
+    cache[url] = new AsyncSubject();
+    fetch(url)
+      .then((response) => response.json)
+      .then((data) => {
+        cache[url].next(data);
+        cache[url].complete();
+      });
+  }
+  return cache[url].asObservable();
+}
 
-const addHtmlElement = (coords: Coords) => {
-  document.body.innerHTML += `  <div 
-    id=${coords.id}
-    style="
-      position: absolute;
-      height: 30px;
-      width: 30px;
-      text-align: center;
-      top: ${coords.y}px;
-      left: ${coords.x}px;
-      background: silver;
-      border-radius: 80%;"
-    >
-  </div>`;
-};
+const url = "https://api.mock.com/v1/cedfd";
+// 최초요청
+getResource(url).subscribe((data) => console.log(data));
 
-const clearDocs = () => {
-  document.body.innerHTML = `<div id='intervalValue'></div>`;
-};
-
-const interval$ = interval(1000).pipe(
-  map((v) => v % 10),
-  tap((v) => {
-    if (v === 0) {
-      // clearDocs();
-    }
-  }),
-  tap((v) => subject.next(v)),
-  tap((v) => addContent("intervalValue", v))
-);
-
-const click$ = fromEvent(document, "click").pipe(
-  map((e) => e as MouseEvent),
-  mergeMap((e) => {
-    const id = Math.random();
-    addHtmlElement({ id: id, x: e.clientX, y: e.clientY });
-    return subject.pipe(
-      tap((v) => {
-        if (v % 10 === 0) {
-          unsubscriber.next("z");
-        }
-      }),
-      takeUntil(unsubscriber),
-      tap((value) => addContent(id, value)),
-      catchError(() => of({}))
-    );
-  })
-);
-
-merge(interval$, click$).subscribe();
+// 캐시된 내용이 나올것이다.(요청후 완료까지 3초가 안걸린다면)
+setTimeout(() => {
+  getResource(url).subscribe((data) => console.log(data));
+}, 3000);
