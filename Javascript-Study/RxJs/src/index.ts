@@ -1,4 +1,9 @@
-import { animationFrameScheduler, asyncScheduler, queueScheduler } from "rxjs";
+import {
+  animationFrameScheduler,
+  asyncScheduler,
+  BehaviorSubject,
+  queueScheduler,
+} from "rxjs";
 
 // asyncScheduler 사용예시 1
 // asyncScheduler.schedule(
@@ -35,16 +40,16 @@ import { animationFrameScheduler, asyncScheduler, queueScheduler } from "rxjs";
 
 // animationFrameScheduler 실행 예시
 // HTML : <div style="background: #0ff;"></div>
-const div = document.querySelector("div");
-animationFrameScheduler.schedule(
-  function (height) {
-    div!.style.height = height + "px";
-    if ((height as number) > 300) {
-      this.unsubscribe();
-    }
-    this.schedule((height as number) + 1); // `this` references currently executing Action,
-    // which we reschedule with new state
-  },
-  0,
-  0
-);
+// const div = document.querySelector("div");
+// animationFrameScheduler.schedule(
+//   function (height) {
+//     div!.style.height = height + "px";
+//     if ((height as number) > 300) {
+//       this.unsubscribe();
+//     }
+//     this.schedule((height as number) + 1); // `this` references currently executing Action,
+//     // which we reschedule with new state
+//   },
+//   0,
+//   0
+// );
