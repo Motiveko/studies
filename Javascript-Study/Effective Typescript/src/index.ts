@@ -5,3 +5,13 @@ interface Tuple extends Array<number | string> {
 }
 const t: Tuple = ["1", 2];
 t.forEach((val) => console.log(val));
+
+interface Options {
+  width: number;
+  heigth: number;
+  color: string;
+}
+
+type OptionsUpdate = {
+  [k in keyof Options]: Options[k];
+};

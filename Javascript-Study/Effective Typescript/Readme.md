@@ -966,7 +966,227 @@ interface Array<T> {
 
 타입 선언에는 사용자가 채워야 하는 빈틈이 있을 수 있는데, 이 때 보강을 사용할 수 있도록 `인터페이스`로 타입을 선언하면 좋다. 그런데 API를 공개하는것이 아닌 프로젝트 내부적으로 선언되는 타입에 대해 선언 병합이 발생하는 것은 잘못된 설계다. 이럴땐 내가 타입을 잘 선언한게 맞는지 다시한번 생각해보고 `type`을 사용하도록 하자.
 
+<br><br>
+
 ## 14. 타입 연산과 제너릭 사용으로 반복 줄이기
+소프트웨어 개발 원칙중에 코드(함수, 상수, 루프)의 반복을 줄여 코드를 개선하는 DRY(don't repeat yourself)원칙이 있다. 이는 타입에도 적용할 수 있는 원칙이다. 타입이 중복되어 사용되는 몇가지 케이스를 살펴보고 이를 개선한다.
+
+
+1. 함수 시그니처를 `명명된 타입`으로 분리해 중복 제거
+
+함수에서 반복된 시그니처가 발생하고 있지 않는지 항상 살펴보고 이를 개선해야 한다. 예를들어 아래와 같이 몇몇 함수가 같은 타입 시그니처를 공유하고 있다고 해보자
+```ts
+function get(url: string, opts: Options): Promise<Response>{/* ... */}
+function post(url: string, opts: Options): Promise<Response>{/* ... */}
+```
+
+함수 시그니처를 아래와 같이 명명된 타입으로 분리할 수 있다.
+```ts
+type HttpFunction = (url: string, opts: Options): Promise<Response>
+const get: HttpFunction = (url, opts) => {/* ... */}
+const post: HttpFunction = (url, opts) => {/* ... */}
+```
+
+<br>
+
+2. 타입 확장을 통한 중복 제거
+
+선언된 타입/인터페이스에도 중복이 없는지, 상속관계가 없는지 살펴봐야 한다. 아래의 타입은 중복이 존재한다.
+```ts
+interface Person {
+  firstName: string;
+  lastName: string;
+}
+interface PersonWithBirthDate {
+  firstName: string;
+  lastName: string;
+  birth: Date;
+}
+```
+`PersonWithBirthDate`가 `Person`을 상속(확장)하도록 해서 중복을 피하고, `Person`타입이 변할 때 내용이 자동으로 싱크되어 `PersonWithBirthDate`에 반영되도록 할 수 있다. 물론 **둘이 전혀 다른 독립된 타입이라면**(싱크할 필요가 없다면) 이런 방법은 옳지 않을것이다.
+
+```ts
+interface PersonWithBirthDate extends Person {
+  birth: Date;
+}
+
+// or
+
+type PersonWithBirthDate = Person & { birth: Date };
+```
+
+<br>
+
+3. 어떤 타입의 부분집합 정의
+
+아래는 `State`와 이것의 일부분을 표현하는 `TopNavState` 두개의 타입을 정의한 예시다.
+```ts
+interface State {
+  userId: string;
+  pageTitle: string;
+  recentFiles: string[];
+  pageContents: string;
+}
+interface TopNavState {
+  userId: string;
+  pageTitle: string;
+  recentFiles: string[];
+}
+```
+`TopNavState`는 여러가지 방법으로 안정적으로(싱크되게) 정의 할 수 있는데, 우선 `State`를 인덱싱 하여 속성의 타입에서 중복 제거가 가능하다.
+```ts
+type TopNaveState = {
+  userId: State['userId'];
+  pageTitle: State['pageTitle'];
+  recentFiles: State['recentFiles'];
+}
+```
+하지만 여전히 코드의 반복이 있고, `TopNavState`의 프로퍼티 명을 잘못 입력하는 경우도 있을 수 있다. `매핑된 타입`을 이용하면 좀 더 개선시킬 수 있다.
+```ts
+type TopNaveState = {
+  [k in 'userId' | 'pageTitle' | 'recentFiles']: State[k];
+};
+```
+많이 개선되었다. userId를 userid라고 잘못쓰면 타입 시스템이 에러를 발생시킬것이다. `매핑된 타입`은 굉장히 많으 쓰이고, 표준 라이브러리에서도 찾을 수 있는데, `Pick`이라고 한다.
+```ts
+// lib.es5.d.ts
+type Pick<T, K extends keyof T> = {
+    [P in K]: T[P];
+};
+```
+`Pick`을 이용해 `TopNavState`를 아래와 같이 정의할 수 있다.
+```ts
+type TopNavState = Pick<State, 'userId' | 'pageTitle' | 'recentFiles' >;
+```
+`Pick`은 제너릭 타입으로, `Pick`을 사용하는것은 ***타입에 대해 함수를 호출하는 것과 같다.***
+
+<br>
+
+4. 태그된 유니온(Tagged Union)에서 중복 제거
+
+아래와 같이 태그된 유니온에서도 중복이 많이 발생한다.
+```ts
+
+interface SaveAction{
+  type: 'save'
+  // ...
+}
+interface LoadAction {
+  type: 'load';
+  // ...
+}
+
+type Action = SaveAction | LoadAction;
+type ActionType = 'save' | 'load';
+```
+위의 방식은 `ActionType`에 type 프로퍼티 값을 다시 써주는 중복이 발생한다. `Action`을 `인덱싱`하면 이를 개선할 수 있다.
+```ts
+type ActionType = Action['type'];
+```
+`ActionType`은 `Pick<Action, 'type'>`과 다르다는것을 명심하자.
+
+<br>
+
+
+5. 어떤 타입의 약한 타입(weak type)의 중복제거
+
+약한 타입이란 선택적 속성만 가지는 타입을 말한다. 예를들어, 클래스의 생성시 속성을 모두 채우고 상태를 업데이트 하는 `update()` 함수를 정의한다고 할 때, 클래스의 속성들의 약한 타입을 인자로 받을것이다.
+```ts
+interface Options {
+  width: number;
+  heigth: number;
+  color: string;
+}
+interface OptionsUpdate {
+  width?: number;
+  heigth?: numer;
+  color?: string;
+}
+class UIWidget {
+  constructor(init: Options) {/**/}
+  update(options: OptionsUpdate) {/**/}
+}
+```
+딱봐도 중복이 너무 많다. 우선 `매핑된 타입`과 `keyof`를 사용해 `Options`로부터 `OptionsUpdate`를 만들 수 있다. ***`keyof`는 타입을 받아서 속성 타입의 유니온을 반환한다.***
+
+```ts
+type OptionsUpdate  = {
+  [k in keyof Options]: Options[k]
+}
+```
+이러한 패턴 역시 아주 자주 쓰여 표준 라이브러리에 `Partial`로 정의되어 있다.
+```ts
+class UIWidget {
+  constructor(init: Options) {/**/}
+  update(options: Partial<Options>) {/**/}
+}
+```
+
+<br>
+
+6. 값의 형태에 해당하는 타입을 정의할 때 중복제거
+
+어떤 값이 이미 존재할 때, 해당 값의 형테에 해당하는 타입을 정의하고 싶을 수 있다. `typeof`연산자를 사용하자.
+```ts
+const INIT_OPTIONS = {
+  width: 640,
+  heigth: 480,
+  color: '#ababab',
+}
+type Options = typeof INIT_OPTIONS;
+/*
+type Options = {
+    width: number;
+    heigth: number;
+    color: string;
+}
+*/
+```
+
+<br>
+
+7. 함수나 메서드의 반환 값에 명명된 타입을 만들 경우
+
+제목그대로, 함수의 반환타입을 타입으로 정의하고 싶은 경우 유틸리티 타입 `ReturnType`을 사용하면 된다.
+```ts
+function getUserInfo(userId: string) {
+  // ...
+  return {
+    userId, name, age, height, weight
+  };
+}
+
+type UserInfo = ReturnType<typeof getUserInfo>;
+```
+
+---
+`제너릭 타입`은 ***타입을 위한 함수***와 같다고 했다. 함수에서 일반적으로 매개변수로 매핑할 수 있는 값을 타입 시스템을 이용해 제한하는 것 처럼, ***제너릭 타입에도 매개변수를 제한***해야 한다. 이 때 `extends`를 사용하여 제너릭 매개변수가 특정 타입을 확장한다고 정의할 수 있다.
+
+```ts
+interface Name {
+  first: string;
+  last: string;
+}
+
+// 제너릭 타입 DancingDuo
+type DancingDuo<T extends Name> = [T, T]; 
+
+const couple1: DancingDuo<Name> = [
+  {first: 'f1', last: 'l1'},
+  {first: 'f2', last: 'l2'}
+];  // ok
+
+const couple2: DancingDuo<{first: string}> = [  // Name 타입에 필요한 'last' 속성이 없습니다.
+  {first: 'f1'},
+  {first: 'f2'}
+]
+```
+`{first: string}`이 `Name`을 확장하지 않았기 때문에 오류가 발생하였다. 
+
+제너릭 타입 사용시 항상 매개변수를 작성해야한다. `DancingDuo<Name>`는 작동하지만 `DancingDuo`는 동작하지 않는다. 타입스크립트가 제너릭 매개변수의 타입을 추론하게 하기 위해, 함수를 작성할 때는 신중하게 타입을 고려하도록 하자.
+
+<br><br>
+
 ## 15. 동적 데이터에 인덱스 시그니처 사용하기
 ## 16. number 인덱스 시그니처보다는 Array, 튜플, ArrayLike를 사용하기
 ## 17. 변경 관련된 오류 방지를 위해 readonly 사용하기
