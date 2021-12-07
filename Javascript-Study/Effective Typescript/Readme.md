@@ -1188,7 +1188,46 @@ const couple2: DancingDuo<{first: string}> = [  // Name 타입에 필요한 'las
 <br><br>
 
 ## 15. 동적 데이터에 인덱스 시그니처 사용하기
+정적인 타입은 인터페이스로 정의하고, ***동적인 타입은 `인덱스 시그니처`를 사용해 표현***한다. 예를들어 컬럼값을 모르는 CSV 파일을 파싱할 때, 결과값을 인덱스 시그니처로 만들 수 있다.
+
+```ts
+function parseCSV(input: string): {[columnName: string]: string}[] {
+  const lines = input.split('\n');
+  const [header, ...rows] = lines;
+  const headerColumns = header.split(',');
+
+  return rows.map((rowStr) => {
+    const row: { [columnName: string]: string } = {};
+    rowStr.split(',').forEach((v, i) => {
+      row[headerColumns[i]] = v;
+    })
+    return row;
+  })
+}
+```
+만약 사용자가 입력할 열값을 알 수 있다면 인터페이스로 정의해도 괜찮다. 단, 선언한 열값과 런타이에 들어오는 값이 일치한다는 보장은 없으므로 값에 `string`타입과 함께`undefined`를 추가해 안정성을 높일 수 있다. 
+
+어떤 타입에 가능한 필드가 제한되어 있는 상황이면 인덱스 시그니처로 모델링 하지 말아야한다. 만약 키 값에 ***`string`의 부분집합***을 정의하고 싶다면 `Record`나 `매핑된 타입`을 사용할 수 있다. 특히 **매핑된 타입의 경우 키마다 별도의 타입을 사용할 수도 있다.**
+```ts
+type Vec3D = Record<'x' | 'y' | 'z' , number>;
+// { x: number, y: number, z: number }
+
+// 매핑된 타입, 키마다 값의 타입을 동적으로 줄 수도 있다.
+type ABC = {[k in 'a' | 'b' | 'c']: k extends 'b' ? string : number};
+/*
+type ABC = {
+  a: number;
+  b: string;
+  c: number;
+}
+*/
+```
+<br><br>
+
 ## 16. number 인덱스 시그니처보다는 Array, 튜플, ArrayLike를 사용하기
+
+
+
 ## 17. 변경 관련된 오류 방지를 위해 readonly 사용하기
 ## 18. 매핑된 타입을 사용하여 값을 동기화하기
  
