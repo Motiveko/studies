@@ -39,6 +39,13 @@ export function expectText<T>(
   expect(actualText).toBe(text);
 }
 
+export function expectContent<T>(
+  fixture: ComponentFixture<T>,
+  text: string
+): void {
+  expect(fixture.nativeElement.textContent).toBe(text);
+}
+
 export function setFieldValue<T>(
   fixture: ComponentFixture<T>,
   testid: string,

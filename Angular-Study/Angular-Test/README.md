@@ -1508,3 +1508,195 @@ Angular에서 싱글톤으로 생성되는 서비스는 일반적으로 아래�
 - 상태값을 가진다.
 
 <!-- 따라서 서비 -->
+
+### 16. Testing Pipes
+`pipe`를 테스트 하는데는 두가지 방법이 있다.
+  1. `transform` 메서드만 테스트
+  2. `Component`에 `pipe`를 적용하고 랜더링 되는 값을 테스트
+
+아래  `TranslatePipe`는 `TranslateService`에 의존하여, 동기/비동기적으로 작동하는 pipe다.
+
+```ts
+// translate.pipe.ts
+@Pipe({
+  name: 'translate',
+  pure: false,
+})
+export class TranslatePipe implements PipeTransform, OnDestroy {
+  private lastKey: string | null = null;
+  private translation: string | null = null;
+
+  private onTranslationChangeSubscription: Subscription;
+  private getSubscription: Subscription | null = null;
+
+  constructor(
+    private changeDetectorRef: ChangeDetectorRef,
+    private translateService: TranslateService
+  ) {
+    this.onTranslationChangeSubscription =
+      this.translateService.onTranslationChange.subscribe(() => {
+        if (this.lastKey) {
+          this.getTranslation(this.lastKey);
+        }
+      });
+  }
+
+  public transform(key: string): string | null {
+    if (key !== this.lastKey) {
+      this.lastKey = key;
+      this.getTranslation(key);
+    }
+    return this.translation;
+  }
+
+  private getTranslation(key: string): void {
+    this.getSubscription?.unsubscribe();
+    this.getSubscription = this.translateService
+      .get(key)
+      .subscribe((translation) => {
+        this.translation = translation;
+        this.changeDetectorRef.markForCheck();
+        this.getSubscription = null;
+      });
+  }
+
+  public ngOnDestroy(): void {
+    this.onTranslationChangeSubscription.unsubscribe();
+    this.getSubscription?.unsubscribe();
+  }
+}
+```
+pipe사용시 Angular에서 `transform()` 메서드를 호출하게 되는데, 이 때 `getTranslation`을 호출하고, 이는 다시 `TranslateService.get()`을 호출한다.
+```ts
+// translate.service.ts
+@Injectable()
+export class TranslateService {
+  private currentLang = 'en';
+
+  private translations: Translations | null = null;
+
+  public onTranslationChange = new EventEmitter<Translations>();
+
+  constructor(private http: HttpClient) {
+    this.loadTranslations(this.currentLang);
+  }
+
+  public use(language: string): void {
+    this.currentLang = language;
+    this.loadTranslations(language);
+  }
+
+  /** Sync/Async 로 처리된다.*/
+  public get(key: string): Observable<string> {
+    if (this.translations) {
+      return of(this.translations[key]);
+    }
+    return this.onTranslationChange.pipe(
+      take(1),
+      map((translations) => translations[key])
+    );
+  }
+
+  /** 설정된 language값에 따라 translation 가져온다. */
+  private loadTranslations(language: string): void {
+    this.translations = null;
+    this.http
+      .get<Translations>(`assets/${language}.json`)
+      .subscribe((translations) => {
+        this.translations = translations;
+        this.onTranslationChange.emit(translations);
+      });
+  }
+}
+```
+`TranslateService.get()`은 `translation`이 있을경우 해당 값을 Synchronous하게 반환하고, 없을경우 `onTranslationChange`를 반환하는데, 이게 결국 `httpClient`를 사용해 비동기적으로 동작하게 된다.
+`TranslatePipe.getTranslation()`의 subscription의 next헨들러 내 `changeDetectorRef.markForCheck()`는 이런 동작을 고려해 우선 pipe가 우선 null을 반환하고, 추후 비동기적으로 값이 넘어왔을때 Angular의 changeDetector가 다시 한번 변화감지하여 `TranslatePipe.transform`가 호출하고 다시 translation을 받아 값을 랜더링 하도록 동작하게 만든다.
+
+<br>
+
+Component에 랜더링 하지 않는 unit test는 간단하고, 의미가 별로 없다. 따라서 랜더링을 테스트하는 `integration test`를 작성한다. 컴포넌트는 간단한 테스트용 컴포넌트를 만든다. `TranslateService`는 `pipe`에서 직접 의존하는 `onTranslationChange`와 `get`만 mocking하여 만든다(`Partial<TranslateService>`).
+
+<br>
+
+비동기 테스트는 역시 `fakeAsync`, `tick`함수를 사용하고, Service의 비동기 동작은 RxJS의 `delay` 연산자로 흉내낸다. 작성된 test suite는 아래와 같다.
+
+
+```ts
+// translate.pipe.spec.ts
+
+//...import
+
+const key1 = 'key1';
+const key2 = 'key2';
+
+@Component({
+  template: `{{ key | translate }}`,
+})
+class HostComponent {
+  public key = key1;
+}
+
+describe('TranslatePipe', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  // pipe에서 직접 의존하는 메서드/프로퍼티만 작성한다.
+  let translateService: Pick<TranslateService, 'onTranslationChange' | 'get'>;
+
+  beforeEach(async () => {
+    translateService = {
+      onTranslationChange: new EventEmitter<Translations>(),
+      get(key: string): Observable<string> {
+        return of(`Translation for ${key}`);
+      },
+    };
+
+    await TestBed.configureTestingModule({
+      declarations: [TranslatePipe, HostComponent],
+      providers: [{ provide: TranslateService, useValue: translateService }],
+    }).compileComponents();
+
+    translateService = TestBed.inject(TranslateService);
+    fixture = TestBed.createComponent(HostComponent);
+  });
+
+  // service가 동기방식으로 값을 줄때 테스트
+  it('translates the key, sync service response', () => {
+    fixture.detectChanges();
+    expectContent(fixture, 'Translation for key1');
+  });
+
+  // translateService가 비동기로 동작할때의 테스트는 delay oerator로 가라로 만들고, fakeAsync 함수로 테스트한다.
+  it('translates the key, async service response', fakeAsync(() => {
+    
+    // get메서드가 비동기로 동작하도록 재정의한다.
+    translateService.get = (key) =>
+      of(`Async translation for ${key}`).pipe(delay(100));
+    fixture.detectChanges();
+    
+    // null은 랜더링하면 ''
+    expectContent(fixture, '');
+
+    tick(100);
+
+    // 다시 변화감지가 수행되도록 한다.
+    fixture.detectChanges();
+    expectContent(fixture, 'Async translation for key1');
+  }));
+
+  it('translates a changed key', () => {
+    fixture.detectChanges();
+    fixture.componentInstance.key = key2;
+    fixture.detectChanges();
+
+    expectContent(fixture, 'Translation for key2');
+  });
+
+  it('updates on translation change', fakeAsync(() => {
+    fixture.detectChanges();
+    translateService.get = (key) => of(`New translation for ${key}`);
+    // translation이 바뀌면 값을 emit, pipe에서 이걸 구독하고 있다가 translateService.get()을 다시 호출한다.
+    translateService.onTranslationChange.emit({});
+    fixture.detectChanges();
+    expectContent(fixture, 'New translation for key1');
+  }));
+});
+```

@@ -17,6 +17,7 @@ import { FlickrSearchComponent } from './components/flickr-search/flickr-search/
 import { PhotoListComponent } from './components/flickr-search/photo-list/photo-list.component';
 import { SearchFormComponent } from './components/flickr-search/search-form/search-form.component';
 import { PhotoItemComponent } from './components/flickr-search/photo-item/photo-item.component';
+import { TranslatePipe } from './pipes/translate.pipe';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { PhotoItemComponent } from './components/flickr-search/photo-item/photo-
     PhotoListComponent,
     SearchFormComponent,
     PhotoItemComponent,
+    TranslatePipe,
   ],
   imports: [
     BrowserModule,
