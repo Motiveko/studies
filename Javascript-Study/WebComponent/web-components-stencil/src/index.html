@@ -7,64 +7,15 @@
 
     <script type="module" src="/build/web-components-stencil.esm.js"></script>
     <style>
-      body {
-        font-family: sans-serif;
-      }
-      #side-drawer-btn {
-        position: absolute;
-        right: 1rem;
-        background-color: orange;
-        z-index: 1000;
-      }
-      .side-nav ul {
-        list-style: none;
-        padding-left: 1rem;
-      }
 
-      .side-nav li {
-        margin: 1rem 0;
-      }
-
-      .side-nav a {
-        text-decoration: none;
-        color:black;
-      }
     </style>
     <script nomodule src="/build/web-components-stencil.js"></script>
   </head>
   <body>
-    <button id="side-drawer-btn">Open</button>
-    <uc-side-drawer  drawer-title="Main Menu">
-      <nav class="side-nav">
-        <ul>
-          <li><a href="/">A Link</a></li>
-          <li><a href="/">Another Link</a></li>
-          <li><a href="/">A third Link</a></li>
-          <ul>
-            <li><a href="/">B Link</a></li>
-            <li><a href="/">B Link</a></li>
-          </ul>
-        </ul>
-      </nav>
-    </uc-side-drawer>
-  <uc-tool-tip tool-tip-content="We built this before, now it is better!">
-    <span>Let's test this new Tooltip!</span>
-  </uc-tool-tip>
+    <uc-stock-price stock-symbol="AAPL"></uc-stock-price>
+  
+  <script type="module">
 
-    <script>
-      const toggleSideDrawer = function() {
-        let id = undefined;
-        return function() {
-          if(!id) {
-            id = setTimeout(() => { id = undefined }, 300)
-            // sideDrawer.open = !sideDrawer.open;
-            sideDrawer.toggle();
-          }
-        }
-      };
-      const sideDrawerBtn = document.querySelector('#side-drawer-btn');
-      const sideDrawer = document.querySelector('uc-side-drawer')
-      sideDrawerBtn.addEventListener('click', toggleSideDrawer());
-    </script>
+  </script>
   </body>
 </html>

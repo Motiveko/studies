@@ -1,0 +1,5 @@
+form button:disabled {
+    background-color: #ccc;
+    border: #ccc;
+    color: white;
+}

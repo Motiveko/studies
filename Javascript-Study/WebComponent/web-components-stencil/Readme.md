@@ -79,7 +79,7 @@ onCloseDrawer () {
 <br>
 
 ## 95. Using State
-`@Prop`은 외부에서 컴포넌트로 들어오는 값으 변화감지를 수행하고, `@State()`는 내부에서 변화감지를 수행한다.(`open`은 변화감지를 통해 랜더링을 다시한게 아닌, css selector에 의해 다시 랜더링 한것이었다.) `@State`가 변하면 `reder()`가 재실행된다.
+`@Prop`은 외부에서 컴포넌트로 들어오는 값의 변화감지를 수행하고, `@State()`는 내부에서 변화감지를 수행한다.(`open`은 변화감지를 통해 랜더링을 다시한게 아닌, css selector에 의해 다시 랜더링 한것이었다.) `@State`가 변하면 `reder()`가 재실행된다.
 
 <br>
 
@@ -90,3 +90,70 @@ onCloseDrawer () {
 
 ## 97. Adding Backdrop
 JSX는 하나의 root element만 가질 수 있다고 했는데, 사실 `render()`의 return이 배열이면 여러개의 Element를 랜더링 할 수 있다고한다 ㅎㅎ. 
+
+<br>
+
+## 107. Accessing the Host Element
+`@Element`를 이용해 Host Element에 접근할 수 있다. 이를 이용해 `shadowRoot`,`qeurySelector` 등의 HTMLElement의 메서드, 프로퍼티를 사용할 수 있다.
+```ts
+// el은 host element에 바인딩된다.
+@Element() el: HTMLElement; 
+
+// render()함수의 랜더링 결과는 shadowRoot에 랜더링되므로, 요소는 shadowRoot에서 쿼리해야한다.
+const symbol = (this.el.shadowRoot.querySelector('#stock-symbol') as HTMLInputElement).value;
+```
+
+<br>
+
+## 108. Using Refernces
+Element의 `ref` attribute를 이용해 컴포넌트의 프로퍼티와 HTML요소를 바인딩해 직접 접근 가능하다.(Angular에서 TemlplateReference 쓰는거랑 약간 비슷하다.) 문법은 `ref` 내부에 함수를 정의해 컴포넌트 속성에 HTMLElement를 할당하면 된다.
+
+```ts
+// stock-price.tsx
+export class StockPrice {
+  stokcInput: HTMLInputElement
+  //...
+
+  render() {
+    return [
+      //... 
+      <input type="text" id="stock-symbol" ref={el => this.stokcInput = el }/>
+    ]
+  }
+```
+> `ref`는 `tsx`의 기능이 아닌 `Stencil`의 기능이다. 
+
+<br>
+
+## 109. Two Way Binding & Input Validation
+`value` + `onInput` 어트리뷰트로 HTMLInputElment의 value에 대한 two way binding을 구현할 수 있다.(Angular보다 훨 복잡다)
+
+```tsx
+// stock-price.tsx
+export class StockPrice {
+
+  // @State 데코레이터가 있기때문에 값 변경시 다시 랜더링된다.
+  @State() stockUserInput: string;  
+  @State() stockInputValid = false;
+
+  onUserInput(event: Event) {
+    this.stockUserInput = (event.target as HTMLInputElement).value;
+    this.stockInputValid = this.stockUserInput.trim() !== '';
+  }
+  // ...
+  render() {
+    return [
+      // input 이벤트 발생시 stockUserInput값 재할당 및 최종적으로 다시 랜더링될것이다.
+      <input type="text" id="stock-symbol" 
+        ref={el => this.stokcInput = el }
+        value={this.stockUserInput}
+        onInput={this.onUserInput}  
+      />
+        
+      <button type="submit" disabled={!this.stockInputValid}>Fetch</button>
+    ]
+  }
+```
+
+## 111. Using the "componentdidload" Lifecycle Hook
+`componentDidLoad`는 컴포넌트가 DOM에 load될때의 훅이다. Angular의 `OnInit`훅 정도로 생각하면 될 것 같다.
