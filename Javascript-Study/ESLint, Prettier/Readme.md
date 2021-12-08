@@ -503,7 +503,7 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
     echo {}> .prettierrc.json
     ```
 3. `.prettierignore`파일도 생성하고 빌드 파일 등을 포함시킨다.
-4. `ESLint`와 함께 잘 작동하도록 `eslint-plugin-prettier` 설치
+4. `ESLint`와 함께 잘 작동하도록 [`eslint-plugin-prettier`](https://github.com/prettier/eslint-plugin-prettier) 설치(디테일한 설정은 공식 레포지토리를 참고한다)
     ```
     npm install --save-dev eslint-plugin-prettier
     ```
@@ -517,7 +517,6 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
         "arrow-body-style": "off",
         "prefer-arrow-callback": "off"
       },
-      "extends": ["plugin:prettier"]
     }    
     ```
     - `extends`: eslint-config-prettier configuration을 사용한다. **`ESLint`의 `Prettier`와 부딪히는 속성이 off된다.**
