@@ -494,6 +494,10 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
 
 ## 2. Prettier 적용하기
 ### 2.1 Basic Settings
+
+> ***❗️ `.editorconfig`를 지우자. 이게 있으면 `.prettierrc`를 override 한다고 한다.***
+> ***❗️❗️ `.prettierrc` 설정을 변경하면, 이를 lint가 인지하기 위해서는 `ESLintServer`를 재시작해줘야한다. 프로젝트를 껏다 키면된다. 이거 안되서 삽질을 겁나게 많이했다...***
+
 1. 설치하기
     ```
     npm install --save-dev --save-exact prettier
@@ -511,11 +515,16 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
     ```json
     // .eslintrc.json
     {
-      "plugins": ["prettier"],
+      "plugins": [
+        "prettier"
+      ],
+      "extends": [
+        //...
+        "plugin:prettier/recommended"
+      ]
       "rules": {
-        "prettier/prettier": "error",
-        "arrow-body-style": "off",
-        "prefer-arrow-callback": "off"
+        // ...
+        "prettier/prettier": ["error",{},{ "usePrettierrc": true }], // .prettierrc 설정을 사용한다.
       },
     }    
     ```
@@ -529,8 +538,21 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
 <br>
 
 ### 2.2 Editor Integration
-- 언젠가 정리해서 작성예정
+위의 ESLint + Prettier 설정 그대로에 `ESLint`, `Prettier` 플러그인을 설치하면 된다. 설치 후 `cmd + shif + p`로 vscode 설정파일(`settings.json`)에 가서 아래와 같은 형태의 옵션을 설정하면 된다.
+```json
+// settings.json
+{
+  // ...
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",  // cmd+k , cmd+f 시 .prettierrc 설정대로 포매팅
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true  // 코드 저장시 eslint 설정대로 코드 포매팅
+    },
+  },
+}
 
+```
+`save`와 `cmd+k , cmd+f`시 포맷팅이 일치하려면 결국 둘 다 `.prettierrc`의 설정으로 포맷팅 해야 한다. `2.1`의 설정은 이를 위한 설정이다. ***`.prettierrc`변경시 `ESLint`가 이를 알 수 있도록 반드시 재시작하자..***
 
 
 <br><br>
