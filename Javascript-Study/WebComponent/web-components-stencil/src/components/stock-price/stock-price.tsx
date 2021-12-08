@@ -1,5 +1,5 @@
-import { Component, Element, h, Prop, State } from '@stencil/core';
-import { catchError, debounceTime, from, map, Subject, switchMap, tap } from 'rxjs'
+import { Component, Element, h, Prop, State, Watch } from '@stencil/core';
+import { catchError, debounceTime, distinctUntilChanged, from, Subject, switchMap, tap } from 'rxjs'
 @Component({
   tag: 'uc-stock-price',
   styleUrl: './stock-price.css',
@@ -7,22 +7,29 @@ import { catchError, debounceTime, from, map, Subject, switchMap, tap } from 'rx
 })
 export class StockPrice {
 
-  stokcInput: HTMLInputElement
+  stokcInput: HTMLInputElement | undefined
 
-  @Element() el: HTMLElement;
+  @Element() el!: HTMLElement;
 
   @State() fetchedPrice: number = 0;
 
-  @State() stockUserInput: string;
+  @State() stockUserInput!: string;
   @State() stockInputValid = false;
-  @State() error: string;
+  @State() error!: string;
 
-  @Prop() stockSymbol: string
+  @Prop({mutable: true, reflect: true}) stockSymbol!: string
+  
+  @Watch('stockSymbol')
+  stockSymbolChanged(newValue: string, oldValue: string) {
+    this.stockUserInput = newValue;
+    this.subject.next(newValue);
+  }
 
   subject = new Subject<string>();
   constructor() {
     this.subject
       .pipe(
+        distinctUntilChanged((prev, curr) => prev===curr),
         debounceTime(300),
         switchMap(
           (symbol) => from(fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=YNJ8L0Q71SR4FY13`)
@@ -48,14 +55,32 @@ export class StockPrice {
   getPrice() {
     // const symbol = (event.target as HTMLInputElement).value || 'MSFT';
     // const symbol = (this.el.shadowRoot.querySelector('#stock-symbol') as HTMLInputElement).value;
-    // const symbol = this.stokcInput.value;
+    // const symbol = this.stokcInput.value; 
   }
-  componentDidLoad() {
+
+  componentWillLoad() {
+    console.log('componentWillLoad')
     console.log(this.stockSymbol)
+  }
+
+  componentWillUpdate() {
+    console.log('componentWillUpdate')
+  }
+
+  componentDidUpdate() {
+    console.log('componentDidUpdate')
+  }
+
+  componentDidLoad() {
     if( this.stockSymbol) {
       this.subject.next(this.stockSymbol);
     }
   }
+
+  disconnectedCallback() {
+    console.log('disconnectedCallback')
+  }
+
   
   onFetchStockPrice() {
     this.subject.next('');

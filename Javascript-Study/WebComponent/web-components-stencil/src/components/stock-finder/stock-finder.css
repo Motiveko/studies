@@ -1,0 +1,24 @@
+form input {
+  font: inherit;
+  color: #3b013b;
+  padding: 0.1rem 0.25rem;
+  display: block;
+  margin-bottom: 0.5rem
+}
+
+form input:focus,
+form button:focus {
+  outline: none;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li:hover,
+li:active {
+  background: #3b013b;
+  cursor: pointer;
+}
