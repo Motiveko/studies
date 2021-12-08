@@ -1225,8 +1225,60 @@ type ABC = {
 <br><br>
 
 ## 16. number 인덱스 시그니처보다는 Array, 튜플, ArrayLike를 사용하기
+제목 그대로, ***number타입을 키로 가지는 인덱스 시그니처 보다는 Array류의 타입을 사용해야하자.*** 왜인지 알아보자.
 
+우선 자바스크립트에서 '객체의 키의 타입'은 보통 `string`이나 `symbol`이다. 만약 숫자나 객체 등을 객체의 키로 사용하면 런타임에서 문자열로 바꿔 사용한다.
+```js
+const x = {};
+x[[1,2,3]] = 2;
+console.log(x); // { '1,2,3' : 21 }
 
+const y = {};
+y[1] = 1;
+console.log(y); // { '1': 1 }
+```
+
+그런데 배열은 엄연한 객체인데, ***숫자 인덱스를 사용한다.*** 이상한가? 사실 훼이크가 있는데, 문자열 키를 사용해도 배열을 참조하는게 가능하다. 또 `Object.keys`메서드로 배열의 키를 나열하면 키가 문자열로 출력된다.
+```js
+const x = [1,2,3];
+
+console.log(x[0]);    // 1
+console.log(x['0']);  // 1
+Object.keys(x);       // ['0', '1', '2']
+```
+이런 혼란을 바로잡기 위해 타입스크립트에서는 숫자 키를 허용하고, 문자열 키와 다른것으로 인식한다. `Array` 타입의 선언은 아래와 같다.
+```ts
+// lib.es5.d.ts
+interface Array<T> {
+  // ...
+  [n: number]: T;
+}
+```
+형태가 `number 인덱스 시그니처`와 매우 유사한걸 알 수 있다. 이게 바로 number 인덱스 시그니처보다는 Array, 튜플, ArrayLike를 사용해야 하는 이유다.
+
+그런데 `Array` 사용시 `for in...`문 등에서 조금 헷갈리는게 있다.
+```ts
+const xs = [1,2,3];
+for(const key in xs) {
+  console.log(typeof key);  // string
+  
+  xs[key];            // 정상 
+  xs[key.toString()]; // 인덱스 식이 'number' 형식이 아니므로 요소에 암시적으로 'any' 형식이 있습니다.
+}
+```
+Array에서 key의 타입은 number다. 그런데 `for in...`문을 돌리면 key의 타입이 string으로 나오는걸 확인할 수 있다. 그리고 이 string타입의 key로 배열의 인덱스 참조를 해도 오류가 안난다. 그런데, key.toString()으로 다시 string 타입으로 바꾸면 또 오류가 발생한다.(런타임 동작에는 문제가 없다.)
+
+이부분은 '배열을 순회하는 코드 스타일에 대한 실용적인 허용' 이라고 한다. 근데 헷갈린다. 그리고 실제로 `for in...`문은 `for of...`나 일반적인 `for`문에 비해 몇배는 느리니 사용을 지양하는 방법이라고 한다. `Array.prototype.forEach`라는 좋은 메서드도 존재한다.
+
+타입스크립트에는 `ArrayLike` 타입이 존재한다. 특정한 길이를 가지는 유사배열 객체인데, 길이가 고정인 number 인덱스 시그니처라면 사용을 고려해볼만 하다.(참고로 런타임에서 키는 역시 문자열로 바뀐다.)
+```ts
+// lib.es5.d.ts
+interface ArrayLike<T> {
+  readonly length: number;
+  readonly [n: number]: T;
+}
+```
+<br><br>
 
 ## 17. 변경 관련된 오류 방지를 위해 readonly 사용하기
 ## 18. 매핑된 타입을 사용하여 값을 동기화하기
