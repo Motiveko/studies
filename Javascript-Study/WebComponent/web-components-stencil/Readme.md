@@ -155,5 +155,94 @@ export class StockPrice {
   }
 ```
 
-## 111. Using the "componentdidload" Lifecycle Hook
-`componentDidLoad`는 컴포넌트가 DOM에 load될때의 훅이다. Angular의 `OnInit`훅 정도로 생각하면 될 것 같다.
+### 112. All Lifecycle Hooks
+다양한 종류의 [Stencil Component Lifecycle Method](https://stenciljs.com/docs/component-lifecycle#component-lifecycle-methods)를 알어보자
+
+기본적으로 Component Initialize 이후 순서대로
+- `connectedCallback`
+- `componentWillLoad` : component 로드 전에 호출
+- `componentWillRender`
+- `render`
+    - `render` 이후로 `State`붙은 값을 바꾸면 랜더링을 다시하므로 비효율적. 해당 작업은 가급적 `render` 전에 하자!
+- `componentDidRender`
+- `componentDidLoad`
+- `disconnectedCallback`: 컴포넌트 최종 제거
+
+`@Prop`이나 `@State`의 값이 변하면 rerender를 일으킨다.
+- `@Watch('propName')`
+- `componentShouldUpdate`
+- `componentWillUpdate`
+- `componentWillRender`
+- 이하 동일
+
+<br>
+
+## 114. Watching Prop Changes 
+`@Watch(PROPERTY_NAME)`데코레이터를 메서드에 붙이면 해당 메서드를 PropertyChange Hook으로 활용할 수 있다.(lifecycle상 update에서 제일 먼저 호출되는듯)
+```ts
+@Prop() stockSymbol!: string
+
+@Watch('stockSymbol')
+stockSymbolChanged(newValue: string, oldValue: string) {
+  // 인자로는 newValue, oldValue를 받는다.
+}
+```
+
+<br>
+
+## 117. Outputting a List of Elements
+`tsx`는 문법이 굉장히 특이하다. 아래와 같이 컴포넌트의 프로퍼티를 랜더링 할 수 있다.
+```tsx
+export class StockFinder {
+
+  searchResults: {name: string, symbol: string}[];
+
+  render() {
+    return [
+      <ul>
+        {this.searchResults?.map(result => (
+          <li>{result.name}</li>
+        ))}
+      </ul>
+    ]
+}
+}
+```
+
+<br>
+
+## 119. Emitting Customs Events
+> 참고 : https://stenciljs.com/docs/events
+
+Custom Event의 이름은 충돌 가능성이 없게 unique하게 짓는게 좋다.(예 :`ucSymbolSelected`)
+
+```tsx
+export class StockFinder {
+  @Event({bubbles: true, composed: true,}) ucSymbolSelected: EventEmitter<string>;
+
+  onSelectSymbol(symbol: string) {
+    this.ucSymbolSelected.emit(symbol)
+  }
+
+  render() {
+    return (
+      {this.searchResults?.map(result => (
+        <li onClick={this.onSelectSymbol.bind(this, result.symbol)}>{result.name}</li>
+      ))}
+    )
+  }
+}
+```
+
+```HTML
+<!-- ... -->
+<uc-stock-finder></uc-stock-finder>
+<script>
+  const stockFinderEl = document.querySelector('uc-stock-finder');
+  stockFinderEl.addEventListener('ucSymbolSelected', event => {
+    console.log(event);
+    // event.detail에 emit()으로 넘겨준 값이 들어있따.
+  })
+</script>
+````
+
