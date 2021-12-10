@@ -281,4 +281,61 @@ export class StockPrice {
 
 <br>
 
-## 123. Adding a Loading Spinner
+## 124. Embedding Components Into Components
+`Angular`에서는 Component를 모듈에서 만들고 해당 컴포넌트를 다른 모듈에서 사용하려면 다른 모듈의 `declarations`에 선언해야하는데, `stencil.js`에서는 기본적으로 global하게 사용 가능하다. WebComponent는  전역 객체의 메서드 `customElements.define()`를 사용하기 때문인 듯 하다.
+
+<br>
+
+## 125. Using CSS Properties
+[`css variable`](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties)을 이용하면, component 밖에서 정의한 변수를 컴포넌트 내부에서 사용 가능하다.
+```html
+<!-- index.html -->
+<style>
+  html {
+    --color-primary: #3b013b;
+    --color-primary-inverse: white;
+  }
+</style>
+```
+
+```css
+/* stock-price.css */
+form button:hover {
+  background: var(--color-primary, grey);
+}
+/* ... */
+```
+
+이러한 방법은 전체 `component`들의 `css color`를 통일하는데 굉장히 유용하다.
+
+<br><br>
+
+## 130. Using Stencil Config
+Stencil 프로젝트의 빌드 관련된 설정을 정의한다. [공식가이드](https://stenciljs.com/docs/host-element)를 참고하는게 낫다.
+
+<br>
+
+## 131. Building & Using the Components
+
+`npm run build`로 빌드 후 빌드한 파일을 프로젝트에 위치시킨다. 빌드시 `stencil.config.ts`의 `namespace`를 test로 지정하고, 빌드 결과물을 `scripts/`디렉토리에 넣었다면, 아래와 같이 html 파일에 esm을 import시킨다.
+```html
+<script type="module" src="./scripts/esm/test.js"></script>
+```
+이후 추가적인 설정 없이 html 파일에서 정의했던 Web Component를 사용할 수 있다.
+
+참고로 lazy loading으로 작동한다(실제 DOM에 render되는 순간에 load). 설정 안해도 알아서 해준다.
+
+<br>
+
+## 135. Using Web Components in an Angular App
+
+npm 배포한 프로젝트 설치 후..
+
+1. `AppModule`에서 import `@angular/core/CUSTOM_ELEMENTS_SCHEMA `
+  - angular component가 아닌 요소를 사용할것이다.
+
+2. @NgModule({ schemas: [CUSTOM_ELEMENTS_SCHEMA] })
+3. `main.ts`에서 import `NPM_PACKAGE_NAME/dist/loader/defineCustomElements`
+4. `main.ts`에서 `defineCustomElements(window)` 실행
+  - 프로젝트 전역에 WebComponent를 정의한다.
+5. 아무 컴포넌트의 템플릿에서 WebComponent를 사용할 수 있다.

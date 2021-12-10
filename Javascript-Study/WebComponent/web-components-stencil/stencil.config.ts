@@ -1,21 +1,21 @@
 import { Config } from '@stencil/core';
 
 export const config: Config = {
-  namespace: 'web-components-stencil',
+  namespace: 'UdemyWCCourse',
   outputTargets: [
     {
       type: 'dist',
-      esmLoaderPath: '../loader',
+      // esmLoaderPath: '../loader',
     },
-    {
-      type: 'dist-custom-elements-bundle',
-    },
-    {
-      type: 'docs-readme',
-    },
-    {
-      type: 'www',
-      serviceWorker: null, // disable service workers
-    },
+    // {
+    //   type: 'dist-custom-elements-bundle',
+    // },
+    // {
+    //   type: 'docs-readme',
+    // },
+    // {
+    //   type: 'www',
+    //   serviceWorker: null, // disable service workers
+    // },
   ],
 };
