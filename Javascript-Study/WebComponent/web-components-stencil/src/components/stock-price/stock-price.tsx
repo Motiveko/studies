@@ -1,4 +1,4 @@
-import { Component, Element, h, Prop, State, Watch } from '@stencil/core';
+import { Component, Element, h, Host, Listen, Prop, State, Watch } from '@stencil/core';
 import { catchError, debounceTime, distinctUntilChanged, from, Subject, switchMap, tap } from 'rxjs'
 @Component({
   tag: 'uc-stock-price',
@@ -21,6 +21,7 @@ export class StockPrice {
   
   @Watch('stockSymbol')
   stockSymbolChanged(newValue: string, oldValue: string) {
+    console.log('stockSymbolChanged')
     this.stockUserInput = newValue;
     this.subject.next(newValue);
   }
@@ -40,6 +41,7 @@ export class StockPrice {
             throw new Error('Invalid Symbol');
           }
           this.fetchedPrice = res['Global Quote']['05. price']
+          this.error = null;
         }),
         catchError(err => this.error = err.message)
       )
@@ -51,15 +53,25 @@ export class StockPrice {
     this.stockInputValid = this.stockUserInput.trim() !== '';
     if(this.stockInputValid) this.subject.next(this.stockUserInput);
   }
-  // API key: YNJ8L0Q71SR4FY13
-  getPrice() {
-    // const symbol = (event.target as HTMLInputElement).value || 'MSFT';
-    // const symbol = (this.el.shadowRoot.querySelector('#stock-symbol') as HTMLInputElement).value;
-    // const symbol = this.stokcInput.value; 
+
+  @Listen('ucSymbolSelected', {target: 'body'})
+  onStockSymbolSelected(event: CustomEvent) {
+    console.log('onStockSymbolSelected')
+    console.log(event);
+    if(event.detail && event.detail !== this.stockUserInput) {
+      this.stockUserInput = event.detail;
+      this.stockSymbol = this.stockUserInput
+      this.subject.next(event.detail);
+    }
+  }
+
+  hostData() {
+    return { class: this.error ? 'error' : '' }
   }
 
   componentWillLoad() {
     console.log('componentWillLoad')
+    this.stockUserInput = this.stockSymbol
     console.log(this.stockSymbol)
   }
 

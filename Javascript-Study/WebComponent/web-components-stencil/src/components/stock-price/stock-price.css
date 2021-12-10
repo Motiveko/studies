@@ -3,3 +3,9 @@ form button:disabled {
     border: #ccc;
     color: white;
 }
+:host {
+    background-color: red;
+}
+:host(.error) {
+    border : 2px solid #e79804; 
+}

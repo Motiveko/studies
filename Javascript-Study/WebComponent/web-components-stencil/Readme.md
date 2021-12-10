@@ -218,7 +218,7 @@ Custom Event의 이름은 충돌 가능성이 없게 unique하게 짓는게 좋�
 
 ```tsx
 export class StockFinder {
-  @Event({bubbles: true, composed: true,}) ucSymbolSelected: EventEmitter<string>;
+  @Event({bubbles: true, composed: true}) ucSymbolSelected: EventEmitter<string>;
 
   onSelectSymbol(symbol: string) {
     this.ucSymbolSelected.emit(symbol)
@@ -244,5 +244,41 @@ export class StockFinder {
     // event.detail에 emit()으로 넘겨준 값이 들어있따.
   })
 </script>
-````
+```
 
+<br>
+
+## 121. Using the Listen Decorator
+[`@Listen`](https://stenciljs.com/docs/events#listen-decorator) 데코레이터를 사용하면 `DOM Event`나 `Custom Event`의 핸들러를 정의할 수 있다. 기본적으로 컴포넌트 내부의 이벤트를 감지하나, 옵션으로 target을 설정하면 버블링되는 외부의 이벤트도 감지 가능하다.
+```tsx
+@Listen('ucSymbolSelected', {target: 'body'})
+onStockSymbolSelected(event: CustomEvent) {
+  // do somethig
+}
+```
+`target`은 `body`, `codument`, `window`가 설정 가능하고, `body`로 설정하면 컴포넌트 외부의 이벤트가 버블링되어 body에 도달하면 이걸 가져오는 형태이다. 개인적으로 이렇게 컴포넌트 외부의 이벤트를 컴포넌트 내부에서 핸들러를 만드는게 좋은 방법인지는 잘 모르겠다
+
+<br>
+
+## 122. Using Hostdata
+강좌에서는 `hostData()`메서드를 쓰는데 공식 문서상에 해당 내용을 찾을수 없다. 대신 [`HostElement`](https://stenciljs.com/docs/host-element)를 사용해 `render()`의 반환값을 `<Host>`태그로 래핑해서 해당 태그에 class, attribute를 사용할 수 있다.
+
+예를들어 `stock-price`컴포넌트에서 http 요청 중 에러 발생시, 컴포넌트 스타일을 변경하고 싶다고 가정해보자. 아래와 같이 적용할 수 있다.
+```tsx
+export class StockPrice {
+  // ...
+  hostData() {
+    return { class: this.error ? 'error' : '' }
+  }
+}
+```
+```css
+:host(.error) {
+    border : 2px solid #e79804; 
+}
+```
+참고로 `hostData()`에서 반환하는 값은 `set`이 아니라 `add`의 개념이다.
+
+<br>
+
+## 123. Adding a Loading Spinner
