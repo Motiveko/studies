@@ -1428,6 +1428,66 @@ function shouldUpdate(
 
 # 3장. 타입 추론
 ## 19. 추론 가능한 타입을 사용해 장황한 코드 방지하기
+타입스크립트는 변수에 할당되는 값이나 사용을 추적해 타입을 추론한다. 이를 이용하면 모든 변수에 장황하게 값을 적을 필요가 없어진다. 
+```ts
+// bad
+let x: number = 12;
+
+// good
+let x = 12;
+```
+위의 경우 `number` 타입을 명시적으로 선언하지 않아도 타입스크립트가 알아서 x의 타입은 number로 추론해 인식한다. `const`로 선언된 변수의 경우 좀 더 좁은 타입으로 추론한다.
+```ts
+const x = 'hello';
+typeof x; // const x: "hello"
+```
+`eslint`의 [`no-inferrable-types`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/docs/rules/no-inferrable-types.md) 룰은 이렇게 간단한 원시 타입의 값들에 대해 타입 선언을 하지 못하도록 에러를 발생시켜 준다.
+
+객체 리터럴이나 함수의 반환 타입도 알아서 추론해준다.
+```ts
+const person = {
+  name: 'motiveko',
+  age: 31
+} // 타입은 {name: string, age: number}
+
+function square(nums: number[]) {
+  return nums.map(x => x*x);
+}
+const squares = square([1,2,3]);  // 타입은 number[]
+```
+
+하지만 `no-inferrable-types`에서 객체 리터럴이나 함수 반환 타입에 대해서는 명시적 타입 선언에 대해 에러를 발생시키지 않는 이유가 있는데, 명시적 타입 선언이 더 좋은 경우가 많기 때문이다.
+
+<br>
+
+객체 리터럴에 명시적 타입을 선언할 경우, ***`잉여 속성 체크`가 동작해 오타없이 정확하게 값을 선언할 수 있게 해준다.*** 만약 명시적으로 타입을 선언하지 않으면, 객체를 잘못 선언했을 때 ***오류가 나지 않거나, 정의하는 곳이 아닌 사용하는 곳에서 에러가 발생한다.***
+```ts
+type Person = {
+  name: string,
+  age: number
+}
+const person = {
+  names: `motiveko`, // 오타발생, 에러는 안난다.
+  age: 13
+}
+
+const handlePerson = (person: Person) => {/*...*/};
+
+handlePerson(person); // person 사용 시점에 와서야 name 속성이 없다는 에러를 볼 수 있다.
+```
+
+***함수 반환 타입에도 명시적으로 반환 타입을 선언하는것이 좋다.*** 몇가지 장점이 있는데
+1. 함수의 전체 타입 시그니처를 먼저 작성하면 구현에 맞춰주먹구구식으로 시그니처가 작성되는걸 방지하고, 제대로 원하는 모양을 얻는다. TDD로 개발했을 때와 비슷한 장점이다.
+2. `Person`과 같이 사용자가 만든 `명명된 타입`으로 반환할 경우 타입이 깔끔해지고 직관적이다.
+
+함수 반환 타입을 명시할 경우, 함수 구현을 잘못해 반환 타입이 이상해져도 구현 단계에서 에러를 발견할 수 있는데, 반환 타입을 명시하지 않으면 사용 단계에서야 에러가 발생할 것이다.
+
+<br>
+
+***결론은 `eslint`의 `no-inferrable-types`룰을 적용해서 개발하고, 객체 리터럴과 함수 반환 타입은 명시적으로 작성하도록 하자는 것이다.***
+
+<br><br>
+
 ## 20. 다른 타입에는 다른 변수 사용하기
 ## 21. 타입 넓히기
 ## 22. 타입 좁히기

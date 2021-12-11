@@ -1,34 +1,11 @@
-interface ScatterProps {
-  xs: number[];
-  ys: number[];
-
-  xRange: [number, number];
-  yRange: [number, number];
-  color: string;
-
-  onClick: (x: number, y: number, index: number) => void;
-  // hi: string;
+type Person = {
+  name: string,
+  age: number
+}
+const person = {
+  names: `motiveko`, // 오타발생, 에러는 안난다.
+  age: 13
 }
 
-function shouldUpdate(
-  oldProps: ScatterProps,
-  newProps: ScatterProps
-): boolean {
-  let key: keyof ScatterProps;
-  for(key in oldProps) {
-    if(oldProps[key] !== newProps[key] && REQUIRES_UPDATE[key] ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-const REQUIRES_UPDATE: {[key in keyof ScatterProps]: boolean} ={
-  xs: true,
-  ys: true,
-  xRange: true,
-  yRange: true,
-  color: true,
-  onClick: false
-}
+const handlePerson = (person: Person) => {/*...*/};
+handlePerson(person);
