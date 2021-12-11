@@ -1,18 +1,34 @@
-import {ReadonlyDeep} from 'type-fest/source/readonly-deep'
+interface ScatterProps {
+  xs: number[];
+  ys: number[];
 
-type Person = {
-  name: string,
-  address: {
-    city: string,
-    state: string
-  }
+  xRange: [number, number];
+  yRange: [number, number];
+  color: string;
+
+  onClick: (x: number, y: number, index: number) => void;
+  // hi: string;
 }
-type DeepReadonlyPerson = ReadonlyDeep<Person>;
-const person: DeepReadonlyPerson = {
-  name: 'motiveko',
-  address: {
-    city: 'seoul',
-    state: 'yp'
+
+function shouldUpdate(
+  oldProps: ScatterProps,
+  newProps: ScatterProps
+): boolean {
+  let key: keyof ScatterProps;
+  for(key in oldProps) {
+    if(oldProps[key] !== newProps[key] && REQUIRES_UPDATE[key] ) {
+      return true;
+    }
   }
+  return false;
 }
-person.address.city = 'pusan'
+
+
+const REQUIRES_UPDATE: {[key in keyof ScatterProps]: boolean} ={
+  xs: true,
+  ys: true,
+  xRange: true,
+  yRange: true,
+  color: true,
+  onClick: false
+}

@@ -1361,7 +1361,71 @@ type DeepReadonlyPerson = {
 <br><br>
 
 ## 18. 매핑된 타입을 사용하여 값을 동기화하기
- 
+예시 케이스로 설명한다. 산점도(scatter plot)을 그리기 위한 컴포넌트를 만든다고 가정해보자. 컴포넌트는 아래 `ScatterProps`인터페이스 타입이다.
+
+```ts
+interface ScatterProps {
+  xs: number[];
+  ys: number[];
+
+  xRange: [number, number];
+  yRange: [number, number];
+  color: string;
+
+  onClick: (x: number, y: number, index: number) => void;
+}
+```
+`ScatterProps`상태가 변경될 때 브라우저는 다시 랜더링할것이다. 그런데 `onClick`같은 핸들러가 변경되는 사항은 랜더링과 상관 없으므로 최적화를 위해 `onClick`변경시에는 다시 랜더링 하고 싶지 않다. 따라서 `shouldUpdate` 함수를 정의하고 변경된 상태값이 `onClick`이면 랜더링 하지 않도록 한다. 
+```ts
+function shouldUpdate(
+  oldProps: ScatterProps,
+  newProps: ScatterProps
+): boolean {
+  let key: keyof ScatterProps;
+  for(key in oldProps) {
+    if(oldProps[key] !== newProps[key]) {
+      if(key !== 'onClick') {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+```
+이런 방식이라면 `ScatterProps`에 다른 상태값이 추가됐을 때 해당 상태값에 대해 `shouldUpdate`의 로직을 업데이트 했는지 불분명해진다. `ScatterProps` 와 `shouldUpdate` 가 강제로 동기화 되지 않고 있는것이다. ***이럴 때 `매핑된 타입`을 이용해 둘 사이의 동기화를 컴파일 단계에서 강제할 수 있다.***
+
+```ts
+// 매핑된 타입
+const REQUIRED_UPDATE: {[key in keyof ScatterProps]: boolean} = {
+  xs: true,
+  ys: true,
+  xRange: true,
+  yRange: true,
+  color: true,
+  onClick: false
+}
+
+function shouldUpdate(
+  oldProps: ScatterProps,
+  newProps: ScatterProps
+): boolean {
+  let key: keyof ScatterProps;
+  for(key in oldProps) {
+    if(oldProps[key] !== newProps[key] && REQUIRES_UPDATE[key] ) {
+      return true;
+    }
+  }
+  return false;
+}
+```
+`ScatterProps`타입에 완전히 종속적인 타입의 값을 가지는 `REQUIRED_UPDATE`를 정의하고 이를 `shouldUpdate`에서 사용한다. 따라서 `ScatterProps`에 값이 추가/제거되면 컴파일에서 `REQUIRED_UPDATE`에 해당 내용을 반영하도록 오류가 발생할 것이다. 이를 통해 개발자는 `shouldUpdate`의 존재를 까먹고 `ScatterProps`를 변경하는 일이 없을것이다.
+
+<br>
+
+***매핑된 타입은 매우매우매우 유용한 방식으로 보인다. 이러한 형태의 타입스크립트 사용이야말로 안정적인 자바스크립트 프로그래밍을 도와주는 타입스크립트의 존재 이유에 부합하는 프로그래밍이 아닐까? 실전에서 예제와 같은 동기화가 필요한 동작을 찾아 반드시 매핑된 타입을 정의하려는 노력이 필요하다.***
+
+<br><br>
+
 # 3장. 타입 추론
 ## 19. 추론 가능한 타입을 사용해 장황한 코드 방지하기
 ## 20. 다른 타입에는 다른 변수 사용하기
