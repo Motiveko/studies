@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
-    "rxjs": "^7.4.0"
+    "rxjs": "^7.4.0",
+    "type-fest": "^2.8.0"
   }
 }

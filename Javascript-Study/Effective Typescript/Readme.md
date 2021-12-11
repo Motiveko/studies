@@ -1281,6 +1281,85 @@ interface ArrayLike<T> {
 <br><br>
 
 ## 17. 변경 관련된 오류 방지를 위해 readonly 사용하기
+접근 제어자 `readonly`는 변수를 `immutable`하게 만들어 주는 제어자다. 일반적인 `string`, `number`과 같은 원시값들은 애초에 `immutable`이기 때문에 사용할 수 없고, **객체타입의 데이터에만 사용 가능하다.**
+
+> ❗️ 타입스크립트에서 제공하는 readonly 타입에는 두가지가 있는데, `readonly`는 배열, 튜플 타입에만, 유틸리티 타입인 `Readonly`는 모든 객체 타입 데이터에 사용 가능하다.
+
+<br>
+
+`readonly`를 붙인 타입에는 객체를 `mutable`하게 만드는 속성을 제거하는데, 이 말은 ***원본 타입이 readonly 타입의 부분집합(subtype)이 된다는 뜻이다.*** 이런 이유로 `readonly T`는 `T`에 할당 불가능하지만, `T`는 `readonly T`에 할당 가능하다. 
+
+`readonly`로 변수를 선언하고 여러 함수를 이용할 경우 이런게 문제가 될 때가 있는데, 예를들어 `readolny number[]`타입의 변수를 `number[]`타입에 할당해야 할 경우, `as number[]` 단언을 사용하자.(물론 함수가 원본 배열을 건드리지 않는다는 것을 알 수 있을때 이렇게 해야한다. 아니라면 객체를 복사해서 쓰자)
+
+> `readonly`는 타입스크립트 접근 제어자이므로 런타임에서 제거되고, 결국 mutalbe한 속성이 실제로 지워지는건 아니라서 오류는 없다.
+
+<br>
+
+타입스크립트에서 기본 제공하는 readonly 타입들은 모두 `Shallow Readonly`로 작동한다. 하나씩 살펴보자.
+```ts
+const arr: readonly number[][] = []
+
+arr.push[[]];     // 'readonly number[][]' 형식에 'push' 속성이 없습니다.
+arr[0].push(123); // 정상
+```
+2차원 배열의 1depth는 mutable하게 만드는 `push` 메서드가 제거되었다. 하지만 2depth의 배열은 `push`메서드 등의 상태 변경이 가능해진다. 즉 `readonly number[][]`는 `readonly (number[]) []`라고 할 수 있는것이다. 객체에 적용하는 유틸리티 타입 `Readonly`도 비슷하다.
+
+```ts
+type Person = {
+  name: string,
+  address: {
+    city: string,
+    state: string
+  }
+}
+type ReadonlyPerson =  Readonly<Person>;
+/**
+ type ReadonlyPerson = {
+    readonly name: string;
+    readonly address: {
+        city: string;
+        state: string;
+    };
+}
+ */
+```
+1depth의 property들은 모두 readonly가 붙었지만 2depth의 city, state들은 변경 가능하므로 address는 결국 mutable이다. `Deep Readonly`는 타입스크립트 자체에서는 제공하지 않고 `ts-fest`나 `ts-essential`같은 서드파티 라이브러리를 사용해서 만들 수 있다. 아래는 `ts-fest`의 `ReadonlyDeep`을 사용해 `Person`의 `deep readonly`타입을 정의하였다.
+
+```ts
+import {ReadonlyDeep} from 'type-fest/source/readonly-deep'
+type Person = {
+  name: string,
+  address: {
+    city: string,
+    state: string
+  }
+}
+type DeepReadonlyPerson = ReadonlyDeep<Person>;
+const person: DeepReadonlyPerson = {
+  name: 'motiveko',
+  address: {
+    city: 'seoul',
+    state: 'yp'
+  }
+}
+person.address.city = 'pusan'; // 읽기 전용 속성이므로 'city'에 할당할 수 없습니다.ts(2540)
+/**
+type DeepReadonlyPerson = {
+    readonly name: string;
+    readonly address: ReadonlyObjectDeep<{
+        city: string;
+        state: string;
+    }>;
+}
+* /
+```
+
+<br>
+
+타입스크립트는 런타입에서도 객체가 immutable하게 돌아가게 만들어 주진 않지만, 개발 단계에서 객체를 변경할 때 에러를 내주므로 실수를 막을 수 있다. ***immutable하게 쓸 객체라면 readonly 타입으로 만드는 습관을 들이도록 하자.***
+
+<br><br>
+
 ## 18. 매핑된 타입을 사용하여 값을 동기화하기
  
 # 3장. 타입 추론
