@@ -3,10 +3,12 @@
 
 ## 1. 프레임워크에 대한 이야기
 ## 2. 렌더링
-todolist 랜더링 
 
+정리할 키워드
 [`Node.cloneNode(options: boolean)`](https://developer.mozilla.org/en-US/docs/Web/API/Node/cloneNode)
-
+`가상 DOM`
+`window.requestAnimationFrame`
+`Element.replaceWith`
 
 ## 3. DOM 이벤트 관리
 ## 4. 웹 구성 요소
