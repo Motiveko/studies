@@ -1,11 +1,11 @@
-type Person = {
-  name: string,
-  age: number
+interface Scatter {
+  a: string,
+  b: number,
+  c: boolean
 }
-const person = {
-  names: `motiveko`, // 오타발생, 에러는 안난다.
-  age: 13
+type MappedScatter = {[key in keyof Scatter ]: boolean};
+const m: MappedScatter = {
+  a: true,
+  b: false,
+  c: true
 }
-
-const handlePerson = (person: Person) => {/*...*/};
-handlePerson(person);
