@@ -1517,7 +1517,7 @@ fecthProduct(id);
 <br><br>
 
 ## 21. 타입 넓히기
-타입스크립트에서 작성된 코드의 `정적 분석 시점`에 변수는 가능한 값의 집합인 `타입`을 가진다. 이 때, 변수를 초기화 할 때 타입을 명시하지 않으면, 타입 체커가 **지정된 단일 값**을 가지고 할당 가능한 집합을 유추하는데, 이 과정을 **`타입 넓히기(widening)`**라고 한다. 타입 넓히기 과정을 잘 이해하지 않으면 예기치 못한 오류를 맞딱뜨리게 된다. 예를 들어 아래와 같이 벡터를 다루는 코드가 있다고 해보자.
+타입스크립트에서 작성된 코드의 `정적 분석 시점`에 변수는 가능한 값의 집합인 `타입`을 가진다. 이 때, 변수를 초기화 할 때 타입을 명시하지 않으면, 타입 체커가 **지정된 단일 값**을 가지고 할당 가능한 집합을 유추하는데, 이 과정을 **`타입 넓히기(widening)`** 라고 한다. 타입 넓히기 과정을 잘 이해하지 않으면 예기치 못한 오류를 맞딱뜨리게 된다. 예를 들어 아래와 같이 벡터를 다루는 코드가 있다고 해보자.
 ```ts
 interface Vector3 { x: number; y: number; z: number; }
 function getComponent(vector: Vector3, axis: 'x' | 'y' | 'z') {
@@ -1528,7 +1528,7 @@ let x = 'x';
 let vec = {x: 10, y: 20, z: 30};
 getComponent(vec, x); // 'string' 형식의 인수는 '"x" | "y" | "z"' 형식의 매개 변수에 할당될 수 없습니다.ts(2345)
 ```
-런타임에서 문제없이 실행되겠지만, 마지막 함수 호출에서 오류가 발생한다. 이유는 ***타입 넓히기 과정에서 x의 타입이 `string`으로 유추되었기 때문이다! ***
+런타임에서 문제없이 실행되겠지만, 마지막 함수 호출에서 오류가 발생한다. 이유는 ***타입 넓히기 과정에서 x의 타입이 `string`으로 유추되었기 때문이다!***
 `x`는 `let`키워드로 선언되었기 때문에 타입스크립트에서는 `재할당`을 염두해 둔다. 이 때 재할당은 문자열로 이뤄질 것이라고 추측하기 때문에 x의 타입은 `string`이 된다.
 
 <br>
@@ -1602,8 +1602,171 @@ const a2 = [1,2,3] as const; // 타입은 readonly[1,2,3]
 
 타입 넓히기로 인한 오류가 발생하면, 위의 4가지 케이스를 잘 고려해서 오류를 고쳐나가야 한다.
 
+<br><br>
 
 ## 22. 타입 좁히기
+타입 좁히기는 타입 넓히기의 반대로, 타입스크립트가 ***넓은 타입으로부터 좁은 타입으로 진행하는 과정***을 말한다. 대표적으로 아래와 같은 몇가지 케이스가 존재한다.
+
+1. null체크
+```ts
+const el = document.getElementById('foo');  // 타입은 HTMLElement | null
+if(el) {
+    // 타입은 HTMLElement
+    el.innerText = 'bar'
+} else {
+    // 타입은 null
+    alert('no element #foo');
+}
+```
+
+<br>
+
+2. 분기문에서 예외를 던지거나 함수를 반환해 타입 좁히기
+```ts
+const el = document.getElementById('foo');
+
+if(!el) 
+    throw new Error('Unable to find #foo'); // 타입은 null
+el.innerText = 'bar';                       // 타입은 HTMLElement
+```
+
+<br>
+
+3. `instanceof`를 사용한 타입 좁히기
+```ts
+function contains(text: string, search: string | RegExp) {
+    if(search instanceof RegExp) {
+        return !!search.exec(text); // 타입이 RegExp
+    }
+    return text.includes(search);   // 타입이 string
+}
+```
+
+<br>
+
+4. 속성 체크로 타입 좁히기
+```ts
+interface A { a: number }
+interface B { b: number }
+function pickAB(ab: A | B) {
+  if('a' in ab) {
+    // 타입은 A
+  } else {
+    // 타입은 B
+  }
+}
+```
+
+5. `태그된 유니온(tagged union)`을 이용한 타입 좁히기
+
+태그된 유니온은 override 등에도 사용할 수 있으니 잘 숙지해야한다!
+
+```ts
+interface UploadEvent { type: 'upload'; filename: string; contents: string }
+interface DownloadEvent { type: 'download'; filename: string; }
+
+// 태그된 유니온 
+type AppEvent = UploadEvent | DownloadEvent;
+
+function handleEvent(e: AppEvent) {
+  switch(e.type) {
+    case 'upload':
+      // 타입은 UploadEvent
+      break;
+    case 'download':
+      // 타입은 DownloadEvent
+      break;
+  }
+}
+```
+
+<br>
+
+6. 사용자 정의 `타입 가드(type guard)`를 이용한 타입 좁히기
+
+타입 가드는 `boolean`값을 반환하는데, 명시적으로 반환 타입을 `SOME_VAR is SOME_TYPE` 형태로 작성해야 타입 체커가 타입을 좁힐 수 있다.
+```ts
+function isInputElement(el: HTMLElement): el is HTMLInputElement {  
+  return 'value' in el; // boolean
+}
+function getElementContent(el: HTMLElement) {
+  if(isInputElement(el)) {
+    // 타입은 HTMLInputElement
+  } else {
+    // 타입은 HTMLElement
+  }
+}
+```
+
+
+7. `Array.isArray` 같은 내장함수를 이용한 타입 좁히기
+
+아래와 같이 내장 함수를 이용하면 타입을 좁힐 수 있다.
+
+```ts
+function contains(text: string, terms: string|string[]) {
+    const termList = Array.isArray(terms) 
+        ? terms     // terms는 string[]
+        : [terms];  // terms는 string
+    // ...
+}
+```
+이런게 가능한 이유는 **내장 함수의 타입 정의가 타입 가드 형태이기 때문**이다.
+```ts
+// lib.es5.d.ts
+interface ArrayConstructor {
+  isArray(arg: any): arg is any[];
+}
+```
+
+<br>
+
+***하지만 타입 좁히기에는 여러가지 실수가 발생할 수 있는데 예를들면 아래와 같은 경우가 있다.***
+
+```ts
+const el = document.getElementById('foo'); // HTMLElement | null
+if(typeof el === 'object') {
+  // 여전히 타입은 HTMLElement | null
+}
+```
+왜 좁히기가 작동하지 않은걸까? `typeof null`은 `'object'`이기 때문이다. `typeof undefined`는 
+`'undefined'`이기 때문에 `undefined`라면 성공했겠지만, `null`은 안타깝게도 실패한다. 
+
+```ts
+function foo(x?: number | string | null) {
+  if(!x) {
+    // 여전히 타입은 number | string | null
+  }
+}
+```
+위의 경우 `number | string`이 되길 바랬지만 실패다. 이유는 `0`, `''`도 if문에서 `false`로 처리되기 때문이다. 실수하기 정말 좋다.(그래도 if문 내에서 변수를 `number|string`으로 사용하려들면 타입 체커가 고맙게도 에러를 발생시킬것이다.)
+
+아래와 같이 `Array`의 프로토타입 메서드에서도 타입 좁히기를 잘못하는 경우가 많다.(내가 맨날하는 실수)
+```ts
+const names = ['nick', 'motiveko', 'alpha', 'beta'];
+const filterdNames = ['hi', 'alpha'].map(
+  (search) => names.find((name) => name === saerch)
+) // string | undefined
+.filter(find => find !== undefined);  // (string | undefined)[]
+```
+
+`filter`에서 분명 `undefined`인것을 걸렀는데, 타입은 여전히 유니온 타입이다. `filter`에 **`타입 가드`** 를 사용해서 `name is string`을 반환해야만 타입 체커가 이를 인지할 수 있다.
+
+
+```ts
+function isDefined<T>(val: T | undefined) val is T {
+  return val !== undefined;
+}
+const filterdNames = ['hi', 'alpha'].map(
+  (search) => names.find((name) => name === saerch)
+) .filter(isDefined);  // string[]
+```
+
+이걸 모르면 타입스크립트를 욕하면서 타입 단언으로 이를 해결하게 될 것이다..
+
+<br><br>
+
+
 ## 23. 한꺼번에 객체 생성하기
 ## 24. 일관성 있는 별칭 사용하기
 ## 25. 비동기 코드에서는 콜백 대신 async 함수 사용하기
