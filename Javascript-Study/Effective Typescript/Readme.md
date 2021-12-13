@@ -1323,7 +1323,7 @@ type ReadonlyPerson =  Readonly<Person>;
 }
  */
 ```
-1depth의 property들은 모두 readonly가 붙었지만 2depth의 city, state들은 변경 가능하므로 address는 결국 mutable이다. `Deep Readonly`는 타입스크립트 자체에서는 제공하지 않고 `ts-fest`나 `ts-essential`같은 서드파티 라이브러리를 사용해서 만들 수 있다. 아래는 `ts-fest`의 `ReadonlyDeep`을 사용해 `Person`의 `deep readonly`타입을 정의하였다.
+1depth의 property들은 모두 readonly가 붙었지만 2depth의 city, state들은 변경 가능하므로 address는 결국 mutable이다. `Deep Readonly`는 타입스크립트 자체에서는 제공하지 않고 `type-fest`나 `ts-essential`같은 서드파티 라이브러리를 사용해서 만들 수 있다. 아래는 `type-fest`의 `ReadonlyDeep`을 사용해 `Person`의 `deep readonly`타입을 정의하였다.
 
 ```ts
 import {ReadonlyDeep} from 'type-fest/source/readonly-deep'
@@ -1766,8 +1766,89 @@ const filterdNames = ['hi', 'alpha'].map(
 
 <br><br>
 
-
 ## 23. 한꺼번에 객체 생성하기
+타입스크립트에서 변수의 타입은 일반적으로 바뀌지 않는다. 이러한 특징으로 인해 객체 생성시 한번에 생성하는것이 좋다.
+
+```ts
+const pt = {};
+pt.x = 3; // 'x' 속성이 없습니다.
+pt.y = 3; // 'y' 속성이 없습니다.
+```
+
+객체를 제각각 나눠서 만들어야 하는 경우 타입 단언문을 사용하면 된다.(좋은 방법은 절대 아니다);
+```ts
+type Point = { x: number, y: number }
+const pt = {} as Point; 
+pt.x = 3;
+pt.y = 4; // 정상
+```
+
+객체의 스프레드 연산자(`...`)를 이용하면 좀 더 큰 객체를 한번에 만들기 편해진다.
+
+```ts
+const pt = {x: 3, y: 4};
+const id = { name: 'pointA' };
+const namePoint = {...pt, ...id};
+```
+`Object.assign()`을 이용한 복사는 타입스크립트에서는 먹지 않는다.
+
+```ts
+const pt = {x: 3, y: 4};
+const id = { name: 'pointA' };
+const namePoint = {}
+Object.assign(namePoint, pt, id);
+namePoint.x;  // 'name' 속성이 없습니다.
+```
+
+타입에 안전한 방식으로 조건부 타입을 가진 객체를 만들수도 있다.속성을 추가하지 않는 `null`이나 `{}`을 스프레드 문법을 적용하면 된다.
+
+> ❗️ 아래 예제는 책에 있는건데, 책과 실제 해보면 추론되는 타입이 다르다. 타입스크립트 버전이 올라가면서 방식이 바뀐것으로 추정. ***지금 해보면 나오는 타입이 책보다 좀 더 넓은 타입이다.***
+
+```ts
+declare let hasMiddle: boolean;
+const firstLast = { first: 'motive', last: 'ko' };
+const motiveko = {...firstLast, ...(hasMiddle ? {middle: 'the slayer'} : {})};
+/*
+const motiveko: {
+    middle?: string | undefined;
+    first: string;
+    last: string;
+}
+*/
+```
+위의 예제처럼 middle은 선택적 속성으로 추론된다. `undefined`가 union되었는데, 이유는 모르겠다. 책에서는 `middle?: string`로 추론된다고 한다.
+여러개의 선택적 속성도 안전하게 추가할 수 있다.
+
+```ts
+declare let hasDates: boolean;
+const nameTitle = {name: 'motkeko', title: 'feDev' };
+const motiveko = {
+  ...nameTitle,
+  ...(hasDates ? {start: 1991, end: 2099} : {})
+}
+/*
+const motiveko: {
+    start?: number | undefined;
+    end?: number | undefined;
+    name: string;
+    title: string;
+}
+*/
+```
+역시나 선택적 속성에, `number | undefined`로 유니온 타입이 추론되었다. 책에서는 아래와 같이 좀 더 좁은 범위로 추론된다고 한다.
+```ts
+type motvieko = 
+  {name: string, title: string} 
+  | {name: string, title: string, start: number, end: number}
+```
+사실 `start`와 `end`는 항상 같이 존재하므로 위의 좁은 유니온 타입이 적절하다.(아이템 32에서 다룬다.)
+
+<br>
+
+가끔 객체나 배열을 변환해서 새로운 객체나 배열을 생성하고 싶을 때가 있다(많다). ***`loadsh`를 사용하는게 가장 깔끔하고 편리하다.***
+
+<br><br>
+
 ## 24. 일관성 있는 별칭 사용하기
 ## 25. 비동기 코드에서는 콜백 대신 async 함수 사용하기
 ## 26. 타입 추론에 문맥이 어떻게 사용되는지 이해하기
