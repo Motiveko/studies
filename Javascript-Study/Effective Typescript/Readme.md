@@ -1850,6 +1850,123 @@ type motvieko =
 <br><br>
 
 ## 24. 일관성 있는 별칭 사용하기
+`별칭(alias)`이란 어떤 값에 새 이름을 할당하는 것이다.
+
+```ts
+const person = {name: 'motiveko', age: 31};
+const myName = person.name; // person.name에 myName이라는 별칭
+```
+
+별칭을 잘못 사용하고 남발하면 코드의 제어 흐름을 분석하기 어렵다. 따라서 제목대로 ***일관성 있는 별칭 사용***이 중요한데, 아래와 같은 것들이 있다.
+
+1. 타입 좁히기
+
+`객체의 속성값`을 사용할 때, 여러번 사용하면 반복을 줄이기 위해 보통 별칭을 만든다. 이 때 타입 좁히기를 해야 하는 경우가 발생하는데, 타입을 좁히기를 한 값을 일관적으로 사용해야 한다.(별칭을 선언했으니 보통 별칭이다). 아래의 예제는 다각형을 표현하는 자료구조와 관련된 코드다.
+```ts
+interface Coordinate {
+    x: number;
+    y: number;
+}
+
+interface BoundingBox {
+    x: [number, number];
+    y: [number, number];
+}
+
+interface Polygon {
+    exterior: Coordinate[],
+    holes: Coordinate[][],
+    bbox? :BoundingBox
+}
+```
+
+어떤 점이 `Polygon` 내에 있는지 확인하는 함수를 작성하려 한다. 점의 `Coordinate`의 `x`/`y`값이 `Polygon`의 `bbox` 내인지 확인하는 로직이다.
+
+```ts
+function isPointInPolygon(polygon: Polygon, pt: Coordinate) {
+  if(polygon.bbox) {
+    if(pt.x < polygon.bbox.x[0] 
+      || pt.x > polygon.bbox.x[1]
+      || pt.y < polygon.bbox.y[0]
+      || pt.y > polygon.bbox.y[1]
+    ) {
+      return false
+    }
+  }
+}
+```
+`polygon.bbox`는 너무 길고 많이쓰인다. 이를 별칭으로 뽑아 써서 코드양을 줄일 수 있다. 이 때, 별칭을 잘못 쓰면 타입체커에서 문제가 된다.
+```ts
+function isPointInPolygon(polygon: Polygon, pt: Coordinate) {
+  const box = polygon.bbox;
+  if(polygon.bbox) {  
+    // polygon.bbox 의 타입은 BoundingBox
+    if(pt.x < box.x[0]  // 객체가 undefined일 수 있습니다.
+      || pt.x > box.x[1]
+      || pt.y < box.y[0]
+      || pt.y > box.y[1]
+    ) {
+      return false
+    }
+  }
+} 
+```
+`polygon.bbox`와 별칭 `box`가 같은 값을 참조한다고 해서 타입 좁히기가 양쪽에 다 적용되지 않았다. 따라서 if 블록 내 사용되는 값과 타입 체크한 값은 같은 값을 사용해야한다.
+```ts
+function isPointInPolygon(polygon: Polygon, pt: Coordinate) {
+  const box = polygon.bbox;
+  if(box) {  
+    if(pt.x < box.x[0] 
+      || pt.x > box.x[1]
+      || pt.y < box.y[0]
+      || pt.y > box.y[1]
+    ) {
+      return false
+    }
+  }
+}   // 정상
+```
+
+2. 별칭 이름
+
+위에서 `box`는 `Polygon`의 `bbox`속성과 이름이 달라 코드를 읽는데 직관적이지 않다. 가급적 `객체 비구조 할당`을 사용해서 별칭을 만들어 이름을 일관되게 만들자.
+```ts
+const { bbox } = polygon;
+```
+
+<br>
+
+<!-- 이부분은 내가 맞게 이해한건지 모르겠다. 나중에 타입스크립트 고수가 되어 다시 찾아오면 책을 다시보자 -->
+두가지 외 별칭에 관해 생각해 볼 케이스가 있는데, 순수 함수가 아닌 ***부수효과가 있을 수 있는 함수를 사용할 때***이다.
+
+```ts
+// 순수함수라는 보장이 없는 fn
+function fn(p: Polygon) { /*...*/}
+
+function someFn(p: Polygon) {
+  if(p.bbox) {
+    // p.bbox 타입은 BoundingBox
+    fn(p);
+    // p.bbox 타입은 BoundingBox
+  }
+}
+```
+위 `someFn` 함수의 if문 배무에 `p.bbox` 의 타입은 `BoundingBox`지만, `fn` 호출시 인자로 전달되면서 이후에도 `BoundingBox`라는 보장은 사라진다. 하지만 타입시스템에서는 함수의 부수효과 여부를 알기도 힘들고, 매번 타입을 되돌리면 모든 함수 호출마다 다시 타입체크를 실행해야해서, **함수 호출 후에도 타입을 유지한다.** 이 문제는 별칭을 사용해 타입 체크를 통과하는 방법이 있다.
+
+```ts
+function someFn(p: Polygon) {
+  const { bbox } = p;
+  if(bbox) {
+    // p.bbox 타입은 BoundingBox | undefined
+    fn(p);
+    // p.bbox 타입은 BoundingBox | undefined
+  }
+}
+```
+
+<br><br>
+
+
 ## 25. 비동기 코드에서는 콜백 대신 async 함수 사용하기
 ## 26. 타입 추론에 문맥이 어떻게 사용되는지 이해하기
 ## 27. 함수형 기법과 라이브러리로 타입 흐름 유지하기
