@@ -1968,6 +1968,44 @@ function someFn(p: Polygon) {
 
 
 ## 25. 비동기 코드에서는 콜백 대신 async 함수 사용하기
+자바스크립트에서 es6 이전에 비동기 동작을 위해 사용하던 `콜백 패턴`은 여러 문제가 있었다. 여러개의 비동기 실행을 합치면 `콜백 지옥`을 피할수가 없었고, 이는 가독성이나 에러 처리 등의 측면에서 개발을 매우 어렵게했다.
+
+<br>
+
+이를 보완하기 위해 es6에서 [`Promise`](https://ko.javascript.info/promise-api)가 도입된다. 프로미스의 도입으로 여러 비동기 실행의 순서가 코드가 작성된 순서(`then` 콜백 순서)대로 작동해서 가독성이 좋아졌고, 에러 처리는 `catch` 하나로 처리할 수 있어 편리해졌다.
+
+<br>
+
+여기서 한단계 더 나아가 `ES2017`에서 [`async/await`](https://ko.javascript.info/async-await)키워드가 나왔고, 이제는 마치 동기 코드를 작성하듯 비동기 코드를 작성할 수 있게 되었다.
+
+***이 아이템의 최종 결론은 비동기 코드에 가능하다면 `async/await`를 사용하자는 것이다***
+<br>
+
+<!-- 콜백 < Promise 예시 -->
+<!-- 콜백 < async/await 예시 -->
+Http 요청을 날리는 `fetchURL`함수와 캐시를 추가한 `fetchWithCache` 함수가 있다. 
+
+```ts
+function fetchUrl(url: string, callback: (text: string) => void): void {
+	// ...
+}
+
+const _cache: {[url: string]: string} = {};
+function fetchWithCache(url: string, callback: (text: string) => void): void {
+	if(url in _cache) {
+		callback(_cache[url]);
+	} else {
+		fetchUrl(url, response => {
+			_cache[url] = response;
+			callback(response);
+		});
+	}
+}
+```
+
+
+<br><br>
+
 ## 26. 타입 추론에 문맥이 어떻게 사용되는지 이해하기
 ## 27. 함수형 기법과 라이브러리로 타입 흐름 유지하기
 
