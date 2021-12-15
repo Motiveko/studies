@@ -1850,6 +1850,123 @@ type motvieko =
 <br><br>
 
 ## 24. 일관성 있는 별칭 사용하기
+`별칭(alias)`이란 어떤 값에 새 이름을 할당하는 것이다.
+
+```ts
+const person = {name: 'motiveko', age: 31};
+const myName = person.name; // person.name에 myName이라는 별칭
+```
+
+별칭을 잘못 사용하고 남발하면 코드의 제어 흐름을 분석하기 어렵다. 따라서 제목대로 ***일관성 있는 별칭 사용***이 중요한데, 아래와 같은 것들이 있다.
+
+1. 타입 좁히기
+
+`객체의 속성값`을 사용할 때, 여러번 사용하면 반복을 줄이기 위해 보통 별칭을 만든다. 이 때 타입 좁히기를 해야 하는 경우가 발생하는데, 타입을 좁히기를 한 값을 일관적으로 사용해야 한다.(별칭을 선언했으니 보통 별칭이다). 아래의 예제는 다각형을 표현하는 자료구조와 관련된 코드다.
+```ts
+interface Coordinate {
+    x: number;
+    y: number;
+}
+
+interface BoundingBox {
+    x: [number, number];
+    y: [number, number];
+}
+
+interface Polygon {
+    exterior: Coordinate[],
+    holes: Coordinate[][],
+    bbox? :BoundingBox
+}
+```
+
+어떤 점이 `Polygon` 내에 있는지 확인하는 함수를 작성하려 한다. 점의 `Coordinate`의 `x`/`y`값이 `Polygon`의 `bbox` 내인지 확인하는 로직이다.
+
+```ts
+function isPointInPolygon(polygon: Polygon, pt: Coordinate) {
+  if(polygon.bbox) {
+    if(pt.x < polygon.bbox.x[0] 
+      || pt.x > polygon.bbox.x[1]
+      || pt.y < polygon.bbox.y[0]
+      || pt.y > polygon.bbox.y[1]
+    ) {
+      return false
+    }
+  }
+}
+```
+`polygon.bbox`는 너무 길고 많이쓰인다. 이를 별칭으로 뽑아 써서 코드양을 줄일 수 있다. 이 때, 별칭을 잘못 쓰면 타입체커에서 문제가 된다.
+```ts
+function isPointInPolygon(polygon: Polygon, pt: Coordinate) {
+  const box = polygon.bbox;
+  if(polygon.bbox) {  
+    // polygon.bbox 의 타입은 BoundingBox
+    if(pt.x < box.x[0]  // 객체가 undefined일 수 있습니다.
+      || pt.x > box.x[1]
+      || pt.y < box.y[0]
+      || pt.y > box.y[1]
+    ) {
+      return false
+    }
+  }
+} 
+```
+`polygon.bbox`와 별칭 `box`가 같은 값을 참조한다고 해서 타입 좁히기가 양쪽에 다 적용되지 않았다. 따라서 if 블록 내 사용되는 값과 타입 체크한 값은 같은 값을 사용해야한다.
+```ts
+function isPointInPolygon(polygon: Polygon, pt: Coordinate) {
+  const box = polygon.bbox;
+  if(box) {  
+    if(pt.x < box.x[0] 
+      || pt.x > box.x[1]
+      || pt.y < box.y[0]
+      || pt.y > box.y[1]
+    ) {
+      return false
+    }
+  }
+}   // 정상
+```
+
+2. 별칭 이름
+
+위에서 `box`는 `Polygon`의 `bbox`속성과 이름이 달라 코드를 읽는데 직관적이지 않다. 가급적 `객체 비구조 할당`을 사용해서 별칭을 만들어 이름을 일관되게 만들자.
+```ts
+const { bbox } = polygon;
+```
+
+<br>
+
+<!-- 이부분은 내가 맞게 이해한건지 모르겠다. 나중에 타입스크립트 고수가 되어 다시 찾아오면 책을 다시보자 -->
+두가지 외 별칭에 관해 생각해 볼 케이스가 있는데, 순수 함수가 아닌 ***부수효과가 있을 수 있는 함수를 사용할 때***이다.
+
+```ts
+// 순수함수라는 보장이 없는 fn
+function fn(p: Polygon) { /*...*/}
+
+function someFn(p: Polygon) {
+  if(p.bbox) {
+    // p.bbox 타입은 BoundingBox
+    fn(p);
+    // p.bbox 타입은 BoundingBox
+  }
+}
+```
+위 `someFn` 함수의 if문 배무에 `p.bbox` 의 타입은 `BoundingBox`지만, `fn` 호출시 인자로 전달되면서 이후에도 `BoundingBox`라는 보장은 사라진다. 하지만 타입시스템에서는 함수의 부수효과 여부를 알기도 힘들고, 매번 타입을 되돌리면 모든 함수 호출마다 다시 타입체크를 실행해야해서, **함수 호출 후에도 타입을 유지한다.** 이 문제는 별칭을 사용해 타입 체크를 통과하는 방법이 있다.
+
+```ts
+function someFn(p: Polygon) {
+  const { bbox } = p;
+  if(bbox) {
+    // p.bbox 타입은 BoundingBox | undefined
+    fn(p);
+    // p.bbox 타입은 BoundingBox | undefined
+  }
+}
+```
+
+<br><br>
+
+
 ## 25. 비동기 코드에서는 콜백 대신 async 함수 사용하기
 ## 26. 타입 추론에 문맥이 어떻게 사용되는지 이해하기
 ## 27. 함수형 기법과 라이브러리로 타입 흐름 유지하기
@@ -1858,7 +1975,131 @@ type motvieko =
 ## 28. 유효한 상태만 표현하는 타입을 지향하기
 ## 29. 사용할 때는 너그럽게, 생성할 때는 엄격하게
 ## 30. 문서에 타입 정보를 쓰지 않기 
+
+<br><br>
+
 ## 31. 타입 주변에 null값 배치하기
+> 👍 이 아이템에서 다룬 내용은 실전에서 매번 고민했던 부분인데, 여러번 보자!!
+
+`tsconfig`의 `strictNullChecks`를 `true`로 설정하면 어떤 타입의 `undefined`나 `null`의 Union타입에 대해 타입 좁히기를 통해 체크를 하는 것을 강제하게 된다. ( Optional Chaining(`?`)나 type assertion(`!`)를 사용하기도 한다.)
+
+객체 타입의 변수에 이런 Null Check 과정에서 객체가 통째로 `null`이면 한번만 체크하면 되는데, 선택적 속성처럼 속성마다 Null Check를 해줘야 하는 경우가 많이 발생한다. ***값이 전부 `null`이거나 전부 `null`이 아니라면*** 편할것이다.
+
+아래 예제와 같은 경우가 바로 불편한 경우를 만드는 예제다. 숫자들의 최대/최소값을 구하는 함수다.
+```ts
+function extent(nums: number[]) {
+  let min, max;
+  for(const num of nums) {
+    if(!min) {
+      min = num;
+      max = num;
+    } 
+    else {
+      min = Math.min(min, num);
+      max = Math.max(max, num);
+    }
+  }
+  return [min, max];
+}
+```
+이 함수에는 몇가지 문제가 있는데, 아래와 같다.
+- 최소값이 0인경우, 다른 값이 덧씨워진다.( if같은 조건문에서는 `0`도 `false`)
+- nums 배열이 비었으면 함수는 `[undefined, undefined]`를 반환한다.
+
+값에 `undefined`를 포함하는 객체는 다루기 어려워 권장되지 않는다. 
+
+<br>
+
+어쨋거나, 함수 로직을 파악하면, `min`, `max`는 동시에 `undefined`이거나 동시에 `undefined`가 아닌 값일 것 이라는 것을 알 수 있는데, ***타입 체커는 이를 알지 못하고있다.***
+
+`strictNullChecks`를 켜면 아래와 같이 에러가 발생한다.
+```ts
+function extent(nums: number[]) {
+  //...
+  else {
+    min = Mathi.min(min, num);
+    max = Math.max(max, num); // 'number | undefined' 형식의 인수는 'number' 형식의 매개 변수에 할당될 수 없습니다.
+  }
+}
+
+const [min, max] = extent([1,2,3]);
+const span = max - min; // 개체가 undefined인 것 같습니다 x2
+```
+
+함수 내에서는 타입 좁히기가 실행된건 `min` 하나 뿐이기 때문에 `max`의 타입은 여전히 `number | undefined`인 것이다. 반환값에서는 max, min 모두 `undefined`의 유니온 타입이다. 
+
+이를 스마트하게 해결할 수 없을까? ***둘 다 `null`이거나 둘 다 `null`이 아닌 타입***을 만들면 된다.
+
+방법은 아래와 같다!
+```ts
+function extent(nums: number[]) {
+  let result: [number, number] | null = null;
+  if(!result) {
+    //...
+  } else {
+    //...
+  }
+  return result;
+}
+const range = extent([1,2,3]);
+if(range) {
+  const [min, max] = range;
+  const span = max - min;   // 정상
+}
+```
+이제 result에 대한 타입 체크만 하면, `result[0]`, `result[1]`에 대한 타입이 number라는 것이 보장된다. 이처럼 전체 타입에 `null union`을 해주는 것을 **`타입 주변에 null값을 배치한다`** 라고 말한다.
+
+여기선 속성이 두개지만, 여러개로 늘어난다면(물론 전부 `null`이거나 전부 `null`이 아니라는 조건 하에) 이런 형태의 타입 선언이 더욱 빛을 발하게 된다.
+
+<br>
+
+이러한 속성값마다 `null` 일 수 있는 타입을 가지는 문제는 **`비동기 처리`** 에서도 발생한다. 아래의 경우는 `class`의 `init()`메서드에서 클래스의 여러 속성값을 각각 비동기로 http 요청을 날려 받은 응답값으로 초기화 하는 경우다.
+
+```ts
+class UserPosts {
+  constructor() {
+    this.user = null;
+    this.posts = null;
+  }
+
+  async init(userId: string) {
+    return Promise.asll([
+      async () => this.user = await fetchUser(userId),
+      async () => this.posts = await fetchPostsForUser(userId),
+    ])
+  }
+}
+```
+`init()`메서드에서 `Promise.all`로 `user`, `posts` 각각에 값을 할당하는데, 반환되는 promise가 모두 `fullfilled`되기 전에는 **모두 null**이거나 **어느 하나면 null**이거나의 3가지경우가 발생한다. 또 `promise.then()`에 콜백으로 `UserPosts`객체를 처리할 때 속성값은 각각에 대해 null체크를 해줘야 할 것이다.
+
+간소화 시키려면 **모두 null**이거나 **모두 null이 아닌** 상태로 만들어야한다!
+
+```ts
+class UserPosts {
+  
+  user: UserInfo;
+  posts: Post[];
+
+  constructor(user: UserInfo, posts: Post[]) {
+    this.user = user;
+    this.posts = posts;
+  }
+
+  static async init(userId: string) {
+    const [user, posts] = await Promise.all([
+      fetchUser(userId),
+      fetchPostsForUser(userId)
+    ]);
+    return new UserPosts(user, posts);
+  }
+}
+```
+이제 `init()`으로 `UserPosts` 객체를 생성하면 항상 속성들이 모두 `null`이 아님을 보장받을 수 있다.
+
+여러 속성들의 조건들을 잘 살펴보고 `타입 주변에 null값 배치`를 통해 null체크 횟수를 줄일 수 있는지 확인해보자.
+
+<br><br>
+
 ## 32. 유니온의 인터페이스보다는 인터페이스의 유니온을 사용하기
 ## 33. string 타입보다 더 구체적인 타입 사용하기
 ## 34. 부정확한 타입보다는 미완성 타입을 사용하기
