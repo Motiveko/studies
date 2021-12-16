@@ -1978,12 +1978,94 @@ function someFn(p: Polygon) {
 
 여기서 한단계 더 나아가 `ES2017`에서 [`async/await`](https://ko.javascript.info/async-await)키워드가 나왔고, 이제는 마치 동기 코드를 작성하듯 비동기 코드를 작성할 수 있게 되었다.
 
-***이 아이템의 최종 결론은 비동기 코드에 가능하다면 `async/await`를 사용하자는 것이다***
+<!-- ***이 아이템의 최종 결론은 비동기 코드에 가능하다면 `async/await`를 사용하자는 것이다***  -->
+<br>
+<!-- 콜백 < Promise 예시 -->
+
+우선 콜백보다 프로미스가 좋은 이유를 알아보자. 예를들어 **병렬로 페이지를 로드**하는 코드를 콜백 패턴으로 작성하면 아래와 같은 형태일것이다.
+
+```ts
+function fetchUrl(url: string, callback: (text: string) => void): void {
+	// ...
+}
+
+function fetchPagesCB() {
+	let numDone = 0;
+	const responses: string[] = [];
+	const done = () => {
+		const [respose1, response2, response3] = responses;
+    // .. 응답들을 가지고 후처리
+	}
+  const urls = ['url1','url2','url3'];
+  urls.forEach((url, i) => {
+    fetchUrl(url, (res) => {
+      responses[i] = res;
+      numDone ++;
+      if(numDone === urls.length) done(); // 마지막 콜백이 처리되면 done() 호출
+    })
+  })
+}
+```
+
+이 코드는 읽기도 어렵고, 에러처리도 문제다. 또 forEach문의 순서대로 응답이 돌아오란 보장이 없으니 `done()` 호출 시점에 모든 응답을 받았다고 보장하기도 어렵다.(예제코드는 위와 같은데 사실 responses 배열을 순회해서 모든 응답이 있으면 `done()`을 실행하도록 바꾸면 될 듯 하다.)
+
 <br>
 
-<!-- 콜백 < Promise 예시 -->
-<!-- 콜백 < async/await 예시 -->
-Http 요청을 날리는 `fetchURL`함수와 캐시를 추가한 `fetchWithCache` 함수가 있다. 
+이 코드, `Promise`로 처리하면 간단해진다.
+```ts
+function fetchPages() {
+  Promise.all([
+    fetch('url1'), fetch('url2'), fetch('url3'),
+  ])
+  .then((responses) => {/*   후처리... */})
+  .catch((e) => console.error(e))
+}
+```
+
+이 코드를 `async/await`으로 바꾸면 아래와 같이 된다.
+```ts
+async function fetchPages() {
+  await const responses = Promise.all([
+    fetch('url1'), fetch('url2'), fetch('url3'),
+  ])
+  // ...
+}
+```
+
+<br>
+
+`Promise`를 사용하면 httpRequest에 `timeout` 같은 기능도 만들기 쉽다. `Promise.race`를 이용한다.
+```ts
+const timeout: (millis: number) =>Promise<never> = (millis) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => reject('요청이 너무 오래걸렸어요..'), millis);
+  })
+}
+
+const fetchWithTimeout:(url: string, millis: number) => Promise<Response> = (url, millis) => {
+  return Promise.race([fetch(url), timeout(millis)]);
+}
+```
+
+이 패턴은 유명한 패턴이라고 하니 잘 알아두자. 
+
+> `fetchWithTimeout`의 타입은 `Promise<Response>`인데 원래 타입은 `Promise<Response | never>`인데 `never` 유니온은 생략할 수 있으므로 타입체커카 알아서 제거하고 추론한다고 한다.
+
+<br>
+
+`Promise`도 좋아보이지만 이 아이템의 결론은 ***가능하다면 `async/await`을 써라*** 이다. 왜 그럴까?
+
+`async`가 적용된 함수는 항상 `Promise`를 반환하도록 강제된다.
+```ts
+const getNumber = async () => 42; // 타입은 () => Promise<number>
+```
+그냥 `42`라는 값을 반환했을 뿐인데 반환 타입은 `Promise<number>`가 되었다. 이를 `Promise`를 사용하면 아래와 같이 구현해야한다.
+
+```ts
+const getNumber = () => Promise.resolve(42);
+```
+
+**`Promise`를 반환하게 해서 비동기를 강제한다**는 점은 비동기 함수 작성에 큰 도움이 된다. 동기/비동기를 섞어쓰면 큰일이 나기 때문이다. 예를들면 아래와 Http 요청을 날리는 `fetchURL`함수와 캐시를 추가한 `fetchWithCache` 함수가 있다. 
 
 ```ts
 function fetchUrl(url: string, callback: (text: string) => void): void {
@@ -2002,6 +2084,38 @@ function fetchWithCache(url: string, callback: (text: string) => void): void {
 	}
 }
 ```
+잘 읽어보면 캐시가 있을 경우 값을 콜백이 `동기`로 호출된다. 반면 캐시가 없으면 콜백이 `비동기`로  호출된다. 이는 사용시에 치명적인 문제를 일으킨다.
+
+```ts
+let requestStats = 'loading' | 'success' | 'error';
+function getUser(userId: string) {
+  fetchWithCache(`ùser/${userId}`, (profile) => {
+    requestStatus = 'success';
+  })
+  requestStatus = 'loading';
+}
+```
+캐시가 없다면 `requestStatus = 'success';`가 비동기로 처리되 문제가 없었을 것이다. 하지만 캐시가 있으면 동기로 처리되고 우선 상태가 `success`된 후 `loading`이 돼 다시는 돌아오지 않을것이다. `async/await`을 사용하면 비동기로 강제되어 이런 실수가 없어진다.
+```ts
+const _cache: {[url: string]: string} = {};
+async function fetchWithCache(url: string): string {
+  
+	if(url in _cache) {
+		return callback(_cache[url]);
+	} else {
+    const text = await fetch(url);
+    _cache[url] = text;
+    return text;
+	}
+}
+async function getUserInfo(userId) {
+  requestStatus = 'loading';
+  const profile = await fetchWithCache(url);
+  requestStatus = 'success';
+}
+```
+
+`async/await`을 사용하면 ***동작이 비동기로 강제***되고, ***코드를 동기방식처럼 작성***할 수 있어 가독성에도 매우 좋다. 안쓸 이유가 없다는 것이다.
 
 
 <br><br>
