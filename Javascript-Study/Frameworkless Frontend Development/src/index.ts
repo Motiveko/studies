@@ -1,6 +1,15 @@
 import { Todo, getTodos } from './getTodos';
 import appView from './view/app';
 
+declare const APP_NAME: string;
+declare const VERSION: string;
+declare const BUILT_AT: any;
+
+console.log(
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  `******${APP_NAME}@${VERSION} IS BUILT AT ${(new Date(BUILT_AT)).getUTCDate()}******`
+);
+)
 export interface State {
   currentFilter: string;
   todos: Todo[];

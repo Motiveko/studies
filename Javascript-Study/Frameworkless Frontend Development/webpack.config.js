@@ -1,7 +1,7 @@
 /* eslint-disable */
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
+const webpack = require('webpack');
 module.exports = {
     entry: './src/index.ts',
     devtool: 'inline-source-map',
@@ -23,7 +23,12 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: "./index.html"
+            template: "./index.html",
+        }),
+        new webpack.DefinePlugin({
+            APP_NAME: JSON.stringify("Frameworkless Frontend Development"),
+            VERSION: JSON.stringify("v2.2"),
+            BUILT_AT: webpack.DefinePlugin.runtimeValue(Date.now)
         })
     ],
     devServer: {
