@@ -2,8 +2,7 @@
     "compilerOptions": {
         "outDir": "./dist/",
         "noImplicitAny": true,
-        "module": "ES6",
-        // "target": "ES2015",
+        "module": "esnext",
         "target": "ES2021",
         "sourceMap": true,
         "allowJs": true,

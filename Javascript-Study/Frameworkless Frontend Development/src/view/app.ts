@@ -1,5 +1,5 @@
 import { State } from '..';
-import todosView from './todo';
+import todosView from './todos';
 import counterView from './counter';
 import filtersView from './filter';
 
