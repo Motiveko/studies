@@ -1,23 +1,13 @@
 /* eslint-disable */
-// Karma configuration
-// Generated on Fri Dec 17 2021 01:39:09 GMT+0900 (GMT+09:00)
 const webpackConfig = require('./webpack.config');
-
 module.exports = function(config) {
   config.set({
-    // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
-    // frameworks to use
-    // available frameworks: https://www.npmjs.com/search?q=keywords:karma-adapter
     frameworks: ['jasmine'],
-    // plugin: ['karma-webpack'],
-    // list of files / patterns to load in the browser
     files: [
-       "src/view/todo.spec.ts",
-      
+       "src/**/*.spec.ts",
     ],
     webpack: {
-      // devtool: 'eval-source-map',
       module: webpackConfig.module,
       resolve: webpackConfig.resolve,
       stats: {
@@ -26,52 +16,20 @@ module.exports = function(config) {
         reasons: true,
         errorDetails: true
       },
-      devtool: 'inline-source-map',
     },
-    webpackMiddleware: {
-      quiet: true,
-      stats: {
-        colors: true
-      }
-    },
-
     preprocessors: {
-      "src/view/todo.spec.ts": ['webpack', 'sourcemap'] // *.tsx for React Jsx
+      "src/**/*.spec.ts": ['webpack'] 
     },
-    // list of files / patterns to exclude
     exclude: [
     ],
-    karmaTypescriptConfig: {
-      compilerOptions: {
-          allowJs: true,
-      },
-  },
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://www.npmjs.com/search?q=keywords:karma-preprocessor
-    preprocessors: {
-    },
-    mime: { 'text/x-typescript': ['ts','tsx'] },
-    // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://www.npmjs.com/search?q=keywords:karma-reporter
+    // mime: { 'text/x-typescript': ['ts','tsx'] },
     reporters: ["progress"],
-    // web server port
     port: 9876,
-    // enable / disable colors in the output (reporters and logs)
     colors: true,
-    // level of logging
-    // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
     logLevel: config.LOG_INFO,
-    // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
-    // start these browsers
-    // available browser launchers: https://www.npmjs.com/search?q=keywords:karma-launcher
     browsers: ['Chrome'],
-    // Continuous Integration mode
-    // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
-    // Concurrency level
-    // how many browser instances should be started simultaneously
     concurrency: Infinity
   })
 }
