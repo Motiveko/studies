@@ -6099,7 +6099,7 @@ for(const entry of map.entries()) {
 
 ### 39.2.6 HTMLCollection과 NodeList
 - `HTMLCollection`과 `NodeList`는 DOM API가 여러개의 결과값을 반환하기 위한 DOM 컬렉션 객체로 유사 배열 객체이며 이터러블이다.
-- 중요한 특징은 ***노드 객체의 상태를 실시간으로 반영하는 살아 있는(live) 객체라는 것이다.*** HTMLCollection은 언제나 live 객체로 동작하고, Nodelist는 보통은 non-live고 경우에 따라 live 객체로 작동한다.
+- 중요한 특징은 ***노드 객체의 상태를 실시간으로 반영하는 살아 있는(live) 객체라는 것이다.*** `HTMLCollection`은 언제나 `live 객체`로 동작하고, `Nodelist`는 보통은 `non-live`고 경우에 따라 live 객체로 작동한다.
 
 ***HTMLCollection***
 - live 객체이기 때문에 주의해야할 점이 있다. 아래의 경우를 보자.
@@ -6142,6 +6142,32 @@ for(const entry of map.entries()) {
 - 하지만 **`childNodes` 프로퍼티가 반환하는 NodeList 객체는 live 객체로 동작하므로 주의가 필요하다.**
 
 HTMLCollection과 NodeList 객체는 예상과 다르게 동작할 가능성이 있으므로, 안전하게 사용하기 위해 **이 객체들을 배열로 변환하여 사용하는 것을 권장한다.** 스프레드 문법이나 Array.from은 이럴때를 위해 존재하는것.
+
+```HTML
+<!DOCTYPE html>
+<html>
+<body>
+  <ul id="fruits">
+    <li>Apple</li>
+    <li>Banana</li>
+  </ul>
+  <script>
+    // $fruits는 HTMLElement
+    const $fruits = document.getElementById('fruits');
+
+    // childNodes 프로퍼티는 NodeList객체('live')를 반환한다.
+    const { childNodes } = $fruits;
+
+    // 스프레드 문법을 이용해 배열로 사용
+    [...childNodes].forEach(childNode => {
+      $fruits.removeChild(childNode);
+    })
+    
+    console.log(childNodes);  // NodeList []
+  </script>
+</body>
+</html>
+```
 
 <br>
 
@@ -6314,7 +6340,7 @@ DOMPurify.sanitize('<img src="x" onerror="alert(document.cookie)">');
 
 <br>
 
-### 39.6.4 복수의 노드 생성과 추가
+### 39.6.4 복수의 노드 생성과 추가 👍👍
 - 위의 방식으로 복수의 노드를 추가한다고 생각해보자. $fruits.appendChild()가 여러번 호출돼, 리플로우/리페인트도 여러번 호출될 것이다. 구리다.
 - div 등으로 컨테이너를 만들고, 컨테이너에 추가할 노드를 모은 다음 DOM에 컨테이너를 추가하는 방법도 생각해 볼 수 있다. 하지만 불필요한 컨테이너 요소가 들어가는것은 역시나 구리다.
 - 해결책으로 `DocumentFragment` 노드를 사용할 수 있다. DocumentFragment 노드는 부모 노드가 없어서 기존 DOM과는 별도로 존재한다는 특징이 있다.
@@ -6421,8 +6447,8 @@ $input.oninput = () => {
 <br>
 
 ### 39.7.4 data 어트리뷰트와 dataset 프로퍼티
-- data 어트리뷰트는 data-user-id, data-role과 같이 data- 접두사 다음에 임의의 이름을 붙여 사용한다.
-- data 어트리뷰트 값은 HTMLElement.dataset 프로퍼티로 취득할 수 있다. DOMStringMap 객체를 반환하는데, data- 뒤의 이름을 camelCase로 변환한 프로퍼티를 가지고 있다. 이 프로퍼티로 data 어트리뷰트 값을 취득/변경할 수 있다.
+- [`data 어트리뷰트`](https://developer.mozilla.org/ko/docs/Learn/HTML/Howto/Use_data_attributes)는 data-user-id, data-role과 같이 data- 접두사 다음에 임의의 이름을 붙여 사용한다.
+- data 어트리뷰트 값은 HTMLElement.dataset 프로퍼티로 취득할 수 있다. `DOMStringMap` 객체를 반환하는데, ***data- 뒤의 이름을 camelCase로 변환한 프로퍼티***를 가지고 있다. 이 프로퍼티로 data 어트리뷰트 값을 취득/변경할 수 있다.
 ```HTML
 <!DOCTYPE html>
 <html>
