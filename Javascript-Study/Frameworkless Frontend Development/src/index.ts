@@ -1,5 +1,14 @@
 import { Todo, getTodos } from './getTodos';
-import appView from './view/app';
+import filtersView from './view/filter';
+import todosView from './view/todos';
+import counterView from './view/counter';
+
+import registry from './registry';
+
+export type State = {
+	currentFilter: string;
+	todos: Todo[];
+};
 
 declare const APP_NAME: string;
 declare const VERSION: string;
@@ -10,10 +19,9 @@ console.log(
 	`******${APP_NAME}@${VERSION} IS BUILT AT ${new Date(BUILT_AT).getUTCDate()}******`
 );
 
-export interface State {
-	currentFilter: string;
-	todos: Todo[];
-}
+registry.add('todos', todosView);
+registry.add('filter', filtersView);
+registry.add('counter', counterView);
 
 const state: State = {
 	currentFilter: 'All',
@@ -25,6 +33,6 @@ if (!main) {
 	throw Error('앱에 문제가 있습니다.');
 }
 window.requestAnimationFrame(() => {
-	const newMain = appView(main, state);
+	const newMain = registry.renderRoot(main, state);
 	main.replaceWith(newMain);
 });

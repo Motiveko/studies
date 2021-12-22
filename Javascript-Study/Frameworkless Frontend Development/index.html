@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/todomvc-common@1.0.5/base.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/todomvc-app-css@2.1.2/index.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Faker/3.1.0/faker.js"></script>
     <title>Document</title>
 </head>
@@ -21,15 +23,18 @@
         <label for="toggle-all">
             Mark all as Complete
         </label>
-        <ul class="todo-list">
+        <ul class="todo-list" data-component="todos">
             <!-- 여기에 todo list랜더링 예정 -->
         </ul>
-        <footer>
-            <span class="todo-count">
+        <footer class="footer">
+            <span 
+                class="todo-count"
+                data-component="counter"
+            >
                 
                 <!-- n items left -->
             </span>
-            <ul class="filters">
+            <ul class="filters" data-component="filters">
                 <li>
                     <a href="#">All</a>
                 </li>
