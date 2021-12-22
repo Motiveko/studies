@@ -10,6 +10,9 @@
 `window.requestAnimationFrame`
 `Element.replaceWith`
 
+테스트 관련
+jest로 테스트시 tsconfig Target을 너무 최신으로 잡으면 없던 에러가 발생하는데, 예를들면 optional chaning 연산자 뒤에 `.`에 대해 unexpected token 에러가 뜬다. 이거 왜그런지 좀 생각해볼 문제. 추후 정리필요
+
 ## 3. DOM 이벤트 관리
 ## 4. 웹 구성 요소
 ## 5. HTTP 요청
