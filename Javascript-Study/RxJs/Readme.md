@@ -380,11 +380,54 @@ setTimeout(() => {
 
 <br>
 
-### Scheduler
-정리중..
-task를 scheduling할때 쓴다.
+### [Scheduler](https://rxjs.dev/guide/scheduler)
+`Scheduler`는 `구독의 시작`과 `notification`의 전달을 조절하는 기능을 수행한다. `Scheduler`는 `task`의 실행을 저장하는 `자료구조`이면서, `실행 컨텍스트`이고, 실행 시점을 알려주는 `clock`이다. 말로하면 이해가 안되니 예제를 다뤄본다.
+
+아래 코드의 실행결과는?
+```ts
+import { asyncScheduler, Observable } from "rxjs";
+import { observeOn } from "rxjs/operators";
+
+const observable = new Observable((observer) => {
+  observer.next(1);
+  observer.next(2);
+  observer.next(3);
+  observer.complete();
+}).pipe(
+  observeOn(asyncScheduler)
+);
+
+console.log('subscribe 전');
+observable.subscribe(
+  console.log,
+  (err) => console.error(err),
+  () => console.log('done')
+)
+console.log('subscribe 후');
+```
+
+```
+결과 ====>
+
+subscribe 전
+subscribe 후
+1
+2
+3
+```
+`observeOn`은 `scheduler`를 인자로 받아 **소스 옵저버블과 최종 옵저버블 사이에** `프록시 옵저버블`을 생성한다. 이 때, 프록시 옵저버블의 동작은 스케줄러가 결정하게 되는것이다.
+
+`asyncScheduler`는 내부적으로 `setInterval`, `setTimeout`을 이용해 비동기로 동작하게 되는데, 여기서 `delay`값을 지정해주지 않아 마치 `setInterval(0)`와 같이 동작한 것이다. 결과적으로 ***동기 실행이 모두 종료(empty callstack)된 후 옵저버 동작이 실행되는 것이다.***
+
+스케쥴러에는 `queueScheduler`, `asapScheduler`, `asyncScheduler`, `animationFrameScheduler`가 있는데 하나씩 알아본다.
+
+<br><br>
 
 ### queueScheduler
+`Queue`를 이용해서 스케쥴링 한다. `Iteration operation`에 사용할 수 있다.
+<!-- TODO : 정리해야한다 -->
+
+
 ### asapScheduler
 - 동작을 defer시킬때 쓴다. 이 말은 setTimeout(task, 0)와 거의 같다. 단, 이것보다 빠르다고 하는데 자세한건 좀 더살펴보자
 
@@ -396,8 +439,11 @@ task를 scheduling할때 쓴다.
 - 이를 이용해 smooth browser animation이 구현 가능하다.
 - delay 있으면 asyncScheduler화 되므로 0으로 써야할듯
 
-<br><br>
 
+
+
+
+<br><br>
 
 ## Hot/Cold Observable, Unit/Multicast
 RxJS 옵저버블은 기본적으로 구독 전까지 동작하지 않는데, 이런 특성을 갖는 Observable은 `Cold Observable`이라고 한다. 

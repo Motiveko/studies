@@ -1,9 +1,24 @@
-import {
-  animationFrameScheduler,
-  asyncScheduler,
-  BehaviorSubject,
-  queueScheduler,
-} from "rxjs";
+import { asyncScheduler, Observable } from "rxjs";
+import { observeOn } from "rxjs/operators";
+
+const observable = new Observable((observer) => {
+  observer.next(1);
+  observer.next(2);
+  observer.next(3);
+  observer.complete();
+}).pipe(
+  observeOn(asyncScheduler)
+);
+
+console.log('subscribe 전');
+observable.subscribe(
+  console.log,
+  (err) => console.error(err),
+  () => console.log('done')
+)
+console.log('subscribe 후');
+
+
 
 // asyncScheduler 사용예시 1
 // asyncScheduler.schedule(
