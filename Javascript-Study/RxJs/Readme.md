@@ -380,24 +380,131 @@ setTimeout(() => {
 
 <br>
 
-### Scheduler
-정리중..
-task를 scheduling할때 쓴다.
+### [Scheduler](https://rxjs.dev/guide/scheduler)
+> `Scheduler`는 `구독의 시작`과 `notification`의 전달을 조절하는 기능을 수행한다. `Scheduler`는 `task`의 실행을 저장하는 `자료구조`이면서, `실행 컨텍스트`이고, 실행 시점을 알려주는 `clock`이다. 
+
+설명이 충분하지 않다. 직접 소스코드를 까보면서 알아본다.
+
+스케쥴러에는 `queueScheduler`, `asapScheduler`, `asyncScheduler`, `animationFrameScheduler`가 있는데, 상속 구조는 맨 위에 `Scheduler`가 있고, 이를 `AsyncScheduler`가 상속하고, 이를 `QueueScheduler`, `AsapScheduler`, `AnimationFrameScheduler`가 상속하는 구조다. ***`AsyncScheduler`의 동작을 이해하면 나머지를 이해할 수 있게 된다.***
+
+`Scheduler`는 `Scheduler`와 `Action`으로 구성된다고 할 수 있다. `Action`이 위에서 설명한 task, 즉 동작이다.
+```ts
+class Scheduler implements SchedulerLike{
+  now(): number;
+  public schedule<T>(work: (this: SchedulerAction<T>, state?: T) => void, delay: number = 0, state?: T): Subscription {
+    return new this.schedulerActionCtor<T>(this, work).schedule(state, delay);
+  }
+}
+```
+
+`now`는 스케쥴러 내부 `clock`을 통해 현재 시간을 반환한다. 이를 이용해 비동기 처리를 할 수 있게 되는것이다. 
+
+`schedule`은 인자로 받는 `work`를 스케쥴링하는데, 스케쥴 함수는 `schedulerActionCtor`를 이용해 `Action`구현체를 만들고 `work` 프로퍼티에 우리가 전달한 task(work)를 할당한다. 그리고 `Action.schedule`을 호출해 동작을 스케줄링 하게 된다. 이 때 `delay`는 지연시킬 시간(비동기), `state`는 실행 컨텍스트가 된다.
+
+
+`task`는 결국 `Action`객체가 되어 스케줄링 되고 실행되는데 이 `Action`을 저장하는 자료구조로서의 역할은 어디에 있을까? `Scheduler`는 내부 구현체로 직접 사용하진 않는다. 해답은 `AsycnScheduler`에 존재한다.
+
+<br>
+
+### AsyncScheduler
+
+```ts
+export declare class AsyncScheduler extends Scheduler {
+    static delegate?: Scheduler;
+    actions: Array<AsyncAction<any>>;
+    active: boolean;
+    scheduled: any;
+    constructor(SchedulerAction: typeof Action, now?: () => number);
+    schedule<T>(work: (this: SchedulerAction<T>, state?: T) => void, delay?: number, state?: T): Subscription;
+    flush(action: AsyncAction<any>): void;
+}
+```
+
+`actions`는 `Array<AsyncAction>`타입의 프로퍼티로, 여기에 `task`가 저장되고 실행되는데, 이 때 `Array.prototype`의 `push()`와 `shift()`메소드를 이용해 `Queue`로서 동작하게 된다(FIFO). 
+
+`Action`을 상속하는 `AsyncAction`은 이렇게 생겼다. `work`프로퍼티와 스케쥴러 참조, 그 외 상태값들이 있고, 스스로 `schedule()`메서드를 이용해 스케쥴링 할 수 있다. `execute()`는 즉시 `work`를 수행시깈다.
+
+```ts
+export declare class AsyncAction<T> extends Action<T> {
+    protected scheduler: AsyncScheduler;
+    protected work: (this: SchedulerAction<T>, state?: T) => void;
+    id: any;
+    state: T;
+    delay: number;
+    protected pending: boolean;
+    constructor(scheduler: AsyncScheduler, work: (this: SchedulerAction<T>, state?: T) => void);
+    schedule(state?: T, delay?: number): Subscription;
+    protected requestAsyncId(scheduler: AsyncScheduler, id?: any, delay?: number): any;
+    protected recycleAsyncId(scheduler: AsyncScheduler, id: any, delay?: number): any;
+    /**
+     * Immediately executes this action and the `work` it contains.
+     * @return {any}
+     */
+    execute(state: T, delay: number): any;
+    protected _execute(state: T, delay: number): any;
+    /** @deprecated This is an internal implementation detail, do not use. */
+    _unsubscribe(): void;
+}
+```
+
+간단한 예제를 통해 `schedule` 메서드를 어떻게 사용하고 `task`를 어떻게 전달하는지 살펴본다.
+
+```ts
+asyncScheduler.schedule(function (state: number | undefined) {
+  if(state !== undefined && state < 5) {
+    console.log(state);
+    this.schedule(state + 1, 1000);
+  }
+}, 3000, 0);
+```
+
+이 코드는 아래와 같이 작동한다.
+  - 초기 state = 0으로 첫번째 인자로 넘겨준 `task`함수를 3초 후에 수행하도록 스케줄링 한다.
+  - 3초 뒤 `task`가 수행되는데, state < 5이므로, state를 출력하고, 다시 자기 자신(`task`)이 1초 뒤 state = 1로 수행되도록 스케줄링 한다.
+  - 1초 뒤 스케줄링 된 task가 수행되어 state가 출력되고, state=2, delay=1초 로 자기 자신(`taks`)을 스케줄링한다.    
+  - ...
+  - state가 5가되면 더이상 동작을 스케줄링 하지 않고 종료된다.
+  - 출력값 : 0 1 2 3 4
+
+> 여기서 `this`가 어떻게 schedule을 참조할 수 있는걸까? `task`는 Action의 생정자로 전달되어 Action 클래스의 프로퍼티(메서드)가 된다. 메서드 내부의 this는 클래스 인스턴스를 참조하므로 this는 생성된 `Action`(`AsyncAction`)을 참조할 수 있게 된다!
+
+> `Action.schedule`이 `scheduler.flush`를 수행해 내부 `queue`에서 `push/shift`를 수행하고 전체 `Action.execute`를 수행해 task가 실행되는 상세한 과정은 자세히 다루진 않는다. 솔직히 스케줄러는 많이 쓰는것 같진 않기 때문이다.. 제대로 쓸 일이 생긴다면 다시 소스코드를 파보자.
+  
+<br>
 
 ### queueScheduler
-### asapScheduler
-- 동작을 defer시킬때 쓴다. 이 말은 setTimeout(task, 0)와 거의 같다. 단, 이것보다 빠르다고 하는데 자세한건 좀 더살펴보자
+```ts
+export class QueueScheduler extends AsyncScheduler {}
+```
+구현 코드를 보면 `AsyncScheduler` 상속 후 추가되는게 없으므로 이름만 다를 뿐 `AsyncScheduler`와 거의 비슷하다. 설명에 보면 `Queue`로 `Action`을 관리한다고 나오는데 `AsyncScheduler`도 마찬가지기 때문이다.
 
-### asyncScheduler
-- setTimeout 과 같이 비동기로 동작하게 만들 때 쓴다.
+다른점이라면, `QueueAction`를 사용하는데, 스케쥴링시 `delay` 를 0으로 주면 `동기로 task를 수행`한다는 점.
+
+<br>
+
+### asapScheduler
+문서상 동작을 `defer`시킬 때 사용한다고 한다. 이는 비동기로 delay없이 수행하는것을 의미하는데, `AsyncScheduler`에서 `delay`를 0으로 준것과 같이 동작한다.
+
+<br>
 
 ### animationFrameScheduler 
-- delay=0일 때 window.requestAnimationFrame 이 발생하면 task를 실행한다. 이 말은 repaint 되기 직전에 실행된다는 말이라고함. 찾아보자.
-- 이를 이용해 smooth browser animation이 구현 가능하다.
-- delay 있으면 asyncScheduler화 되므로 0으로 써야할듯
+역시 `AsyncScheduler`를 상속해 비동기로 동작할 수 있다. 특수한 점은 ***`delay`가 0일 때, 브라우저가 `window.requestAnimationFrame` 수행 시 task를 수행한다***는 점이다. 즉 브라우저 렌더링 엔진의 `repaint` 수행 직전에 task를 수행할 수 있다는 것인데, 예제는 너무 간단한 것 밖에 없어서 어떻게 써야할 지는 모르겠다. 짬좀 생기면 알 수 있겠지?
+
+```ts
+import { animationFrameScheduler } from 'rxjs';
+ 
+const div = document.querySelector('div');
+ 
+animationFrameScheduler.schedule(function(height) {
+  div.style.height = height + "px";
+ 
+  this.schedule(height + 1);  
+}, 0, 0);
+```
+`div` 요소를 가져와 매 `window.requestAnimationFrame`마다 height를 1씩 증가시킨다. 크기가 커질것이다.
+
 
 <br><br>
-
 
 ## Hot/Cold Observable, Unit/Multicast
 RxJS 옵저버블은 기본적으로 구독 전까지 동작하지 않는데, 이런 특성을 갖는 Observable은 `Cold Observable`이라고 한다. 

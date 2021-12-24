@@ -2098,6 +2098,7 @@ function getUser(userId: string) {
 캐시가 없다면 `requestStatus = 'success';`가 비동기로 처리되 문제가 없었을 것이다. 하지만 캐시가 있으면 동기로 처리되고 우선 상태가 `success`된 후 `loading`이 돼 다시는 돌아오지 않을것이다. `async/await`을 사용하면 비동기로 강제되어 이런 실수가 없어진다.
 ```ts
 const _cache: {[url: string]: string} = {};
+
 async function fetchWithCache(url: string): string {
   
 	if(url in _cache) {
@@ -2121,6 +2122,149 @@ async function getUserInfo(userId) {
 <br><br>
 
 ## 26. 타입 추론에 문맥이 어떻게 사용되는지 이해하기
+타입스크립트에서는 사용되는 ***`문맥으로부터 값을 분리했을 때`*** 여러가지 문제가 발생할 수 있다. 타입 추론이 값이 존재하는 문맥을 고려하기 때문인데, 이는 자바스크립트에서는 발생하지 않을 문제다. 여러가지 문제가 되는 케이스를 살펴보고 해결 방안을 알아본다.
+
+<br>
+
+1. String Union
+```ts
+type Language = 'Javascript' | 'Typescript';
+function setLanguage(language: Language) { /* */}
+
+// 1.
+setLanguage('Javascript');  // 정상
+
+// 2.
+let language = 'Javascript';
+setLanguage(language);      // string 형식의 인수는 Language 형식의 매개변수에 할당할 수 없습니다.
+```
+
+1의 경우는 정상작동한다. 하지만 2의 경우 `문맥으로부터 값을 분리`했고, `language`의 타입은 `string`으로 추론되어 `Language`에 할당할 수 없게 된다.
+
+해법은 
+  1. 타입선언에서 `language`의 값을 제한한다
+  2. `language`를 상수로 만든다
+이다.
+
+```ts
+// 1.
+let language: Language = 'Javascript';
+setLanguage(language);  // 정상
+
+// 2. 
+const language = 'Javascript'; // 타입은 'Javascript'
+setLanguage(language);         // 정상
+```
+
+<br>
+
+2. Tuple
+`panTo`는 특정 좌표로 뭔가를 이동시키는 함수다. 좌표를 인자로 받는다.
+```ts
+function panTo(where: [number, number]) { /* */}
+
+// 1.
+panTo([10, 20]);  // 정상
+
+// 2.
+const loc = [10, 20];
+panTo(loc);       // number[] 형식의 인수는 [number, number] 형식의 매개변수에 할당될 수 없습니다.
+```
+여기서도 문맥에서 값을 분리해 문제가 되었다. `number[]`로 추론되었기 때문이다.
+
+해법은 
+  1. `loc`에 타입선언을 제공한다.
+  2. `loc`에 `as const`로 상수 문맥을 제공한다.
+이다.
+
+```ts
+// 1.
+const loc: [number, number] = [10, 20];
+panTo(loc); // 정상
+
+// 2. 
+const loc = [10, 20] as const;
+panTo(loc); // 'readonly [10, 20]' 형식은 'readonly'이며 변경 가능한 형식 '[number, number]'에 할당할 수 없습니다.ts(2345)
+```
+
+단언 `as const`가 적용된 문법이 깊은 상수(deeply const)로 인식되어 타입스크립트가 너무 타입을 정교하게 추론했기 때문에 2는 정상작동 하지 않았다. 이 경우 `panTo`의 매개변수 타입을 `readonly`로 바꾸는게 좋은데, 라이브러리 등을 사용할 경우 함수 시그니쳐 변경이 불가능하므로 1.의 방법대로 타입 선언을 제공해서 고치면 된다.
+
+<br>
+
+3. 객체
+객체 사용시에도 문자열 리터럴과 비슷하게 문제가 발생할 수 있다.
+```ts
+type Language = 'Javascript' | 'Typescript';
+interface GovnernedLanguage {
+	language: Language
+	org: string
+}
+
+	
+function complain(language: GovnernedLanguage) { /* */}
+
+// 1.
+complain({ language: 'Typescript', org: 'MS'}); // 정상
+
+// 2.
+const ts = {
+	language: 'Typescript',
+	org: 'MS'
+}
+complain(ts); //'string' 형식은 'Language' 형식에 할당할 수 없습니다.ts(2345)
+```
+
+이 경우도 `language`프로퍼티가 `string`으로 추론되어 문제가 발생하였다. 
+
+해법으로
+  1. `ts`에 타입 문맥을 제공하거나 
+  2. `language`프로퍼티에 상수 단언(`as const`)을 사용
+으로 해결 가능하다.
+
+```ts
+// 1. 
+const ts: GovnernedLanguage= {
+	language: 'Typescript',
+	org: 'MS'
+}
+complain(ts); 
+
+// 2
+const ts = {
+	language: 'Typescript' as const,
+	org: 'MS'
+}
+complain(ts); 
+```
+
+<br>
+
+4. 콜백
+콜백으로 다른 함수를 전달할 때 타입스크립트는 콜백의 매개변수 타입을 추론하기 위해 문맥을 사용한다.
+
+```ts
+function callWithRandomNumbers(fn: (n1: number, n2: number) => void) {
+	fn(Math.random(), Math.random());
+}
+
+// 1.
+callWithRandomNumbers((a, b) => {
+	a; // number 타입
+	b; // number 타입
+})
+
+// 2.
+const fn = (a, b) => {
+  // implicit any 관련 메시지 발생. a, b의 타입을 추론하지 못한다.
+}
+callWithRandomNumbers(fn);
+```
+
+이 때 콜백을 문맥에서 분리하면 매개변수를 추론하지 못하는데, 명시적으로 시그니처를 정의해주면 된다.(2의 경우 호출에서 컴파일 에러가 발생하는건 아니다.)
+
+<br><br>
+
+
 ## 27. 함수형 기법과 라이브러리로 타입 흐름 유지하기
 
 # 4장. 타입 설계
@@ -2253,6 +2397,10 @@ class UserPosts {
 <br><br>
 
 ## 32. 유니온의 인터페이스보다는 인터페이스의 유니온을 사용하기
+
+
+
+
 ## 33. string 타입보다 더 구체적인 타입 사용하기
 ## 34. 부정확한 타입보다는 미완성 타입을 사용하기
 ## 35. 데이터가 아닌, API와 명세를 보고 타입 만들기
