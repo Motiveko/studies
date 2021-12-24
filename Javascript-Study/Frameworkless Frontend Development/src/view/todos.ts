@@ -2,8 +2,8 @@ import { State } from '..';
 import { Todo } from '../getTodos';
 
 const getTodoElement = (todo: Todo) => {
-	const { text, completed } = todo;
-	return `
+  const { text, completed } = todo;
+  return `
     <li ${completed ? 'class="completed"' : ''}>
       <div class="view">
         <input
@@ -18,8 +18,8 @@ const getTodoElement = (todo: Todo) => {
 };
 
 export default (targetElement: Element, state: State) => {
-	const newTodoList = targetElement.cloneNode(true) as Element;
-	const todosElement = state.todos.map(getTodoElement).join('');
-	newTodoList.innerHTML = todosElement;
-	return newTodoList;
+  const newTodoList = targetElement.cloneNode(true) as Element;
+  const todosElement = state.todos.map(getTodoElement).join('');
+  newTodoList.innerHTML = todosElement;
+  return newTodoList;
 };

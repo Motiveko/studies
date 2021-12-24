@@ -4,7 +4,6 @@
   "trailingComma": "none",
   "bracketSpacing": true,
   "semi": true,
-  "useTabs": true,
   "arrowParens": "avoid",
   "endOfLine": "lf",
   "jsxBracketSameLine": true,
@@ -13,8 +12,7 @@
     {
       "files": ["**/*.html", "**/.*.json"],
       "options": {
-        "tabWidth": 4,
-        "useTabs": true
+        "tabWidth": 4
       }
     }
   ]

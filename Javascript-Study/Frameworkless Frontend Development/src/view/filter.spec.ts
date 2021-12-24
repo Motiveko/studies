@@ -13,20 +13,20 @@ const TEMPLATE = `<ul class="filters">
 </ul>`;
 
 fdescribe('filter 테스트', () => {
-	let targetElement: Element;
-	beforeEach(() => {
-		const tempElement = document.createElement('div');
-		tempElement.innerHTML = TEMPLATE;
-		// targetElement = tempElement.childNodes[0];
-		targetElement = tempElement.querySelector('ul') as HTMLUListElement;
-	});
+  let targetElement: Element;
+  beforeEach(() => {
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = TEMPLATE;
+    // targetElement = tempElement.childNodes[0];
+    targetElement = tempElement.querySelector('ul') as HTMLUListElement;
+  });
 
-	test('currentFilter에 설정된 요소에는 selected class가 추가되어야 한다.', () => {
-		const newCounter = filtersView(targetElement, {
-			currentFilter: 'All',
-			todos: []
-		});
-		const selectedItem = newCounter.querySelector('li a.selected');
-		expect(selectedItem?.textContent).toBe('All');
-	});
+  test('currentFilter에 설정된 요소에는 selected class가 추가되어야 한다.', () => {
+    const newCounter = filtersView(targetElement, {
+      currentFilter: 'All',
+      todos: []
+    });
+    const selectedItem = newCounter.querySelector('li a.selected');
+    expect(selectedItem?.textContent).toBe('All');
+  });
 });
