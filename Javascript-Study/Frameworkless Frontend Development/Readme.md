@@ -16,6 +16,17 @@ jest로 테스트시 tsconfig Target을 너무 최신으로 잡으면 없던 에
 데이터 속성 : https://developer.mozilla.org/ko/docs/Learn/HTML/Howto/Use_data_attributes
 
 ## 3. DOM 이벤트 관리
+모든 DOM 노드는 `EventTarget` 인터페이스를 구현하는데, `EventTarget`은 다음과 같은 시그니처를 가진다.
+```ts
+interface EventTarget {
+  addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void;
+  dispatchEvent(event: Event): boolean;
+  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+}
+```
+
+
+
 ## 4. 웹 구성 요소
 ## 5. HTTP 요청
 ## 6. 라우팅
