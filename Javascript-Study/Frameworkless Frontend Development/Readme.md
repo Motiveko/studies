@@ -28,6 +28,11 @@ interface EventTarget {
 
 
 ## 4. 웹 구성 요소
+웹 컴포넌트
+- 커스텀 엘리먼트 : https://developer.mozilla.org/ko/docs/Web/Web_Components/Using_custom_elements
+- 
+
+
 ## 5. HTTP 요청
 ## 6. 라우팅
 ## 7. 상태 관리
