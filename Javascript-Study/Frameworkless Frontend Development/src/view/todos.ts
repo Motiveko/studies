@@ -1,4 +1,5 @@
-import { State } from '..';
+import { ElementFlags } from 'typescript';
+import { Events, State } from '..';
 import { Todo } from '../getTodos';
 
 let template: HTMLTemplateElement | undefined;
@@ -15,7 +16,7 @@ const createNewTodoNode: CreateTodoNode = () => {
     ?.cloneNode(true) as HTMLLIElement;
 };
 
-const getTodoElement = (todo: Todo) => {
+const getTodoElement = (todo: Todo, index: number, events: Events) => {
   const { text, completed } = todo;
 
   const element = createNewTodoNode();
@@ -28,12 +29,15 @@ const getTodoElement = (todo: Todo) => {
     (element.querySelector('input.toggle') as HTMLInputElement).checked = true;
   }
 
+  const handler = (e: any) => events.deleteItem(index)
+
+  element.querySelector('button.destroy')!.addEventListener('click', handler)
   return element;
 };
 
-export default (targetElement: Element, state: State) => {
+export default (targetElement: Element, state: State, events: Events) => {
   const newTodoList = targetElement.cloneNode(true) as Element;
-  state.todos.map(getTodoElement).forEach(element => {
+  state.todos.map((todo, index) => (getTodoElement(todo, index, events))).forEach(element => {
     newTodoList.appendChild(element);
   })
   return newTodoList;

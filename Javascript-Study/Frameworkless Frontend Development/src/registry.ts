@@ -1,6 +1,6 @@
-import { State } from '.';
+import { Events, State } from '.';
 
-type Component = (targetElement: Element, state: State) => Element;
+type Component = (targetElement: Element, state: State, events: Events) => Element;
 type Registry = {
   [name: string]: Component | undefined;
 };
@@ -18,8 +18,8 @@ const add: AddRegistry = (name, component) => {
  * @returns wrapper 컴포넌트 + 자식 컴포넌트 생성 함수
  */
 const renderWrapper: (c: Component) => Component = component => {
-  return (targetElement, state) => {
-    const element = component(targetElement, state);
+  return (targetElement, state, events) => {
+    const element = component(targetElement, state, events);
 
     const childComponents = element.querySelectorAll('[data-component]');
 
@@ -28,18 +28,18 @@ const renderWrapper: (c: Component) => Component = component => {
       const child = registry[name];
 
       if (child) {
-        target.replaceWith(child(target, state));
+        target.replaceWith(child(target, state, events));
       }
     });
     return element;
   };
 };
 
-const renderRoot: Component = (root, state) => {
+const renderRoot: Component = (root, state, events) => {
   const cloneComponent: Component = root => {
     return root.cloneNode(true) as Element;
   };
-  return renderWrapper(cloneComponent)(root, state);
+  return renderWrapper(cloneComponent)(root, state, events);
 };
 export default {
   add,

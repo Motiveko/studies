@@ -8,40 +8,48 @@ describe('filtersView', () => {
   });
 
   test('모든 todo에 대해 li요소를 만든다 ', () => {
-    const newTodoList = todosView(targetElement, {
-      currentFilter: '',
-      todos: [
-        {
-          text: 'First',
-          completed: true
-        },
-        {
-          text: 'Second',
-          completed: true
-        },
-        {
-          text: 'Third',
-          completed: false
-        }
-      ]
-    });
+    const newTodoList = todosView(
+      targetElement,
+      {
+        currentFilter: '',
+        todos: [
+          {
+            text: 'First',
+            completed: true
+          },
+          {
+            text: 'Second',
+            completed: true
+          },
+          {
+            text: 'Third',
+            completed: false
+          }
+        ]
+      },
+      {}
+    );
     expect(newTodoList.querySelectorAll('li').length).toBe(3);
   });
 
   test('todo에 적절한 attribute가 설정되어야 한다.', () => {
-    const newTodoList = todosView(targetElement, {
-      currentFilter: '',
-      todos: [
-        {
-          text: 'First',
-          completed: true
-        },
-        {
-          text: 'Second',
-          completed: false
-        }
-      ]
-    });
+    const newTodoList = todosView(
+      targetElement,
+      {
+        currentFilter: '',
+        todos: [
+          {
+            text: 'First',
+            completed: true
+          },
+          {
+            text: 'Second',
+            completed: false
+          }
+        ]
+      },
+      {}
+    );
 
     const [firstItem, secondItem] = newTodoList.querySelectorAll('li');
 

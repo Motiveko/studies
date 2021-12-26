@@ -12,6 +12,9 @@ export type State = {
   currentFilter: string;
   todos: Todo[];
 };
+export type Events = {
+  [key: string]: (...args: any) => void;
+};
 
 declare const APP_NAME: string;
 declare const VERSION: string;
@@ -32,10 +35,24 @@ const state: State = {
   todos: getTodos()
 };
 
+const events: Events = {
+  deleteItem: (index: number) => {
+    state.todos.splice(index, 1);
+    render();
+  },
+  addItem: (text: string) => {
+    state.todos.push({
+      text,
+      completed: false
+    });
+    render();
+  }
+};
+
 const render = () => {
   window.requestAnimationFrame(() => {
     const main = document.querySelector('#root') as HTMLElement;
-    const newMain = registry.renderRoot(main, state);
+    const newMain = registry.renderRoot(main, state, events);
     // main.replaceWith(newMain);
     applyDiff(document.body, main, newMain);
   });
