@@ -2,6 +2,7 @@ import { Todo, getTodos } from './getTodos';
 import filtersView from './view/filter';
 import todosView from './view/todos';
 import counterView from './view/counter';
+import appView from './view/app';
 
 import registry from './registry';
 
@@ -21,6 +22,7 @@ console.log(
   `******${APP_NAME}@${VERSION} IS BUILT AT ${new Date(BUILT_AT).getUTCDate()}******`
 );
 
+registry.add('app', appView);
 registry.add('todos', todosView);
 registry.add('filter', filtersView);
 registry.add('counter', counterView);
@@ -32,14 +34,11 @@ const state: State = {
 
 const render = () => {
   window.requestAnimationFrame(() => {
-    const main = document.querySelector('.todoapp') as HTMLElement;
+    const main = document.querySelector('#root') as HTMLElement;
     const newMain = registry.renderRoot(main, state);
     // main.replaceWith(newMain);
     applyDiff(document.body, main, newMain);
   });
 };
 
-setInterval(() => {
-  state.todos = getTodos();
-  render();
-}, 5000);
+render();

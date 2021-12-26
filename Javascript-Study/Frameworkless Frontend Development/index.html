@@ -12,47 +12,63 @@
 </head>
 
 <body>
-    <section class="todoapp">
-        <header class="header">
-            <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done" autofocus="">
-        </header>
-        <section class="main">
-            <input id="toggle-all" class="toggle-all" type="checkbox">
-        </section>
-        <label for="toggle-all">
-            Mark all as Complete
-        </label>
-        <ul class="todo-list" data-component="todos">
-            <!-- 여기에 todo list랜더링 예정 -->
-        </ul>
-        <footer class="footer">
-            <span 
-                class="todo-count"
-                data-component="counter"
-            >
-                
-                <!-- n items left -->
-            </span>
-            <ul class="filters" data-component="filters">
-                <li>
-                    <a href="#">All</a>
-                </li>
-                <li>
-                    <a href="#/active">Active</a>
-                </li>
-                <li>
-                    <a href="#/completed">Completed</a>
-                </li>
+    <!-- TODO 컴포넌트 템플릿 -->
+    <template id="todo-item">
+        <li>
+            <div class="view">
+                <input type="checkbox" class="toggle">
+                <label></label>
+                <button class="destroy"></button>
+            </div>
+            <input class="edit">
+        </li>
+    </template>
+
+    <template id="todo-app">
+        <section class="todoapp">
+            <header class="header">
+                <h1>todos</h1>
+                <input class="new-todo" placeholder="What needs to be done" autofocus="">
+            </header>
+            <section class="main">
+                <input id="toggle-all" class="toggle-all" type="checkbox">
+            </section>
+            <label for="toggle-all">
+                Mark all as Complete
+            </label>
+            <ul class="todo-list" data-component="todos">
+                <!-- 여기에 todo list랜더링 예정 -->
             </ul>
-            <button class="clear-completed">
-                Clear completed
-            </button>
-        </footer>
-    </section>
+            <footer class="footer">
+                <span 
+                    class="todo-count"
+                    data-component="counter"
+                >
+                    
+                    <!-- n items left -->
+                </span>
+                <ul class="filters" data-component="filters">
+                    <li>
+                        <a href="#">All</a>
+                    </li>
+                    <li>
+                        <a href="#/active">Active</a>
+                    </li>
+                    <li>
+                        <a href="#/completed">Completed</a>
+                    </li>
+                </ul>
+                <button class="clear-completed">
+                    Clear completed
+                </button>
+            </footer>
+        </section>
+    </template>
+    <div id="root">
+        <div data-component="app"></div>
+    </div>
     <footer class="info">
         <p>Double-click to edit a todo</p>
     </footer>
 </body>
-<button class="hi">hi</button>
 </html>
