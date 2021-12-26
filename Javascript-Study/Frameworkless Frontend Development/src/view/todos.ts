@@ -25,7 +25,7 @@ const getTodoElement = (todo: Todo, index: number, events: Events) => {
   (element.querySelector('input.edit') as HTMLInputElement).value = text;
 
   if(completed) {
-    element.querySelector('li')?.classList.add('completed');
+    element.classList.add('completed');
     (element.querySelector('input.toggle') as HTMLInputElement).checked = true;
   }
 

@@ -4,6 +4,19 @@ let targetElement: Element;
 
 describe('filtersView', () => {
   beforeEach(() => {
+    const todoListTemplate = document.createElement('template');
+    todoListTemplate.id = 'todo-item';
+    todoListTemplate.innerHTML = `
+      <li>
+        <div class="view">
+          <input type="checkbox" class="toggle">
+          <label></label>
+          <button class="destroy"></button>
+        </div>
+        <input class="edit">
+      </li>
+    `;
+    document.querySelector('body')?.appendChild(todoListTemplate);
     targetElement = document.createElement('ul');
   });
 
