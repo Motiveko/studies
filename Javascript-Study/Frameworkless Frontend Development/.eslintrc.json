@@ -19,11 +19,11 @@
     "@typescript-eslint/strict-boolean-expressions": [
       2,
       {
-        "allowString": false,
+        "allowString": true,
         "allowNumber": false
       }
     ],
-    "prettier/prettier": ["error",{},{"usePrettierrc": true}]
+    "prettier/prettier": ["error",{},{"usePrettierrc": true}],
   },
   "env": {
     "browser": true,
