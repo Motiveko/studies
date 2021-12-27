@@ -1,0 +1,22 @@
+{
+  "name": "wootecho-fe-mission",
+  "version": "1.0.0",
+  "description": "우아한 테크 코스에 지원하는 지원자들은 어느정도 수준의 과제를 하는가, 나는 그걸 수행할 수 있는가를 판가름 해보기 위해 만들어본다.",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/.bin/webpack serve",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.16.5",
+    "@babel/preset-env": "^7.16.5",
+    "babel-loader": "^8.2.3",
+    "html-webpack-plugin": "^5.5.0",
+    "jest": "^27.4.5",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.7.1"
+  }
+}
