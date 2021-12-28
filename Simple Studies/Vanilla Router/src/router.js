@@ -67,7 +67,6 @@ export default () => {
 
   router.setNotFound = cb => {
     notFound = cb;
-    console.log(notFound)
     return router;
   }
 

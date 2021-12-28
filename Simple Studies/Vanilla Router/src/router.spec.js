@@ -24,16 +24,19 @@ describe('routerTest', () => {
     expect(component).toHaveBeenCalledWith({ "id": id, "pw" : pw });
   })
 
-  test.only('router.navigate()로 존재하지 않는 fragment 전달시 notFound 호출', () => {
+  test('router.navigate()로 존재하지 않는 fragment 전달시 notFound 호출', () => {
     const fragment = '#/foo/bar/:id/:pw';
     
-    const component = jest.fn();
-    router.start();
-    router.setNotFound(component);
+    const notFound = jest.fn();
     
-    // TODO :: window에 추가한 event handler가 동작하지 않는것 같다. 이건 아마 우리의 잘못은 아닌거같은데 jsdom 동작을 살펴봐야할듯
+    router
+      .setNotFound(notFound)
+      .start();
+    
     router.navigate(fragment);
+    // jsdom 은 이벤트를 자동으로 dispatch 해주지 않는다. 수동으로 해줘야함
+    window.dispatchEvent(new Event('hashchange'))
     
-    expect(component).toHaveBeenCalled();
+    expect(notFound).toHaveBeenCalledTimes(2); 
   })
 })

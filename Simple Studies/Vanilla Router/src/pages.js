@@ -9,7 +9,8 @@ export default container => {
 
   const detail = (params) => {
     const { id } = params;
-    container.textContent = `This is Detail Page with Id ${Id}`;
+    console.log(params)
+    container.textContent = `This is Detail Page with Id ${id}`;
   }
 
   const anotherDetail = (params) => {
