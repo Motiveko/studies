@@ -1,5 +1,5 @@
 import { Todo } from '../getTodos';
-import { getModelInstance } from '../index';
+import getModelInstance  from '../model/model-instance';
 import { State } from '../model/model';
 import { EVENTS } from './Application';
 

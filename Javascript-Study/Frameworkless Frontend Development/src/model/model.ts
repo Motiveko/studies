@@ -37,10 +37,8 @@ export default (initialState: State = INITIAL_STATE) => {
     listener(freeze(state));
 
     return () => {
-
       // filter는 원본배열을 변환하지 않는다
       listeners = listeners.filter(l => l !== listener);
-      alert(listeners.length)
     }
   }
 

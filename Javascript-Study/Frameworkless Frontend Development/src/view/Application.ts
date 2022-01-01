@@ -1,4 +1,4 @@
-import { getModelInstance } from "..";
+import getModelInstance  from '../model/model-instance';
 import { Todo } from "../getTodos";
 import Footer from "./Footer";
 import List from "./List";

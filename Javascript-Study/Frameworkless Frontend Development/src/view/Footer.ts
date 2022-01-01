@@ -1,5 +1,5 @@
 import { Template } from "webpack";
-import { getModelInstance } from "..";
+import getModelInstance  from '../model/model-instance';
 import { Todo } from "../getTodos";
 import { CurrentFilter, State } from "../model/model";
 import { EVENTS } from "./Application";
@@ -91,4 +91,7 @@ export default class Footer extends HTMLElement {
       }
     })
   }
+  disconnectedCallback() {
+    this.unsubscribe();
+  }  
 }
