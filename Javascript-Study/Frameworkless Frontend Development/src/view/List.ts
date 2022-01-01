@@ -48,6 +48,7 @@ export default class List extends HTMLElement {
 
   // 랜더링 함수 
   _updateList(state: State) {
+    console.log(state);
     const {todos, currentFilter} = state;
     this.list!.innerHTML = '';
     todos

@@ -22,7 +22,6 @@ const INITIAL_STATE: State = {
   currentFilter: 'All'
 }
 
-
 export default (initialState: State = INITIAL_STATE) => {
   
   const state = cloneDeep(initialState);
