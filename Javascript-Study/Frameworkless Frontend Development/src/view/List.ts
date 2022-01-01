@@ -54,6 +54,7 @@ export default class List extends HTMLElement {
     return element;
   }
 
+  // 랜더링 함수 
   _updateList() {
     this.list!.innerHTML = '';
     this.todos
