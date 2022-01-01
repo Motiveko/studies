@@ -1,4 +1,7 @@
 import { Todo } from '../getTodos';
+import { getModelInstance } from '../index';
+import { State } from '../model/model';
+import { EVENTS } from './Application';
 
 const TODO_LIST_CONTAINER = `<ul class="todo-list"></ul>`;
 const TODO_LIST_ELEMENT = `<li>
@@ -10,28 +13,17 @@ const TODO_LIST_ELEMENT = `<li>
     <input class="edit">
 </li>`;
 
-export const EVENTS = {
-  DELETE_ITEM: 'DELETE_ITEM'
-};
-
 export default class List extends HTMLElement {
   list: HTMLUListElement | undefined;
   itemTemplate: HTMLElement | undefined;
+  model: ReturnType<typeof getModelInstance>
+  unsubscribe: () => void;
 
-  static get observedAttributes() {
-    return ['todos'];
-  }
-
-  get todos() {
-    const todos = this.getAttribute('todos');
-    if (!todos) {
-      return [];
-    }
-    return JSON.parse(todos);
-  }
-
-  set todos(todos: Todo[]) {
-    this.setAttribute('todos', JSON.stringify(todos));
+  constructor() {
+    super();
+    this._init();
+    this.model = getModelInstance();
+    this.unsubscribe = this.model.addChangeListener(this._updateList.bind(this));
   }
 
   _createNewTodoNode(): HTMLElement {
@@ -50,14 +42,22 @@ export default class List extends HTMLElement {
       (element.querySelector('input.toggle') as HTMLInputElement).checked = true;
     }
 
-    (element.querySelector('button.destroy') as HTMLElement).dataset.index = String(index);
+    (element.querySelector('div.view') as HTMLElement).dataset.index = String(index);
     return element;
   }
 
   // 랜더링 함수 
-  _updateList() {
+  _updateList(state: State) {
+    const {todos, currentFilter} = state;
     this.list!.innerHTML = '';
-    this.todos
+    todos
+      .filter((todo) => {
+        return currentFilter === 'Completed' 
+          ? todo.completed
+          : currentFilter ==='Active'
+            ? !todo.completed
+            : true;
+      })
       .map((todo, index) => this._getTodoElement(todo, index))
       .forEach(el => this.list!.appendChild(el));
   }
@@ -71,7 +71,15 @@ export default class List extends HTMLElement {
     this.dispatchEvent(event);
   }
 
-  connectedCallback() {
+  _onToggleClick(index: number) {
+    const event = new CustomEvent(EVENTS.TOGGLE_ITEM,{
+      detail: {
+        index
+      }  
+    });
+    this.dispatchEvent(event);
+  }
+  _init() {
     this.innerHTML = TODO_LIST_CONTAINER;
 
     const template = document.createElement('template');
@@ -81,16 +89,21 @@ export default class List extends HTMLElement {
 
     this.list.addEventListener('click', e => {
       const target = e.target as HTMLElement;
+      const index = (e as any).target.parentElement.dataset.index;
       if (target.matches('button.destroy')) {
-
-        this._onDeleteClick(Number(target.dataset.index));
+        // this._onDeleteClick(Number(target.dataset.index));
+        this._onDeleteClick(index);
+      }
+      if (target.matches('input.toggle')) {
+        this._onToggleClick(index);
       }
     });
-    this._updateList();
   }
 
-  attributeChangedCallback(name: string, oldVal: string, newVal: string): void {
-    // attribute가 todos밖에 없을 예정. 오직 상태값에 변화가 있을때만 랜더링한다.
-    this._updateList();
-  }
+  connectedCallback() {  }
+
+  disconnectedCallback() {
+    // TODO : 컴포넌트 지울때 호출하는지 테스트코드 작성
+    this.unsubscribe();
+  }  
 }

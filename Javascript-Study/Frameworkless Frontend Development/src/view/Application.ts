@@ -1,6 +1,15 @@
+import { getModelInstance } from "..";
 import { Todo } from "../getTodos";
 import Footer from "./Footer";
-import List, { EVENTS } from "./List";
+import List from "./List";
+
+
+export const EVENTS = {
+  DELETE_ITEM: 'DELETE_ITEM',
+  TOGGLE_ITEM: 'TOGGEL_ITEM',
+  CHANGE_FILTER: 'CHANGE_FILTER',
+  CLEAR_COMPLETED: 'CLEAR_COMPLETED'
+};
 
 const APP_TEMPLATE = `<section class="todoapp">
 <header class="header">
@@ -27,39 +36,21 @@ export default class App extends HTMLElement {
   // component
   list!: List;
   footer!: Footer;
-
-  // state
-  todos: Todo[] = [];
-  currentFilter = ''
+  
+  model: ReturnType<typeof getModelInstance>
 
   constructor () {
     super()
-    this.init();
-
+    this.model = getModelInstance();
+    this.initTemplate();
   }
 
-  init() {
+  initTemplate() {
     const tempTemplate = document.createElement('template');
     tempTemplate.innerHTML = APP_TEMPLATE;
     this.template = tempTemplate.content.firstElementChild as HTMLElement;
   }
 
-  _deleteTodo(index: number) {
-    
-    this.todos.splice(index, 1);
-    this._syncAttributes();
-  }
-
-  _addTodo(todo: Todo) {
-    this.todos.push(todo);
-    this._syncAttributes();
-  } 
-  _syncAttributes() {
-    // 상태전파
-    this.list.todos = this.todos;
-    this.footer.todos = this.todos;
-    this.footer.currentFilter = this.currentFilter;
-  }
 
   connectedCallback() {
     window.requestAnimationFrame(() => {
@@ -70,20 +61,29 @@ export default class App extends HTMLElement {
 
       this.querySelector('.new-todo')!.addEventListener('keypress', (e) => {
         if((e as KeyboardEvent).key === 'Enter') {
-          this._addTodo({ 
-            text: (e.target as HTMLInputElement).value,
-            completed: false
-          });
+          this.model.addItem((e.target as HTMLInputElement).value);
           (e.target as HTMLInputElement).value = '';
         }
       })
 
       this.list.addEventListener(EVENTS.DELETE_ITEM, (e) => {
         const event = e as CustomEvent;
-        this._deleteTodo(event.detail.index);
+        this.model.deleteItem(event.detail.index);
       });
-      
-      this._syncAttributes();
+      this.list.addEventListener(EVENTS.TOGGLE_ITEM, (e) => {
+        const event = e as CustomEvent;
+        this.model.toggleItem(event.detail.index);
+      })
+
+      this.footer.addEventListener(EVENTS.CHANGE_FILTER, (e) => {
+        const event = e as CustomEvent;
+        this.model.changeFilter(event.detail.filter);
+      })
+
+      this.footer.addEventListener(EVENTS.CLEAR_COMPLETED, (e) => {
+        this.model.clearCompleted(); 
+      })
+
     })
   }
 }
