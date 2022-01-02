@@ -83,7 +83,6 @@ export default class App extends HTMLElement {
       this.footer.addEventListener(EVENTS.CLEAR_COMPLETED, (e) => {
         this.model.clearCompleted(); 
       })
-
     })
   }
 }

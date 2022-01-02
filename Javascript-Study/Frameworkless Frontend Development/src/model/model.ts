@@ -1,4 +1,5 @@
 import { Todo } from "../getTodos";
+import observableFactory from './observable';
 
 export type CurrentFilter = 'All' | 'Active' | 'Completed';
 export type State = {
@@ -7,7 +8,6 @@ export type State = {
 }
 
 export type Listener = (state: State) => void;
-
 
 type Freeze = <T extends object>(x:T) => T 
 type CloneDeep = <T extends object>(x:T) => T 
@@ -22,24 +22,18 @@ const INITIAL_STATE: State = {
   currentFilter: 'All'
 }
 
+export type Model = {
+  addItem: (text: string) => void
+  deleteItem: (index: number) => void
+  toggleItem: (index: number) => void
+  changeFilter: (filter: CurrentFilter) => void
+  clearCompleted: () => void
+}
+
 export default (initialState: State = INITIAL_STATE) => {
   
   const state = cloneDeep(initialState);
   let listeners: Listener[] = [];
-  const _invokeListeners = () => {
-    listeners.forEach(listener => listener(freeze(state)));
-  }
-  
-  const addChangeListener = (listener: Listener) => {
-    listeners.push(listener);
-    
-    listener(freeze(state));
-
-    return () => {
-      // filter는 원본배열을 변환하지 않는다
-      listeners = listeners.filter(l => l !== listener);
-    }
-  }
 
   const addItem = (text: string) => {
     if(!text) {
@@ -50,8 +44,6 @@ export default (initialState: State = INITIAL_STATE) => {
       text,
       completed: false
     });
-    
-    _invokeListeners();
   }
 
   const deleteItem = (index: number) => {
@@ -61,8 +53,6 @@ export default (initialState: State = INITIAL_STATE) => {
     }
 
     todos.splice(index, 1);
-    
-    _invokeListeners();
   }
 
   const toggleItem = (index: number) => {
@@ -72,27 +62,25 @@ export default (initialState: State = INITIAL_STATE) => {
     }
 
     todos[index].completed = !todos[index].completed;
-    _invokeListeners();
   }
   const changeFilter = (filter: CurrentFilter) => {
     if(!['All', 'Active', 'Completed'].includes(filter)) {
       throw new Error(`선택한 filter값이 잘못되었습니다. 선택한 filter: ${filter}`);
     }
     state.currentFilter = filter;
-    _invokeListeners();
   }
 
   const clearCompleted = () => {
     state.todos = state.todos.filter(todo => !todo.completed);
-    _invokeListeners();
   }
   
-  return {
+  const model: Model = {
     addItem,
     deleteItem,
     toggleItem,
     changeFilter,
     clearCompleted,
-    addChangeListener
-  }
+  };
+  
+  return observableFactory(model, () => state);
 }
