@@ -1,53 +1,35 @@
-import { Listener, State, Model} from "./model"
-import modelFactory from './model';
-import { Module } from "webpack";
+import { State} from "./model"
 
-const cloneDeep = (state: any) => JSON.parse(JSON.stringify(state));
+export type Listener = (state: State) => void;
+
+type Freeze = <T extends object>(x:T) => T 
+type CloneDeep = <T extends object>(x:T) => T 
+
+const cloneDeep: CloneDeep = (state: any) => JSON.parse(JSON.stringify(state));
 
 const freeze = (state: State) => {
   return Object.freeze(cloneDeep(state));
 }
 
-type ModelActions = Model[keyof Model];
-
-export default (model: Model, stateGetter: () => State) => {
+type Unsubscribe = () => void;
+type AddChangeListener = (listener: Listener) => Unsubscribe ;
+export default (initialState: State): State & { addChangeListener: AddChangeListener} => {
   
   let listeners: Listener[] = [];
 
-  const wrapAction = (action: ModelActions) => {
-    // TODO : action의 시그니쳐가 매번 다른데 이걸 아래 방법 말고 컴파일 에러 안나게 할 수 있는 방법을 모르겠다.
-    return (...args: any[]) => {
-      // @ts-ignore: Unreachable code error
-      const value = action(...args);
-      invokeListener();
-      return value;
+  const proxy = new Proxy(cloneDeep(initialState), {
+    set: function(target, prop, value) {
+      console.log('setter caslls ', value);
+      target[prop as keyof typeof target] =  value;
+      listeners.forEach(listener => listener(freeze(target)));
+      return true;
     }
-  }
+  }) as State & { addChangeListener: AddChangeListener};
 
-  const invokeListener = () => {
-    console.log(stateGetter());
-    listeners.forEach(listener => listener(freeze(stateGetter())));
-  }
-
-  const addChangeListener = (listener: Listener) => {
+  proxy.addChangeListener = (listener: Listener) => {
     listeners.push(listener);
-    listener(freeze(stateGetter()));
+    listener(freeze(proxy));
     return () => listeners.filter(li => li !== listener);
   }
-
-  const baseProxy = {
-    addChangeListener
-  }
-  return Object
-    .keys(model)
-    .filter(key => {
-      return typeof model[key as keyof typeof model] === 'function'
-    })
-    .reduce((proxy, key) => {
-      const action = model[key as keyof typeof model];
-      return {
-        ...proxy,
-        [key]: wrapAction(action)
-      }
-    }, baseProxy) as unknown as (Model & { addChangeListener: typeof addChangeListener });
+  return proxy;
 }

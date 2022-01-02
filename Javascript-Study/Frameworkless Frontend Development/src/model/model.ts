@@ -7,15 +7,6 @@ export type State = {
   currentFilter: CurrentFilter
 }
 
-export type Listener = (state: State) => void;
-
-type Freeze = <T extends object>(x:T) => T 
-type CloneDeep = <T extends object>(x:T) => T 
-const cloneDeep: CloneDeep = (state) => {
-  return JSON.parse(JSON.stringify(state));
-}
-
-const freeze: Freeze = (x) => Object.freeze(cloneDeep(x));
 
 const INITIAL_STATE: State = {
   todos: [],
@@ -32,18 +23,18 @@ export type Model = {
 
 export default (initialState: State = INITIAL_STATE) => {
   
-  const state = cloneDeep(initialState);
-  let listeners: Listener[] = [];
+  let state = observableFactory(initialState);
 
   const addItem = (text: string) => {
     if(!text) {
       return;
     }
-
-    state.todos.push({
+    const { todos } = state;
+    todos.push({
       text,
       completed: false
     });
+    state.todos = todos;
   }
 
   const deleteItem = (index: number) => {
@@ -52,17 +43,26 @@ export default (initialState: State = INITIAL_STATE) => {
       return;
     }
 
-    todos.splice(index, 1);
+    state.todos = state.todos.filter((todo, i) => i !== index)
   }
 
   const toggleItem = (index: number) => {
-    const { todos } = state;
-    if(index < 0 || index >= todos.length ) {
-      return;
+    if (index < 0) {
+      return
     }
 
-    todos[index].completed = !todos[index].completed;
+    if (!state.todos[index]) {
+      return
+    }
+
+    state.todos = state.todos.map((todo, i) => {
+      if (i === index) {
+        todo.completed = !todo.completed
+      }
+      return todo
+    })
   }
+
   const changeFilter = (filter: CurrentFilter) => {
     if(!['All', 'Active', 'Completed'].includes(filter)) {
       throw new Error(`선택한 filter값이 잘못되었습니다. 선택한 filter: ${filter}`);
@@ -74,13 +74,12 @@ export default (initialState: State = INITIAL_STATE) => {
     state.todos = state.todos.filter(todo => !todo.completed);
   }
   
-  const model: Model = {
+  return {
+    addChangeListener: state.addChangeListener,
     addItem,
     deleteItem,
     toggleItem,
     changeFilter,
     clearCompleted,
   };
-  
-  return observableFactory(model, () => state);
 }
