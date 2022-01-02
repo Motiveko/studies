@@ -1,8 +1,9 @@
 import { Template } from "webpack";
-import getModelInstance  from '../model/model-instance';
 import { Todo } from "../getTodos";
 import { CurrentFilter, State } from "../model/model";
 import { EVENTS } from "./Application";
+
+import { eventBus } from '../index'
 
 const FOOTER_TEMPLATE = `<footer class="footer">
 <span 
@@ -30,7 +31,6 @@ data-component="counter"
 export default class Footer extends HTMLElement {
 
   footer: HTMLElement | undefined;
-  model: ReturnType<typeof getModelInstance>;
   unsubscribe: () => void
   static get observedAttributes() {
     return ['todos, current-filter'];
@@ -39,8 +39,7 @@ export default class Footer extends HTMLElement {
   constructor() {
     super();
     this.init();
-    this.model = getModelInstance();
-    this.unsubscribe = this.model.addChangeListener(this._updateFooter.bind(this));
+    this.unsubscribe = eventBus.subscribe(this._updateFooter.bind(this));
   }
 
 

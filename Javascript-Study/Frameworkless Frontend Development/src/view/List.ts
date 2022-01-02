@@ -1,7 +1,8 @@
 import { Todo } from '../getTodos';
-import getModelInstance  from '../model/model-instance';
 import { State } from '../model/model';
 import { EVENTS } from './Application';
+
+import { eventBus } from '../index'
 
 const TODO_LIST_CONTAINER = `<ul class="todo-list"></ul>`;
 const TODO_LIST_ELEMENT = `<li>
@@ -16,14 +17,13 @@ const TODO_LIST_ELEMENT = `<li>
 export default class List extends HTMLElement {
   list: HTMLUListElement | undefined;
   itemTemplate: HTMLElement | undefined;
-  model: ReturnType<typeof getModelInstance>
+
   unsubscribe: () => void;
 
   constructor() {
     super();
     this._init();
-    this.model = getModelInstance();
-    this.unsubscribe = this.model.addChangeListener(this._updateList.bind(this));
+    this.unsubscribe = eventBus.subscribe(this._updateList.bind(this));
   }
 
   _createNewTodoNode(): HTMLElement {

@@ -1,8 +1,9 @@
-import getModelInstance  from '../model/model-instance';
 import { Todo } from "../getTodos";
 import Footer from "./Footer";
 import List from "./List";
-
+import { eventBus } from '../index'
+import eventCreator from "../model/eventCreator";
+import { ActionEvent } from "../model/model";
 
 export const EVENTS = {
   DELETE_ITEM: 'DELETE_ITEM',
@@ -37,11 +38,8 @@ export default class App extends HTMLElement {
   list!: List;
   footer!: Footer;
   
-  model: ReturnType<typeof getModelInstance>
-
   constructor () {
     super()
-    this.model = getModelInstance();
     this.initTemplate();
   }
 
@@ -51,6 +49,9 @@ export default class App extends HTMLElement {
     this.template = tempTemplate.content.firstElementChild as HTMLElement;
   }
 
+  _dispatch (event: ActionEvent) {
+    eventBus.dispatch(event);
+  }
 
   connectedCallback() {
     window.requestAnimationFrame(() => {
@@ -61,27 +62,27 @@ export default class App extends HTMLElement {
 
       this.querySelector('.new-todo')!.addEventListener('keypress', (e) => {
         if((e as KeyboardEvent).key === 'Enter') {
-          this.model.addItem((e.target as HTMLInputElement).value);
+          this._dispatch(eventCreator.addItem((e.target as HTMLInputElement).value));
           (e.target as HTMLInputElement).value = '';
         }
       })
 
       this.list.addEventListener(EVENTS.DELETE_ITEM, (e) => {
         const event = e as CustomEvent;
-        this.model.deleteItem(event.detail.index);
+        this._dispatch(eventCreator.deleteItem(event.detail.index));
       });
       this.list.addEventListener(EVENTS.TOGGLE_ITEM, (e) => {
         const event = e as CustomEvent;
-        this.model.toggleItem(event.detail.index);
+        this._dispatch(eventCreator.toggleItem(event.detail.index));
       })
 
       this.footer.addEventListener(EVENTS.CHANGE_FILTER, (e) => {
         const event = e as CustomEvent;
-        this.model.changeFilter(event.detail.filter);
+        this._dispatch(eventCreator.changeFilter(event.detail.filter));
       })
 
       this.footer.addEventListener(EVENTS.CLEAR_COMPLETED, (e) => {
-        this.model.clearCompleted(); 
+        this._dispatch(eventCreator.clearCompleted()); 
       })
     })
   }
