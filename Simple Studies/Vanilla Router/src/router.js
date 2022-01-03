@@ -80,11 +80,11 @@ export default () => {
   }
 
   router.navigate = (url) => {
-    window.history.pushState(null, null, url)
+    window.history.pushState(null, null, url);
+    checkRoutes();
   }
 
   router.start = () => {
-    setInterval(checkRoutes, TICKTIME);
     checkRoutes();
 
     const NAV_A_SELECTOR = 'a[data-navigation]';

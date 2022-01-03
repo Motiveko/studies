@@ -12,5 +12,3 @@ router
   .add('/list/:id/:anotherId', pages.anotherDetail)
   .setNotFound(pages.notFound)
   .start();
-
-
