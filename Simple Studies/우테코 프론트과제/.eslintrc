@@ -1,0 +1,15 @@
+{
+  "settings": {
+    "jest": {
+      "version": 27
+    }
+  },
+  "extends": [
+    "airbnb",
+    "prettier"
+  ],
+  "env": {
+    "jest": true,
+    "browser": true
+  }
+}
