@@ -5,6 +5,7 @@
     }
   },
   "extends": [
+    "eslint:recommended",
     "airbnb",
     "prettier"
   ],
