@@ -1,16 +1,26 @@
-import VendingMachine from "./view/vending-machine";
+/* eslint-disable*/
+import AppComponent from './view/app';
+import ItemManagerComponent from './view/item-manager';
+import ChargeChangeComponent from './view/charge-change';
+import PurchaseItemComponent from './view/purchase-item';
 
+// bootstrap
+const routes = [
+  {
+    url: '/item-manager',
+    name: '상품 관리',
+    component: (...args) => new ItemManagerComponent(...args)
+  },
+  {
+    url: '/charge-change',
+    name: '잔돈 충전',
+    component: (...args) => new ChargeChangeComponent(...args)
+  },
+  {
+    url: '/purchase-item',
+    name: '상품 구매',
+    component: (...args) => new PurchaseItemComponent(...args)
+  }
+];
 
-
-window.onload = () => {
-  let app = document.querySelector('#id');
-  
-  window.requestAnimationFrame(() => {
-    render();
-  })
-}
-
-const render = () => {
-  console.log(app);
-  app.innerHTML = '<app-vending-machine></app-vending-machine>';
-}
+document.querySelector('#app').appendChild(new AppComponent(routes));
