@@ -26,6 +26,7 @@ module.exports = {
       template: './index.html'
     })
   ],
+  devtool: 'source-map',
   devServer: {
     host: 'localhost',
     port: 4200,
