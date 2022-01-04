@@ -3,7 +3,6 @@ import ItemManagerComponent from './view/item-manager';
 import ChargeChangeComponent from './view/charge-change';
 import PurchaseItemComponent from './view/purchase-item';
 
-// bootstrap
 const routes = [
   {
     url: '/item-manager',
