@@ -1,4 +1,3 @@
-/* eslint-disable*/
 import AppComponent from './view/app';
 import ItemManagerComponent from './view/item-manager';
 import ChargeChangeComponent from './view/charge-change';

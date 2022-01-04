@@ -2,7 +2,16 @@
   "settings": {
     "jest": {
       "version": 27
+    },
+    "import/resolver": {
+      "webpack": {
+        "config": "webpack.config.js"
+      }
     }
+  },
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
   },
   "extends": [
     "eslint:recommended",
@@ -11,6 +20,13 @@
   ],
   "env": {
     "jest": true,
-    "browser": true
+    "browser": true,
+    "es2021": true,
+    "commonjs": true 
+  },
+  "rules": {
+    // TODO : airbnb rule 사용시 module resolve 관련 에러가 발생하는데 해결방법을 못찾았다.
+    "import/no-unresolved": "off",
+    "no-alert": "off"
   }
 }

@@ -1,5 +1,5 @@
 const template = document.createElement('template');
-template.innerHTML = `<p>아이템 메니저 탭입니다</p>`;
+template.innerHTML = `<p>상품 관리 탭입니다</p>`;
 export default class ItemManagerComponent extends HTMLElement {
   constructor() {
     super();
