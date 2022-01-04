@@ -44,10 +44,14 @@ export default class AppComponent extends HTMLElement {
 
   createNavigations() {
     if (this.routes) {
-      return this.routes.map(element => {
+      return this.routes.map(route => {
+        const { url, name, id } = route;
+
         const navButton = document.createElement('button');
-        navButton.dataset.navigation = element.url;
-        navButton.textContent = element.name;
+        navButton.dataset.navigation = url;
+        navButton.textContent = name;
+        navButton.setAttribute('id', id);
+
         return navButton;
       });
     }

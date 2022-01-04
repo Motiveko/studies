@@ -1,23 +1,27 @@
 import AppComponent from './view/app';
-import ItemManagerComponent from './view/item-manager';
-import ChargeChangeComponent from './view/charge-change';
-import PurchaseItemComponent from './view/purchase-item';
+import ProductAdd from './view/product-add/product-add';
+import VendingMachineManage from './view/vending-machine-menage';
+import ProductPurchase from './view/product-purchase';
 
 const routes = [
   {
-    url: '/item-manager',
+    id: 'product-add-menu',
+    url: '/product-add',
     name: '상품 관리',
-    component: (...args) => new ItemManagerComponent(...args)
+    component: (...args) => new ProductAdd(...args)
   },
   {
-    url: '/charge-change',
+    id: 'vending-machine-manage-menu',
+    url: '/vending-machine-manage',
     name: '잔돈 충전',
-    component: (...args) => new ChargeChangeComponent(...args)
+
+    component: (...args) => new VendingMachineManage(...args)
   },
   {
-    url: '/purchase-item',
+    id: 'product-purchase-menu',
+    url: '/product-purchase',
     name: '상품 구매',
-    component: (...args) => new PurchaseItemComponent(...args)
+    component: (...args) => new ProductPurchase(...args)
   }
 ];
 

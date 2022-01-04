@@ -16,7 +16,7 @@ template.innerHTML = `<div>
   </div>
 </div>
 `;
-export default class ItemManagerComponent extends HTMLElement {
+export default class ProductAdd extends HTMLElement {
   constructor() {
     super();
     this.init();
@@ -52,4 +52,4 @@ export default class ItemManagerComponent extends HTMLElement {
   }
 }
 
-customElements.define('app-item-manager', ItemManagerComponent);
+customElements.define('product-add', ProductAdd);

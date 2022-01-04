@@ -1,6 +1,6 @@
 const template = document.createElement('template');
-template.innerHTML = `<p>상품 구매 탭입니다.</p>`;
-export default class PurchaseItemComponent extends HTMLElement {
+template.innerHTML = `<p>잔돈 충전 탭입니다.</p>`;
+export default class VendingMachineManage extends HTMLElement {
   constructor() {
     super();
     this.init();
@@ -12,4 +12,4 @@ export default class PurchaseItemComponent extends HTMLElement {
   }
 }
 
-customElements.define('app-purchase-item', PurchaseItemComponent);
+customElements.define('vending-machine-manage', VendingMachineManage);
