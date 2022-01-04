@@ -1,6 +1,6 @@
 import modelFactory from './model';
 
-describe('model - addItem test', () => {
+describe('model - addProduct test', () => {
   let model = '';
   let spyAlert = '';
   let spyListener = '';
@@ -13,27 +13,27 @@ describe('model - addItem test', () => {
 
   afterEach(() => {});
 
-  test('addItem 호출하면 item이 추가된다.', () => {
+  test('addProduct 호출하면 product가 추가된다.', () => {
     let realState = {};
     model.addChangeListener(state => {
       realState = state;
     });
-    const item = {
+    const product = {
       name: '아이템',
       price: 100,
-      stock: 10
+      quantity: 10
     };
-    model.addItem(item);
-    expect(realState.items[0]).toStrictEqual(item);
+    model.addProduct(product);
+    expect(realState.products[0]).toStrictEqual(product);
   });
 
-  test('addItem에서 item에 필요 속성이 없으면 alert 호출한다.', () => {
+  test('addProduct에서 product에 필요 속성이 없으면 alert 호출한다.', () => {
     // when
     model.addChangeListener(spyListener);
-    model.addItem({});
+    model.addProduct({});
 
     // then
-    expect(spyAlert).toHaveBeenCalledWith('상품은 name, price, stock이 필수 속성입니다.');
+    expect(spyAlert).toHaveBeenCalledWith('상품은 name, price, quantity는 필수 속성입니다.');
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
@@ -42,7 +42,7 @@ describe('model - addItem test', () => {
     model.addChangeListener(spyListener);
 
     // when
-    model.addItem({ name: 'name', stock: 0, price: '한글' });
+    model.addProduct({ name: 'name', quantity: 0, price: '한글' });
 
     expect(spyAlert).toHaveBeenCalledWith('상품 가격은 숫자만 입력해주세요.');
     expect(spyListener).toHaveBeenCalledTimes(1);
@@ -51,12 +51,12 @@ describe('model - addItem test', () => {
   test('상품 가격이 100원 이하이거나 나눠떨어 지지 않으면 alert 호출한다.', () => {
     // given
     const name = 'name';
-    const stock = 10;
+    const quantity = 10;
     model.addChangeListener(spyListener);
 
     // when
-    model.addItem({ name, stock, price: 101 });
-    model.addItem({ name, stock, price: 90 });
+    model.addProduct({ name, quantity, price: 101 });
+    model.addProduct({ name, quantity, price: 90 });
 
     // then
     expect(spyAlert).toHaveBeenCalledWith('상품 가격은 100원 이상이며 10으로 나눠떨어져야 합니다.');
@@ -71,8 +71,8 @@ describe('model - addItem test', () => {
     model.addChangeListener(spyListener);
 
     // when
-    model.addItem({ name, price, stock: '한글' });
-    model.addItem({ name, price, stock: -1 });
+    model.addProduct({ name, price, quantity: '한글' });
+    model.addProduct({ name, price, quantity: -1 });
 
     expect(spyAlert).toHaveBeenCalledWith('상품 수량은 숫자만 입력 가능합니다.');
     expect(spyAlert).toHaveBeenCalledWith('상품 수량의 최소값은 0 입니다.');
