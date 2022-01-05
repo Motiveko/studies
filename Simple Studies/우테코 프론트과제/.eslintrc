@@ -18,6 +18,14 @@
     "airbnb",
     "prettier"
   ],
+  "overrides": [
+    {
+      "files": ["*.spec.js"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
+  ],
   "env": {
     "jest": true,
     "browser": true,
