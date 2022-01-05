@@ -2,6 +2,7 @@ import observableFactory from './observable';
 
 describe('observable factory', () => {
   let model;
+
   beforeEach(() => {
     model = observableFactory({ foo: 'bar' });
   });
@@ -16,7 +17,7 @@ describe('observable factory', () => {
 
   test('model에 변경(set)이 발생하면 listener 호출된다.', () => {
     let count = 0;
-    model.addChangeListener(() => {
+    model.addChangeListener(state => {
       count += 1;
     });
     model.foo = 'zar';

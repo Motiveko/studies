@@ -4,7 +4,7 @@ const template = document.createElement('template');
 template.innerHTML = `<h2>상품 추가하기</h2>
 <div class="item-manager-content">
   <form id="item-form">
-    <fieldset style="width: 150">
+    <fieldset >
       <legend>상품 등록</legend>
       상품명 : <input type="text" id="product-name-input" name="name" placeholder="상품명" />
       가격 : <input type="text" id="product-price-input" name="price" placeholder="가격" />
@@ -14,6 +14,15 @@ template.innerHTML = `<h2>상품 추가하기</h2>
   </form>
 </div>`;
 
+const addProductToModel = form => {
+  const item = Object.fromEntries(new FormData(form));
+  item.price = Number(item.price);
+  item.quantity = Number(item.quantity);
+
+  if (model.addProduct(item)) {
+    form.reset();
+  }
+};
 export default class ProductAddForm extends HTMLElement {
   constructor() {
     super();
@@ -27,15 +36,18 @@ export default class ProductAddForm extends HTMLElement {
   }
 
   initEvent() {
-    this.addEventListener('submit', e => {
+    this.addEvent('submit', 'form#item-form', e => {
+      e.preventDefault();
       const { target } = e;
-      if (target.matches('form#item-form')) {
-        e.preventDefault();
-        const item = Object.fromEntries(new FormData(target));
-        item.price = Number(item.price);
-        item.quantity = Number(item.quantity);
-        model.addProduct(item);
-        target.reset();
+      addProductToModel(target);
+    });
+  }
+
+  addEvent(event, selector, callback) {
+    this.addEventListener(event, e => {
+      const { target } = e;
+      if (target.matches(selector)) {
+        callback(e);
       }
     });
   }

@@ -12,7 +12,7 @@ export default class AppComponent extends HTMLElement {
   constructor(routes) {
     super();
     this.routes = routes;
-    this.init(routes);
+    this.init();
   }
 
   init() {

@@ -19,9 +19,7 @@ export default class ProductAdd extends HTMLElement {
     // TODO : 구현해야함
   }
 
-  render(newState) {
-    console.log(newState);
-  }
+  render(newState) {}
 
   disconnectedCallback() {
     this.unsubscribe();

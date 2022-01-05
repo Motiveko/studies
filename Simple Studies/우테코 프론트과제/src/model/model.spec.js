@@ -1,9 +1,9 @@
 import modelFactory from './model';
 
 describe('model - addProduct test', () => {
-  let model = '';
-  let spyAlert = '';
-  let spyListener = '';
+  let model;
+  let spyAlert;
+  let spyListener;
 
   beforeEach(() => {
     model = modelFactory();
