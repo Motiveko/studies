@@ -11,7 +11,7 @@ describe.only('ProductAddForm', () => {
   beforeEach(() => {
     productForm = new ProductAddForm();
     spyAddProduct = jest.spyOn(model, 'addProduct').mockImplementation(() => true);
-    form = productForm.querySelector('#item-form');
+    form = productForm.querySelector('#product-form');
     spyReset = jest.spyOn(form, 'reset');
   });
 

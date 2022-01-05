@@ -1,7 +1,7 @@
 import './css/style.css';
 import AppComponent from './view/app';
 import ProductAdd from './view/product-add/product-add';
-import VendingMachineManage from './view/vending-machine-menage';
+import VendingMachineManage from './view/vending-machine-manage/vending-machine-manage';
 import ProductPurchase from './view/product-purchase';
 
 const routes = [
