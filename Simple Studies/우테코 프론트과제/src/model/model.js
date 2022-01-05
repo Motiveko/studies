@@ -44,8 +44,9 @@ const validateProduct = product => {
   validateProductQuantity(quantity);
 };
 
-export default (initialState = INITIAL_STATE) => {
-  const proxy = observableFactory(initialState);
+export default state => {
+  const initialState = state ?? INITIAL_STATE;
+  const { proxy, addChangeListener } = observableFactory(initialState);
   const addProduct = product => {
     try {
       validateProduct(product);
@@ -58,7 +59,7 @@ export default (initialState = INITIAL_STATE) => {
   };
 
   return {
-    addChangeListener: proxy.addChangeListener,
+    addChangeListener,
     addProduct
   };
 };
