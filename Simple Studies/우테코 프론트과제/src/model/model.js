@@ -46,20 +46,20 @@ const validateProduct = product => {
 
 export default state => {
   const initialState = state ?? INITIAL_STATE;
-  const { proxy, addChangeListener } = observableFactory(initialState);
+  const proxy = observableFactory(initialState);
   const addProduct = product => {
     try {
       validateProduct(product);
     } catch (error) {
       alert(error.message);
-      return;
+      return false;
     }
-
     proxy.products = [...proxy.products, product];
+    return true;
   };
 
   return {
-    addChangeListener,
+    addChangeListener: proxy.addChangeListener,
     addProduct
   };
 };

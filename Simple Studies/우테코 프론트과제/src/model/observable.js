@@ -5,18 +5,15 @@ const freeze = state => Object.freeze(cloneDeep(state));
 export default initialState => {
   let listeners = [];
   const proxy = new Proxy(cloneDeep(initialState), {
-    // eslint-disable-next-line no-unused-vars
-    set(target, p, value, receiver) {
+    set(target, p, value) {
       // eslint-disable-next-line no-param-reassign
       target[p] = value;
-      console.log(target);
       listeners.forEach(li => li(freeze(target)));
       return true;
     }
-    // });
   });
 
-  const addChangeListener = listener => {
+  proxy.addChangeListener = listener => {
     listeners.push(listener);
     listener(freeze(proxy));
     return () => {
@@ -24,5 +21,5 @@ export default initialState => {
     };
   };
 
-  return { proxy, addChangeListener };
+  return proxy;
 };
