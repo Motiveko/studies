@@ -1,15 +1,11 @@
+import { CHANGE_CONSTANTS } from '../constant/constant';
 import observableFactory from './observable';
 /**
  *
  * products { name, price, quantity }, price > 100, price % 10 === 0
  */
 const INITIAL_STATE = {
-  change: {
-    10: 0,
-    50: 0,
-    100: 0,
-    500: 0
-  },
+  changes: CHANGE_CONSTANTS.INITIAL_CHANGES,
   products: [],
   amount: 0
 };
@@ -25,6 +21,7 @@ const validateProductPrice = price => {
     throw new Error('상품 가격은 100원 이상이며 10으로 나눠떨어져야 합니다.');
   }
 };
+
 const validateProductQuantity = quantity => {
   if (!isNumber(quantity)) {
     throw new Error('상품 수량은 숫자만 입력 가능합니다.');
@@ -58,8 +55,18 @@ export default state => {
     return true;
   };
 
+  const addCharge = newChange => {
+    const { changes } = proxy;
+    proxy.changes = Object.keys(newChange).reduce((acc, coin) => {
+      acc[coin] = newChange[coin] + changes[coin];
+      return acc;
+    }, {});
+    return true;
+  };
+
   return {
     addChangeListener: proxy.addChangeListener,
-    addProduct
+    addProduct,
+    addCharge
   };
 };

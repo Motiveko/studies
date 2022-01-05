@@ -12,15 +12,6 @@ template.innerHTML = `<h2>상품 추가하기</h2>
   </fieldset>
 </form>`;
 
-const addProductToModel = form => {
-  const item = Object.fromEntries(new FormData(form));
-  item.price = Number(item.price);
-  item.quantity = Number(item.quantity);
-
-  if (model.addProduct(item)) {
-    form.reset();
-  }
-};
 export default class ProductAddForm extends HTMLElement {
   constructor() {
     super();
@@ -37,7 +28,7 @@ export default class ProductAddForm extends HTMLElement {
     this.addEvent('submit', 'form#product-form', e => {
       e.preventDefault();
       const { target } = e;
-      addProductToModel(target);
+      this.addProductToModel(target);
     });
   }
 
@@ -48,6 +39,16 @@ export default class ProductAddForm extends HTMLElement {
         callback(e);
       }
     });
+  }
+
+  addProductToModel(form) {
+    const item = Object.fromEntries(new FormData(form));
+    item.price = Number(item.price);
+    item.quantity = Number(item.quantity);
+
+    if (model.addProduct(item)) {
+      form.reset();
+    }
   }
 }
 

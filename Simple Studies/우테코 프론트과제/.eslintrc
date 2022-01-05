@@ -35,6 +35,7 @@
   "rules": {
     // TODO : airbnb rule 사용시 module resolve 관련 에러가 발생하는데 해결방법을 못찾았다.
     "import/no-unresolved": "off",
-    "no-alert": "off"
+    "class-methods-use-this": "off",
+    "no-alert": "off",
   }
 }

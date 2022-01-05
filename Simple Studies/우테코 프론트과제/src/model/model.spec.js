@@ -1,5 +1,6 @@
 import modelFactory from './model';
 
+const add = (a, b) => a + b;
 describe('model - addProduct test', () => {
   let model;
   let spyAlert;
@@ -13,7 +14,7 @@ describe('model - addProduct test', () => {
 
   afterEach(() => {});
 
-  test('addProduct 호출하면 product가 추가된다.', () => {
+  test('addProduct - 호출하면 product가 추가된다.', () => {
     let realState = {};
     model.addChangeListener(state => {
       realState = state;
@@ -27,7 +28,7 @@ describe('model - addProduct test', () => {
     expect(realState.products[0]).toStrictEqual(product);
   });
 
-  test('addProduct에서 product에 필요 속성이 없으면 alert 호출한다.', () => {
+  test('addProduct - product에 필요 속성이 없으면 alert 호출한다.', () => {
     // when
     model.addChangeListener(spyListener);
     model.addProduct({});
@@ -37,7 +38,7 @@ describe('model - addProduct test', () => {
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
-  test('상품 가격이 숫자가 아니면 alert 호출한다.', () => {
+  test('addProduct - 상품 가격이 숫자가 아니면 alert 호출한다.', () => {
     // given
     model.addChangeListener(spyListener);
 
@@ -48,7 +49,7 @@ describe('model - addProduct test', () => {
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
-  test('상품 가격이 100원 이하이거나 나눠떨어 지지 않으면 alert 호출한다.', () => {
+  test('addProduct - 상품 가격이 100원 이하이거나 나눠떨어 지지 않으면 alert 호출한다.', () => {
     // given
     const name = 'name';
     const quantity = 10;
@@ -64,7 +65,7 @@ describe('model - addProduct test', () => {
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
-  test('상품 갯수가 숫자가 아니거나 음수면 alert 호출한다.', () => {
+  test('addProduct - 상품 갯수가 숫자가 아니거나 음수면 alert 호출한다.', () => {
     // given
     const name = 'n';
     const price = 110;
@@ -77,5 +78,28 @@ describe('model - addProduct test', () => {
     expect(spyAlert).toHaveBeenCalledWith('상품 수량은 숫자만 입력 가능합니다.');
     expect(spyAlert).toHaveBeenCalledWith('상품 수량의 최소값은 0 입니다.');
     expect(spyListener).toHaveBeenCalledTimes(1);
+  });
+
+  test.only('addCharge - 호출시 coin들이 증가한다.', () => {
+    let currentChanges;
+    model.addChangeListener(state => {
+      currentChanges = state.changes;
+    });
+    // 최초 상태 - 잔돈 전부 0개씩이다
+    Object.values(currentChanges).forEach(quantity => {
+      expect(quantity).toBe(0);
+    });
+
+    const coins = {
+      10: 1,
+      50: 2,
+      100: 3,
+      500: 4
+    };
+    model.addCharge(coins);
+    // 동전별로 갯수가 추가된다.
+    Object.keys(coins).forEach(coin => {
+      expect(coins[coin]).toBe(currentChanges[coin]);
+    });
   });
 });
