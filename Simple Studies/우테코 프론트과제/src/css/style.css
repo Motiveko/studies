@@ -1,0 +1,25 @@
+/* body {
+  background-color: olive;
+} */
+
+button {
+  margin: 0.2rem
+}
+
+div.item-manager-content {
+  width: auto
+}
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 2px solid black;
+  text-align: center;
+}
+
+th {
+  background-color: #f3f3f3;
+}
+th, td {
+  padding: 1.5rem;
+  border: 1px solid black;
+}

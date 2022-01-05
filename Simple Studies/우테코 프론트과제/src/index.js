@@ -1,4 +1,3 @@
-import './css/style.css';
 import AppComponent from './view/app';
 import ProductAdd from './view/product-add/product-add';
 import VendingMachineManage from './view/vending-machine-menage';
