@@ -16,7 +16,7 @@ export default class AppComponent extends HTMLElement {
   }
 
   init() {
-    const newTemplate = template.content.firstElementChild.cloneNode(true);
+    const newTemplate = template.content.cloneNode(true);
 
     // initialize router
     const routerOutlet = newTemplate.querySelector('#router');
