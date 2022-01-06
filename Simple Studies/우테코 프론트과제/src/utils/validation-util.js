@@ -1,4 +1,5 @@
 import VMError from '../core/vm-error';
+import { hasOwnProperties } from './common-util';
 
 // TODO : model의 validation로직 분리할 것
 // '0' 도 number로 취급한다.
@@ -27,7 +28,7 @@ export const validateCharge = charge => {
   }
 };
 export const validateProduct = product => {
-  if (!Object.prototype.hasOwnProperty.call(product, 'name', 'price', 'quantity')) {
+  if (!hasOwnProperties(product, ['name', 'price', 'quantity'])) {
     throw new VMError('상품은 name, price, quantity는 필수 속성입니다.');
   }
   const { price, quantity } = product;

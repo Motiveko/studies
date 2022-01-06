@@ -21,4 +21,10 @@ export const getRandomChanges = charge => {
   return changes;
 };
 
-export const hi = () => ({});
+export const getReturnChanges = charge => {
+  const changes = createInitialChanges();
+  const totalCharge = charge;
+  while (totalCharge >= 0) {
+    return;
+  }
+};
