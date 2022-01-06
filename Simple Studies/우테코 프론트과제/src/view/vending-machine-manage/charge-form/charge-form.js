@@ -40,10 +40,9 @@ export default class ChargeForm extends HTMLElement {
     });
   }
 
-  chargeCoins(form) {
+  addCustomerCharge(form) {
     const { charge } = Object.fromEntries(new FormData(form));
-
-    model.addCharge(charge);
+    model.addCustomerCharge(charge);
     form.reset();
   }
 }

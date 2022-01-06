@@ -10,16 +10,13 @@ export default class ProductAdd extends HTMLElement {
   }
 
   init() {
+    this.render();
+  }
+
+  render() {
     this.appendChild(new ProductAddForm());
     this.appendChild(new ProductTable());
-    this.initEventHandler();
   }
-
-  initEventHandler() {
-    // TODO : 구현해야함
-  }
-
-  render(newState) {}
 
   disconnectedCallback() {
     this.unsubscribe();

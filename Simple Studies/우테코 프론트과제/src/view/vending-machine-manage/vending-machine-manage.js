@@ -1,6 +1,6 @@
 import ChargeForm from './charge-form/charge-form';
 import ChargeTable from './charge-table/charge-table';
-import CurrentChange from './current-change/current-change';
+import CurrentCharge from './current-change/current-change';
 
 export default class VendingMachineManage extends HTMLElement {
   constructor() {
@@ -10,7 +10,7 @@ export default class VendingMachineManage extends HTMLElement {
 
   init() {
     this.append(new ChargeForm());
-    this.append(new CurrentChange());
+    this.append(new CurrentCharge());
     this.append(new ChargeTable());
   }
 }

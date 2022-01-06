@@ -8,7 +8,11 @@ import observableFactory from './observable';
 const INITIAL_STATE = {
   changes: createInitialChanges(),
   products: [],
-  amount: 0
+  amount: 0,
+  customer: {
+    charge: 0,
+    changes: createInitialChanges()
+  }
 };
 
 export default state => {
@@ -29,9 +33,23 @@ export default state => {
     return true;
   };
 
+  const addCustomerCharge = () => {
+    alert('TODO :addCustomerCharge 구현해야 합니다.');
+  };
+
+  const purchaseProduct = name => {
+    alert('TODO : 상품 구매 구현할 것');
+  };
+  const returnCustomerCharge = () => {
+    alert('TODO : returnCustomerCharge 구현할 것');
+  };
+
   return {
     addChangeListener: proxy.addChangeListener,
     addProduct,
-    addCharge
+    addCharge,
+    addCustomerCharge,
+    purchaseProduct,
+    returnCustomerCharge
   };
 };

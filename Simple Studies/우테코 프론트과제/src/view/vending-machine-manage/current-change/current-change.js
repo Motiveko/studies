@@ -1,6 +1,6 @@
 import model from '../../../model/model-instance';
 
-export default class CurrentChange extends HTMLElement {
+export default class CurrentCharge extends HTMLElement {
   constructor() {
     super();
     model.addChangeListener(this.render.bind(this));
@@ -8,14 +8,14 @@ export default class CurrentChange extends HTMLElement {
 
   render(state) {
     this.innerHTML = '';
-    let currentChange = '';
+    let currentCharge = '';
     if (state?.changes) {
       const { changes } = state;
-      currentChange = Object.keys(changes)
+      currentCharge = Object.keys(changes)
         .map(p => p * changes[p])
         .reduce(this.sum, 0);
     }
-    this.innerHTML = `<div id="vending-machine-charge-amount">보유 금액: ${currentChange}원</div>`;
+    this.innerHTML = `<div id="vending-machine-charge-amount">보유 금액: ${currentCharge}원</div>`;
   }
 
   sum(a, b) {
@@ -23,4 +23,4 @@ export default class CurrentChange extends HTMLElement {
   }
 }
 
-customElements.define('current-change', CurrentChange);
+customElements.define('current-change', CurrentCharge);
