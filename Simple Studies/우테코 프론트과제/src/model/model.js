@@ -1,7 +1,7 @@
 import { createInitialChanges } from '../constant/constant';
 import VMError from '../core/vm-error';
-import { getRandomChanges } from '../utils/model-util';
-import { validateCharge, validateProduct } from '../utils/validation-util';
+import { calcMinimumChanges, getRandomChanges, mergeChanges } from '../utils/model-util';
+import { validateProduct } from '../utils/validation-util';
 import observableFactory from './observable';
 /**
  * products { name, price, quantity }, price > 100, price % 10 === 0
@@ -25,17 +25,14 @@ export default state => {
   };
 
   const addCharge = charge => {
-    const newChange = getRandomChanges(charge);
+    const newChanges = getRandomChanges(charge);
     const { changes } = proxy;
-    proxy.changes = Object.keys(newChange).reduce((acc, coin) => {
-      acc[coin] = newChange[coin] + changes[coin];
-      return acc;
-    }, {});
+    proxy.changes = mergeChanges(changes, newChanges);
     return true;
   };
 
   const addCustomerCharge = charge => {
-    validateCharge(charge);
+    addCharge(charge);
     proxy.customer = { ...proxy.customer, charge };
   };
 
@@ -64,7 +61,20 @@ export default state => {
 
     proxy.customer = { ...proxy.customer, charge: charge - price };
   };
-  const returnCustomerCharge = () => {};
+  const returnCustomerCharge = () => {
+    const { changes } = proxy;
+    const { charge } = proxy.customer;
+    const minChanges = calcMinimumChanges(changes, charge);
+    console.log(changes);
+    console.log(minChanges);
+
+    /**
+     * 잔돈 반환로직
+     * 1. 자판기의 잔돈을 가져온다.
+     * 2. 500원부터 차례로 반환할 수 있는 최대치만큼 반환한다.
+     * 3. 10원에서 돈을 맞출 수 없으면 에러를 던진다.
+     */
+  };
 
   return {
     addChangeListener: proxy.addChangeListener,

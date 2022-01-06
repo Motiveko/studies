@@ -1,4 +1,5 @@
 import VMError from '../core/vm-error';
+import { calcChangesSum } from '../utils/model-util';
 import modelFactory from './model';
 
 const add = (a, b) => a + b;
@@ -17,10 +18,6 @@ describe('model - addProduct test', () => {
         }
       }
     };
-  });
-
-  afterEach(() => {
-    window.MissionUtils = undefined;
   });
 
   test('addProduct - 호출하면 product가 추가된다.', () => {
@@ -104,39 +101,51 @@ describe('model - addProduct test', () => {
     const charge = 3000;
     model.addCharge(charge);
     // 동전별로 갯수가 추가된다.
-    const changeSum = Object.keys(currentChanges).reduce((acc, coin) => {
-      // eslint-disable-next-line no-param-reassign
-      acc += coin * currentChanges[coin];
-      return acc;
-    }, 0);
+    const changeSum = calcChangesSum(currentChanges);
     expect(changeSum).toBe(charge);
   });
 });
 
-describe.only('model - customer test', () => {
+describe('model - customer test', () => {
   let model;
   let spyListener;
 
   beforeEach(() => {
     model = modelFactory();
     spyListener = jest.fn();
+    window.MissionUtils = {
+      Random: {
+        pickNumberInList: range => {
+          const randomIndex = Math.floor(Math.random() * range.length);
+          return range[randomIndex];
+        }
+      }
+    };
   });
 
   test('addCustomerCharge 실행시 charge가 10의배수가 아니면 Error', () => {
     expect(() => model.addCustomerCharge(103)).toThrow();
   });
 
-  test('addCustomerCharge 실행시 customer.charge 값이 증가한다.', () => {
+  test('addCustomerCharge 실행시 고객의 charge와 자판기 changes가 증가한다.', () => {
+    let currentChanges;
     let currentCharge;
     model.addChangeListener(state => {
-      // const { charge } = state.customer;
-      currentCharge = state.customer.charge;
+      const { changes } = state;
+      const { charge } = state.customer;
+      currentChanges = changes;
+      currentCharge = charge;
     });
+
+    // 초기상태
     expect(currentCharge).toBe(0);
+    expect(calcChangesSum(currentChanges)).toBe(0);
 
-    model.addCustomerCharge(1000);
+    const charge = 1000;
 
+    model.addCustomerCharge(charge);
     expect(currentCharge).toBe(1000);
+    expect(calcChangesSum(currentChanges)).toBe(charge);
   });
 
   test('purchaseProduct - 존재하지 않는 상품이면 Error', () => {
@@ -186,7 +195,7 @@ describe.only('model - customer test', () => {
     model.addChangeListener(state => {
       currentQuantity = state.products.find(product => product.name === name).quantity;
       currentCharge = state.customer.charge;
-    });
+    }); // given end
 
     // when
     model.purchaseProduct(name);
@@ -196,18 +205,31 @@ describe.only('model - customer test', () => {
     expect(currentQuantity).toBe(quantity - 1);
   });
 
-  test('returnCustomerCharge - 남은 잔돈을 반환하고 charge를 0으로 만든다.', () => {
-    const oldCharge = 1500;
-
-    model.addCustomerCharge(oldCharge);
-    model.returnCustomerCharge();
-    let currentState;
-    model.addChangeListener(state => {
-      currentState = state;
-    });
-
-    const { charge, changes } = currentState.customer;
-
-    expect(charge).toBe(0);
+  test.only('returnCustomerCharge - 자판기의 잔돈이 부족하면 Error', () => {
+    // TODO : module spy가 생각하는데로 동작하지 않는데 해결필요.
+    jest.mock('../utils/model-util', () => ({
+      calcMinimumChanges: (changes, charge) => {
+        throw new Error();
+      }
+    }));
+    jest.spyOn(model, 'addCustomerCharge').mockImplementation(() => {});
+    const customerCharge = 1500;
+    model.addCustomerCharge(customerCharge);
+    expect(() => model.returnCustomerCharge()).toThrow();
   });
+
+  // test('returnCustomerCharge - 남은 잔돈을 반환하고 charge를 0으로 만든다.', () => {
+  //   const oldCharge = 1500;
+
+  //   model.addCustomerCharge(oldCharge);
+  //   model.returnCustomerCharge();
+  //   let currentState;
+  //   model.addChangeListener(state => {
+  //     currentState = state;
+  //   });
+
+  //   const { charge, changes } = currentState.customer;
+
+  //   expect(charge).toBe(0);
+  // });
 });
