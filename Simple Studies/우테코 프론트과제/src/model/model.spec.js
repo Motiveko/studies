@@ -1,18 +1,27 @@
+import VMError from '../core/vm-error';
 import modelFactory from './model';
 
 const add = (a, b) => a + b;
 describe('model - addProduct test', () => {
   let model;
-  let spyAlert;
   let spyListener;
 
   beforeEach(() => {
     model = modelFactory();
-    spyAlert = jest.spyOn(window, 'alert').mockImplementation(() => {});
     spyListener = jest.fn();
+    window.MissionUtils = {
+      Random: {
+        pickNumberInList: range => {
+          const randomIndex = Math.floor(Math.random() * range.length);
+          return range[randomIndex];
+        }
+      }
+    };
   });
 
-  afterEach(() => {});
+  afterEach(() => {
+    window.MissionUtils = undefined;
+  });
 
   test('addProduct - 호출하면 product가 추가된다.', () => {
     let realState = {};
@@ -31,10 +40,10 @@ describe('model - addProduct test', () => {
   test('addProduct - product에 필요 속성이 없으면 alert 호출한다.', () => {
     // when
     model.addChangeListener(spyListener);
-    model.addProduct({});
 
+    const addEmptyProduct = () => model.addProduct({});
     // then
-    expect(spyAlert).toHaveBeenCalledWith('상품은 name, price, quantity는 필수 속성입니다.');
+    expect(addEmptyProduct).toThrow(new VMError('상품은 name, price, quantity는 필수 속성입니다.'));
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
@@ -43,9 +52,8 @@ describe('model - addProduct test', () => {
     model.addChangeListener(spyListener);
 
     // when
-    model.addProduct({ name: 'name', quantity: 0, price: '한글' });
-
-    expect(spyAlert).toHaveBeenCalledWith('상품 가격은 숫자만 입력해주세요.');
+    const addInvalidProduct = () => model.addProduct({ name: 'name', quantity: 0, price: '한글' });
+    expect(addInvalidProduct).toThrow(new VMError('상품 가격은 숫자만 입력해주세요.'));
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
@@ -55,13 +63,16 @@ describe('model - addProduct test', () => {
     const quantity = 10;
     model.addChangeListener(spyListener);
 
-    // when
-    model.addProduct({ name, quantity, price: 101 });
-    model.addProduct({ name, quantity, price: 90 });
+    const addProduct1 = () => model.addProduct({ name, quantity, price: 101 });
+    const addProduct2 = () => model.addProduct({ name, quantity, price: 90 });
 
-    // then
-    expect(spyAlert).toHaveBeenCalledWith('상품 가격은 100원 이상이며 10으로 나눠떨어져야 합니다.');
-    expect(spyAlert).toHaveBeenCalledTimes(2);
+    // when then
+    expect(addProduct1).toThrow(
+      new VMError('상품 가격은 100원 이상이며 10으로 나눠떨어져야 합니다.')
+    );
+    expect(addProduct2).toThrow(
+      new VMError('상품 가격은 100원 이상이며 10으로 나눠떨어져야 합니다.')
+    );
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
@@ -72,15 +83,15 @@ describe('model - addProduct test', () => {
     model.addChangeListener(spyListener);
 
     // when
-    model.addProduct({ name, price, quantity: '한글' });
-    model.addProduct({ name, price, quantity: -1 });
+    const addProduct1 = () => model.addProduct({ name, price, quantity: '한글' });
+    const addProduct2 = () => model.addProduct({ name, price, quantity: -1 });
 
-    expect(spyAlert).toHaveBeenCalledWith('상품 수량은 숫자만 입력 가능합니다.');
-    expect(spyAlert).toHaveBeenCalledWith('상품 수량의 최소값은 0 입니다.');
+    expect(addProduct1).toThrow(new VMError('상품 수량은 숫자만 입력 가능합니다.'));
+    expect(addProduct2).toThrow(new VMError('상품 수량의 최소값은 0 입니다.'));
     expect(spyListener).toHaveBeenCalledTimes(1);
   });
 
-  test.only('addCharge - 호출시 coin들이 증가한다.', () => {
+  test('addCharge - 호출시 coin들이 증가한다.', () => {
     let currentChanges;
     model.addChangeListener(state => {
       currentChanges = state.changes;
@@ -90,16 +101,14 @@ describe('model - addProduct test', () => {
       expect(quantity).toBe(0);
     });
 
-    const coins = {
-      10: 1,
-      50: 2,
-      100: 3,
-      500: 4
-    };
-    model.addCharge(coins);
+    const charge = 3000;
+    model.addCharge(charge);
     // 동전별로 갯수가 추가된다.
-    Object.keys(coins).forEach(coin => {
-      expect(coins[coin]).toBe(currentChanges[coin]);
-    });
+    const changeSum = Object.keys(currentChanges).reduce((acc, coin) => {
+      // eslint-disable-next-line no-param-reassign
+      acc += coin * currentChanges[coin];
+      return acc;
+    }, 0);
+    expect(changeSum).toBe(charge);
   });
 });

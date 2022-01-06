@@ -46,9 +46,8 @@ export default class ProductAddForm extends HTMLElement {
     item.price = Number(item.price);
     item.quantity = Number(item.quantity);
 
-    if (model.addProduct(item)) {
-      form.reset();
-    }
+    model.addProduct(item);
+    form.reset();
   }
 }
 

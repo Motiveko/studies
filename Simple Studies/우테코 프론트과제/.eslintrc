@@ -37,5 +37,6 @@
     "import/no-unresolved": "off",
     "class-methods-use-this": "off",
     "no-alert": "off",
+    "no-restricted-globals": "off"
   }
 }
