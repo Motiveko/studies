@@ -4,14 +4,13 @@ import ProductAdd from './view/product-add/product-add';
 import VendingMachineManage from './view/vending-machine-manage/vending-machine-manage';
 import ProductPurchase from './view/product-purchase';
 
-window.onerror = function (message, url, line, col, error) {
-  console.error(`${message}\n At ${line}:${col} of ${url}`);
-
-  if (error?.type === 'VMError') {
+window.addEventListener('error', event => {
+  const message = event.error?.rawMessage;
+  if (message) {
     alert(message);
+    event.preventDefault();
   }
-  // throw error;
-};
+});
 
 const routes = [
   {
