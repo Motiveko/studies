@@ -1,5 +1,4 @@
 import model from '../../../model/model-instance';
-import { CHANGE_CONSTANTS } from '../../../constant/constant';
 
 const template = document.createElement('template');
 template.innerHTML = `<h2>자판기 동전 충전하기</h2>
@@ -42,23 +41,10 @@ export default class ChargeForm extends HTMLElement {
   }
 
   chargeCoins(form) {
-    let { charge } = Object.fromEntries(new FormData(form));
+    const { charge } = Object.fromEntries(new FormData(form));
 
-    const changes = CHANGE_CONSTANTS.INITIAL_CHANGES;
-    while (charge > 0) {
-      const randomCoin = this.getRandomCoins(charge);
-      charge -= randomCoin;
-      changes[randomCoin] += 1;
-    }
-    if (model.addCharge(changes)) {
-      form.reset();
-    }
-  }
-
-  getRandomCoins(totalValue) {
-    const coinRange = CHANGE_CONSTANTS.COIN_TYPE.filter(coin => coin <= totalValue);
-    // eslint-disable-next-line no-undef
-    return MissionUtils.Random.pickNumberInList(coinRange);
+    model.addCharge(charge);
+    form.reset();
   }
 }
 

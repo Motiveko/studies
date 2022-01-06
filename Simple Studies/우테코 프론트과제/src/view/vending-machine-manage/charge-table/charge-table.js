@@ -20,6 +20,7 @@ export default class ChargeTable extends HTMLElement {
   }
 
   render(state) {
+    console.log(state);
     this.innerHTML = '';
     const newTemplate = template.content.cloneNode(true);
     if (state?.changes) {

@@ -1,4 +1,4 @@
-import { CHANGE_CONSTANTS } from '../constant/constant';
+import { createInitialChanges } from '../constant/constant';
 import { getRandomChanges } from '../utils/model-util';
 import { validateProduct } from '../utils/validation-util';
 import observableFactory from './observable';
@@ -6,7 +6,7 @@ import observableFactory from './observable';
  * products { name, price, quantity }, price > 100, price % 10 === 0
  */
 const INITIAL_STATE = {
-  changes: CHANGE_CONSTANTS.INITIAL_CHANGES,
+  changes: createInitialChanges(),
   products: [],
   amount: 0
 };

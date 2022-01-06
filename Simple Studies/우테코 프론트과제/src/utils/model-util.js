@@ -1,6 +1,5 @@
-import { CHANGE_CONSTANTS } from '../constant/constant';
+import { CHANGE_CONSTANTS, createInitialChanges } from '../constant/constant';
 import { validateCharge } from './validation-util';
-import { cloneDeep } from './common-util';
 
 const getRandomCoin = totalValue => {
   const coinRange = CHANGE_CONSTANTS.COIN_TYPE.filter(coin => coin <= totalValue);
@@ -13,8 +12,7 @@ export const getRandomChanges = charge => {
 
   let totalCharge = charge;
 
-  const changes = cloneDeep(CHANGE_CONSTANTS.INITIAL_CHANGES);
-
+  const changes = createInitialChanges();
   while (totalCharge > 0) {
     const randomCoin = getRandomCoin(totalCharge);
     totalCharge -= randomCoin;
