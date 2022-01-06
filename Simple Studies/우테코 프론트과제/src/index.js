@@ -4,6 +4,15 @@ import ProductAdd from './view/product-add/product-add';
 import VendingMachineManage from './view/vending-machine-manage/vending-machine-manage';
 import ProductPurchase from './view/product-purchase';
 
+window.onerror = function (message, url, line, col, error) {
+  console.error(`${message}\n At ${line}:${col} of ${url}`);
+
+  if (error?.type === 'VMError') {
+    alert(message);
+  }
+  // throw error;
+};
+
 const routes = [
   {
     id: 'product-add-menu',
