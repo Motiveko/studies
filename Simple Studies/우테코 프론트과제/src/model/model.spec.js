@@ -206,7 +206,7 @@ describe('model - customer test', () => {
     expect(currentQuantity).toBe(quantity - 1);
   });
 
-  test.only('returnCustomerCharge - 잔돈 반환시 자판기 잔돈 감소한만큼 고객 잔돈 증가하고 charge는 0이된다.', () => {
+  test('returnCustomerCharge - 잔돈 반환시 자판기 잔돈 감소한만큼 고객 잔돈 증가하고 charge는 0이된다.', () => {
     // 초기상태
     let VMChanges;
     let custmoerChanges;

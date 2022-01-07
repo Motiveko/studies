@@ -22,11 +22,23 @@ const validateProductQuantity = quantity => {
     throw new VMError('상품 수량의 최소값은 0 입니다.');
   }
 };
+
+/**
+ * 투입 금액 Validation
+ * @param {*} charge 투입 금액
+ * @throws VMError
+ */
 export const validateCharge = charge => {
   if (isNaN(charge) || charge % 10 !== 0) {
     throw new VMError('입력값은 10단위의 숫자여야 합니다.');
   }
 };
+
+/**
+ * 상품 Validation
+ * @param {*} product 추가할 상품
+ * @throws VMError
+ */
 export const validateProduct = product => {
   if (!hasOwnProperties(product, ['name', 'price', 'quantity'])) {
     throw new VMError('상품은 name, price, quantity는 필수 속성입니다.');
