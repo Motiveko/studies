@@ -15,10 +15,14 @@ export default class CustomerCharge extends HTMLElement {
     this.innerHTML = '';
     let currentCharge = '';
 
-    if (state?.customerCharge) {
-      currentCharge = state.customerCharge;
+    if (state?.customer?.charge) {
+      currentCharge = state.customer.charge;
     }
     this.innerHTML = `<div id="charge-amount">투입한 금액: ${currentCharge}원</div>`;
+  }
+
+  disconnectedCallback() {
+    this.unsubscribe();
   }
 }
 

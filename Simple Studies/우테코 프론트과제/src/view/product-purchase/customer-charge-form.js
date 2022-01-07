@@ -5,7 +5,7 @@ template.innerHTML = `<h2>금액 투입</h2>
 <form id="charge-form">
   <fieldset >
     <legend>금액 투입</legend>
-    투입할 금액 : <input type="text" id="charge-input" name="name" placeholder="투입할 금액" />
+    투입할 금액 : <input type="number" id="charge-input" name="charge" placeholder="투입할 금액" />
     <button id="charge-button" type="submit">투입하기</button>
   </fieldset>
 </form>`;

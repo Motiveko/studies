@@ -48,6 +48,7 @@ export default state => {
    * @param {*} charge 투입할 금액
    */
   const addCustomerCharge = charge => {
+    console.log(charge);
     addCharge(charge);
     proxy.customer = { ...proxy.customer, charge };
   };

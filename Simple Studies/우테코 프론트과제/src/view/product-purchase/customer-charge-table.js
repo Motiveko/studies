@@ -22,13 +22,33 @@ export default class CustomerChargeTable extends HTMLElement {
   }
 
   init() {
-    this.render();
+    this.initEvent();
   }
 
   render(state) {
     this.innerHTML = '';
     const newTemplate = template.content.cloneNode(true);
+    newTemplate.querySelector('#coin-quantity').innerHTML = this.createCoinQuantity(
+      state?.customer?.changes
+    );
     this.appendChild(newTemplate);
+  }
+
+  initEvent() {
+    this.addEvent('click', '#coin-return-button', this.returnCharge);
+  }
+
+  returnCharge() {
+    model.returnCustomerCharge();
+  }
+
+  addEvent(event, selector, callback) {
+    this.addEventListener(event, e => {
+      const { target } = e;
+      if (target.matches(selector)) {
+        callback(e);
+      }
+    });
   }
 
   disconnectedCallback() {
@@ -48,7 +68,7 @@ export default class CustomerChargeTable extends HTMLElement {
   createCoinRow({ coin, quantity }) {
     return `<tr>
           <td>${coin}원</td>
-          <td id="coin-${coin}-quantity">${quantity}개</td>
+          <td id="-coin-${coin}-quantity">${quantity}개</td>
         </tr>`;
   }
 }

@@ -14,6 +14,7 @@ export default class ProductAdd extends HTMLElement {
   }
 
   render() {
+    this.innerHTML = '';
     this.appendChild(new ProductAddForm());
     this.appendChild(new ProductTable());
   }
