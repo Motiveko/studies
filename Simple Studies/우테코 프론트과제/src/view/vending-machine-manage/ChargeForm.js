@@ -1,4 +1,4 @@
-import model from '../../../model/model-instance';
+import model from '../../model/model-instance';
 
 const template = document.createElement('template');
 template.innerHTML = `<h2>자판기 동전 충전하기</h2>

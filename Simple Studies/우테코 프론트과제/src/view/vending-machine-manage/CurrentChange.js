@@ -1,4 +1,4 @@
-import model from '../../../model/model-instance';
+import model from '../../model/model-instance';
 
 export default class CurrentCharge extends HTMLElement {
   constructor() {

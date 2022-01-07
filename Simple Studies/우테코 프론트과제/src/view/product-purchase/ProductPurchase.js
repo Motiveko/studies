@@ -1,7 +1,7 @@
-import CustomerCharge from './customer-charge';
-import CustomerChargeForm from './customer-charge-form';
-import ProductPurchaseTable from './product-purchase-table';
-import CustomerChargeTable from './customer-charge-table';
+import CustomerCharge from './CustomerCharge';
+import CustomerChargeForm from './CustomerChargeForm';
+import ProductPurchaseTable from './ProductPurchaseTable';
+import CustomerChargeTable from './CustomerChargeTable';
 
 export default class ProductPurchase extends HTMLElement {
   constructor() {

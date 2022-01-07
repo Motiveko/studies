@@ -1,6 +1,6 @@
-import ProductAddForm from './product-add-form';
-import model from '../../../model/model-instance';
-import VMError from '../../../core/vm-error';
+import ProductAddForm from './ProductAddForm';
+import model from '../../model/model-instance';
+import VMError from '../../core/vm-error';
 
 // jest.mock('../../../model/model-instance');
 

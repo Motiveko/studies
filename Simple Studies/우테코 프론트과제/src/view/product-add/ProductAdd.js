@@ -1,6 +1,6 @@
 import model from '../../model/model-instance';
-import ProductAddForm from './product-add-form/product-add-form';
-import ProductTable from './product-table/product-table';
+import ProductAddForm from './ProductAddForm';
+import ProductTable from './ProductTable';
 
 export default class ProductAdd extends HTMLElement {
   constructor() {

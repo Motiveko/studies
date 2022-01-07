@@ -1,4 +1,4 @@
-import model from '../../../model/model-instance';
+import model from '../../model/model-instance';
 
 const template = document.createElement('template');
 template.innerHTML = `<h2>상품 추가하기</h2>

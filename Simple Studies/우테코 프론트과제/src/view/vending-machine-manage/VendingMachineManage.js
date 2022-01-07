@@ -1,6 +1,6 @@
-import ChargeForm from './charge-form/charge-form';
-import ChargeTable from './charge-table/charge-table';
-import CurrentCharge from './current-change/current-change';
+import ChargeForm from './ChargeForm';
+import ChargeTable from './ChargeTable';
+import CurrentCharge from './CurrentChange';
 
 export default class VendingMachineManage extends HTMLElement {
   constructor() {
