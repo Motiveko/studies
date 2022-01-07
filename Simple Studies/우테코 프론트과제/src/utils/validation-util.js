@@ -48,3 +48,28 @@ export const validateProduct = product => {
   validateProductPrice(price);
   validateProductQuantity(quantity);
 };
+
+/**
+ * 상품 구매에 대한 Validation
+ * @param {*} proxy 상태
+ * @param {*} pName 구매할 상품명
+ * @throws VMError
+ * @returns 구매할 상품 객체
+ */
+export const validatePurchase = (proxy, pName) => {
+  const product = proxy.products.find(({ name }) => name === pName);
+  // TODO : 리팩터링
+  if (!product) {
+    throw new VMError(`${pName}은 존재하지 않는 상품입니다.`);
+  }
+  const { name, price, quantity } = product;
+  if (quantity <= 0) {
+    throw new VMError(`${name}은 재고가 부족합니다.`);
+  }
+
+  const { charge } = proxy.customer;
+  if (price > charge) {
+    throw new VMError(`${name} 구매에 필요한 금액이 부족합니다..`);
+  }
+  return product;
+};

@@ -1,12 +1,11 @@
 import { createInitialChanges } from '../constant/constant';
-import VMError from '../core/vm-error';
 import {
   calcMinimumChanges,
   getRandomChanges,
   mergeChanges,
   unionChanges
 } from '../utils/model-util';
-import { validateProduct } from '../utils/validation-util';
+import { validateProduct, validatePurchase } from '../utils/validation-util';
 import observableFactory from './observable';
 /**
  * products { name, price, quantity }, price > 100, price % 10 === 0
@@ -57,21 +56,8 @@ export default state => {
    * @param {*} pName 구매할 상품명
    */
   const purchaseProduct = pName => {
-    const product = proxy.products.find(({ name }) => name === pName);
-    // TODO : 리팩터링
-    if (!product) {
-      throw new VMError(`${pName}은 존재하지 않는 상품입니다.`);
-    }
-    const { name, price, quantity } = product;
-    if (quantity <= 0) {
-      throw new VMError(`${name}은 재고가 부족합니다.`);
-    }
-
+    const { name, price, quantity } = validatePurchase(proxy, pName);
     const { charge } = proxy.customer;
-    if (price > charge) {
-      throw new VMError(`${name} 구매에 필요한 금액이 부족합니다..`);
-    }
-
     proxy.products = proxy.products.map(p => {
       if (p.name === name) {
         return { ...p, quantity: quantity - 1 };
