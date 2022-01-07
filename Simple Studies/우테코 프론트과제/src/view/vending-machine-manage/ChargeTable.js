@@ -16,7 +16,7 @@ template.innerHTML = `<h2>자판기가 보유한 동전</h2>
 export default class ChargeTable extends HTMLElement {
   constructor() {
     super();
-    model.addChangeListener(this.render.bind(this));
+    this.unsubscribe = model.addChangeListener(this.render.bind(this));
   }
 
   render(state) {
@@ -45,6 +45,10 @@ export default class ChargeTable extends HTMLElement {
           <td>${coin}원</td>
           <td id="vending-machine-coin-${coin}-quantity">${quantity}개</td>
         </tr>`;
+  }
+
+  disconnectedCallback() {
+    this.unsubscribe();
   }
 }
 

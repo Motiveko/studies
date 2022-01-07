@@ -1,8 +1,5 @@
 import ProductAddForm from './ProductAddForm';
 import model from '../../model/model-instance';
-import VMError from '../../core/vm-error';
-
-// jest.mock('../../../model/model-instance');
 
 describe('ProductAddForm', () => {
   let productForm;

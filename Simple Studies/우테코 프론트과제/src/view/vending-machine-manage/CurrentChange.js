@@ -3,7 +3,7 @@ import model from '../../model/model-instance';
 export default class CurrentCharge extends HTMLElement {
   constructor() {
     super();
-    model.addChangeListener(this.render.bind(this));
+    this.unsubscribe = model.addChangeListener(this.render.bind(this));
   }
 
   render(state) {
@@ -20,6 +20,10 @@ export default class CurrentCharge extends HTMLElement {
 
   sum(a, b) {
     return a + b;
+  }
+
+  disconnectedCallback() {
+    this.unsubscribe();
   }
 }
 
