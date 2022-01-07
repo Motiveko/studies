@@ -1,5 +1,11 @@
 import VMError from '../core/vm-error';
-import { calcChangesSum, calcMinimumChanges, getRandomChanges, mergeChanges } from './model-util';
+import {
+  calcChangesSum,
+  calcMinimumChanges,
+  getRandomChanges,
+  mergeChanges,
+  unionChanges
+} from './model-util';
 
 describe('model util test', () => {
   beforeEach(() => {
@@ -34,7 +40,7 @@ describe('model util test', () => {
     const changes = getRandomChanges(charge);
     expect(charge).toBe(calcChangesSum(changes));
   });
-  test('calcMinimumChanges - 동전이 모지라면 Error', () => {
+  test('calcMinimumChanges - 동전이 모자라면 Error', () => {
     const changes = {
       500: 10,
       100: 10,
@@ -62,7 +68,7 @@ describe('model util test', () => {
     expect(minChanges[10]).toBe(0);
   });
 
-  test('mergeChanges - 잔돈을 합친다 테스트', () => {
+  test('mergeChanges - 잔돈을 합친다.', () => {
     const changes1 = {
       500: 3,
       100: 2,
@@ -81,5 +87,38 @@ describe('model util test', () => {
     expect(mergedChanges[100]).toBe(5);
     expect(mergedChanges[50]).toBe(2);
     expect(mergedChanges[10]).toBe(5);
+  });
+
+  test('unionChanges - 감소시킬 잔돈이 모자라면 Error', () => {
+    const leftChanges = {
+      500: 0,
+      100: 1,
+      50: 2,
+      10: 3
+    };
+    const rightChanges = { ...leftChanges, 500: 1 };
+    expect(() => unionChanges(leftChanges, rightChanges)).toThrow(
+      new VMError('500원짜리 잔돈이 모자랍니다.')
+    );
+  });
+
+  test('unionChanges - 감소시킨 잔돈을 반환한다.', () => {
+    const leftChanges = {
+      500: 5,
+      100: 4,
+      50: 3,
+      10: 2
+    };
+    const rightChanges = {
+      500: 4,
+      100: 3,
+      50: 2,
+      10: 1
+    };
+    const result = unionChanges(leftChanges, rightChanges);
+    expect(result[500]).toBe(1);
+    expect(result[100]).toBe(1);
+    expect(result[50]).toBe(1);
+    expect(result[10]).toBe(1);
   });
 });

@@ -1,6 +1,11 @@
 import { createInitialChanges } from '../constant/constant';
 import VMError from '../core/vm-error';
-import { calcMinimumChanges, getRandomChanges, mergeChanges } from '../utils/model-util';
+import {
+  calcMinimumChanges,
+  getRandomChanges,
+  mergeChanges,
+  unionChanges
+} from '../utils/model-util';
 import { validateProduct } from '../utils/validation-util';
 import observableFactory from './observable';
 /**
@@ -65,15 +70,8 @@ export default state => {
     const { changes } = proxy;
     const { charge } = proxy.customer;
     const minChanges = calcMinimumChanges(changes, charge);
-    console.log(changes);
-    console.log(minChanges);
-
-    /**
-     * 잔돈 반환로직
-     * 1. 자판기의 잔돈을 가져온다.
-     * 2. 500원부터 차례로 반환할 수 있는 최대치만큼 반환한다.
-     * 3. 10원에서 돈을 맞출 수 없으면 에러를 던진다.
-     */
+    proxy.customer = { changes: minChanges, charge: 0 };
+    proxy.changes = unionChanges(proxy.changes, minChanges);
   };
 
   return {

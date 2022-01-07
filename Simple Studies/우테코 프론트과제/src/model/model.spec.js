@@ -1,5 +1,6 @@
 import VMError from '../core/vm-error';
-import { calcChangesSum } from '../utils/model-util';
+import { cloneDeep } from '../utils/common-util';
+import { calcChangesSum, calcMinimumChanges } from '../utils/model-util';
 import modelFactory from './model';
 
 const add = (a, b) => a + b;
@@ -205,31 +206,33 @@ describe('model - customer test', () => {
     expect(currentQuantity).toBe(quantity - 1);
   });
 
-  test.only('returnCustomerCharge - 자판기의 잔돈이 부족하면 Error', () => {
-    // TODO : module spy가 생각하는데로 동작하지 않는데 해결필요.
-    jest.mock('../utils/model-util', () => ({
-      calcMinimumChanges: (changes, charge) => {
-        throw new Error();
-      }
-    }));
-    jest.spyOn(model, 'addCustomerCharge').mockImplementation(() => {});
-    const customerCharge = 1500;
-    model.addCustomerCharge(customerCharge);
-    expect(() => model.returnCustomerCharge()).toThrow();
+  test.only('returnCustomerCharge - 잔돈 반환시 자판기 잔돈 감소한만큼 고객 잔돈 증가하고 charge는 0이된다.', () => {
+    // 초기상태
+    let VMChanges;
+    let custmoerChanges;
+    let custmoerCharge;
+    model.addChangeListener(state => {
+      VMChanges = state.changes;
+      custmoerChanges = state.customer.changes;
+      custmoerCharge = state.customer.charge;
+    });
+    expect(calcChangesSum(VMChanges)).toBe(0);
+    expect(calcChangesSum(custmoerChanges)).toBe(0);
+    expect(custmoerCharge).toBe(0);
+
+    // 고객의 금액 투입
+    const charge = 1500;
+    model.addCustomerCharge(charge);
+
+    const chargedChanges = cloneDeep(VMChanges);
+    expect(custmoerCharge).toBe(charge);
+
+    // 잔돈 반환
+    model.returnCustomerCharge();
+
+    // then
+    expect(calcChangesSum(VMChanges)).toBe(0);
+    expect(custmoerCharge).toBe(0);
+    expect(custmoerChanges).toStrictEqual(chargedChanges);
   });
-
-  // test('returnCustomerCharge - 남은 잔돈을 반환하고 charge를 0으로 만든다.', () => {
-  //   const oldCharge = 1500;
-
-  //   model.addCustomerCharge(oldCharge);
-  //   model.returnCustomerCharge();
-  //   let currentState;
-  //   model.addChangeListener(state => {
-  //     currentState = state;
-  //   });
-
-  //   const { charge, changes } = currentState.customer;
-
-  //   expect(charge).toBe(0);
-  // });
 });
