@@ -26,15 +26,26 @@ export default class AppComponent extends HTMLElement {
     // nav button
     const nav = newTemplate.querySelector('nav');
     this.createNavigations().forEach(navButton => nav.appendChild(navButton));
-    nav.addEventListener('click', e => {
-      const { target } = e;
-      if (target.matches('button[data-navigation]')) {
-        this.router.navigate(target.dataset.navigation);
-      }
-    });
+    this.initEvent();
 
     // render template
     this.appendChild(newTemplate);
+  }
+
+  initEvent() {
+    this.addEvent('click', 'button[data-navigation]', e => {
+      const { target } = e;
+      this.router.navigate(target.dataset.navigation);
+    });
+  }
+
+  addEvent(event, selector, callback) {
+    this.addEventListener(event, e => {
+      const { target } = e;
+      if (target.matches(selector)) {
+        callback(e);
+      }
+    });
   }
 
   initRouter(routerOutlet) {
