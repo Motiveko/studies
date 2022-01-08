@@ -1,12 +1,13 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 const template = document.createElement('template');
-template.innerHTML = `<h2>금액 투입</h2>
-<form id="charge-form">
+template.innerHTML = `<h2>${DISPLAY.TITLE_CUSTOMER_CHARGE_FORM}</h2>
+<form id="${DISPLAY.ID_CUSTOMER_CHARGE_FORM}">
   <fieldset >
-    <legend>금액 투입</legend>
-    투입할 금액 : <input type="number" id="charge-input" name="charge" placeholder="투입할 금액" />
-    <button id="charge-button" type="submit">투입하기</button>
+    <legend>${DISPLAY.FORM_CUSTOMER_CHARGE}</legend>
+    투입할 금액 : <input type="number" id="${DISPLAY.ID_CUSTOMER_CHARGE_INPUT}" name="charge" placeholder="투입할 금액" />
+    <button id="${DISPLAY.ID_CUSTOMER_CHARGE_BUTTON}" type="submit">${DISPLAY.NAME_CUSTOMER_CHARGE_BUTTON}</button>
   </fieldset>
 </form>`;
 
@@ -22,7 +23,7 @@ export default class CustomerChargeForm extends HTMLElement {
   }
 
   initEvent() {
-    this.addEvent('submit', 'form#charge-form', e => {
+    this.addEvent('submit', `form#${DISPLAY.ID_CUSTOMER_CHARGE_FORM}`, e => {
       e.preventDefault();
       const { target } = e;
       this.chargeCoin(target);

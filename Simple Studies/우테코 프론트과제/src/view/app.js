@@ -1,9 +1,10 @@
+import { DISPLAY } from '../constant/constant';
 import routerFactory from '../router/router';
 
 const template = document.createElement('template');
 template.innerHTML = `<div class="container">
   <header>
-    <h1>**** 자판기 ****</h1>
+    <h1>${DISPLAY.TITLE_APP}</h1>
   </header>
   <nav></nav>
   <div id="router"></div>

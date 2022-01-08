@@ -1,14 +1,15 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 const template = document.createElement('template');
-template.innerHTML = `<h2>상품 추가하기</h2>
-<form id="product-form">
+template.innerHTML = `<h2>${DISPLAY.TITLE_PRODUCT_ADD_FORM}</h2>
+<form id=${DISPLAY.ID_PRODUCT_ADD_FORM}>
   <fieldset >
-    <legend>상품 등록</legend>
-    상품명 : <input type="text" id="product-name-input" name="name" placeholder="상품명" />
-    가격 : <input type="text" id="product-price-input" name="price" placeholder="가격" />
-    수량 : <input type="text" id="product-quantity-input" name="quantity" placeholder="수량" />
-    <button id="product-add-button" type="submit">상품 추가</button>
+    <legend>${DISPLAY.FORM_PRODUCT_ADD}</legend>
+    상품명 : <input type="text" id=${DISPLAY.ID_PRODUCT_NAME_INPUT} name="name" placeholder="상품명" />
+    가격 : <input type="text" id=${DISPLAY.ID_PRODUCT_PRICE_INPUT} name="price" placeholder="가격" />
+    수량 : <input type="text" id=${DISPLAY.ID_PRODUCT_QUANTIY_INPUT} name="quantity" placeholder="수량" />
+    <button id="${DISPLAY.ID_PRODUCT_ADD_BUTTON}" type="submit">${DISPLAY.NAME_PRODUCT_ADD_BUTTON}</button>
   </fieldset>
 </form>`;
 
@@ -25,7 +26,7 @@ export default class ProductAddForm extends HTMLElement {
   }
 
   initEvent() {
-    this.addEvent('submit', 'form#product-form', e => {
+    this.addEvent('submit', `form#${DISPLAY.ID_PRODUCT_ADD_FORM}`, e => {
       e.preventDefault();
       const { target } = e;
       this.addProductToModel(target);

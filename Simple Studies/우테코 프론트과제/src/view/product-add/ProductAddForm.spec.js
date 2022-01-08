@@ -1,5 +1,6 @@
 import ProductAddForm from './ProductAddForm';
 import model from '../../model/model-instance';
+import { DISPLAY } from '../../constant/constant';
 
 describe('ProductAddForm', () => {
   let productForm;
@@ -9,7 +10,7 @@ describe('ProductAddForm', () => {
   beforeEach(() => {
     productForm = new ProductAddForm();
     spyAddProduct = jest.spyOn(model, 'addProduct').mockImplementation(() => true);
-    form = productForm.querySelector('#product-form');
+    form = productForm.querySelector(`#${DISPLAY.ID_PRODUCT_ADD_FORM}`);
     spyReset = jest.spyOn(form, 'reset');
   });
 

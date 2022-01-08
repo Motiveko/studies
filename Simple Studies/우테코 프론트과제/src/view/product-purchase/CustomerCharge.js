@@ -1,3 +1,4 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 export default class CustomerCharge extends HTMLElement {
@@ -18,7 +19,7 @@ export default class CustomerCharge extends HTMLElement {
     if (state?.customer?.charge) {
       currentCharge = state.customer.charge;
     }
-    this.innerHTML = `<div id="charge-amount">투입한 금액: ${currentCharge}원</div>`;
+    this.innerHTML = `<div id="${DISPLAY.ID_CUSTOMER_CHARGE_AMOUNT}">${DISPLAY.NAME_CUSTOMER_CHARGE_AMOUNT}: ${currentCharge}원</div>`;
   }
 
   disconnectedCallback() {

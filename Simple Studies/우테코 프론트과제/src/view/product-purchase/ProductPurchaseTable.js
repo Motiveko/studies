@@ -1,8 +1,9 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 const template = document.createElement('template');
-template.innerHTML = `<h2>구매할 수 있는 상품 현황</h2>
-<table id="product-table">
+template.innerHTML = `<h2>${DISPLAY.TITLE_PRODUCT_PURCHASE_TABLE}</h2>
+<table id="${DISPLAY.ID_PRODUCT_PURCHASE_TABLE}">
   <tr>
     <th>상품명</th>
     <th>가격</th>
@@ -36,7 +37,11 @@ export default class ProductPurchaseTable extends HTMLElement {
   }
 
   initEvents() {
-    this.addEvent('click', 'button.purchase-button', this.purchaseProduct.bind(this));
+    this.addEvent(
+      'click',
+      `button.${DISPLAY.CLASS_PRODUCT_PURCHASE_BUTTON}`,
+      this.purchaseProduct.bind(this)
+    );
   }
 
   purchaseProduct(event) {
@@ -55,12 +60,12 @@ export default class ProductPurchaseTable extends HTMLElement {
 
   createProductRow(product) {
     const { name, price, quantity } = product;
-    return `<tr class="product-purchase-item">
-      <td class="product-purchase-name" data-product-name=${name}>${name}</td>
-      <td class="product-purchase-price" data-product-price=${price}>${price}</td>
-      <td class="product-purchase-quantity" data-product-price=${quantity}>${quantity}</td>
+    return `<tr class="${DISPLAY.CLASS_PRODUCT_PURCHASE_ITEM}">
+      <td class="${DISPLAY.CLASS_PRODUCT_PURCHASE_NAME}" data-product-name=${name}>${name}</td>
+      <td class="${DISPLAY.CLASS_PRODUCT_PURCHASE_PRICE}" data-product-price=${price}>${price}</td>
+      <td class="${DISPLAY.CLASS_PRODUCT_MANAGE_QUANTITY}" data-product-price=${quantity}>${quantity}</td>
       <td>
-        <button type="text" class="purchase-button" data-product-name=${name}>구매하기</button>
+        <button type="text" class="${DISPLAY.CLASS_PRODUCT_PURCHASE_BUTTON}" data-product-name=${name}>${DISPLAY.NAME_PRODUCT_PURCHASE_BUTTON}</button>
       </td>
     </tr>`;
   }

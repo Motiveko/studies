@@ -1,3 +1,4 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 export default class CurrentCharge extends HTMLElement {
@@ -15,7 +16,7 @@ export default class CurrentCharge extends HTMLElement {
         .map(p => p * changes[p])
         .reduce(this.sum, 0);
     }
-    this.innerHTML = `<div id="vending-machine-charge-amount">보유 금액: ${currentCharge}원</div>`;
+    this.innerHTML = `<div id="${DISPLAY.ID_VM_CHARGE_AMOUNT}">${DISPLAY.NAME_VM_CHARGE_AMOUNT}: ${currentCharge}원</div>`;
   }
 
   sum(a, b) {

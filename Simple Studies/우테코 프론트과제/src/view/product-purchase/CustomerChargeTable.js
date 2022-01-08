@@ -1,8 +1,9 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 const template = document.createElement('template');
-template.innerHTML = `<h2>잔돈</h2>
-<button id="coin-return-button">반환하기</button>
+template.innerHTML = `<h2>${DISPLAY.TITLE_CUSTOMER_CHARGE_TABLE}</h2>
+<button id="${DISPLAY.ID_COIN_RETURN_BUTTON}">${DISPLAY.NAME_COIN_RETURN_BUTTON}</button>
 <table>
   <thead>
     <tr>
@@ -10,7 +11,7 @@ template.innerHTML = `<h2>잔돈</h2>
       <th>개수</th>
     </tr>
   </thead>
-  <tbody id="coin-quantity">   
+  <tbody id="${DISPLAY.ID_COIN_QUANTITY}">   
   </tbody>
 </table>
 `;
@@ -28,14 +29,14 @@ export default class CustomerChargeTable extends HTMLElement {
   render(state) {
     this.innerHTML = '';
     const newTemplate = template.content.cloneNode(true);
-    newTemplate.querySelector('#coin-quantity').innerHTML = this.createCoinQuantity(
+    newTemplate.querySelector(`#${DISPLAY.ID_COIN_QUANTITY}`).innerHTML = this.createCoinQuantity(
       state?.customer?.changes
     );
     this.appendChild(newTemplate);
   }
 
   initEvent() {
-    this.addEvent('click', '#coin-return-button', this.returnCharge);
+    this.addEvent('click', `button#${DISPLAY.ID_COIN_RETURN_BUTTON}`, this.returnCharge);
   }
 
   returnCharge() {

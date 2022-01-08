@@ -1,8 +1,9 @@
 import model from '../../model/model-instance';
+import { DISPLAY } from '../../constant/constant';
 
 const template = document.createElement('template');
-template.innerHTML = `<h2>상품 현황</h2>
-<table id="product-table">
+template.innerHTML = `<h2>${DISPLAY.TITLE_PRODUCT_TABLE}</h2>
+<table id=${DISPLAY.ID_PRODUCT_TABLE}>
   <tr>
     <th>상품명</th>
     <th>가격</th>
@@ -14,9 +15,9 @@ template.innerHTML = `<h2>상품 현황</h2>
 const createProductRow = product => {
   const { name, price, quantity } = product;
   return `<tr class="product-manage-item">
-      <td class="product-manage-name">${name}</td>
-      <td class="product-manage-price">${price}</td>
-      <td class="product-manage-quantity">${quantity}</td>
+      <td class=${DISPLAY.CLASS_PRODUCT_MANAGE_NAME}>${name}</td>
+      <td class=${DISPLAY.CLASS_PRODUCT_MANAGE_PRICE}>${price}</td>
+      <td class=$${DISPLAY.CLASS_PRODUCT_MANAGE_QUANTITY}>${quantity}</td>
     </tr>`;
 };
 
@@ -45,7 +46,7 @@ export default class ProductTable extends HTMLElement {
     state.products.forEach(product => {
       rows.innerHTML += createProductRow(product);
     });
-    newTemplate.querySelector('#product-table').appendChild(rows.content);
+    newTemplate.querySelector(`#${DISPLAY.ID_PRODUCT_TABLE}`).appendChild(rows.content);
     this.appendChild(newTemplate);
   }
 

@@ -1,7 +1,8 @@
+import { DISPLAY } from '../../constant/constant';
 import model from '../../model/model-instance';
 
 const template = document.createElement('template');
-template.innerHTML = `<h2>자판기가 보유한 동전</h2>
+template.innerHTML = `<h2>${DISPLAY.TITLE_VM_CHARGE_TABLE}</h2>
 <table>
   <thead>
     <tr>
@@ -9,7 +10,7 @@ template.innerHTML = `<h2>자판기가 보유한 동전</h2>
       <th>개수</th>
     </tr>
   </thead>
-  <tbody id="coin-quantity">   
+  <tbody id="${DISPLAY.ID_VM_COIN_QUANTITY}">   
   </tbody>
 </table>
 `;
