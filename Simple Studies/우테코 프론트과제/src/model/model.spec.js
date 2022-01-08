@@ -143,10 +143,14 @@ describe('model - customer test', () => {
     expect(calcChangesSum(currentChanges)).toBe(0);
 
     const charge = 1000;
-
+    // 금액 투입 1회차
     model.addCustomerCharge(charge);
-    expect(currentCharge).toBe(1000);
+    expect(currentCharge).toBe(charge);
     expect(calcChangesSum(currentChanges)).toBe(charge);
+    // 금액 투입 2회차
+    model.addCustomerCharge(charge);
+    expect(currentCharge).toBe(charge * 2);
+    expect(calcChangesSum(currentChanges)).toBe(charge * 2);
   });
 
   test('purchaseProduct - 존재하지 않는 상품이면 Error', () => {

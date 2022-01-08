@@ -44,11 +44,12 @@ export default state => {
 
   /**
    * 고객 - 금액 투입하기
-   * @param {*} charge 투입할 금액
+   * @param {*} chargeInput 투입할 금액
    */
-  const addCustomerCharge = charge => {
-    addCharge(charge);
-    proxy.customer = { ...proxy.customer, charge };
+  const addCustomerCharge = chargeInput => {
+    addCharge(chargeInput);
+    const { charge } = proxy.customer;
+    proxy.customer = { ...proxy.customer, charge: charge + chargeInput };
   };
 
   /**
