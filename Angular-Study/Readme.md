@@ -5,4 +5,4 @@
 ### [3. Angular Essentials](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular-Essentials)
 ### [4. Angular Tips](https://github.com/Motiveko/studies/tree/master/Angular-Study/Angular%20Tips)
 ### [3. 앵귤러 에니메이션](https://github.com/Motiveko/studies/tree/master/Angular-Study/angular-animation)
-### [4. RxJs 상태관리](https://github.com/Motiveko/studies/tree/master/Angular-Study/angular-animation)
+### [4. RxJs 상태관리](https://github.com/Motiveko/studies/tree/master/Angular-Study/rxjs-state-managements-sample)
