@@ -1,0 +1,6 @@
+### [모던 자바스크립트 Deep Dive](https://github.com/Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive)
+### [이펙티브 타입스크립트](https://github.com/Motiveko/studies/tree/master/Javascript-Study/Effective%20Typescript)
+### [ESLint, Prettier](https://github.com/Motiveko/studies/tree/master/Javascript-Study/ESLint%2C%20Prettier)
+### [RxJS](https://github.com/Motiveko/studies/tree/master/Javascript-Study/RxJs)
+### [프레임워크 없는 프론트엔드 개발](https://github.com/Motiveko/studies/tree/master/Javascript-Study/Frameworkless%20Frontend%20Development)
+### [WebComponent](https://github.com/Motiveko/studies/tree/master/Javascript-Study/WebComponent)
