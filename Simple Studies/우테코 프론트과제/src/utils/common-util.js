@@ -13,3 +13,10 @@ export const cloneDeep = obj => JSON.parse(JSON.stringify(obj));
  */
 export const hasOwnProperties = (obj, properties) =>
   properties.find(property => !Object.prototype.hasOwnProperty.call(obj, property)) === undefined;
+/**
+ * 값의 합, 숫자로 구한다.
+ * @param {*} a
+ * @param {*} b
+ * @returns 값의 합(nubmer type)
+ */
+export const add = (a, b) => Number(a) + Number(b);

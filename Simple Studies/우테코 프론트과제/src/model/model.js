@@ -1,4 +1,5 @@
 import { createInitialChanges } from '../constant/constant';
+import { add } from '../utils/common-util';
 import {
   calcMinimumChanges,
   getRandomChanges,
@@ -49,7 +50,7 @@ export default state => {
   const addCustomerCharge = chargeInput => {
     addCharge(chargeInput);
     const { charge } = proxy.customer;
-    proxy.customer = { ...proxy.customer, charge: charge + chargeInput };
+    proxy.customer = { ...proxy.customer, charge: add(charge, chargeInput) };
   };
 
   /**
