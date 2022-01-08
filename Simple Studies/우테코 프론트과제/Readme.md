@@ -1,87 +1,135 @@
-# 우아한 테크코스 FE 과제 도전기
+# 우테코 FE 미션 풀어보기
+> 바닐라 자바스크립트를 이용한 자판기 앱 만들기
 
-우아한 테크 코스에 지원하는 지원자들은 어느정도 수준의 과제를 하는가, 나는 그걸 수행할 수 있는가를 판가름 해보기 위해 만들어본다.
-
-[이 블로그 게시글](https://velog.io/@compy/%EC%9A%B0%EC%95%84%ED%95%9C%ED%85%8C%ED%81%AC%EC%BD%94%EC%8A%A4-4%EA%B8%B0-%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C-%EA%B3%BC%EC%A0%95-%ED%94%84%EB%A6%AC%EC%BD%94%EC%8A%A4-3%EC%A3%BC%EC%B0%A8-%ED%9B%84%EA%B8%B0) 을 읽고 미션 요구사항을 파악하고 개발해본다.
-
-
-## 기능 요구사항
-> 반환되는 동전이 최소한이 되는 자판기를 구현한다.
-
-<br>
-
-### 1. 공통
-상단에 탭메뉴가 존재하며 각 탭에 따라 적절한 기능을 수행한다.
-
-- 상품 관리탭은 자판기가 보유하고 있는 상품을 추가하는 기능을 수행한다.
-- 잔돈 충전탭은 자판기가 보유할 금액을 충전하는 기능을 수행한다.
-- 상품 구매탭은 사용자가 금액을 투입할 수 있으며, 투입한 금액에 맞춰 상품을 구매하고, 남은 금액에 대해서는 잔돈을 반환하는 기능을 수행한다.
-- 다른 탭으로 이동했다 돌아와도 기존 탭의 상태가 유지되어야 한다.
-- localStorage를 이용하여, 새로고침하더라도 가장 최근에 작업한 정보들을 불러올 수 있도록 한다.
+- 미션 상세보기 : https://github.com/woowacourse/javascript-vendingmachine-precourse
+-  미션 기본 규칙 외에 아래 내용 추가함
+  - `jest`를 이용한 비즈니스 로직 유닛 테스틑
+  - `webpack` 을 이용한 build, serve
+  - `prettier`를 이용한 코드 포맷팅
 
 <br>
 
-### 2. 상품 관리 탭
-상품 관리탭에서, 다음과 같은 규칙을 바탕으로 상품을 추가한다.
-
-- 최초 상품 목록은 비워진 상태이다.
-- 상품명, 가격, 수량을 입력해 상품을 추가할 수 있다.
-- 상품 가격은 100원부터 시작하며, 10원으로 나누어 떨어져야 한다.
-- 사용자는 추가한 상품을 확인할 수 있다.
-
-<br>
-
-### 3. 잔돈 충전 탭 (자판기 보유 동전)
-잔돈 충전 탭에서, 다음과 같은 규칙으로 자판기 보유 금액을 충전한다.
-
-- 잔돈 충전 탭에서 최초 자판기가 보유한 금액은 0원이며, 각 동전의 개수는 0개이다.
-- 잔돈 충전 입력 요소에 충전할 금액을 입력한 후, 충전하기 버튼을 눌러 자판기 보유 금액을 충전할 수 있다.
-- 자판기 보유 금액은 {금액}원 형식으로 나타낸다.
-- 자판기 보유 금액만큼의 동전이 무작위로 생성된다.
-- 동전의 개수는 {개수}개 형식으로 나타낸다.
-- 자판기 보유 금액을 누적하여 충전할 수 있다. 추가 충전 금액만큼의 동전이 무작위로 생성되어 기존 동전들에 더해진다.
+## 1. 실행하기
+```
+npm i
+npm run test
+npm run start
+```
 
 <br>
 
-### 4. 상품 구매 탭
-상품 구매탭에서, 다음과 같은 규칙을 바탕으로 금액을 충전하고, 상품을 구매하며, 잔돈을 반환한다.
-
-- 상품 구매 페이지에서 최초 충전 금액은 0원이며, 반환된 각 동전의 개수는 0개이다.
-- 사용자는 투입할 금액 입력 요소에 투입 금액을 입력한 후, 투입하기버튼을 이용하여 금액을 투입한다.
-    - 금액은 10원으로 나누어 떨어지는 금액만 투입할 수 있다.
-    - 자판기가 보유한 금액은 {금액}원 형식으로 나타낸다.
-- 금액은 누적으로 투입할 수 있다.
-- 사용자는 반환하기 버튼을 통해 잔돈을 반환 받을 수 있다.
+## 2. 동작 영상
+![동작](./assets/동작.gif)
 
 <br>
 
-#### 상품 구매 > 잔돈 계산 모듈
-- 상품 구매 탭에서 잔돈 반환 시 다음과 같은 규칙을 통해 잔돈을 반환한다.
+## 3. 프로젝트 구조
+```bash
+├── src
+│   ├── constant # 상수
+│   │   ├── constant.js # 프로젝트에 사용되는 상수
+│   │
+│   ├── core # 전역적으로 사용되는 객체
+│   │   ├── vm-error.js # 사용자 정의 에러
+│   │
+│   ├── css # css파일
+│   │   ├── style.css # 전역 css파일
+│   │
+│   ├── model # 애플리케이션 상태 관리 관련 기능 모음
+│   │   ├── model-instance.js # 애플리케이션에서 사용되는 상태 객체 인스턴스
+│   │   ├── model.js # 애플리케이션 상태 객체(factory 함수)
+│   │   ├── model-spec.js # model.js 유닛 테스트
+│   │   ├── observable.js # 상태 객체를 구독 가능한 옵저버블로 만드는 observable factory 함수
+│   │   └── observable.spec.js # observable.js 유닛 테스트
+│   │
+│   ├── router # 프로젝트 라우터 
+│   │   ├── router.js # history api 기반 라우터 생성 함수
+│   │   ├── router-spec.js # router.js 유닛 테스트
+│   │   │
+│   │
+│   ├── utils
+│   │   ├── common-util.js # 일반 유틸 함수
+│   │   ├── common-util.spec.js # common-util.js의 유닛 테스트
+│   │   ├── model-util.js # model에서 사용되는 유틸 함수
+│   │   ├── model-util.spec.js # model-util.js의 유닛 테스트
+│   │   ├── validation-util.js # 사용자 입력 검증 관련 유틸
+│   │   └── validation-util.spec.js # validation-util.js의 유닛 테스트
+│   │
+│   ├── view # 클래스 상속을 위한 부모 클래스 모음
+│   │   ├── product-add # 상품 관리
+│   │   │   ├── ProductAdd.js # 상품 추가하기 컴포넌트
+│   │   │   ├── ProductAddForm.js # 상품 추가하기 폼 컴포넌트
+│   │   │   ├── ProductAddForm.spce.js # ProductAddForm.js의 유닛 테스트
+│   │   │   └── ProductTable.js # 상품 목록 컴포넌트
+│   │   │
+│   │   ├── product-purchase # 상품 구매
+│   │   │   ├── CustomerCharge.js # 투입 금액 컴포넌트
+│   │   │   ├── CustomerChargeForm.js # 금액 투입하기 컴포넌트
+│   │   │   ├── CustomerChargeTable.js # 잔돈 컴포넌트
+│   │   │   ├── ProductPurchase.js # 상품 구매하기 컴포넌트
+│   │   │   └── ProductPurchaseTable.js # 구매 가능한 상품 목록 컴포넌트
+│   │   │
+│   │   ├── vending-machine-manage # 잔돈 충전
+│   │   │   ├── ChargeForm.js # 잔돈 충전하기 폼 컴포넌트
+│   │   │   ├── ChargeTable.js # 잔돈 테이블 컴포넌트
+│   │   │   ├── CurrentChange.js # 보유 금액 컴포넌트
+│   │   │   └── VendingMachineManage.js # 잔돈 충전 컴포넌트
+│   │   │   
+│   │   └── app.js # 앱의 루트 컴포넌트
+│   │
+│   └── index.js # 앱의 entry point
+│   │
+└── .eslintrc # lint 설정
+│   
+└── .prettierrc # prettier 설정
+│   
+└── babel.config.json # 바벨 설정
+│   
+└── index.html 
+│   
+└── .jest.config.js # jest 설정
+│   
+└── .webpack.config.js # 웹팩 설정
+```
 
-- 잔돈을 돌려줄 때는 현재 보유한 최소 개수의 동전으로 잔돈을 돌려준다.
-지폐를 잔돈으로 반환하는 경우는 없다고 가정한다. 
-- 잔돈을 반환할 수 없는 경우 잔돈으로 반환할 수 있는 금액만 반환한다.
-- 동전의 개수를 나타내는 정보는 {개수}개 형식으로 나타낸다.
+<br>
 
-<br><br>
+## 4. 프로젝트 설명
+1. 기능
+    - 애플리케이션 기능은 미션에 제시된 요구사항을 그대로 구현하였다.
 
-### 프로그래밍 요구사항
-- 스크립트 추가 외에 주어진 index.html파일은 수정할 수 없다.
-    - 스타일(css)은 채점 요소가 아니다.
-- 모든 예외 발생 상황은 alert메서드를 이용하여 처리한다.
-- 외부 라이브러리(jQuery, Lodash 등)를 사용하지 않고, 순수 Vanilla JS로만 구현한다.
-- 자바스크립트 코드 컨벤션을 지키면서 프로그래밍 한다. 정답이 없으므로, 다양한 컨벤션을 비교해보며 스스로 더 - 적절해보이는 컨벤션을 자율적으로 선택한다.
-    - Google JavaScript Style Guide
-    - Airbnb JavaScript Style Guide()
-    - JavaScript Standard Style
-    - NHN FE개발랩
-- indent(인덴트, 들여쓰기) depth를 3이 넘지 않도록 구현한다. 2까지만 허용한다.
-    - 예를 들어 while문 안에 if문이 있으면 들여쓰기는 2이다.
-    - 힌트: indent(인덴트, 들여쓰기) depth를 줄이는 좋은 방법은 함수(또는 메소드)를 분리하면 된다.
-- 함수(또는 메소드)가 한 가지 일만 하도록 최대한 작게 만들어라.
-- 변수 선언시 var 를 사용하지 않는다. const 와 let 을 사용한다.
+<br>
+
+2. 빌드
+    - `webpack`을 이용해 빌드한다. 
+    - `babel-loader`를 이용해 트랜스파일 하고, `style-loader`, `css-loader`를 이용해 `css`를 `import`한다.
+    - `HtmlWebpackPlugin`을 이용해 `index.html`에 엔트리 포인트인 `index.js`를 `import`한다
+    - `webpack-dev-server`를 이용해 앱을 실행할 수 있다.
+
+<br>
+
+3. 컴포넌트
+        -  화면 구성에 사용된 컴포넌트는 [`WebComponent`](https://www.webcomponents.org/)를 사용해서 구현한다.
+
+<br>
+
+4. 상태 관리
+    - 애플리케이션 전역에서 사용 가능한 상태 모듈(`model.js`)을 이용한다.
+    - 컴포넌트가 상태 변화에 따라 자동으로 다시 랜더링 될 수 있도록, 상태를 ***구독 가능한 반응형 모델***로 만든다.(`observable.js`) 
+    - 이를 위해 자바스크립트의 [`native proxy`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)객체를 이용해 상태 객체의 `setter`함수를 오버라이드 하여, `setter` 호출시 상태를 구독중인 모든 컴포넌트의 랜더링 함수(`listeners`)가 실행된다.
+    - 구독 함수(`addChangeListener`)의 결과로 반환되는 구독 해제 함수(`unsubscribe`)를 웹 컴포넌트의 `disconnectedCallback` 함수에 실행해, 메모리 누수를 막는다.
+    - 프로젝트 요구사항인 local storage에서의 상태 저장 기능을 위해, model 인스턴스 생성시 아래 과정을 수행한다.(`model-instance.js`)
+        - local storage에서 상태값 조회하여 모델 인스턴스 생성시 전달
+        - 상태 변화시 local storage에 변화된 상태를 저장하는 함수가 모델 인스턴스를 **구독**
     
-- import 문을 이용해 스크립트를 모듈화하고 불러올 수 있게 만든다.
-    - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Statements/import
-- 함수(또는 메소드)의 길이가 15라인을 넘어가지 않도록 구현한다.
-    - 함수(또는 메소드)가 한 가지 일만 잘 하도록 구현한다.
+<br>
+
+5. 라우터
+    - 라우터는 브라우저의 `history API`를 기반으로 라우터를 구현한다.(`router.js`)
+    - 라우터 인스턴스 생성시 `routes`객체를 전달해, url과 컴포넌트의 맵핑 레지스트리를 생성한다.
+    - 앱 컴포넌트에 `router`객체를 주입하고, 라우터 네비게이션 버튼(`button[data-navigation]`) 클릭 시 라우터의 `navigate` 함수가 호출되고, url과 매칭되는 컴포넌트를 랜더링한다.
+
+<br>
+
+6. 에러 처리
+- `window` 객체에 `onerror` 핸들러를 등록하고, 애플리케이션에서 정의한 `VMError` 발생시 프로젝트 요구사항대로 `alert`으로 해당 메시지를 사용자에게 보여준다.(`index.js`)
