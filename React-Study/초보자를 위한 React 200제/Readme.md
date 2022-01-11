@@ -407,6 +407,18 @@ export default function Fragments () {
   )
 }
 ```
+- `key`가 없다면 `<>`를 사용해도 된다.
+```js
+export default function Fragments () {
+  return (
+    <>
+      <div>내용1</div>
+      <p>내용2</p>
+    </>
+  )
+}
+```
+
 > 궁금해서 `<React.Frament>` 말고 `<templat>`으로 감싸서 컴포넌트를 반환했지만 `template`태그가 사라지지 않아 실제 랜더링 되진 않았다.
 
 <br>
@@ -444,7 +456,74 @@ $npm i --save bootstrap reactstrap
 // App.js
 import 'bootstrap/dist/css/bootstrap.css'
 ```
+- 컴포넌트의 props등은 메뉴얼을 참조해서 쓰자.
 
+
+<br>
+
+> ~65까지는 bootstrap, swwetalert, axios 등의 라이브러리와 자바스크립트 관련 내용으로 생략한다.
+
+<br>
+
+### 66 ~ 72 는 이벤트 핸들러 관련 내용으로, 자바스크립트의 on{EVENT} 와 같으므로 생략한다.
+
+<br>
+
+### 73. [Ref](https://ko.reactjs.org/docs/react-api.html#refs) 사용하기
+- ref는 element에 대한 참조를 제어하는것으로, document의 `querySelecotr`같은 역할을 한다고 보면 된다.
+```js
+export default class ReactRef extends Component {
+  constructor(props) {
+    super(props);
+    this.InputRef = React.createRef();
+  }
+
+  RefFocus = () => {
+    this.InputRef.current.focus();
+  }
+
+  JavascriptFocus() {
+    document.getElementById('id').focus();
+  }
+
+  componentDidMount() {
+    // 랜더링 후 ref 출력
+    console.log(this.InputRef)
+  }
+
+  render() {
+    return(
+      <>
+        <input id="id" type="text" ref={this.InputRef} />
+        <input type="button" value="Ref Focus" onClick={this.RefFocus} />
+        <input type="button" value="Javascript Focus" onClick={this.JavascriptFocus} />
+      </>
+    )
+  }
+}
+```
+
+==== 출력 결과 ==== <br>
+![출력 결과](assets/ReactRef.png)
+
+- ref는 `React.createRef()` 함수로 만들 수 있고, element의 `ref` 어트리뷰트에 ref 객체를 를 할당함으로써 참조할 수 있다. 이 때 ref 객체의 `current` 속성에 Element가 할당된다. 위 결과처럼 selector값이 저장된다!
+
+<br>
+
+### 74. 커링 함수 구현하기
+- `커링`(Currying)은 ***함수의 재사용을 높이기 위해 함수 자체를 return 하는 함수다.*** 고차함수랑 같은건가?
+```js
+// 일반 함수
+const plusNumOrString = (a, b) => a + b;
+
+// 커링함수
+const plusFunction1 = (a) => {
+  return function(b) {
+    return plusNumOrString(a, b);
+  }
+}
+const plusFunction2 = (a) => (b) => plusNumOrString(a, b);
+```
 
 
 
