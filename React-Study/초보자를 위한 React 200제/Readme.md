@@ -348,3 +348,107 @@ export default App;
 ```
 
 <br>
+
+<br>
+
+### 31. hook 사용하기
+`hook`은 함수형 컴포넌트에서 사용된다. `useState`와 `useEffect` 훅에 대해 알아본다.
+1. [useState](https://ko.reactjs.org/docs/hooks-reference.html#usestate)
+```js
+const [count, setCount] = useState(initialCount);
+```
+
+- useState(초기상태)의 결과로 길이 2의 배열을 반환하는데, 첫번째부터 각각 상태/setter함수 이다.
+- 위 훅에서 `setCount`는 클래스 컴포넌트의 `setState`와 거의 같은 동작을 하는데, 차이점은 `setState`와 ***달리 상태 merge 기능이 없다는 것***이다. 상태를 merge하려면 `setter`함수를 아래와 같이 사용하면 된다.
+```js
+const [state, setState] = useState({});
+setState(prevState => {
+  // Object.assign would also work
+  return {...prevState, ...updatedValues};
+});
+```
+
+<br>
+
+2. [useEffect](https://ko.reactjs.org/docs/hooks-reference.html#useeffect)
+- 랜더링 후에 실행되는 훅이다.
+- 명령형 또는 어떤 effect를 발생하는 함수를 인자로 받는다. 무슨말인지 실제 사례를 보면서 이해한다
+- 아래는 랜더링마다 그냥 의미없는 출력을 하는 코드다.
+```js
+// 최초 랜더링시에 useEffect 출력하고, 그 이후 리랜더링마다 역시 출력한다.
+useEffect(() => {
+  console.log('useEffect');
+})
+```
+- 랜더링하면서 기존 랜더링에서 사용하던 리소스를 정리하게 할 수 있다. ***훅 인자로 전달된 함수의 결과로 리소스 정리 함수를 반환하면*** 다음 ***useEffect 훅 실행 전에 이게 실행된다.***
+```js
+useEffect(() => {
+  // 최초 랜더링시 구독, 매 랜더링마다 다시 구독
+  const subscription = props.source.subscribe();
+  return () => {
+    // 최초 랜더링 이후 매 랜더링마다 구독 해제하고, 위의 구독을 다시 수행함
+    subscription.unsubscribe();
+  };
+});
+```
+
+<br>
+
+### 32. [Fragments](https://ko.reactjs.org/docs/fragments.html#gatsby-focus-wrapper) 사용하기
+- 컴포넌트의 element 반환 시, 하나의 태그로 감싸진 내용을 반환하지 않으면 에러가 발생한다.
+- 이 때 html의 `template` 태그처럼 전체를 감싸서 DOM에 추가했을 때 내용물만 추가되고 본 태그는 없어지게 할 수 있는데 리액트의 `Fragment`다.(웹의 DocumentFragment와 같다고 보면 될듯)
+```js
+export default function Fragments () {
+  return (
+    <React.Fragment>
+      <div>내용1</div>
+      <p>내용2</p>
+    </React.Fragment>
+  )
+}
+```
+> 궁금해서 `<React.Frament>` 말고 `<templat>`으로 감싸서 컴포넌트를 반환했지만 `template`태그가 사라지지 않아 실제 랜더링 되진 않았다.
+
+<br>
+
+### 33. map()으로 element 반환하기
+- `Angular`의 `ngFor`같은게 리액트에는 따로 없는모양이다. 그냥 `Array.prototype.map`을 이용해서 배열을 순회하는 방식으로 element를 만들어내자.
+- 이 때, `Vanllia js`에서 하듯 출력을 string 타입으로 취급하는게 아니라서, `.join('')`과 같은 마무리는 필요하지 않다.
+
+```js
+export default function ReturnMap() {
+  const elementArray = [
+    <li>react</li>,
+    <li>angular</li>,
+    <li>vue</li>
+  ]
+  return (
+    <ul>
+      { elementArray.map(el => el) }
+    </ul>
+  )
+}
+```
+- 또 신기한건 `li`요소를 템플릿 리터럴같은걸 이용해 string으로 정의한게 아니라, HTML 그대로 배열로 만들었다는 것이다.
+- ***`elemntArray`를 `string[]`으로 정의하면 그냥 text node로 처리되어 랜더링된다.***
+
+<br>
+
+### 34~ [Reactstrap](https://www.npmjs.com/package/reactstrap)
+- `Reactstrap`은 리액트용 부트스트랩 패키지다. 사용을 위한 설정은 아래와 같다. 내부적으로 `bootstrap`의 컴포넌트 요소들을 `리액트 컴포넌트`로 정의해놨고, 이를 가져다 쓰기만 하면 된다.
+
+```bash
+$npm i --save bootstrap reactstrap
+```
+```js
+// App.js
+import 'bootstrap/dist/css/bootstrap.css'
+```
+
+
+
+
+
+
+
+
