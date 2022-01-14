@@ -510,8 +510,8 @@ export default class ReactRef extends Component {
 
 <br>
 
-### 74. 커링 함수 구현하기
-- `커링`(Currying)은 ***함수의 재사용을 높이기 위해 함수 자체를 return 하는 함수다.*** 고차함수랑 같은건가?
+### 74. 커링 함수(고차 함수) 구현하기
+- `커링`(Currying)은 ***함수의 재사용을 높이기 위해 함수 자체를 return 하는 함수다.***
 ```js
 // 일반 함수
 const plusNumOrString = (a, b) => a + b;
@@ -525,9 +525,291 @@ const plusFunction1 = (a) => {
 const plusFunction2 = (a) => (b) => plusNumOrString(a, b);
 ```
 
+<br>
 
+### 75. 👍 [하이오더 컴포넌트](https://ko.reactjs.org/docs/higher-order-components.html#gatsby-focus-wrapper) 구현하기
+고차 컴포넌트(HOC, Hight-Order Component)는 컴포넌트를 인자로 받거나 반환하는 함수를 말한다.
 
+```js
+// App.js
+import ReactHoc from './ReactHoc';
+function App() {
+  return (
+    <div>
+      <ReactHoc name='ReactHoc'></ReactHoc>
+    </div>
+  );
+}
 
+export default App;
+```
 
+```js
+// ReactHoc.js
+import React from 'react';
+import withHocComponent from './HocComponent';
 
+class ReactHoc extends React.Component {
+  render() {
+    console.log('2. ReactHock render');
+    return (
+      <h2>props.name: {this.props.name}</h2>
+    )
+  }
+}
+
+export default withHocComponent(ReactHoc, 'ReactHoc');
+```
+
+```js
+// HocComponent.js
+import React from "react";
+
+export default function withHocComponent(InComponent, InComponentName) {
+  return class OutComponent extends React.Component {
+    componentDidMount() {
+      console.log(`3. InComponentName: ${InComponentName}`);
+    }
+    render() {
+      console.log(`1. InComponent render`);
+      return (<InComponent {...this.props} />)
+    }
+  }
+}
+```
+
+console에 찍힌 대로 Hoc의 OutComponent에서 로그가 먼저 찍히고 그 뒤 ReactHoc(InnerComponent)의 render에서 로그가 찍히고, Outer의 componentDidMount에서 로그가 찍힌다.
+
+App.js가 import하는 ReactHoc.js는 HOC, 즉 함수의 실행 결과인 HocComponent.js의 `OuterComponent`를 반환하는데, 따라서 App.js에서 컴포넌트에 할당한 props는 OuterComponent에 들어간다. OuterComponent에서는 함수 인자로 받은 InnerComponent를 랜더링하고, 이 때 자신이 받은 props를 자식에게 넘겨주고 있는 코드다!
+
+`하이오더 컴포넌트`를 구현하면 ***여러 컴포넌트에 동일하게 적용돼야 하는 공통 기능을 코드 중복 없이 사용 가능***하다. 예를 들면 HocComponent.js의 render 함수 내부의 console과 같이 랜더링 시 로그를 찍고 싶을 때, Hoc가 없다면 모든 컴포넌트에 해당 로직을 넣어야 할 것이다.
+
+<br>
+
+### 76. [컨텍스트 api](https://ko.reactjs.org/docs/context.html) 사용하기
+`Context api`는 컴포넌트간의 데이터를 공유하기 위한 api이다. props를 통한 데이터 이동은 부모에서 손자 컴포넌트로 이동시킬 때 필연적으로 자식 컴포넌트를 지나야 하는데 이를 prop drilling이라고 한다. Context Api를 사용하면 데이터를 필요한 컴포넌트에서 바로 가져다 쓸 수 있다.
+```js
+// ContextParent.js
+import React from "react";
+import ContextChild1 from "./ContextChild1";
+
+const TestContext = React.createContext('TestContext');
+const { Provider, Consumer } = TestContext;
+
+export { Consumer }
+export default class ContextParent extends React.Component {
+  render() {
+    return (
+      <Provider value = 'React200'>
+        <ContextChild1></ContextChild1>
+      </Provider>
+    )
+  }
+}
+```
+```js
+import React from "react"
+import ContextChild2 from "./ContextChild2"
+
+export default class ContextChild1 extends React.Component {
+  render() {
+    return (
+      <ContextChild2></ContextChild2>
+    )
+  }
+}
+```
+```js
+import React from "react";
+import { Consumer } from "./ContextParent";
+
+export default class ContextChild2 extends React.Component {
+  render() {
+    return (
+      <Consumer>
+        {contextValue => <h3>{`contextValue : ${contextValue}`}</h3>}
+      </Consumer>
+    )
+  }
+}
+```
+부모 컴포넌트에서 `Context`를 만들고 `Context` 의 `Provider`에 props로 데이터를 넣으면 export한 `Context`의 `Consumer`를 import하는 컴포넌트에서는 해당 데이터를 사용할 수 있게 된다.
+
+<br>
+
+### 77. 컨텍스트로 부모 데이터 변경하기
+`Consumer`로 단순히 원시값을 넘겨주는 게 아닌 함수를 넘겨줄 수도 있다. 이 때, 부모요소의 `setState`메서드를 넘겨주면, `Context` 객체를 구독하는 자식 컴포넌트에서 이를 이용해 부모의 상태를 바꿀 수 있다. 76. 의 예제를 살짝 빌드업한다.
+```js
+// ContextParent.js
+import React from "react";
+
+const TestContext = React.createContext('TestContext');
+const { Provider, Consumer } = TestContext;
+export { Consumer }
+export default class ContextParent extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  setStateFunc(value) {
+    this.setState({ name: value });
+  }
+
+  render() {
+    const content = {
+      ...this.state,
+      setStateFunc: this.setStateFunc.bind(this)
+    }
+    return (
+      <Provider value = {content}>
+        <ContextChild1></ContextChild1>
+      </Provider>
+    )
+  }
+}
+```
+
+```js
+// ContextChild2.js
+import React from "react";
+import { Consumer } from "./ContextParent";
+
+export default class ContextChild2 extends React.Component {
+  render() {
+    return (
+      <Consumer>
+        {contextValue =>
+          <button onClick={e => contextValue.setStateFunc("상태변경")}>
+            {contextValue.name}_button
+          </button>
+        }
+      </Consumer>
+    )
+  }
+}
+```
+
+`ContextChild2`컴포넌트에서 버튼 클릭시 `ContextParent`의 `setStateFunc`메서드를 호출한다.
+
+<br>
+
+### 78 - 80 redux 스토어 생성 ~ action dispatch
+1. `redux` 설치
+```bash
+$ npm i redux
+```
+
+2. 앱의 entry point에 store 생성 및 listener 등록, 필요한 
+```js
+// index.js
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import { createStore } from 'redux'
+import reducers from './reducers';
+
+// reducer를 인자로 store 생성
+const store = createStore(reducers);
+
+// 상태 변경시 호출할 listener는 render함수다
+const listener = () => {
+  ReactDOM.render(
+      <App store={store}/>,
+    document.getElementById('root')
+  );
+}
+// listener 등록
+store.subscribe(listener);
+
+// listener 최초실행, redux는 등록시 최초실행시켜 주지 않는다.
+listener();
+```
+
+예제는 위와 같이 작성되었는데, root 컴포넌트 랜더링 함수를 리스너로 등록하는건 절대로 해선 안될짓. 앱이 깜빡일것이다.
+
+또 예제에서는 앱 컴포넌트에 props로 `store`를 넘겨줬다. 이것도 옳은 방법인가 생각해봐야한다. 난 아니라고 본다.
+
+3. `store`생성에 필요한 `reducer`, `action` 
+
+```js
+// action.js
+export const ADD = 'ADD';
+export const add = () => {
+  return {
+    type: ADD
+  }
+}
+```
+`redux`에서는 `action`의 생성 함수같은게 따로 없다. NgRX랑 좀 다르긴 한데, 사실 action의 구조는 매우 단순하므로 생성함수가 필요있나 싶다.
+
+```js
+// reducer.js
+import {ADD} from '../actions'
+import { combineReducers } from 'redux'
+const initState = {
+  str: 'react'
+};
+
+const data = (state = initState, action) => {
+  switch(action.type) {
+    case ADD:
+      return state, {
+        str: state.str + '200'
+      };
+    default: 
+      return state;
+  }
+};
+
+const App = combineReducers({ data });
+export default App;
+```
+
+리듀서는 초기 상태와 `action`을 처리하는 함수로 구성된다. `action`의 타입에 따라 상태변경 로직을 짜준다. 여기선 switch문을 활용했다.
+
+리듀서 생성 함수는 `combineReducers`를 사용한다. 이걸 store 생성 함수 `createStore`인자로 쓴다.
+
+> 예제와 같이  `return state, { ...somethid };` 문법도 가능하다는 것이 신기하다.
+
+4. 사용
+```js
+// App.js
+import './App.css';
+import StrAddButton from './StrAddButton';
+
+function App(props) {
+  return (
+    <>
+      <h2>{props.store.getState().data.str}</h2>
+      <StrAddButton store={props.store}></StrAddButton>
+    </>
+  );
+}
+
+export default App;
+```
+```js
+import { add } from "./actions";
+
+export default function StrAddButton (props) {
+  const addString = () => {
+    props.store.dispatch(add());
+  }
+  return (
+    <input value='Add200' type='button' onClick={addString.bind(this)}></input>
+  )
+}
+```
+
+index.js => App => StrAddButton 으로 props로 store를 넘겨줬다. 아무리생각해도 옳지 않다. ESM으로 import하는게 맞는거같다.
+
+어쨋든, `StrAddButton`에서 버튼 클릭시 
+1. add 액션이 dispatch되고 
+2. reducer에 등록한 상태변화 로직이 수행되어 상태가 변경되고
+3. listener가 호출되고(App 컴포넌트 랜더링)
+4. App 컴포넌트는 store에서 state를 가져와 랜더링한다.
+
+책 저자의 코딩 실력이 의심되는 예제다.
+
+<br>
 
