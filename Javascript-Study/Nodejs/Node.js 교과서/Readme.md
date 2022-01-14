@@ -485,10 +485,267 @@ console.log('복호화 : ', result2)
 - `decipher.update(문자열, 인코딩, 출력 인코딩)`: 인코딩은 암호화 시와 반대로 넣어야 한다.
 - `decipher.final(출력 인코딩)`: 복호화 결과물의 인코딩을 넣는다.
 
-암호화 관련해서 `crypto-js` 같은 라이브러리를 사용하면 좀 더 간단하게 암호화가 가능하다고 한다.
+암호화 관련해서 [`crypto-js`](https://www.npmjs.com/package/crypto-js) 같은 라이브러리를 사용하면 좀 더 간단하게 암호화가 가능하다고 한다.
 
+<br>
+
+### 3.5.6 [util](https://nodejs.org/api/util.html)
+`util`은 유틸리티 모듈이다. 여러가지 기능이 있는데 많이 쓰이는 두개만 알아본다.
+1. `util.deprecate(fn, msg[, code])` : 첫번째 인자로 받은 함수가 deprecated 되었음을 알려 준다. 
+```js
+
+const util = require('util');
+
+const dontUseMe = util.deprecate((a, b) => {
+  console.log(a, b);
+}, 'dontUseMe 함수는 지원이 중단된 함수입니다.');
+
+dontUseMe(1,2);
+
+====== 출력 결과 ======
+// 1 2
+// (node:43174) DeprecationWarning: dontUseMe 함수는 지원이 중단된 함수입니다.
+// (Use `node --trace-deprecation ...` to show where the warning was created)
+```
+
+2. [`util.promisify(original)`](https://nodejs.org/api/util.html#utilpromisifyoriginal): 콜백 패턴의 함수를 `Promise` 기반으로 바꿔준다. 이를 통해 `async/await` 까지 사용 가능하다. ***콜백 함수는 반드시 (err,  res) => {} 형태로 첫째 인자에는 에러가 들어가야 적용 가능하다.***
+
+```js
+const util = require('util');
+const crypto = require('crypto');
+
+const randomBytesPromise = util.promisify(crypto.randomBytes);
+randomBytesPromise(64)
+  .then((buf) => {
+    console.log(buf.toString('base64'));
+  })
+  .catch((error) => {
+    console.error(error);
+  })
+```
+
+아래에 보는 것 처럼 `crypto.randomBytes` 함수의 콜백은 (err, buf) => void 형태이기 때문에 적용 가능하다.
+
+```ts
+// crypto.d.ts
+function randomBytes(size: number, callback: (err: Error | null, buf: Buffer) => void): void;
+```
+아래 케이스는 직접 테스트를 위해 만들어보았다.
+```js
+const util = require('util');
+
+const callback = (function() {
+  let a = 0;
+
+  return (callback) => {
+    if(a % 2 === 1) {
+      callback(null, a);
+    }
+    else {
+      callback('짝수는 에러메시지', a);
+    }
+    a++;
+  }
+})();
+
+const promisified = util.promisify(callback);
+
+for(let i = 0 ; i< 5; i++) {
+  promisified()
+    .then(console.log)
+    .catch(console.log)
+}
+console.log('끝')
+
+====== 출력 ======
+// 끝
+// 1
+// 3
+// 짝수는 에러메시지
+// 짝수는 에러메시지
+// 짝수는 에러메시지
+```
+위 케이스에서 `Promise`는 마이크로 테스크 큐에 의해 비동기 처리되는데, 이 때 resolve가 무조건 우선실행되고, reject는 모든 resolve가 다 실행된 후에 실행됨을 알 수 있다.
+
+<br>
+
+### 3.5.7 [worker_threads](https://nodejs.org/api/worker_threads.html)
+노드에서 `worker thread`를 이용하면 멀티 스레드 방식으로 작업이 가능하다.
+
+```js
+const {
+  Worker, isMainThread, parentPort
+} = require('worker_threads');
+
+if(isMainThread) { // 메인스레드(부모)일 때
+  const worker = new Worker(__filename);
+  worker.on('message', message => console.log('from worker : ', message))
+  worker.on('exit', () => console.log('worker exit'));
+  worker.postMessage('Ping');
+} else {  // 워커일 때
+  parentPort.on('message', (value) => {
+    console.log('from parent : ', value);
+    parentPort.postMessage('Pong');
+    parentPort.close();
+  })
+}
+```
+`Worker`는 javascript의 execution thread이다.
+```js
+/*
+ * The `Worker` class represents an independent JavaScript execution thread.
+ ...
+ */
+class Worker extends EventEmitter {
+  // ...
+  addListener(event: 'error', listener: (err: Error) => void): this;
+  emit(event: 'error', err: Error): boolean;
+  on(event: 'error', listener: (err: Error) => void): this;
+  removeListener(event: 'error', listener: (err: Error) => void): this;
+  // ...
+}
+```
+`isMainThread`는 현재 코드가 `메인 스레드`(기본 싱글스레드를 말함)에서 실행되는지, 아니면 `Worker`로 직접 생성한 `워커 스레드`에서 실행되는지에 대한 boolean값이다.
+`parentPort`는 부모 스레드인데, 메인 스레드에서 워커를 생성하면 해당 워커의 부모는 메인스레드이다.
+
+위의 시그니처에 보이는 것처럼 `Wokrer`는 `EventEmitter`를 상속한다. `on()` 메서드로 핸들러를 등록할 수 있고, `emit()`메서드로 이벤트를 방출할 수 있다. 위 예제에서 `postMessage()`는 `message`이벤트를 발생시키는 함수다. 부모와 자식간의 핑퐁을 확인할 수 있다.
+
+`new Worker`호출 시 두번째 인수의 `workerData`속성으로 원하는 데이터를 보낼 수 있다. 자식 `Worker`에서는 `worker_threads`모듈의 `workerData`로 받을 수 있다.
+
+```js
+const {
+  Worker, isMainThread, parentPort, workerData
+} = require('worker_threads');
+
+console.log('start!');
+
+if(isMainThread) {
+  const threads = new Set();
+  threads.add(new Worker(__filename, {
+    workerData: { start: 1 }
+  }));
+  threads.add(new Worker(__filename, {
+    workerData: { start: 2 }
+  }))
+
+  for(let worker of threads) {
+    worker.on('message', message => console.log(`from worker : ${message}`));
+    worker.on('exit', () => {
+      threads.delete(worker);
+      if(threads.size === 0) {
+        console.log('job done');
+      }
+    })
+  } 
+} else {
+    const data = workerData;
+    parentPort.postMessage(data.start + 100);
+}
+console.log(isMainThread ? 'main end' : 'worker end');
+
+====== 출력 결과 ======
+// from worker : 101
+// from worker : 102
+// job done
+```
+
+위와 같이 스레드 생성시 데이터를 넘겨줘 해당 데이터를 스레드가 활용할 수 있다.
+
+멀티스레드는 코드양도 늘어나고 스래드 사이의 통신에 발생하는 오버헤드도 상당하므로, 여러가지 상황을 잘 고려해서 사용해야한다.(성능 측정은 필수인듯)
+
+<br>
+
+### 3.5.8 [child_process](https://nodejs.org/api/child_process.html)
+`child_process`는 다른 `프로세스`를 만들 때 사용한다. 노드에서 ***다른 프로그램을 실행하고 싶거나 명령어를 수행하고 싶을 때 사용하는 모듈***로, 예를들면 파이썬의 코드를 실행하고 결과를 받을 수 있다.
+```js
+const { exec , spawn } = require('child_process');
+
+const shellProcess = exec('ls');
+
+pythonProcess.stdout.on('data', (data) => {
+  console.log(data);
+});
+
+pythonProcess.stderr.on('data', (err) => {
+  console.error(err);
+})
+
+const pythonProcess = spawn('python', ['test.py']);
+
+pythonProcess.stdout.on('data', (data) => {
+  console.log(data);
+});
+```
+`exec`는 셸을 실행해서 명령어를 수행하고, `spawn`은 새로운 프로세스를 띄우면서 명령어를 실행한다. `spawn`의 세 번째 인수로 `{ shell: true }`를 넣어주면 셸을 실행해서 명령어를 수행한다.
+
+위 코드를 보면 `stdout`(표준출력)과 `stderr`(표준에러)에 붙여둔 data 이벤트 리스너에 결과가 `버퍼 형태`로 전달된다. 버퍼는 3.6에서 알아보자.
+
+<br>
 
 ### 3.6 파일 시스템 접근하기
+[`fs 모듈`](https://nodejs.org/api/fs.html)은 파일 시스템에 접근하는 모듈이다.
+<!-- 모듈만 하니까 넘 지루하다. 뒤로 넘어갔다가 이거 해야할 때 다시 돌아오자. -->
+
+<br>
+
 ### 3.7 이벤트 이해하기
 ### 3.8 예외 처리하기
 ### 3.9 함께 보면 좋은 자료
+
+<br><br>
+
+## 4. http 모듈로 서버 만들기
+---
+### 4.1 요청과 응답 이해하기
+### 4.2 REST와 라우팅 사용하기
+
+### 4.3 쿠키와 세션 이해하기
+
+### 4.4 http와 http2
+
+### 4.5 cluster
+### 4.6 함께보면 좋은 자료
+
+<br><br>
+
+## 5. 패키지 매니저
+### 5.1 npm 알아보기
+`NPM`은 Node Package Manager로 말 그대로 많은  노드 패키지를 관리하는 매니저다. 
+
+대체자로 페이스북이 내놓은 `yarn`이 있고, npm 대비 몇가지 편리한 기능도 있지만 별도 설치가 필요하다. `npm`이 너무 느리면 `yarn`을 통해 패키지를 설치해도 된다.
+
+<br>
+
+### 5.2 package.json으로 패키지 관리하기
+- `package.json`은 패키지의 버전을 관리하는 파일이다. 
+- npm init 으로 package.json을 만들고 express를 설치해보자
+- 설치 메시지중 `WARN`이 나오는데, `WARN`은 경고일 뿐이라 무시해도 된다. `ERROR`만이 진짜 에러다.
+  - `npm WARN npmtest@0.0.1 No repository field`: package.json에 repository필드가 없을 때 발생하는 경고
+  - `found [발견 숫자] [심각도] severity vulnerabilities run 'npm audit fix'...` : 패키지에 있을수 있는 취약점을 자동으로 검사함. `npm` 패키지에는 가끔 악성 코드를 담은 패키지가 있을 수 있는데, npm audit을 통해 이를 검사할 수 있다. npm aduit fix는 npm이 스스로 수정할 수 있는 취약점을 알아서 수정해준다.
+- `--save`: dependencies에 패키지 이름을 추가하는 옵션인데, `npm@5`부터는 기본으로 설정되어 있으므로 적을 필요가 없다.
+
+- `package-lock.json`: 패키지들의 정확한 버전과 의존 관계가 담겨 있는 파일이다.
+- npm의 전역 설치 옵션(`-g`)는 패키지를 현재 프로젝트의 node_modules 폴더가 아닌 npm이 설치되어 있는 폴더(맥: /usr/local/lib/node_modules)에 설치하는 옵션이다. 이 경로는 보통 `시스템 환경 변수`에 등록되어 있기때문에, 전역 설치한 패키지는 콘솔 명령어로 바로 사용 가능하다. 보통 cli로 쓰려고 설치한다.
+- 전역 설치 대신 `npx`를 사용하는 방법도 있다. 전역 설치는 package.json에서 관리되지 않기 때문에 관리가 어렵기 때문이다. 예를들어 rimraf는 아래와 같이 사용한다.
+
+  ```bash
+  $npm i --save-dev rimraf
+  $npx rimraf node_modules
+  ```
+- 이렇게 패키지를 devDependencies에 추가하고 npx로 실행하면 전역 설치한 것 과
+
+<br>
+
+### 5.3 패키지 버전 이해하기
+Semantic Versioning을 따르는 버전들은 Major.Minor.Patch로 구성된다. 각각 아래와 같은 의미를 지닌다.
+- Major: 하위 호환이 되지 않는 변경 사항
+- Minor: 하위 호환이 되는 변경 사항
+- Patch: 간단한 버그 수정
+
+
+### 5.4 기타 npm 명령어
+### 5.5 패키지 배포하기
+### 5.6 함께 보면 좋은 자료
+
+
+
