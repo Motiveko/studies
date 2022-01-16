@@ -813,3 +813,197 @@ index.js => App => StrAddButton 으로 props로 store를 넘겨줬다. 아무리
 
 <br>
 
+### 81 ~ 83
+`react-redux`를 사용해 redux를 편하게 사용해본다. (솔직히 나는 전혀 편한지 모르겠다)
+예제에서는 [connect()](https://react-redux.js.org/api/connect#connect-parameters) 함수를 사용해서 `컴포넌트`의 `props`에 `redux`의 `state`나 `dispatch`관련 함수를 맵핑시키는데, 일단 예제상으로는 클래스 컴포넌트에만 적용 가능한것으로 보인다. 함수형 컴포넌트에도 적용 가능할거라 생각되므로 나중에 찾아본다.
+
+> 앞장의 예제를 이어서 사용하는데, state를 {count}로 변경하고 reducer에서 add 액션에 대한 처리를 count++ 로 처리하도록 바꿨다. 카운터 예제가 모로봐도 훨씬좋다.
+
+1. entry point에 `Provider`로 store 전달.
+
+```js
+// index.js
+import { Provider } from 'react-redux';
+
+const store = createStore(reducers);
+
+const listener = () => {
+  ReactDOM.render(
+    <Provider store={store}>
+      <App/>
+    </Provider>,
+    document.getElementById('root')
+  );
+}
+```
+`react-redux`의 Provider에 store에 `store`를 전달하면 App컴포넌트의 하위 컴포넌트에서 store를 사용 가능하다.(`connect()`함수를 통해)
+
+
+2. `connect()`에 `mapStateToProps`함수를 전달해 컴포넌트의 `props`에 `store`의 `state`를 연결
+
+```js
+// App.js
+import { connect } from 'react-redux';
+class App extends React.Component {
+  render() {
+    return (
+      <>
+        <h2>{this.props.count}</h2>
+        <StrAddButton></StrAddButton>
+      </>
+    );
+  }
+}
+let mapStateToProps = (state, props) => {
+  return {
+    count: state.data.count
+  }
+}
+App = connect(mapStateToProps, null)(App);
+
+export default App;
+```
+컴포넌트 선언 후 `connect()`함수로 컴포넌트를 재할당해준다. 이 과정에서 컴포넌트의 props에 state값이 들어가게 되는것이다.
+
+
+3. `connect()`에 `mapToDispatchToProps`함수를 전달해 컴포넌트의 `props`에 `dispatch` 함수 적용
+
+```js
+// StrAddButton.js
+import { connect } from "react-redux";
+
+class StrAddButton extends React.Component {
+  render() {
+    return (
+      <input value='Add200' type='button' onClick={this.props.addCount}></input>
+    )
+  }
+}
+
+let mapToDispatchToProps = (dispatch, props) => {
+  return {
+    addCount: () => dispatch(add())
+  }
+}
+
+StrAddButton = connect(null, mapToDispatchToProps)(StrAddButton);
+
+export default StrAddButton;
+```
+역시 컴포넌트 우선 선언 후 `connect()`함수를 사용해 재할당 함으로서 props에 `store.dispatch`를 사용하는 함수를 추가할 수 있게 된다. 
+
+내 생각에 이런 방법은 굉장히 번거로워 보이고 그냥 store 모듈을 필요한 컴포넌트에서 import해서 쓰면 될 것 같아 보이는데, 쓰는 이유가 있으리라고 믿어 본다.
+
+<br>
+
+### 84. redux 미들웨어 사용하기
+`redux`에서 제공하는 [`applyMiddleware()`](https://redux.js.org/api/applymiddleware) 함수를 이용해, 스토어 생성시 미들웨어를 추가할 수 있다. 미들웨어는 action이 dispatch 된 후 reducer에 도달해 처리되기 전/후 처리를 할 수 있다. 미들웨어의 시그니처는 `({ getState, dispatch }) => nextMiddleware => action`이다. 첫째 인자는 `store`다.
+
+아래 `MyMiddleware`는 dispatch된 action을 출력하고, action 처리 결과를 출력하는 역할을 하는 미들웨어다.
+```js
+// index.js
+const MyMiddleware = store => nextMiddle => action => {
+
+  console.log(`action : ${action.type}`);
+  const result = nextMiddle(action);
+  console.log('result : ')
+  console.log(result);
+
+  return result
+}
+
+const store = createStore(reducers, applyMiddleware(MyMiddleware));
+```
+
+<br>
+
+### 85-87 react-cookie
+> 왜 쿠키에 단순 접근해서 crud 하는걸 서드파티 라이브러리를 쓰는지 이해가 안돼 넘어감. 그리고 쿠키를 클라이언트에서 저장하나?
+
+### 88. react-router-dom 사용하기
+React에서 라우터 기능을 사용하는데 주로 [`react-router-dom`](https://github.com/remix-run/react-router/blob/main/docs/getting-started/installation.md)이라는 라이브러리를 사용한다. 리액트에는 기본으로 붙은게 없는가보다. 
+
+`react-router-dom`은 결국 [`react-router`](https://reactrouter.com/docs/en/v6/getting-started/tutorial)를 기반으로 하는것 같은데, 실질적 사용법은 react-router를 읽어보면 될 듯 하다.
+
+1. 전역 컴포넌트를 `BrowserRouter`로 감싼다. `BrowserRouter` 자식에서는 `Routes`, `Route`, `Link` 를 사용할 수 있다.
+```js
+// index.js
+import { BrowserRouter } from 'react-router-dom';
+
+ReactDOM.render(
+  <BrowserRouter>
+    <App/>
+  </BrowserRouter>
+  ,document.getElementById('root')
+);
+```
+
+2. `Routes`에 필요한 `Route`를 등록한다.
+```js
+// App.js
+class App extends React.Component {
+  render() {
+    return (
+      <>
+        <h2>THIS IS HEADER</h2>
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="about" element={<About />} />
+        </Routes>
+
+        <h4>THIS IS FOOTER</h4>
+      </>
+    );
+  }
+}
+```
+
+3. `Link`를 이용해 다른 라우트로 이동할 수 있다.
+
+```js
+// App.js
+function Home () {
+  return (
+    <>
+      <main>
+        <div>THIS IS HOME!!!!</div>
+      </main>
+        <nav>
+        <Link to="/about">About</Link>
+      </nav>
+    </>
+  )
+}
+
+function About ()  {
+  return (
+    <>
+      <main>
+        <div>THIS IS ABOUT!!!!</div>
+      </main>
+        <nav>
+        <Link to="/">HOME</Link>
+      </nav>
+    </>  )
+}
+```
+
+<br>
+
+### 93. react img 태그 사용하기
+React에서 img 태그 사용시, src에서 경로를 쓰는 게 아닌 require 문법을 써야한다.
+```js
+function Image () {
+  return (
+    <>
+      <img src={require('./assets/ts.png')} style={{width: "100px", height: "100px"}}></img>
+    </>
+  )
+}
+```
+추가로 style은 `{ }`내부에 object 형식으로 넣어줘야한다. 자연스래 위처럼 `{{ }}`형태가 된다.
+
+<br>
+
+이후 내용은 그냥 외부 api 사용하고 node 써서 차트 그리는 등의 내용이 대부분으로 생략한다. 지금 내게 필요한 건 react 능력 증진뿐.
