@@ -35,13 +35,20 @@ export const BudgetsProvider = ({ children, ...a }) => {
   };
 
   const deleteBudget =({ id }) => {
-    // TODO : uncategorized로 넣는다.
+
+    setExpenses(prevExpense => {
+      return prevExpense.map(expense => {
+        if(expense.budgetId !== id) return expense;
+        return { ...expense, budgetId : UNCATEGORIZED_BUDGET_ID}
+      })
+    })
     setBudgets(prevBudgets => {
       return prevBudgets.filter(budget => budget.id !== id);
     })
   };
   
   const deleteExpense =({ id }) => {
+
     setExpenses(prevExpenses => {
       return prevExpenses.filter(expense => expense.id !== id);
     })
