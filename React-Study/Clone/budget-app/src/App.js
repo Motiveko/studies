@@ -4,6 +4,7 @@ import { Button, Container, Stack } from 'react-bootstrap';
 import AddBudgetModal from './Components/AddBudgetModal';
 import AddExpenseModal from './Components/AddExpenseModal';
 import BudgetCard from './Components/BudgetCard';
+import UnCategorizedBudgetCard from './Components/UnCategorizedBudgetCard';
 import { useBudgets } from './contexts/BudgetsContext';
 
 function App() {
@@ -27,7 +28,8 @@ function App() {
           <Button variant='primary' onClick={() => setShowAddBudgetModal(true)}>Add Budget</Button>
           <Button variant='outline-primary' onClick={() => openAddExpenseModal()}>Add Expense</Button>
         </Stack>
-        <div style={{display:"grid", 
+        <div style={{
+              display:"grid", 
               gridTemplateColumns:"repeat(auto-fill, minmax(300px, 2fr))", 
               gap: "1rem",
               alignItems: "flex-start"
@@ -46,7 +48,7 @@ function App() {
                 />
                 )
               })}
-          
+          <UnCategorizedBudgetCard />
         </div>
       </Container>
       <AddBudgetModal 
