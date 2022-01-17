@@ -8,8 +8,7 @@ export default function BudgetCard({ name, amount, max, gray, onAddExpenseClick}
   } else if (gray) {
     classNames.push('bg-gray')
   }
-
-
+  
   return (
     <Card className={classNames.join(' ')}>
       <Card.Body>
