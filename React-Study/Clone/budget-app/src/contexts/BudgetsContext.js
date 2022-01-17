@@ -4,6 +4,7 @@ import useLoacalStorage from "../hooks/useLocalStorage";
 
 const BudgetsContext = React.createContext();
 
+export const UNCATEGORIZED_BUDGET_ID = 'Uncategorized';
 export function useBudgets() {
   return useContext(BudgetsContext);
 }
@@ -18,14 +19,12 @@ export const BudgetsProvider = ({ children, ...a }) => {
   };
 
   const addExpense =({ description, amount, budgetId }) => {
-    // TODO : useState의 setter함수에 대해 다시 학습해보자
     setExpenses(prevExpenses => {
       return [...prevExpenses, { id: uuidV4(), description, amount, budgetId }]
     })
   };
 
-  const addBudget =({ name, max }) => {
-    // TODO : useState의 setter함수에 대해 다시 학습해보자
+  const addBudget = ({ name, max }) => {
     setBudgets(prevBudgets => {
       if(prevBudgets.find(budget => budget.name === name)) {
         alert('이미 있는 budget입니다')
@@ -34,12 +33,14 @@ export const BudgetsProvider = ({ children, ...a }) => {
       return [...prevBudgets, { id: uuidV4(), name, max}];
     })
   };
+
   const deleteBudget =({ id }) => {
     // TODO : uncategorized로 넣는다.
     setBudgets(prevBudgets => {
       return prevBudgets.filter(budget => budget.id !== id);
     })
   };
+  
   const deleteExpense =({ id }) => {
     setExpenses(prevExpenses => {
       return prevExpenses.filter(expense => expense.id !== id);
