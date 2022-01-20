@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Alert, Button, Card, Form } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Signup() {
@@ -42,20 +43,19 @@ export default function Signup() {
             > 
             {error}
             </Alert>
-            {currentUser && JSON.stringify(currentUser)}
           </Card.Title>
           <Form onSubmit={handleSubmit}>
             <Form.Group id="email">
               <Form.Label>Email</Form.Label>
-              <Form.Control type="email" ref={emailRef} required />
+              <Form.Control autoComplete="username" type="email" ref={emailRef} required />
             </Form.Group>
             <Form.Group id="password">
               <Form.Label>Password</Form.Label>
-              <Form.Control type="password" ref={passwordRef} required />
+              <Form.Control autoComplete="new-password" type="password" ref={passwordRef} required />
             </Form.Group>
             <Form.Group id="password-confirm">
               <Form.Label>Password Confirmation</Form.Label>
-              <Form.Control type="password" ref={passwordConfirmRef} required />
+              <Form.Control autoComplete="new-password" type="password" ref={passwordConfirmRef} required />
             </Form.Group>
             <Button disabled={loading} type="submit" className="w-100 mt-3">
               Sign Up
@@ -64,7 +64,7 @@ export default function Signup() {
         </Card.Body>
       </Card>
       <div className="w-100 text-center mt-2">
-        Already have an account? Log In
+        Already have an account? <Link to="/login"> Log In</Link>
       </div>
     </>
   )
