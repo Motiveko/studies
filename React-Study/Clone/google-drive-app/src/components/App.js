@@ -10,6 +10,9 @@ import {
 import { AuthProvider } from "../context/AuthContext";
 import Dashboard from "./Dashboard";
 import Login from "./Login";
+import PrivateRoute from "./PrivateRoute";
+import ForgotPassword from "./ForgotPassword";
+import UpdateProfile from "./UpdateProfile";
 
 function App() {
   return (
@@ -24,9 +27,16 @@ function App() {
           <Router>
             <AuthProvider>
               <Routes>
-                <Route exact path="/" element={<Dashboard />} />
+                {/* <PrivateRoute exact path="/" element={<Dashboard />} /> */}
+                <Route exact path="/" element={<PrivateRoute />} >
+                  <Route exact path="/" element={<Dashboard />}/>
+                </Route>
+                <Route exact path="/update-profile" element={<PrivateRoute />} >
+                  <Route exact path="/update-profile" element={<UpdateProfile />}/>
+                </Route>
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
               </Routes>
             </AuthProvider>
           </Router>

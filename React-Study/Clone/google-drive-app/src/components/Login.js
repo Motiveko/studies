@@ -20,11 +20,11 @@ export default function Login() {
       setError(null);
       setLoading(true);
       await login(emailRef.current.value, passwordRef.current.value);
-      setLoading(false);
       navigate('/', { replace: true }); // navigate 이후에 state 변경 코드( ex) setLoading)에러메시지 발생함
     } catch(e) {
       console.log(e);
       setError('Fail to sign in');
+      setLoading(false);
     }
   } 
 
@@ -56,6 +56,9 @@ export default function Login() {
             <Button disabled={loading} type='submit' className="w-100 mt-3">
               Log In
             </Button>
+            <div className="w-100 text-center mt-3">
+              <Link to="/forgot-password">Forgot Password?</Link>
+            </div>
           </Form>
         </Card.Body>
 
