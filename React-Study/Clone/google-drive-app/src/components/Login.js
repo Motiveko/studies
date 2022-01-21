@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Alert, Button, Card, Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useGoogle } from "../context/GoogleAuth";
 
 export default function Login() {
   const emailRef = useRef();
@@ -10,8 +11,8 @@ export default function Login() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-
+  // const { login } = useAuth();
+  const { login } =  useGoogle();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
