@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { Alert, Button, Card, Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useGoogle } from "../context/GoogleAuth";
+import { useAuth } from "../../context/AuthContext";
+import { useGoogleAuth } from "../../context/GoogleAuth";
+import CenteredContainer from "./CenteredContainer";
 
 export default function Login() {
   const emailRef = useRef();
@@ -11,8 +12,8 @@ export default function Login() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // const { login } = useAuth();
-  const { login } =  useGoogle();
+  const { login } = useAuth();
+  // const { login } =  useGoogle();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +31,7 @@ export default function Login() {
   } 
 
   return (
-    <>    
+    <CenteredContainer>    
       <Card>
         <Card.Body>
           <Card.Title>
@@ -67,6 +68,6 @@ export default function Login() {
       <div className="w-100 text-center mt-2">
         Need an account? <Link to="/signup">Sign up</Link>
       </div>
-    </>
+    </CenteredContainer>
   )
 }

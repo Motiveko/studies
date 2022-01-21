@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { Alert, Button, Card, Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
+import CenteredContainer from "./CenteredContainer";
 
 export default function UpdateProfile() {
   const emailRef = useRef();
@@ -34,7 +35,7 @@ export default function UpdateProfile() {
     setLoading(true);
     
     Promise.all(promises).then(() => {
-      navigate('/');
+      navigate('/user');
     })
     .catch((e) =>{
       console.log(e);
@@ -44,7 +45,7 @@ export default function UpdateProfile() {
 
   } 
   return (
-    <>
+    <CenteredContainer>
       <Card>
         <Card.Body>
           <Card.Title>
@@ -85,8 +86,8 @@ export default function UpdateProfile() {
         </Card.Body>
       </Card>
       <div className="w-100 text-center mt-2">
-        <Link to="/">Cancel</Link>
+        <Link to="/user">Cancel</Link>
       </div>
-    </>
+    </CenteredContainer>
   )
 }
