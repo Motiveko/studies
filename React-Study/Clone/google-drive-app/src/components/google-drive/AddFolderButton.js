@@ -2,36 +2,34 @@ import { faFolderPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { database, firestore } from '../../firebase'
-import { collection, addDoc } from "firebase/firestore";
-
-export default function AddFolderButton() {
+import { addFolder, addFile } from '../../firebase'
+import { useAuth } from '../../context/AuthContext'
+export default function AddFolderButton({ currentFolder }) {
   
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
+  const { currentUser } = useAuth();
 
   const openModal = () => {
     setOpen(true);
-  }
+  } 
   
   const closeMoal = () => {
     setOpen(false);
   }
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // database.folders.add({
-    //   name
-    // })
-
-    await addDoc(collection(firestore, 'folders') ,{ 
+    if(currentFolder == null) return;
+    
+    await addFolder({ 
       name,
-      // parentId,
-      // userId,
+      parentId: currentFolder.id,
+      userId: currentUser.uid,
       // path,
-      // createdAt
-    });
+    })
 
     setName('')
     closeMoal();

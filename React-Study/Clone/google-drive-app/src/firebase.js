@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { collection, getFirestore } from 'firebase/firestore'
+import { collection, getFirestore, addDoc, serverTimestamp} from 'firebase/firestore'
 
 const app = initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -11,12 +11,23 @@ const app = initializeApp({
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 });
 
-
-export const firestore = getFirestore();
 // export const database = {
 //   folders: collection(firestore, 'folders'),
 //   files: collection(firestore, 'files')
 // }
+// database.add('')
+
+// v9 기준 문법
+const firestore = getFirestore();
+export const addFolder = (folder) => addDoc(
+  collection(firestore, 'folders'), 
+  {
+    ...folder,
+    createdAt: serverTimestamp()
+  });
+export const addFile = (file) => addDoc(collection(firestore, 'files'), file);
+
+
 export const auth = getAuth();
 
 export default app;
