@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { addFolder, addFile } from '../../firebase'
 import { useAuth } from '../../context/AuthContext'
+import { useFolder } from "../../hooks/useFolder";
 export default function AddFolderButton({ currentFolder }) {
   
   const [open, setOpen] = useState(false);
@@ -23,7 +24,7 @@ export default function AddFolderButton({ currentFolder }) {
     e.preventDefault();
 
     if(currentFolder == null) return;
-    
+
     await addFolder({ 
       name,
       parentId: currentFolder.id,
