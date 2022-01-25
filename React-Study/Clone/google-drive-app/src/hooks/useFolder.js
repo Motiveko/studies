@@ -26,7 +26,6 @@ function reducer (state, { type, payload}) {
         folder: payload.folder
       }
     case ACTIONS.SET_CHILD_FOLDERS:
-      console.log(payload.childFolders);
       return {
         ...state,
         childFolders: payload.childFolders
@@ -38,13 +37,14 @@ function reducer (state, { type, payload}) {
 }
 
 export function useFolder(folderId = null, folder = null) {
-  
+
   const [state, dispatch] = useReducer(reducer, {
     folderId, 
     folder,
     childFolders: [],
     childFiles: []
   })
+  
   const { currentUser } = useAuth();
   // folderId나 folder 변경시 state를 재선택한다.
   useEffect(() => {

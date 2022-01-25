@@ -4,7 +4,7 @@ import { ROOT_FOLDER } from "../../hooks/useFolder";
 
 export default function FolderBreadcrumbs ({ currentFolder  }) {
   const path = [ROOT_FOLDER, ...(currentFolder ? currentFolder.path : [])];
-  console.log(path)
+
   return (
     <Breadcrumb 
         className="flex-grow-1"
@@ -14,7 +14,8 @@ export default function FolderBreadcrumbs ({ currentFolder  }) {
           key={folder.id}
           linkAs={Link}
           linkProps={{
-            to: folder.id ? `/folder/${folder.id}` : '/'
+            to: folder.id ? `/folder/${folder.id}` : '/',
+            state: { folder: {...folder, path: path.slice(1, index)}}
           }}
           className="text-truncate d-inline-block"
           style={{maxWidth: '200px'}}
