@@ -1,12 +1,14 @@
 import { useEffect, useReducer } from "react";
-import { formatDoc, getFolder } from "../firebase";
+import { useAuth } from "../context/AuthContext";
+import { formatDoc, getChildFolder, getFolder } from "../firebase";
 
 const ACTIONS = {
   SELECT_FOLDER: 'select-folder',
-  UPDATE_FOLDER: ' '
+  UPDATE_FOLDER: 'update-folder',
+  SET_CHILD_FOLDERS: 'set-child-folders'
 }
 
-const ROOT_FOLDER = { name: 'Root', id: null, path: [] }
+export const ROOT_FOLDER = { name: 'Root', id: null, path: [] }
 
 function reducer (state, { type, payload}) {
   
@@ -23,6 +25,12 @@ function reducer (state, { type, payload}) {
         ...state,
         folder: payload.folder
       }
+    case ACTIONS.SET_CHILD_FOLDERS:
+      console.log(payload.childFolders);
+      return {
+        ...state,
+        childFolders: payload.childFolders
+      }        
     default:
       return state
   }
@@ -37,15 +45,15 @@ export function useFolder(folderId = null, folder = null) {
     childFolders: [],
     childFiles: []
   })
-
+  const { currentUser } = useAuth();
   // folderId나 folder 변경시 state를 재선택한다.
   useEffect(() => {
     dispatch({ type: ACTIONS.SELECT_FOLDER, payload: { folderId, folder } })
   }, [folderId, folder])
 
   // 폴더 클릭시 folderId를 url로 이동하는데 이를 잡는다.
+  // useEffect는 최초 랜더링 이후 실행된다.
   useEffect(() => {
-    console.log(folderId)
     if(folderId == null) {
       return dispatch({
         type: ACTIONS.UPDATE_FOLDER,
@@ -60,14 +68,27 @@ export function useFolder(folderId = null, folder = null) {
         })
       })
       .catch(() => {
-        console.log('씨바;')
         dispatch({
           type: ACTIONS.UPDATE_FOLDER,
           payload: { folder: ROOT_FOLDER }
         })
       });
     
-  },[folderId])
+  },[folderId]);
+
+  // 현재 폴더의 자식 폴더
+  useEffect(() => {
+    getChildFolder(folderId, currentUser)
+      .then((snapshot) => {
+        dispatch({
+          type: ACTIONS.SET_CHILD_FOLDERS,
+          payload: { childFolders: snapshot.docs.map(formatDoc) }
+        })
+      })
+      .catch((e) => {
+        console.error(e)
+      })
+  },[folderId, currentUser])
   
   return state;
 }

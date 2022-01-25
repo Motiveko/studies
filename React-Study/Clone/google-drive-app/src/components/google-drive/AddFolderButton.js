@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { addFolder, addFile } from '../../firebase'
 import { useAuth } from '../../context/AuthContext'
-import { useFolder } from "../../hooks/useFolder";
+import { ROOT_FOLDER, useFolder } from "../../hooks/useFolder";
 export default function AddFolderButton({ currentFolder }) {
   
   const [open, setOpen] = useState(false);
@@ -25,11 +25,16 @@ export default function AddFolderButton({ currentFolder }) {
 
     if(currentFolder == null) return;
 
+    const path = [...currentFolder.path]; // 복사
+    if(currentFolder !== ROOT_FOLDER) {
+      path.push({ name: currentFolder.name, id: currentFolder.id });
+    }
+
     await addFolder({ 
       name,
       parentId: currentFolder.id,
       userId: currentUser.uid,
-      // path,
+      path,
     })
 
     setName('')

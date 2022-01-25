@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscriber = auth.onAuthStateChanged(user => {
-      console.log(user);
       setCurrentUser(user); // 가입 안도 최최 null이 들어온다
       setLoading(false);
     });

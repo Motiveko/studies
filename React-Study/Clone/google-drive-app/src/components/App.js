@@ -26,6 +26,7 @@ function App() {
             <Route exact path="/" element={<Dashboard />}/>
             <Route exact path="/user" element={<Profile />}/>
             <Route exact path="/update-profile" element={<UpdateProfile />}/>
+            <Route exact path="/folder/:folderId" element={<Dashboard />} />
           </Route>
 
           {/* Auth */}
