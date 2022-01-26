@@ -4,7 +4,7 @@ import { ROOT_FOLDER } from "../../hooks/useFolder";
 
 export default function FolderBreadcrumbs ({ currentFolder  }) {
   const path = [ROOT_FOLDER, ...(currentFolder ? currentFolder.path : [])];
-
+  // TODO : Root에서 Root breadcrumb 클릭시 useFolder에서 childFolders가 사라지게 되는 현상이 있다. 해결해야함.
   return (
     <Breadcrumb 
         className="flex-grow-1"

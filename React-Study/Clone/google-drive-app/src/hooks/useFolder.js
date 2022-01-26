@@ -36,16 +36,28 @@ function reducer (state, { type, payload}) {
 
 }
 
-export function useFolder(folderId = null, folder = null) {
-
-  const [state, dispatch] = useReducer(reducer, {
-    folderId, 
-    folder,
-    childFolders: [],
-    childFiles: []
-  })
+export function useFolder(folderId = null, folder = null, refresh = false) {
   
+  // const [state, dispatch] = useReducer(reducer, {
+  //   folderId, 
+  //   folder,
+  //   childFolders: [],
+  //   childFiles: []
+  // })
+
+  const initializer = () => {
+    // console.log('init');
+    return {
+      folderId, 
+      folder,
+      childFolders: [],
+      childFiles: []
+    }
+  }
+  const [state, dispatch] = useReducer(reducer, null, initializer)
+
   const { currentUser } = useAuth();
+
   // folderId나 folder 변경시 state를 재선택한다.
   useEffect(() => {
     dispatch({ type: ACTIONS.SELECT_FOLDER, payload: { folderId, folder } })
@@ -67,14 +79,15 @@ export function useFolder(folderId = null, folder = null) {
           payload: { folder: formatDoc(doc) }
         })
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error(e);
         dispatch({
           type: ACTIONS.UPDATE_FOLDER,
           payload: { folder: ROOT_FOLDER }
         })
       });
     
-  },[folderId]);
+  },[folderId, refresh]);
 
   // 현재 폴더의 자식 폴더
   useEffect(() => {
@@ -88,7 +101,7 @@ export function useFolder(folderId = null, folder = null) {
       .catch((e) => {
         console.error(e)
       })
-  },[folderId, currentUser])
+  },[folderId, currentUser, refresh])
   
   return state;
 }

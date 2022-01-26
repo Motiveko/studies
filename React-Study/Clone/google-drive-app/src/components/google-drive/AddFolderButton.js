@@ -4,9 +4,8 @@ import { useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { addFolder, addFile } from '../../firebase'
 import { useAuth } from '../../context/AuthContext'
-import { ROOT_FOLDER, useFolder } from "../../hooks/useFolder";
-export default function AddFolderButton({ currentFolder }) {
-  
+import { ROOT_FOLDER } from "../../hooks/useFolder";
+export default function AddFolderButton({ currentFolder, handleAddFolderAndFile }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const { currentUser } = useAuth();
@@ -38,12 +37,13 @@ export default function AddFolderButton({ currentFolder }) {
     })
 
     setName('')
+    handleAddFolderAndFile();
     closeMoal();
   }
 
   return (
     <>
-      <Button onClick={openModal} variant="outline-success" size="small">
+      <Button onClick={openModal} variant="outline-success" size="sm">
         <FontAwesomeIcon icon={faFolderPlus} />
       </Button>
       <Modal show={open} onHide={closeMoal}>
