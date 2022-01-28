@@ -1,11 +1,12 @@
 import { useEffect, useReducer } from "react";
 import { useAuth } from "../context/AuthContext";
-import { formatDoc, getChildFolder, getFolder } from "../firebase";
+import { formatDoc, getChildFolder, getFiles, getFolder } from "../firebase";
 
 const ACTIONS = {
   SELECT_FOLDER: 'select-folder',
   UPDATE_FOLDER: 'update-folder',
-  SET_CHILD_FOLDERS: 'set-child-folders'
+  SET_CHILD_FOLDERS: 'set-child-folders',
+  SET_CHILD_FILES: 'set-child-files'
 }
 
 export const ROOT_FOLDER = { name: 'Root', id: null, path: [] }
@@ -30,6 +31,11 @@ function reducer (state, { type, payload}) {
         ...state,
         childFolders: payload.childFolders
       }        
+    case ACTIONS.SET_CHILD_FILES:
+      return {
+        ...state,
+        childFiles: payload.childFiles
+      }
     default:
       return state
   }
@@ -103,5 +109,18 @@ export function useFolder(folderId = null, folder = null, refresh = false) {
       })
   },[folderId, currentUser, refresh])
   
+  // file 가져오기
+  useEffect(() => {
+    getFiles(folderId, currentUser)
+      .then((snapshot) => {
+        
+        dispatch({
+          type: ACTIONS.SET_CHILD_FILES,
+          payload: { childFiles: snapshot.docs.map(formatDoc) }
+        })
+      })
+  }, [folderId, currentUser, refresh])
+
+
   return state;
 }

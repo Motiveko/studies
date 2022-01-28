@@ -4,6 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useFolder } from "../../hooks/useFolder";
 import AddFileButton from "./AddFileButton";
 import AddFolderButton from "./AddFolderButton";
+import File from "./File";
 import Folder from "./Folder";
 import FolderBreadcrumbs from "./FolderBreadcrumbs";
 import Navbar from "./Navbar";
@@ -11,18 +12,17 @@ import Navbar from "./Navbar";
 export default function Dashboard() {
   const { folderId } = useParams();
   const { state } = useLocation();
-  const [addFileFolder, setAddFileFolder] = useState(false);
-  const { folder, childFolders } = useFolder(folderId, state?.folder, addFileFolder);
-
-  const addFileAndFolder = () => setAddFileFolder(!addFileFolder);
+  const [refresher, setRefresher] = useState(false);
+  const { folder, childFolders, childFiles } = useFolder(folderId, state?.folder, refresher);
+  const refreshFolderContext = () => setRefresher(!refresher);
   return (
     <>
       <Navbar />
       <Container fluid >
         <div className='d-flex align-items-center'>
           <FolderBreadcrumbs currentFolder={folder} />
-          <AddFileButton currentFolder={folder} handleAddFolderAndFile={addFileAndFolder} />
-          <AddFolderButton currentFolder={folder} handleAddFolderAndFile={addFileAndFolder} />
+          <AddFileButton currentFolder={folder} handleUploadCompletion={refreshFolderContext} />
+          <AddFolderButton currentFolder={folder} handleUploadCompletion={refreshFolderContext} />
         </div>
         {childFolders?.length > 0 && 
           <div className="d-flex flex-wrap"> 
@@ -34,6 +34,21 @@ export default function Dashboard() {
                 <Folder folder={childFolder}/>
               </div>
             ))}
+          </div>
+        }
+        
+        {childFolders?.length > 0 && childFiles.length > 0 && <hr />}
+
+        {childFiles?.length > 0 &&
+          <div className="d-flex flex-wrap">
+            {childFiles.map(childFile => (
+              <div key={childFile.id} 
+                style={{maxWidth: '250px'}} 
+                className="p-2"
+              >
+                <File file={childFile}/>
+              </div>
+            ))}            
           </div>
         }
         {/* {folder && <Folder folder={folder}/>} */}

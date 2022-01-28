@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { collection, getFirestore, addDoc, serverTimestamp, doc, getDoc, query, where, orderBy, getDocs, setDoc} from 'firebase/firestore'
 
-import { getStorage, ref, uploadBytes } from 'firebase/storage'
+import { getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'
 
 const app = initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -32,10 +32,26 @@ export const addFolder = (folder) => addDoc(
     createdAt: serverTimestamp()
   });
   
+/**
+ * DocumentSnapshot을 포맷팅한다.
+ * @param {*} doc DocumentSnapshot<DocumentData>
+ * @returns {id: string } && DocumentData
+ */
 export const formatDoc = (doc) => ({ id: doc.id, ...doc.data() });
 
+/**
+ * 현재 폴더 가져오기
+ * @param {*} id 
+ * @returns Promise<DocumentSnapshot<DocumentData>>
+ */
 export const getFolder = (id) => getDoc(doc(firestore, 'folders', id));
 
+/**
+ * 현재 폴더의 자식폴더 가져오기
+ * @param {*} parentId 
+ * @param {*} currentUser 
+ * @returns Promise<QuerySnapshot<DocumentData>>
+ */
 export const getChildFolder = (parentId, currentUser) => {
   return getDocs(
     query(
@@ -44,16 +60,54 @@ export const getChildFolder = (parentId, currentUser) => {
       where('userId', '==', currentUser.uid),
       orderBy('createdAt', 'desc')
       )
-      );
-    }
+    );
+}
+
+/**
+ * 현재 폴더에 저장된 파일 가져오기
+ * @param {*} folderId 
+ * @param {*} currentUser 
+ * @returns Promise<QuerySnapshot<DocumentData>>
+ */
+export const getFiles = (folderId, currentUser) => {
+  // console.log(`folderId: ${folderId}, userId: ${currentUser.uid}`)
+  return getDocs(
+    query(
+      filesRef,
+      where('folder', '==', folderId),
+      where('userId', '==', currentUser.uid),
+      // orderBy('createAt', 'desc')
+    )
+  )
+}
+    
+// === auth ===
 export const auth = getAuth();
       
 // === storage ===
-export const addFile = (file) => addDoc(filesRef, file);
+export const addFile = (file) => addDoc(filesRef, { ...file, createdAt: serverTimestamp() });
 
 const storage = getStorage();
 const getFileRef = (userId, filePath) => ref(storage, `/files/${userId}/${filePath}`);
 
-export const uploadFile = (userId, filePath, file) => uploadBytes(getFileRef(userId, filePath), file);
+/**
+ * 파일 업로드
+ * @param {*} userId 
+ * @param {*} filePath 
+ * @param {*} file 
+ * @returns UploadTask
+ */
+export const uploadFile = (userId, filePath, file) => uploadBytesResumable(getFileRef(userId, filePath), file);
+
+/**
+ * 파일 업로드
+ * @param {*} userId 
+ * @param {*} filePath 
+ * @param {*} file 
+ * @returns Promise<UploadResult>
+ */
+export const uploadFileBytes = (userId, filePath, file) => uploadBytes(getFileRef(userId, filePath), file);
+
+
 
 export default app;

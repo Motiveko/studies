@@ -5,7 +5,7 @@ import { Button, Form, Modal } from "react-bootstrap";
 import { addFolder, addFile } from '../../firebase'
 import { useAuth } from '../../context/AuthContext'
 import { ROOT_FOLDER } from "../../hooks/useFolder";
-export default function AddFolderButton({ currentFolder, handleAddFolderAndFile }) {
+export default function AddFolderButton({ currentFolder, handleUploadCompletion }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const { currentUser } = useAuth();
@@ -37,7 +37,7 @@ export default function AddFolderButton({ currentFolder, handleAddFolderAndFile 
     })
 
     setName('')
-    handleAddFolderAndFile();
+    handleUploadCompletion();
     closeMoal();
   }
 
