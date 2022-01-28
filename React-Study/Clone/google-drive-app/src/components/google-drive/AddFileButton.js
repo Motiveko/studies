@@ -4,16 +4,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getDownloadURL } from "firebase/storage";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { addFile, uploadFile } from "../../firebase";
+import { addFile, getUploadingFileName, uploadFile } from "../../firebase";
 import { ROOT_FOLDER } from "../../hooks/useFolder";
 import { v4 as uuidV4 } from 'uuid'
 import { ProgressBar, Toast } from 'react-bootstrap';
 
 export default function AddFileButton({ currentFolder, handleUploadCompletion }) {
   const { currentUser } = useAuth();
+  const [ fileName, setFileName ] = useState('');
   const [uploadingFiles, setUploadingFiles] = useState([]);
   
-  const handleUpload = (e) => {
+
+  const handleUpload = async (e) => {
 
     e.preventDefault();
     
@@ -30,9 +32,13 @@ export default function AddFileButton({ currentFolder, handleUploadCompletion })
       ? ''
       : currentFolder.path.length > 0
         ? `${currentFolder.path.map((p) => p.name).join('/')}/${currentFolder.name}/`
-        : `${currentFolder.name}/`) + file.name;
+        : `${currentFolder.name}/`);
 
-    const uploadTask = uploadFile(currentUser.uid, filePath, file);
+    let temp = await getUploadingFileName(currentUser.uid, filePath, file);
+    setFileName(temp)
+    
+    const uploadTask = uploadFile(currentUser.uid, filePath, fileName, file);
+    // const uploadTask = {};
 
     uploadTask.on('state_changed',
       (snapshot) => {
@@ -43,17 +49,17 @@ export default function AddFileButton({ currentFolder, handleUploadCompletion })
           }
           return {...uploadingFile}
         }))
-        console.log(uploadingFiles)
       },
       (err) => {
         alert('파일 업로드중 문제가 발생했습니다.');
         console.error(err);
       },
       () => {
+        console.log(fileName + '업로드 완료')
         getDownloadURL(uploadTask.snapshot.ref).then((url) => {
           addFile({
             url,
-            name:file.name,
+            name: fileName,
             folder: currentFolder.id,
             userId: currentUser.uid
           })
@@ -61,10 +67,10 @@ export default function AddFileButton({ currentFolder, handleUploadCompletion })
         // 업로드 완료 즉시 다시 가져오면 안가져와짐
         setTimeout(() => handleUploadCompletion(),500); 
       }
-
     )
     
   }
+  
 
   const removeUploadingFile = (id) => {
     setUploadingFiles(prevUploadingFiles => prevUploadingFiles

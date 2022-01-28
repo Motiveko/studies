@@ -2,7 +2,8 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { collection, getFirestore, addDoc, serverTimestamp, doc, getDoc, query, where, orderBy, getDocs, setDoc, deleteDoc} from 'firebase/firestore'
 
-import { deleteObject, getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'
+import { deleteObject, getStorage, listAll, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'
+import { parseFilename } from './util/fileUtil';
 
 const app = initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -98,10 +99,45 @@ const getFileRef = (userId, filePath) => ref(storage, `/files/${userId}/${filePa
  * 파일 업로드
  * @param {*} userId 
  * @param {*} filePath 
+ * @param {*} filename 
  * @param {*} file 
  * @returns UploadTask
  */
-export const uploadFile = (userId, filePath, file) => uploadBytesResumable(getFileRef(userId, filePath), file);
+export const uploadFile = (userId, filePath, filename, file) => {
+  return uploadBytesResumable(getFileRef(userId, filePath + filename), file);
+};
+
+export const getUploadingFileName = async (userId, filePath, file) => {
+  const filename = await createValidFileName(userId, filePath, file);
+  console.log(filename);
+}
+
+
+const createValidFileName = async (userId, filePath, file) => {
+  console.log(filePath);
+  const { items } = await listAll(ref(storage,`files/${userId}`));
+  console.log(items)
+  if(!filenameExists(file.name, items)) {
+    return file.name;
+  }
+  
+  let count = 1;
+  const [name, ext] = parseFilename(file.name);
+  let newFileName = `${name}_${count}.${ext}`;
+
+  while(filenameExists(newFileName, items)) {
+    count++;
+    newFileName = `${name}_${count}.${ext}`;
+  }
+  
+  return newFileName;
+}
+
+const filenameExists = (filename, existingItems) => existingItems.filter(itemRef => itemRef.name === filename).length > 0; 
+
+
+
+
 
 /**
  * 파일 삭제
