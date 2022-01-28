@@ -46,7 +46,7 @@ export default function Dashboard() {
                 style={{maxWidth: '250px'}} 
                 className="p-2"
               >
-                <File file={childFile}/>
+                <File file={childFile} handleRemoveCompletion={refreshFolderContext}/>
               </div>
             ))}            
           </div>

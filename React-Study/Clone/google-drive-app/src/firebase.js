@@ -1,8 +1,8 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { collection, getFirestore, addDoc, serverTimestamp, doc, getDoc, query, where, orderBy, getDocs, setDoc} from 'firebase/firestore'
+import { collection, getFirestore, addDoc, serverTimestamp, doc, getDoc, query, where, orderBy, getDocs, setDoc, deleteDoc} from 'firebase/firestore'
 
-import { getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'
+import { deleteObject, getStorage, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'
 
 const app = initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -25,6 +25,7 @@ const firestore = getFirestore();
 const foldersRef = collection(firestore, 'folders');
 const filesRef = collection(firestore, 'files');
 
+
 export const addFolder = (folder) => addDoc(
   foldersRef, 
   {
@@ -35,7 +36,7 @@ export const addFolder = (folder) => addDoc(
 /**
  * DocumentSnapshot을 포맷팅한다.
  * @param {*} doc DocumentSnapshot<DocumentData>
- * @returns {id: string } && DocumentData
+ * @returns {*} {id: string } && DocumentData
  */
 export const formatDoc = (doc) => ({ id: doc.id, ...doc.data() });
 
@@ -69,17 +70,20 @@ export const getChildFolder = (parentId, currentUser) => {
  * @param {*} currentUser 
  * @returns Promise<QuerySnapshot<DocumentData>>
  */
-export const getFiles = (folderId, currentUser) => {
+export const getFiles = (folderId, userId) => {
   // console.log(`folderId: ${folderId}, userId: ${currentUser.uid}`)
   return getDocs(
     query(
       filesRef,
       where('folder', '==', folderId),
-      where('userId', '==', currentUser.uid),
-      // orderBy('createAt', 'desc')
+      where('userId', '==', userId),
+      // orderBy('createdAt', 'desc')
     )
   )
 }
+
+
+
     
 // === auth ===
 export const auth = getAuth();
@@ -98,6 +102,41 @@ const getFileRef = (userId, filePath) => ref(storage, `/files/${userId}/${filePa
  * @returns UploadTask
  */
 export const uploadFile = (userId, filePath, file) => uploadBytesResumable(getFileRef(userId, filePath), file);
+
+/**
+ * 파일 삭제
+ * 
+ * @param {*} userId userId
+ * @param {*} file file
+ * @returns [Promise<void>, Promise<void>]
+ */
+export const deleteFile = async (userId, file) =>  {
+    let folder;
+    if( file.folder) {
+      folder = await formatDoc(getFolder(file.folder));
+    }
+
+    const _fullPath = `files/${userId}/${folder?.path.join('/') ? folder.path.join('/')+'/' : ''}${folder?.name ? folder.name : ''}/${file.name}`;
+    
+    const folderPath = folder 
+      ? (folder.path.join('/') 
+        ? folder.path.join('/')+'/' 
+        : '') + `${folder.name}/`
+      : ''
+    const fullPath = `files/${userId}/`
+      .concat(folderPath)
+      .concat(file.name)
+
+
+    console.log(fullPath);
+
+    return _deleteFile(file.id, fullPath);
+};
+
+const _deleteFile = (fileId, fullPath) => Promise.all([
+  deleteObject(ref(storage, fullPath)),       // storage에서 삭제
+  deleteDoc(doc(firestore, 'files', fileId))  // db에서 데이터 삭제 
+])
 
 /**
  * 파일 업로드

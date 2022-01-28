@@ -26,8 +26,6 @@ export default function AddFileButton({ currentFolder, handleUploadCompletion })
       { id, name: file.name, progress: 0, error: false}
     ])
 
-    console.log(uploadingFiles)
-
     const filePath = (currentFolder === ROOT_FOLDER
       ? ''
       : currentFolder.path.length > 0

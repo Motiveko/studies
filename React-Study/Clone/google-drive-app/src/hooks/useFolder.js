@@ -111,9 +111,8 @@ export function useFolder(folderId = null, folder = null, refresh = false) {
   
   // file 가져오기
   useEffect(() => {
-    getFiles(folderId, currentUser)
+    getFiles(folderId, currentUser.uid)
       .then((snapshot) => {
-        
         dispatch({
           type: ACTIONS.SET_CHILD_FILES,
           payload: { childFiles: snapshot.docs.map(formatDoc) }
