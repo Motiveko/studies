@@ -306,12 +306,216 @@ export default function Counter() {
 ```
 - 이런 경우에도 상태 변경을 한번에 배치처리 하고 싶으면 `ReactDOM.unstable_batchUpdates()` 함수를 사용하면 되나, 이름처럼 불안정하므로 가급적 지양해야한다.
 ```js
-  const handleClick = ReactDOM.unstable_batchUpdates(() => {
-    setCount(prev => prev + 1);
-    setCount(prev => prev + 1);
-  })
+  const handleClick = () => {
+    ReactDOM.unstable_batchedUpdates(() => {
+      setCount(prev => prev + 1);
+      setCount(prev => prev + 1);
+    })
+  };
 ```
 - `concurrent`로 작동할 미래의 리액트는(어쩌면 현재일지도?) 외부에서 관리되는 이벤트 처리 함수도 배치로 처리할 수 있을것이라고 한다.
 
+<br>
+
+### 3.3.2 컴포넌트에서 부수 효과 처리하기: useEffect
+- ***함수 실행 시 함수 외부의 상태를 변경하는 연산***을 `부수 효과`라고 한다. 보통 `useEffect`훅에서 부수효과를 처리한다.
+- `useEffect`훅은 `부수효과 함수`와 `의존성 배열` 두개를 인자로 받는다. 부수효과 함수는 함수를 반환할 수 있는데, 이 함수는 보통 부수효과 함수의 리소스 정리(`unsubscribe` 등)를 수행한다.
+- `useEffect`에 전달되는 의존성 배열에 따라 부수효과 함수의 실행이 달라진다.
+    - ***의존성 배열 인자가 없으면*** 컴포넌트 랜더링 후 부수효과 함수가 실행되고 랜더링 갱신 직전 반환 함수가 실행된다.
+    - ***빈 의존성 배열을 인자로 쓰면*** 컴포넌트 랜더링 후 최초 1회 부수효과 함수가 실행되고, 컴포넌트가 제거될 때 반환 함수를 실행한다.
+    - ***props가 들어있는 의존성 배열***을 인자로 쓰면 빈의존성 배열과 같이 실행되고, 해당 `props`가 변경될 때 랜더링이 갱신되며 부수효과 함수가 실행된다.
+- 의존성 배열을 사용할땐 조심해야한다. `useEffect`사용간에 발생하는 버그는 보통 의존성 배열을 잘못 입력해 발생한다.
+- 아래는 `useEffect` 훅을 이용해 화면 넓이를 나타내는 함수다.
+```js
+export default function App() {
+  const [width, setWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  },[]);  
+
+  return (
+    <div>화면 넓이 : { width }</div>
+  )
+}
+```
+- 의존성 배열이 `[]`이므로, 컴포넌트 랜더링후 이벤트 핸들러 등록을 한번만 하고, 컴포넌트가 사라질 때 `removeEventListener`가 실행된다.
+
+<br>
+
+### 3.3.3 훅 직접 만들기
+- 커스텀 훅을 만들 때 이름은 `use`로 시작해야한다. 가독성과 여러 도구의 도움을 받을 수 있게 된다.
+- 커스텀 훅을 만들면 내부 구현을 숨기고 사용 편의성을 높여준다. 위의 화면 넓이를 나타내는 훅을 커스텀 훅으로 분리한다.
+```js
+// useWindowWidth.js
+import { useEffect, useState } from "react";
+
+export function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  return width;
+}
+
+// App.js
+import { useWindowWidth } from './Hooks/useWindowWidth'
+export default function App() {
+  const width = useWindowWidth();
+  return <h2>넓이 : {width}</h2>;
+}
+```
+- 훅을 사용하는 App.js는 매우 심플해졌다. 
+
+> 훅 사용시 햇갈렸던 점은 `useState`훅이 컴포넌트 개개의 스코프를 제공하는 것 처럼 커스텀 훅도 사용하는 컴포넌트마다 독립적인 스코프를 가진다는 것이다. 전역적인 상태 관리 등으로는 쓸 수 없다. 전역적으로 같은 상태값을 사용하려면 `Context`를 사용해야 할 듯.
+
+<br>
+
+### 3.3.4 훅 사용 시 지켜야 할 규칙
+- [규칙](https://ko.reactjs.org/docs/hooks-rules.html#gatsby-focus-wrapper)은 아래와 같다. 
+  1. 컴포넌트에서 훅을 호출하는 순서는 같아야한다.
+  2. 훅은 함수형 컴포넌트 혹은 커스텀 훅 안에서 최상단에서 호출되어야 한다.
+- 훅을 최상단에서 호출해야 하는것은 순서가 같아야 한다는 점과 이어진다. 함수 실행시 조건문 등에 의해 훅이 실행되지 않으면 순서가 꼬인다.
+- 순서가 중요한 이유는 ***리액트 내부적으로 훅을 호출 순서에 맞춰 배열로 관리하기 때문***이다. 컴포넌트 함수 호출시 매번 똑같은 순서로 똑같은 개수의 훅이 실행되어야만 한다.
+
+<br>
+
+### 3.4 콘텍스트 API로 데이터 전달하기
+- 부모 -> 자식 상태값 전달은 보통 `props`로 하는데, 중간 컴포넌트가 많아지면 `Context`를 사용한다.
+
+### 3.4.1 Context API 이해하기
+- `ContextAPI`를 사용해서 중간다리를 생략하고 상태값을 전달해본다.
+
+```js
+import React, { useState } from "react";
+
+const UserConetxt = React.createContext('')
+export default function App() {
+  const [username, setUsername] = useState("");
+  console.log('APP 랜더링')
+  return (
+    <div>
+      <UserConetxt.Provider value={username}>
+        <Profile />
+        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
+      </UserConetxt.Provider>
+    </div>
+  )
+}
+
+const Profile = () => {
+  console.log('Profile 랜더링');
+  return (
+    <div>
+      <Greeting />
+    </div>
+  )
+}
+
+const Greeting = () => {
+  console.log('Greeting 랜더링')
+  return (
+    <UserConetxt.Consumer>
+      {username => <p>{`${username}님 안녕하세요?`}</p>}
+    </UserConetxt.Consumer>
+  )
+}
+```
+- `React.createContext`로 `Context`를 생성하고, `Provider`로 값을 전달하면 `Provider`의 자식에서 `Consumer`로 값을 가져다 쓸 수 있게된다.
+
+- ❗️❗️중요한것은 ***`Provider` 컴포넌트의 속성값(`value`)이 변경되면 중간에 위치한 컴포넌트의 렌더링 여부와 상관없이 하위의 모든 `Consumer` 컴포넌트는 다시 렌더링 된다는 것***이다.
+    - 위의 코드에서 input에 이름을 입력하면 App의 `username` 상태값이 변하면서 `App`이 다시 랜더링되고, 자식 컴포넌트가 모두 다시 랜더링된다.
+    - 이 때, `Profile`을 `React.memo`를 사용해서 다시 랜더링 되지 않게 막으면, `Profile`의 자식인 `Greeting`도 랜더링 다시 랜더링하지 않는다.
+    - `UserConetxt.Consumer`는 `Profile`, `Greeting`과 상관 없이 `Provider`의 속성이 바뀔때 다시 랜더링되므로 문제없이 최적화가 된다.
+```js
+// Profile은 props가 없기때문에 한번 랜더링되면 끝까지 간다.
+const Profile = React.memo(() => {
+  console.log('Profile 랜더링');
+  return (
+    <div>
+      <Greeting />
+    </div>
+  )
+})
+```
+
+<br>
+
+### 3.4.2 Context API 활용하기
+1. 여러 콘텍스트 중첩해서 사용하기
+```js
+// Provider
+function Provider() {
+  return (
+    <SomeContext.Provider value={someValue} >
+      <AnotherContext.Provider value={anotherValue}>
+        ...
+      </AnotherContext.Provider>
+    </SomeContext.Provider>
+  )
+}
+
+// Consumer
+function Consumer() {
+  return (
+    <SomeContext.Consumer>
+      {someValue => (
+        <AnotherContext.Consumer>
+          {anotherValue => <div>anotherValue</div>}
+        </AnotherContext.Consumer>
+      )}
+    </SomeContext.Consumer>
+
+  )
+}
+```
+
+- 위와 같이 데이터 종류별로 `Context`를 나눠서 중첩 사용하면 보통 성능상의 이점이 생긴다. `Provider`의 데이터 변경시 해당 컨택스트의 `Consumer`만 다시 랜더링 되기 때문이다.
+
+2. 하위 컴포넌트에서 콘텍스트 데이터를 수정하기
+- `useState`훅의 `state`를 `Provider`로 전달할 때, `setState` 함수도 전달하면 `Consumer`에서 호출해서 `Context`의 상태값을 변경할 수 있다.
+- 책에서는 `state`와 `setState`를 다른 `Context`로 나눠서 사용한다. 둘을 합쳐 객체로 만들어서 전달하면 바로 뒤에 다루는 ***불필요한 랜더링***이 발생할 수 있기 때문인듯.
+
+### 3.4.3 ContextAPI 사용시 주의할 점
+1. 불필요한 랜더링 발생
+- `Provider`로 객체 전달시 불필요한 랜더링이 발생할 수 있다. 객체 전달시 Provider 컴포넌트가 랜더링 될 때 객체가 새로 생성되므로 객체를 구성하는 state값이 같아도 `Consumer`가 다시 랜더링 되게 된다.
+
+```js
+// 불필요한 랜더링 발생시키는 예
+const UserContext = React.createContext({ username: '' });
+function App() {
+  const [username, setUsername] = useState('');
+  return (
+    // {username} 객체는 App이 랜더링 될때마다 새로운 참조값으로 다시생성 -> 하위의 Consumer 리랜더링
+    <UserContext.Provider value={{username}}>
+      ... 
+    </UserContext.Provider>
+  )
+};
 
 
+// 불필요한 랜더링 발생 안하는 예
+function App() {
+  // state값을 객체로 만들면 새로 랜더링해도 참조가 그대로다
+  const [user, setUser] = useState({username: ''}); 
+  return (
+    <UserContext.Provider value={user}>
+      ... 
+    </UserContext.Provider>
+  )
+}
+```
+- 불필요한 랜더링은 컴포넌트의 `props`에 객체를 사용할 때도 똑같이 적용된다. `state`를 모아서 만든 객체를 `props`로 전달하면 매 랜더링시에 `props`가 바뀌어 `memo`를 쓴 자식도 다시 랜더링한다.
+
+<br>
+
+2. `Provider` 컴포넌트를 찾지 못하는 경우
+- `Consumer`는 반드시 `Provider`의 자식요소여야한다. 자식요소가 아니면 `Provider`로 공급되는 값이 아닌 `Context`의 `기본값`만을 참조하게된다.
+
+<br>
