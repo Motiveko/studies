@@ -519,3 +519,138 @@ function App() {
 - `Consumer`는 반드시 `Provider`의 자식요소여야한다. 자식요소가 아니면 `Provider`로 공급되는 값이 아닌 `Context`의 `기본값`만을 참조하게된다.
 
 <br>
+
+### 3.5 ref 속성값으로 자식 요소에 접근하기
+- `ref` 속성값은 리액트에서 직접 처리한다. ref 속성과 함께 `useRef`훅을 사용해 만든 `ref 객체`로 자식요소(컴포넌트 / DOM 요소)에 접근 가능하다.
+- `클래스 컴포넌트`는 인스턴스가 생성되므로 ref 속성을 사용할 수 있다.
+- `함수형 컴포넌트`는 인스턴스가 생성되지 않아, ref를 직접 사용할수는 없다. 선택지는 두가지가 있다.
+    1. ref가 아닌 다른 이름으로 ref 객체를 입력받아 함수형 컴포넌트 내부의 DOM 요소에 연걸한다.
+    ```js
+    function Form() {
+      const inputRef = useRef();
+      useEffect(()=> {
+        inputRef.current.focus();
+      }, [])
+      return (
+        <TextInput inputRef={inputRef}>
+      )
+    }
+
+    function TextInput({ inputRef }) {
+      return (
+        <input type="text" ref={inputRef} />
+      )
+    }
+    ```
+    -  `ref` 속성을 바로사용하면 리액트에서 이를 처리하기 때문에 우리가 원하는데로 동작하지 않는다. 따라서 `inputRef`로 이름을 바꿔사용함
+
+    2. `forwardRef` 함수로 `ref` 속성값을 직접 처리하기
+    - `forwardRef` 함수를 사용해 함수형 컴포넌트를 만들면 `ref` 예약어를 속성값을 사용할 수 있다.
+    ```js
+    const TextInput = React.forwardRef((props, rev) => (
+      <input type="text" ref={ref} />
+    ));
+    ```
+
+- `ref` 속성값에 `함수`를 사용할 수 있다.
+- `ref` 함수는 컴포넌트 생성시에는 인자로 요소에 대한 참조를, 컴포넌트 제거시에는 인자로 null을 준다.
+- 주의할 점은 컴포넌트가 랜더링될 때마다 새로운 함수를 `ref`로 넣는다는 점이다.
+```js
+export default function App() {
+  const [text, setText] = useState(INITIAL_TEXT)
+  const [showText, setShowText] = useState(true);
+  return (
+    <div>
+      {showText && (
+        <input
+          type='text'
+          ref={ref => ref && setText(INITIAL_TEXT)}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      )}
+      <button onClick={() => setShowText(!showText)}>보이기/가리기</button>
+    </div>
+  )
+}
+```
+- 위 코드에서 input에 값 입력시 text가 원하는대로 변하지 않는다. 값 변화에 따라 컴포넌트가 다시 랜더링되고, `ref` 속성에 새로운 함수가 할당되기 때문이다.
+- `useCallback` 훅을 이용해 ref에 전달되는 함수를 `고정된 함수`로 만들면 해결할 수 있다.
+```js
+
+// ...
+const setInitialText = useCallback(ref => 
+  ref && setText(INITIAL_TEXT)
+,[])
+<input ref={setInitialText} />
+```
+- `ref` 속성값에 새로운 함수를 입력하지 않으므로 `input`요소가 생성/제거 될 때만 setInitialText 함수가 호출된다.
+- [추가적으로 클래스 컴포넌트 사용시 메서드를 등록해서 이를 ref 콜백으로 사용해서 해결할 수 있다.](https://ko.reactjs.org/docs/refs-and-the-dom.html#caveats-with-callback-refs)
+
+
+> 추가 ) [`ref`를 사용해야할 때](https://ko.reactjs.org/docs/refs-and-the-dom.html#when-to-use-refs)를 참고하자. 선언형으로 해결할 수 있는 문제는 선언형으로 해결하는것이 좋다.
+
+<br>
+
+### 3.6 리액트 내장 훅 살펴보기
+### 3.6.1 Consumer 컴포넌트 없이 콘텍스트 사용하기 : [useContext](https://ko.reactjs.org/docs/hooks-reference.html#usecontext)
+- 기존에 `Context`의 `Provider`에서 제공한 값은 `Consumer`컴포넌트를 사용해야 사용 가능했으나, `useContext` 훅을 사용하면 훨씬 간단하게 접근 가능하다.
+```js
+const UserContext = React.createContext();
+const user = {name: 'motiveko', age: 32};
+function Parent() {
+  return (
+    <UserContext.Provider value={user}>
+      <Child />
+    </UserContext.Provider>
+  )
+}
+function Child() {
+  const user = useContext(UserContext);
+  return {user.name};
+}
+```
+
+<br>
+
+### 3.6.2 렌더링과 무관한 값 저장하기: [useRef](https://ko.reactjs.org/docs/hooks-reference.html#useref)
+- `props`는 불변이고, `state`는 렌더링에 연관되는 값이다. 렌더링과 무관한 값이 있는데, 이를 저장할 때 `useRef`를 사용한다. 예를들면 `setTimeout`의 결과 Id값도 어딘가에 저장해서 `clearTimeout`을 호출해야한다.
+- 아래 예제는 `state`값인 age의 이전값을 useRef에 저장하는 예제다.
+```js
+function Profile() {
+  const [age, setAge] = useState(20);
+  const prevAgeRef = useRef(20);
+  useEffect(() => {
+    prevAgeRef.current = age;
+  }, [age]);
+
+  const prevAge = prevAgeRef.current;
+  const text = age === prevAge ? 'same' : age > prevAge ? 'older' : 'younger';
+  return (
+    <div>
+      <p>{`age ${age} is ${text} than age ${prevAge}`}</p>
+      <button
+        onClick={() => {          
+          const age = Math.floor((Math.random() * 50 + 1));
+          setAge(age);
+        }}
+      >
+        나이변경
+      </button>
+    </div>
+  )
+}
+```
+- `useEffect`훅이 호출되는 시점은 `age`가 변경되고, ***변경에 대한 랜더링이 모두 완료된 후***라는 것을 기억하자.
+- 동작 순서는 아래와 같다. 사용자가 `버튼`을 클릭하면
+  1. age 상태 변화, 비동기로 완료됨
+  2. 변화 완료 후 렌더링. prevAgeRef에는 아직 이전값이 저장됨
+  3. 렌더링 완료 후 `useEffect`훅이 호출되어 `prevAgeRef`에 현재 age저장
+
+
+<br>
+
+### 3.6.3 메모이제이션 훅: [useMemo](https://ko.reactjs.org/docs/hooks-reference.html#usememo), [useCallback](https://ko.reactjs.org/docs/hooks-reference.html#usecallback)
+- `useMemo`와 `useCallback`은 둘 다 이전 값을 기억해(memoization) 성능을 최적화 한다. 하지만 약간의 차이가 존재한다.
+
+1. `useMemo`
