@@ -18,8 +18,8 @@ function reducer (state, { type, payload}) {
       return {
         folderId: payload.folderId,
         folder: payload.folder,
-        childFolders: [],
-        childFiles: []
+        childFolders: state.childFolders ?? [],
+        childFiles: state.childFiles ?? []
       }
     case ACTIONS.UPDATE_FOLDER:
       return {
@@ -50,7 +50,6 @@ export function useFolder(folderId = null, folder = null, refresh = false) {
   //   childFolders: [],
   //   childFiles: []
   // })
-
   const initializer = () => {
     // console.log('init');
     return {

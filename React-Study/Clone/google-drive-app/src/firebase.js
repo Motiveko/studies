@@ -109,14 +109,12 @@ export const uploadFile = (userId, filePath, filename, file) => {
 
 export const getUploadingFileName = async (userId, filePath, file) => {
   const filename = await createValidFileName(userId, filePath, file);
-  console.log(filename);
 }
 
 
 const createValidFileName = async (userId, filePath, file) => {
   console.log(filePath);
   const { items } = await listAll(ref(storage,`files/${userId}`));
-  console.log(items)
   if(!filenameExists(file.name, items)) {
     return file.name;
   }
@@ -162,9 +160,6 @@ export const deleteFile = async (userId, file) =>  {
     const fullPath = `files/${userId}/`
       .concat(folderPath)
       .concat(file.name)
-
-
-    console.log(fullPath);
 
     return _deleteFile(file.id, fullPath);
 };
