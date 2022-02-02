@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Container } from "react-bootstrap";
 import { useLocation, useParams } from "react-router-dom";
 import { useFolder } from "../../hooks/useFolder";
@@ -14,7 +14,7 @@ export default function Dashboard() {
   const { state } = useLocation();
   const [refresher, setRefresher] = useState(false);
   const { folder, childFolders, childFiles } = useFolder(folderId, state?.folder, refresher);
-  const refreshFolderContext = () => setRefresher(!refresher);
+  const refreshFolderContext = useCallback(() => setRefresher(!refresher),[refresher]);
   return (
     <>
       <Navbar />

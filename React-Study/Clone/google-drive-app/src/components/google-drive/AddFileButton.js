@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom';
 import {  faFileUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getDownloadURL } from "firebase/storage";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { addFile, getUploadingFileName, uploadFile } from "../../firebase";
 import { ROOT_FOLDER } from "../../hooks/useFolder";
@@ -11,34 +11,32 @@ import { ProgressBar, Toast } from 'react-bootstrap';
 
 export default function AddFileButton({ currentFolder, handleUploadCompletion }) {
   const { currentUser } = useAuth();
-  const [ fileName, setFileName ] = useState('');
+  const fileRef = useRef();
   const [uploadingFiles, setUploadingFiles] = useState([]);
   
 
-  const handleUpload = async (e) => {
+  const handleUpload = useCallback (async (e) => {
 
     e.preventDefault();
     
     const file = e.target.files[0];
     if(currentFolder == null || file == null) return;
 
-    const id = uuidV4();
-    setUploadingFiles(prevUploadingFiles => [
-      ...prevUploadingFiles,
-      { id, name: file.name, progress: 0, error: false}
-    ])
-
     const filePath = (currentFolder === ROOT_FOLDER
       ? ''
       : currentFolder.path.length > 0
         ? `${currentFolder.path.map((p) => p.name).join('/')}/${currentFolder.name}/`
         : `${currentFolder.name}/`);
-
-    let temp = await getUploadingFileName(currentUser.uid, filePath, file);
-    setFileName(temp)
     
-    const uploadTask = uploadFile(currentUser.uid, filePath, fileName, file);
-    // const uploadTask = {};
+    let uniqueFilename = await getUploadingFileName(currentUser.uid, filePath, file);
+
+    const id = uuidV4();
+    setUploadingFiles(prevUploadingFiles => [
+      ...prevUploadingFiles,
+      { id, name: uniqueFilename, progress: 0, error: false}
+    ])
+
+    const uploadTask = uploadFile(currentUser.uid, filePath, uniqueFilename, file);
 
     uploadTask.on('state_changed',
       (snapshot) => {
@@ -55,21 +53,21 @@ export default function AddFileButton({ currentFolder, handleUploadCompletion })
         console.error(err);
       },
       () => {
-        console.log(fileName + '업로드 완료')
+        console.log(uniqueFilename + '업로드 완료')
         getDownloadURL(uploadTask.snapshot.ref).then((url) => {
           addFile({
             url,
-            name: fileName,
+            name: uniqueFilename,
             folder: currentFolder.id,
             userId: currentUser.uid
           })
         });
         // 업로드 완료 즉시 다시 가져오면 안가져와짐
-        setTimeout(() => handleUploadCompletion(),500); 
+        setTimeout(() => handleUploadCompletion(), 500); 
+        fileRef.current.value = null;
       }
     )
-    
-  }
+  }, [currentFolder, currentUser.uid, handleUploadCompletion])
   
 
   const removeUploadingFile = (id) => {
@@ -83,6 +81,7 @@ export default function AddFileButton({ currentFolder, handleUploadCompletion })
         <FontAwesomeIcon icon={faFileUpload} />
         <input
           type="file"
+          ref={fileRef}
           onChange={handleUpload}
           style={{
             opacity:0,

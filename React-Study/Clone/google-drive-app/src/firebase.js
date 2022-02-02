@@ -108,17 +108,17 @@ export const uploadFile = (userId, filePath, filename, file) => {
 };
 
 export const getUploadingFileName = async (userId, filePath, file) => {
-  const filename = await createValidFileName(userId, filePath, file);
+  return await createValidFileName(userId, filePath, file);
 }
 
 
 const createValidFileName = async (userId, filePath, file) => {
-  console.log(filePath);
+  
   const { items } = await listAll(ref(storage,`files/${userId}`));
   if(!filenameExists(file.name, items)) {
     return file.name;
   }
-  
+
   let count = 1;
   const [name, ext] = parseFilename(file.name);
   let newFileName = `${name}_${count}.${ext}`;

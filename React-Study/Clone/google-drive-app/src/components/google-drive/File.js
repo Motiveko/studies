@@ -6,7 +6,6 @@ import { deleteFile, formatDoc, getFolder } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
 
 export default function File ({ file, handleRemoveCompletion}) {
-  console.log(file)
   const { currentUser } = useAuth();
   
 
@@ -15,7 +14,7 @@ export default function File ({ file, handleRemoveCompletion}) {
     e.stopPropagation();
 
     if(window.confirm('파일을 증말 삭제하시겠습니까?')) {
-
+      console.log(file)
       deleteFile(currentUser.uid, file)
         .then(() => {
           window.alert('파일을 삭제하였습니다.');
