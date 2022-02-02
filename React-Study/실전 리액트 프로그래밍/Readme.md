@@ -10,7 +10,7 @@
 - ### [1. 리액트 프로젝트 시작하기](#1-리액트-프로젝트-시작하기-1)
 <!-- - ### [2. ES6+를 품은 자바스크립트, 매력적인 언어가 되다.](#2-ES6+를-품은-자바스크립트,-매력적인-언어가-되다.-1) -->
 - ### [3. 중요하지만 헷갈리는 리액트 개념 이해하기](#3-중요하지만-헷갈리는-리액트-개념-이해하기-1)
-
+- ### [4. 리액트 실전 활용법](#4-리액트-실전-활용법-1)
 
 <br><br>
 
@@ -793,7 +793,179 @@ const Child = forwardRef((props, ref) => {
 
 - `useDebugValue`훅은 커스텀 훅 내부의 상태를 관찰하기 위한 개발용 훅이다. 커스텀 훅 내부에서 `useDebugValue`을 사용하면 개발자 도구에서 훅의 상태값을 볼 수 있게된다.
 
+<br><br>
+
+## 4. 리액트 실전 활용법
+> `useEffect` 훅을 잘못쓰면 오래된 데이터를 참조하거나 부수효ㅗ가가 자주 실행되는 문제가 발생한다. 이 장에서는 `useEffect` 훅을 제대로 사용하는 법과, 가독성/생산성을 높이는 코드 작성법, 렌더링 속도를 올리는 성능 최적화 방법을 다룬다.
+
 <br>
 
+### 4.1 가독성과 생산성을 고려한 컴포넌트 코드 작성법
+> 컴포넌트의 작성자 입장에서는 유지/보수하기 쉬운 코드를, 컴포넌트의 사용자 입장에서는 컴포넌트의 인터페이스를 쉽게 파악할 수 있는 코드를 작성하는게 좋다.
+
+### 4.1.1 추천하는 컴포넌트 코드 작성법
+- 컴포넌트를 아래와 같은 순서로 작성한다.
+```js
+// 1.
+MyComponent.propTypes = {
+  // ...
+}
+
+// 2.
+export default function MyComponent({ prop1, prop2 }) {
+  // ...
+}
+
+// 3. 
+const COLUMNS = [
+  {id: 1, name: 'phone', width: 200, color: 'white'},
+  //...
+];
+const URL_PRODUCT_LIST = '/api/products';
+function getTotalPrice({ price, total }) {
+  // ...
+}
+```
+1. 파일의 최상단에 속성값의 타입을 정의한다. 컴포넌트 사용자가 파일을 열자마자 컴포넌트의 속성값 타입을 보며 컴포넌트의 구조를 이해할 수 있다.
+
+2. 컴포넌트 함수의 매개변수는 `명명된 매개변수`로 정의하는게 좋다. 또한 익명 함수가 아닌 함수의 이름을 정의해야 리액트 개발자 도구에서 디버깅이 쉽다.
+
+3. 컴포넌트 바깥의 변수/함수는 파일의 가장 밑에 정의한다. 가급적 `상수(const)`로 정의하고, 상수라면 가독성을 위해 대문자로 정의한다. ***컴포넌트 내부에 커다란 객체를 생성하는 함수가 있다면, 컴포넌트이 외부 상수 변수로 정의해, 렌더링 시 불필요한 객체 생성을 피해 성능을 올리자.***
+
+<br>
+
+- 컴포넌트 내부 코드를 ***훅별로 모으는게 아닌 연관된 코드끼리(기능별로) 모으자.***
+```js
+function Profile({ userId }) {
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    getUserApi(userId).then(setUser);
+  }, [userId])
+  
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [])
+  // ...
+}
+```
+- 컴포넌트 코드가 복잡하다고 느껴지면 아래와 같이 각 기능을 커스텀 훅으로 분리하는것도 좋은 방법이다. 단, 단순한 컴포넌트를 커스텀 훅으로 분리하면 오히려 가독성에 좋지 않을 수 있다.
+```js
+function Profile({ userId }) {
+  const user = useUser(userId);
+  const width = useWidth();
+  // ...
+}
+
+function useUser({ userId }) {
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    getUserApi(userId).then(setUser);
+  }, [userId])
+  return user;
+}
+
+function useWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [])
+  return width;
+}
+```
+
+<br>
+
+### 4.1.2 속성값 타입 정의하기: prop-types
+> 🤔 타입스크립트를 사용하면 아마 `prop-types`를 사용하진 않을 것으로 생각된다.
+
+- 타입스크립트같은 정적 타입 언어를 사용하지 않고 리액트 컴포넌트의 props의 타입을 지정할 수 있는데, `prop-types` 라이브러리를 이용한다.
+- 원래 [`React.PropTypes`](https://ko.reactjs.org/docs/typechecking-with-proptypes.html) 였으나 현재는 [`prop-types`](https://www.npmjs.com/package/prop-types)라는 외부 패키지로 분리되었다.
+- 4.1.1 에서 첫번째로 propTypes를 작성했는데, 작성 방법은 [공식 문서의 작성 방법](https://www.npmjs.com/package/prop-types#Usage)을 참고한다.
+- 자바스크립트의 변수 타입, element, node, 클래스 타입, 값 union 타입, 객체 형태 등을 정의할 수 있는데, `함수 타입`의 경우 ***매개변수와 반환값에 대한 타입 정보는 정의할 수 없다.*** 주석으로 대체한다.
+- Validationr 함수를 정의해 커스텀 타입 함수를 작성할 수도 있다.
+- ***자바스크립트로 개발시 무조건 propType을 정의하도록 하자.***
+
+<br>
+
+### 4.1.3 가독성을 높이는 조건부 렌더링 방법
+- 조건부 랜더링시 ***`3항 연산`자보단 `&&` 연산자를 사용하자.*** 가독성에 훨씬 좋다.
+- `조건 ||` 보다 `!조건 &&`을 사용해 일관성을 높이자.
+- `&&` 연산자 사용시, `0`, `빈 문자열`, `undefined`, `null` 을 주의하자. 모두 기본적으로 거짓으로 판단된다. 이 중 `0`의 경우 거짓으로 판단되면서 해당값이 출력될 수 있다. `!!0`으로 작성하면 0은 false로 판단되어 출력되지 않는다.
+```js
+// 문제가 될 수 있다.
+function Component() {
+  let flag = 0;
+  return <div> { flag && '테스트'} </div>  // 결과 : 0
+}
+
+// 해결
+function Component() {
+  let flag = 0;
+  return <div> { !!flag && '테스트'} </div>  // 결과 : 
+}
+```
+
+- 조건에 따라 아무것도 랜더링 하지 않는 컴포넌트의 경우, 
+  1. 부모 컴포넌트에서 자식 컴포넌트를 통째로 랜더링하지 않기
+  2. 자식 컴포넌트에서 return 값에 null을 반환
+- 두 가지 방법으로 작성될 수 있다. 후자의 경우 컴포넌트의 mount/unmount 반복으로 인해 성능상 불이익이 있을 수 있으나, 자식 컴포넌트의 로직이 단순화 된다는 장점이 있다. 
+- 조건부랜더링은 다양한 방식이 있으므로 프로젝트에서 하나의 컨벤션을 정해서 사용하는것이 좋다.
+
+<br>
+
+### 4.1.4 관심사 분리를 위한 프레젠테이션, 컨테이너 컴포넌트 구분하기
+> 🥕참고🥕 댄 아브라모프의 [Presentational and Container Components](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0)
+- 댄 아브라모프의 글은 프레젠테이션/컨테이너 컴포넌트를 나눈 기준이 까다로운데, 간단히 아래와 같이 나눌 수 있다.
+  1. `프레젠테이션` : ***비즈니스로직, 상태값이 없다. 단, 마우스 오버와 같은 UI 효과를 위한 상태값은 제외한다.***
+  2. `컨테이너` : 프레젠테이션과 반대로 ***비즈니스로직, 상태값이 있다.***
+
+<br>
+
+- ***프레젠테이션/컨테이너 컴포넌트를 구분하지 않고 마구 개발하면, 비즈니스 로직과 상태값이 여기저기 흩어지고, 상태값의 중복이 발생해 버그로 이어지는 경우도 많다.*** 아래의 경우, 부모의 상태를 자식이 props로 받아 별도의 상태로 관리하는 `안티 패턴(anti-pattern)`의 한 예다.
+
+```js
+function Child({ todos }) {
+  const [doneList, setDoneList] = useState(todos.filter(item => item.done));
+  function onChangeName(key, name) {
+    setDoneList(
+      doneList.map(item => (item.key === key ? {...item, name} : item))
+    );
+  }
+  // ...
+}
+```
+- 부모의 `todos`를 받아 `doneList`라는 새로운 상태값을 만들고, `onChangeName` 호출 시 특정 요소의 `name`을 변경하는 로직이 있다. ***`onChangeName`으로 `doneList`가 변경되어도, 상태는 불변이기 때문에 부모의 todos와는 더이상 정합성이 없어지게된다.*** 아래와 같이 리펙터링해 개선할 수 있다.
+
+```js
+function Child({ todos, onChangeName}) {
+  const doneList = useMemo(() => todos.filter(item => item.done), [todos]);
+  // ...
+}
+```
+- 자식의 `doneList` 값은 `useMemo`를 이용해 생성했고, todos 상태를 변화시킬 비즈니스 로직 `onChangeName`은 부모 요소로부터 속성값으로 받아서 쓴다.
+
+- 컴포넌트의 재사용성은 컴포넌트가 비즈니스 로직과 상태값이 없을수록 높아지므로 재사용성을 높이기 위해 ***항상 상태와 비즈니스 로직을 컨테이너 컴포넌트에 넘기는 것을 고민해야한다.***
+- 일반적으로 프레젠테이션 / 컨테이너 컴포넌트는 ***폴더도 별도로 관리***한다.
+
+<br>
+
+### 4.2 useEffect 훅 실전 활용법
+> 🥕참고🥕 [A Complete Guide to useEffect](https://overreacted.io/ko/a-complete-guide-to-useeffect/)
+
+### 4.2.1 의존성 배열을 관리하는 방법
+### 4.2.2 의존성 배열을 없애는 방법
+
+<br>
+
+### 4.3 렌더링 속도를 올리기 위한 성능 최적화 방법
+### 4.3.1 React.memo로 렌더링 결과 재사용하기
+### 4.3.2 속성값과 상탯값을 불변 변수로 관리하는 방법
+### 4.3.3 가상 돔에서의 성능 최적화
+### 
 
 
