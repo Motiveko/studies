@@ -547,7 +547,7 @@ function App() {
     2. `forwardRef` 함수로 `ref` 속성값을 직접 처리하기
     - `forwardRef` 함수를 사용해 함수형 컴포넌트를 만들면 `ref` 예약어를 속성값을 사용할 수 있다.
     ```js
-    const TextInput = React.forwardRef((props, rev) => (
+    const TextInput = React.forwardRef((props, ref) => (
       <input type="text" ref={ref} />
     ));
     ```
@@ -654,3 +654,146 @@ function Profile() {
 - `useMemo`와 `useCallback`은 둘 다 이전 값을 기억해(memoization) 성능을 최적화 한다. 하지만 약간의 차이가 존재한다.
 
 1. `useMemo`
+- 계산량이 많은 `함수의 반환값`을 재활용할 때 사용한다.
+- 인자로 함수와, 의존성 배열을 받는다. [`lodash`의 `memoize`](https://lodash.com/docs/4.17.15#memoize) 와 비슷하다.
+```js
+function Component({ v1, v2 }) {
+  const value = useMemo(() => expensiveFunction(v1, v2), [v1, v2]);
+  return (
+    <div>결과 : {value}</div>
+  )
+}
+```
+2. `useCallback`
+- 랜더링 최적화를 위해 ***자식 컴포넌트의 속성값에 할당되는 함수에 적용***한다.
+- 부모 -> 자식에 속성으로 함수 할당시, 부모가 재생성 되면 함수가 새로 생성되므로, 자식에 `React.memo`를 적용해도 자식은 다시 랜더링 된다. 이를 방지하기 위해 `useMemo`로 함수를 감싸면, 부모 컴포넌트가 재생성 될 때도 함수가 재실행 되지 않는다.
+
+```js
+// useCallback이 필요한 코드
+function Profile() {
+  const [name, setName] = useState('motiveko')
+  const [age, setAge] = useState(20);
+  return (
+    <User 
+      onSave={() => saveToServer(name, age)}
+      name={name}
+      age={age}
+    />
+  );
+}
+
+// useCallabck 적용
+function Profile() {
+  ....
+  const onSave = useCallback(() => saveToServer(name, age), [name, age]);
+  return (
+    <User 
+      onSave={onSave}
+      ...
+    />
+  );
+}
+```
+
+<br>
+
+### 3.6.4 컴포넌트의 상태를 리덕스처럼 관리하기: useReducer
+- `useReducer`훅을 이용하면 `dispatch` 함수를 이용해 `action`을 발생시키고, `reducer`로 상태변경을 처리하는, `reducer`와 같은 방식으로 상태를 관리할 수 있다.
+- 기본 사용법은 아래와 같다.
+```js
+const initialState = {count: 0};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return {count: state.count + 1};
+    case 'decrement':
+      return {count: state.count - 1};
+    default:
+      throw new Error();
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  return (
+    <>
+      Count: {state.count}
+      <button onClick={() => dispatch({type: 'decrement'})}>-</button>
+      <button onClick={() => dispatch({type: 'increment'})}>+</button>
+    </>
+  );
+}
+```
+- `useReducer`와 Context API를 합쳐서 사용해, `dispatch` 함수를 전달하면 모든 자식 컴포넌트에서 쉽게 상태를 변경시킬 수 있게된다.
+
+```js
+const AppContext = React.createContext();
+
+function App() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  return (
+    <AppContext.Provider value={dispatch}>
+      <Child />
+      <Child2 />
+    </AppContext.Provider>
+  )
+}
+```
+- ***`useReducer`훅의 `dispath`함수는 값이 변하지 않기 때문에 `Consumer`컴포넌트의 불필요한 랜더링이 발생하지 않는다.👍👍***
+
+<br>
+
+### 3.6.5 부모 컴포넌트에서 접근 가능한 함수 구현하기: useImperativeHandle
+- 부모 컴포넌트에서 `함수형` 자식 컴포넌트를 `ref` 속성으로 참조할 때, 자식 컴포넌트의 함수를 호출해야 할 경우가 발생하는데, 이 때 자식 컴포넌트에서 함수 공개를 위해 `useImperativeHandle`훅을 사용할 수 있다.
+
+> ❗️ 안티 패턴이므로 가급적 지양해야한다.
+
+```js
+
+function Parent() {
+  const childRef = useRef();
+  const onClick = () => {
+    childRef.current.addAge(5);
+    console.log(`이름의 길이 : ${childRef.current.getNameLength()}`);
+  }
+  return (
+    <>
+      <Child ref={childRef} />
+      <button onClick={onClick}>버튼</button>
+    </>
+  )
+}
+
+const Child = forwardRef((props, ref) => {
+  const [name, setName] = useState('motiveko');
+  const [age, setAge] = useState(10);
+  useImperativeHandle(ref, () => ({
+    addAge: (value) => setAge(age + value),
+    getNameLength: () => name.length
+  }))
+  return <div>{`이름 : ${name}, 나이 : ${age}`}</div>
+})
+```
+- 함수형 컴포넌트인 `Child`를 `ref`속성으로 참조하기 위해 `forwardRef` 사용하였다.
+- `useImperativeHandle`의 첫번째 인자로 부모에서 참조할 `ref`객체를 넣어주고, 두번째 인자로 공개할 함수(메서드)를 반환하는 함수를 넣었다.
+- 부모에서는 `childRef.current.METHOD_NAME`으로 자식에서 공개한 함수를 실행할 수 있다.
+
+<br>
+
+### 3.6.6 기타 리액트 내장 훅: useLayoutEffect, useDebugValue
+1. `useLayoutEffect`
+- `useEffect`와 비슷하게 랜더링 후 부수효과를 실행하는 훅
+- 차이점은 `useLayoutEffect`는 동기로 작동하기 때문에 컴포넌트가 DOM에 추가된 직후 작동한다는 것이다.(`useEffect`는 비동기)
+- 가급적 `useEffect`를 사용하고, 랜더링 직후 DOM을 읽어야 할 경우에만 `useLayoutEffect`를 사용한다.
+
+<br>
+
+2. `useDebugValue`
+
+- `useDebugValue`훅은 커스텀 훅 내부의 상태를 관찰하기 위한 개발용 훅이다. 커스텀 훅 내부에서 `useDebugValue`을 사용하면 개발자 도구에서 훅의 상태값을 볼 수 있게된다.
+
+<br>
+
+
+
