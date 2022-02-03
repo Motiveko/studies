@@ -958,7 +958,185 @@ function Child({ todos, onChangeName}) {
 > 🥕참고🥕 [A Complete Guide to useEffect](https://overreacted.io/ko/a-complete-guide-to-useeffect/)
 
 ### 4.2.1 의존성 배열을 관리하는 방법
+
+1. 부수효과 함수에서 API를 호출하는 경우
+
+- 의존성 배열은 잘못 입력하면 쉽게 버그로 이어지므로 꼭 필요한 내용만 입력한다.
+- `부수효과 함수`에서 참조해 사용하는 상태, 속성값을 의존성 배열에 추가해야한다.
+- `eslint`의 `exhaustive-deps`규칙은 의존성 배열에서 잘못된 값(빼먹은 값, 없어도 되는 값)에 대해서 알려준다. [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks) 패키지에 포함되어 있는데, `create-react-app`을 사용하면 직접 설치는 필요하지 않은듯.
+
+- 아래는 의존성 배열을 잘못 관리하는 케이스다.
+```js
+function Component() {
+  const [value1, setValue1] = useState(0);
+  const [value2, setValue2] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => console.log(value1, value2), 1000);
+    return () => clearInterval(id);
+  }, [value1])
+  //...
+}
+```
+- 부수효과 함수는 `value1`이 변경될 때에만 새로 실행되고, `value2` 상태값이 변경되어도, `value1`이 변하기 전까지는 변경 이전의 값을 계속 참조하게 된다. `exhaustive-deps` 경고를 띄워줄테니 잡아서 해결하면 된다.
+
+<br>
+
+2. `useEffect` 훅에서 `async/await` 함수 사용하기
+- `부수효과 함수`의 반환값은 (리소스 정리)`함수`여야 한다. 그러나 `async` 함수의 반환값은 무조건 `Promise`이기 때문에 그냥은 사용할 수 없다. ***`async` 함수를 `부수효과 함수` 내부에 정의하고 호출하는 방식으로는 사용 가능***하다.
+
+```js
+// 잘못된 예. 에러 발생한다.
+useEffect(async () => {
+  const data = await fetchAndUser(userId);
+  setUser(data);
+}, [userId]);
+
+// 올바른 예
+useEffect(() => {
+  async function fetchAndSetUser() {
+    const data = await fetchAndUser(userId);
+    setUser(data);
+  }
+  fetchAndSetUser();
+}, [userId]);
+```
+
+3. `fetchAndSetUser`함수 재사용하기
+- 위의 `fetchAndSetUser` 함수를 컴포넌트 내 여러곳에서 재사용해야 한다면 어떻게 해야 할까?
+```js
+function Component({ userId }) {
+  const [user, setUser] = useState();
+  const fetchAndSetUser = useCallback(async () => {
+    const data = await fetchAndUser(userId);
+    setUser(data);
+  }, [userId]);
+  useEffect(fetchAndSetUser, [fetchAndSetUser]);
+}
+```
+- `fetchAndSetUser` 함수를 `useCallback` 훅을 사용해 정의하고, 의존성 배열로 `userId`상태를 넣었다. `userId`가 바뀌어야 `fetchAndSetUser`도 새로 생성된다.
+- `useEffect`의 부수효과 함수로 `fetchAndSetUser`를 넣고, 의존성 배열에도 `fetchAndSetUser`를 넣었다. 결과적으로 ***`userId` 속성값이 변경되어야 부수효과 함수가 다시 실행되어 `user` 상태를 변경할 것이다.***
+
+<br>
+
 ### 4.2.2 의존성 배열을 없애는 방법
+
+
+1. 부수효과 함수 내에서 분기 처리하기
+> 🤔 분기 처리로 의존성 배열을 없애는게 맞는지 생각해봐야 할 것 같다. 분기처리보단 의존성 배열 쓰는게 성능상 훨씬 좋지 않은가?
+
+- 위의 '`fetchAndSetUser`함수 재사용하기' 예제를 '부수효과 함수 내에서 분기 처리'해 의존성 배열을 제거할 수 있다.
+```js
+function Component({ userId }) {
+  const [user, setUser] = useState();
+  const fetchAndSetUser = async () => {
+    const data = await fetchUser(userId);
+    setUser(data);
+  }
+
+  useEffect(() => {
+    if(!user || user.id !== userId) {
+      fetchAndSetUser();
+    }
+  }, []);
+}
+```
+- `부수효과 함수` 내에서 user에 대해 if문으로 분기처리하여, 매 컴포넌트 함수 호출시 재실행 되어도, 필요할 때에만 `fetchAndSetUser`를 호출하도록 만들었다.
+- `fetchAndSetUser`에 대해 `useCallbck` 훅을 사용하지 않아도 된다.(사용하는게 더 좋지 않나?)
+
+<br>
+
+2. ***`useState`의 상탯값변경 함수에 함수 입력하기***
+- `상태값의 setter 함수` 사용시 이전 상태값이 필요하다면 함수를 인자로 전달하자.
+```js
+// 이전 상태값(count)를 참조해야 하므로 의존성 배열을 꼭 써줘야한다. 안써주면 어디선가 count가 업데이트 됐을 때 과거 값을 참조하고 있게 된다.
+useEffect(() => {
+  function onClick() {
+    setCount(count + 1);
+  }
+  // ...
+}, [count])
+
+// setCount의 인자로 함수를 전달하면 이전 상태를 참조할 수 있다. 의존성 배열이 필요 없다.
+useEffect(() => {
+  function onClick() {
+    setCount(prev => prev + 1);
+  }
+}, [])
+```
+
+<br>
+
+3. `useReducer` 활용하기
+- 부수 효과 함수가 여러개의 상탯값을 참조할 경우 `useReducer`사용을 고려해야한다. 아래 `Timer` 컴포넌트는 주어진 시간에서 1초씩 감소시키는 예제다
+```js
+function Timer({ initialTotalSeconds }) {
+  const [hour, setHour] = useState(Math.floor(initialTotalSeconds / 3600));
+  const [minute, setMinute] = useState(Math.floor((initialTotalSeconds % 3600) / 60));
+  const [second, setSecond] = useState(initialTotalSeconds % 60);
+  useEffect(() => {
+    const id = setInterval(() => {
+      // 1초마다 적절히 시/분/초 감소시키는 로직
+    }, 1000);
+    return () => clearInterval(id)
+  }, [hour, minute, second]);
+}
+```
+- 의존성 배열이 많아졌고, 매 초마다 `setInterval`,`clearInterval`을 호출하는 비효율적인 코드다. 이렇게 참조하는 상태가 여러개라면 `userReducer`를 사용해야한다.
+```js
+function Timer({ initialTotalSeconds }) {
+  const [state, dispatch] = useReducer(reducer, {
+    hour: Math.floor(initialTotalSeconds / 3600),
+    minute: Math.floor((initialTotalSeconds % 3600) / 60),
+    second: initialTotalSeconds % 60
+  });
+  useEffect(() => {
+    const id = setInterval(dispatch, 1000);
+    return () => clearInterval(id);
+  }, [])
+}
+
+function reducer(state) {
+  // 적절히 시/분/초 감소시키는 로직
+}
+```
+- 세 가지 상태값은 모두 `useReducer`훅으로 관리된다. `dispatch`의 값은 변하지 않기 때문에 의존성 배열은 필요 없게 된다.(물론 `dispatch` 함수의 `payload`에서 속성값을 참조한다면 이는 의존성 배열에 추가될 것이다)
+
+<br>
+
+4. `useRef` 활용하기
+- 속성값으로 함수가 넘어오는 케이스를 가정해보자. 부모에서 `useCallback`을 사용하지 않았다면 자식으로 넘어오는 함수는 매번 새로운 함수가 될 것이다. 이 함수가 `useEffect`의 의존성 배열에 있다면 매 랜더링 시 `부수효과 함수`가 호출될 것이다.
+- 해당 함수가 ***랜더링과 무관한*** 함수라면, `useRef`에 저장해서 의존성 배열을 제거할 수 있다.
+
+```js
+// useRef 사용하지 않은 경우
+function MyComopnent({ onClick }) {
+  useEffect(() => { // 매 랜더링시 호출될 가능성이 농후하다.
+    window.addEventListener('click', () => onClick());
+    //...
+  }, [onClick]);
+}
+
+// useRef에 onClikc을 저장하는 경우
+function MyComponent({ onClick }) {
+  const onClickRef = useRef();
+  useEffect(() => {
+    onClickRef.current = onClick;
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('click', () => onClickRef.current());
+  }, []);
+}
+```
+- `onClick`함수는 랜더링과 무관해 `onClickRef`에 저장했다. ***`useRef`에 저장된 값이 변경돼도 컴포넌트는 다시 랜더링 되지 않는다.***
+- 부수효과 함수에서 사용되는 `useRef` 값은 의존성 배열에 추가하지 않아도 된다.
+
+<!-- TODO : useRef의 자세한 동작을 알아봐야 할 것 같다. 
+  1. current가 가지는 의미 : 
+  2.   ... 졸리다!
+-->
+
+
 
 <br>
 
