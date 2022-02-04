@@ -977,7 +977,7 @@ function Component() {
   //...
 }
 ```
-- 부수효과 함수는 `value1`이 변경될 때에만 새로 실행되고, `value2` 상태값이 변경되어도, `value1`이 변하기 전까지는 변경 이전의 값을 계속 참조하게 된다. `exhaustive-deps` 경고를 띄워줄테니 잡아서 해결하면 된다.
+- 부수효과 함수는 `value1`이 변경될 때에만 새로 실행되고, `value2` 상태값이 변경되어도, `value1`이 변하기 전까지는 변경 이전의 값을 계속 참조하게 된다. Lint의 `exhaustive-deps`규칙이 경고를 띄워줄테니 잡아서 해결하면 된다.
 
 <br>
 
@@ -1048,7 +1048,7 @@ function Component({ userId }) {
 2. ***`useState`의 상탯값변경 함수에 함수 입력하기***
 - `상태값의 setter 함수` 사용시 이전 상태값이 필요하다면 함수를 인자로 전달하자.
 ```js
-// 이전 상태값(count)를 참조해야 하므로 의존성 배열을 꼭 써줘야한다. 안써주면 어디선가 count가 업데이트 됐을 때 과거 값을 참조하고 있게 된다.
+// 이전 상태값(count)를 참조해야 하므로 의존성 배열을 꼭 써줘야한다. 안써주면 어디선가 count가 업데이트 됐을 때 부수효과 함수는 과거 값을 참조하고 있게 된다.
 useEffect(() => {
   function onClick() {
     setCount(count + 1);
@@ -1099,13 +1099,17 @@ function reducer(state) {
   // 적절히 시/분/초 감소시키는 로직
 }
 ```
-- 세 가지 상태값은 모두 `useReducer`훅으로 관리된다. `dispatch`의 값은 변하지 않기 때문에 의존성 배열은 필요 없게 된다.(물론 `dispatch` 함수의 `payload`에서 속성값을 참조한다면 이는 의존성 배열에 추가될 것이다)
+- 세 가지 상태값은 모두 `useReducer`훅으로 관리된다. 부수효과 함수는 상태값에 대해 몰라도 되기때문에 의존성 배열이 제거되었다.
+- `dispatch`의 값은 변하지 않기 때문에 의존성 배열에 없어도 된다.
+- 물론 `dispatch` 함수의 `payload`에서 속성값을 참조한다면 이는 의존성 배열에 추가될 것이다)
 
 <br>
 
 4. `useRef` 활용하기
 - 속성값으로 함수가 넘어오는 케이스를 가정해보자. 부모에서 `useCallback`을 사용하지 않았다면 자식으로 넘어오는 함수는 매번 새로운 함수가 될 것이다. 이 함수가 `useEffect`의 의존성 배열에 있다면 매 랜더링 시 `부수효과 함수`가 호출될 것이다.
+- `useRef`훅의 특징은 ***저장된 값이 변경되어도 컴포넌트가 다시 랜더링 되지 않는다는 것이다.***
 - 해당 함수가 ***랜더링과 무관한*** 함수라면, `useRef`에 저장해서 의존성 배열을 제거할 수 있다.
+
 
 ```js
 // useRef 사용하지 않은 경우
@@ -1141,9 +1145,252 @@ function MyComponent({ onClick }) {
 <br>
 
 ### 4.3 렌더링 속도를 올리기 위한 성능 최적화 방법
-### 4.3.1 React.memo로 렌더링 결과 재사용하기
+- 리액트에서 CPU를 가장 많이 쓰는것은 렌더링이다. 최초 렌더링 이후, 데이터 변경시 렌더링을 수행하는데, 다음과 같은 단계를 거친다.
+  1. 이전 렌더링 결과를 재사용할지 판단한다.
+  2. 컴포넌트 함수를 호출한다.
+  3. 가상 돔끼리 비교해서 변경된 부분만 실제 돔에 반영한다.
+
+- 이중 첫번째 단계는 클래스 컴포넌트의 `shouldComponentUpadat`메서드나 함수형 컴포넌트에서 `React.memo`를 이용해 구현할 수 있다. 이를 통해 성능 최적화가 가능하다.
+- 사실 대부분의 웹페이지는 성능 최적화를 하지 않아도 잘 돌아간다. 성능 최적화는 성능 이슈가 발생했을 때 고민하도록 하자.
+
+<br>
+
+### 4.3.1 **[React.memo](https://ko.reactjs.org/docs/react-api.html#reactmemo)로 렌더링 결과 재사용하기**
+>  참고자료 - [https://ui.toast.com/weekly-pick/ko_20190731](https://ui.toast.com/weekly-pick/ko_20190731)
+
+<br>
+
+- 컴포넌트가 다시 렌더링 되어야 할 때, 이전 속성값과 현재 속성값을 비교해 컴포넌트 함수 호출 여부를 결정한다. `React.memo`로 감싼 컴포넌트 함수라면 값을 비교해 `boolean`을 반환할moviePropsAreEqual 것이고, 일반 컴포넌트라면 항상 `false`가 반환되어 다시 렌더링 된다.
+- 이 말은 ***`React.memo`를 적용하지 않으면, 부모 컴포넌트가 다시 랜더링 될 때 무조건 자식도 다시 랜더링하게 된다는 것***이다.
+
+```js
+// React.memo의 시그니처
+function memo<P extends object>(
+    Component: FunctionComponent<P>,
+    propsAreEqual?: (prevProps: Readonly<PropsWithChildren<P>>, nextProps: Readonly<PropsWithChildren<P>>) => boolean
+): NamedExoticComponent<P>;
+```
+- `React.memo`는 두번째 인자인 `propsAreEqual` 함수를 전달하지 않으면 [`얕은 비교(shallow Eqaul)`](https://github.com/facebook/react/blob/v16.8.6/packages/shared/shallowEqual.js)를 수행한다.
+
+  > `얕은 비교`란 객체에 직접 연결된(1 depth) 값에 대해 일치 연산(`===`)을 수행 하는것을 말한다. 
+
+- 속성값을 `불변 객체`로 관리하면 값의 단순비교만 해도 변경 여부를 확인할 수 있다. 그러나 `가변 객체`로 관리하면 객체 내부를 모두 순회하며 값을 비교해야 한다. => ***`속성값`은 결국 `부모의 상태값`이므로, 상태값을 불변으로 관리해야 한다는 말이다!***
+```js
+// 속성값이 불변 객체일 경우 구현하며 되는 propsAreEqual 함수 예. 단순하다.
+function propsAreEqual(prevProps, nextProps) {
+  return prevProps.todos !== nextProps.todos;
+}
+```
+> [(참고)](https://ko.javascript.info/object-copy) 객체 비교시 `==`, `===`은 사실 동일하게 작동한다. 둘 다 참조 주소를 비교한다.
+
+<br>
+
 ### 4.3.2 속성값과 상탯값을 불변 변수로 관리하는 방법
+1. 함수의 값이 변하지 않도록 관리하기
+- 자식 컴포넌트 속성에 함수 할당시, 부모 컴포넌트가 랜더링 되도 불필요하게 다시 생성되지 않는 함수를 할당해야한다.
+```js
+// 잘못된 예. React.memo를 사용해도 소용없다.
+function Parent() {
+  const [state, setState] = userState();
+  return (
+    <Child func={(value) => setState(value)} />
+  )
+}
+
+// 올바른 예. useState 훅의 setter 함수는 불변이다.
+function Parent() {
+  const [state, setState] = userState();
+  return (
+    <Child func={setState} />
+  )
+}
+```
+- 위와같이 단순한 `상태값 setter 함수`가 아닌 여러 연산이 합쳐지는 함수의 경우 `useCallback`훅으로 만든 함수를 사용하자.
+```js
+// 잘못된 예.
+function Parent() {
+  const [state, setState] = userState();
+  function func(value) {
+    if(value !== null)  setState(state);
+  }
+  return (
+    <Child func={func} />
+  )
+}
+
+// 올바른 예, func는 컴포넌트 생성시 최초 한번만 만들어진다.
+function Parent() {
+  const [state, setState] = userState();
+  const func = useCallback(() => {
+    if(value !== null)  setState(state)
+  },[]);
+  return (
+    <Child func={func} />
+  )
+}
+```
+
+<br>
+
+2. 객체의 값이 변하지 않도록 관리하기
+- 자식의 `props`에 객체를 inline으로 할당하면 매 랜더링에 새로 생성된다. `컴포넌트 밖 상수`나 `상태값`으로 관리하자
+```js
+// 잘못된 예
+function Parent() {
+  return (
+    <Child obj={{key: 'value'}}/>
+  )
+}
+
+// 올바른 예
+function Parent() {
+  return(
+    <Child obj={obj} />
+  )
+}
+const obj = {key: 'value'};
+
+```
+- 객체 생성이 상태/속성값을 기반으로 연산이 필요하다면, `useMemo` 훅을 이용해 객체를 생성하자.
+```js
+// 잘못된 예, 매 랜더링에 newItems가 새로 생성됨
+function Parent({ items }) {
+  const newItems = items.filter(item => item.new);
+  return (
+    <Child newItems={newItems}/>
+  )
+}
+
+// 올바른 예, items속성값이 변할때만 newItems가 새로 생성된다.
+function Parent({ items }) {
+  const newItems = useMemo(() => items.filter(item => item.new), [items]);
+  return (
+    <Child newItems={newItems}/>
+  )
+}
+```
+<br>
+
 ### 4.3.3 가상 돔에서의 성능 최적화
-### 
+> 가상 돔이 만들어져 실제 돔에 반영되는 과정을 이해하고 성능을 최적화 할 수 있는 부분을 알아본다.
+
+1. 요소의 `타입` 또는 `속성`을 변경하는 경우
+- 요소의 `타입`이 변경되면(예 : div -> span) ***실제 돔에서 자식요소는 삭제되고 다시 추가된다.***
+```js
+function Parent() {
+  const [flag, setFlag] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => setFlag(prev => !prev), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if(flag) {
+    return (
+      <div> 
+        <Child />
+      </div>
+    )
+  } else {
+    return (
+      <span> 
+        <Child />
+      </span>
+    )
+  }
+}
+function Child() {
+  // 자식 컴포넌트 상태는 1초마다 0으로 초기화된다.
+  const [count, setCount] = useState(0);
+
+  // 1초마다 Child컴포넌트가 DOM에서 제거/추가 되면서 부수효과 함수가 실행된다.
+  useEffect(() => {
+    const id = setInterval(() => setCount(prev => prev+1), 50);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <h2>{count}</h2>
+  )
+}
+```
+- ## 이 때 <u>***자식 컴포넌트가 삭제된 후 추가되므로 상태값은 초기화 된다.***</u>
+
+- 그러나 요소의 `속성`이 변경되는 경우 해당 속성값만 실제 돔에 반영한다. ***실제 돔에서 자식 요소는 그대로 있는다.***
+  > ❗️ 실제 돔에서 그대로 있는다는거지 컴포넌트 함수가 실행되지 않는게 아니다! 컴포넌트 함수 실행은 가상돔을 만드는 과정이다!
+
+<br>
+
+2. 요소를 추가/삭제하는 경우
+- 리액트에서 요소의 추가/삭제시 ***기본적으로 실제DOM과 가상DOM 사이의 변경 여부를 판단하는 기준은 요소의 `순서`다.*** 요소의 맨 끝에 요소를 추가/삭제할 경우, 앞에 있는 요소가 변경되지 않았으면 리액트는 이를 인지한다. 그러나 요소의 ***중간에 추가/삭제를 수행할 경우 해당 요소의 뒤의 요소는 순서가 바뀌어 모두 DOM에서 삭제/추가를 수행***하게 된다.
+- 이 때 각 요소에 `key` 프로퍼티에 고유한 값이 할당되어 있으면, 이를 기반으로 가상DOM과 실제 DOM의 차이를 비교하게 된다. 즉 순서가 필요 없어지는 것이다.
+```js
+// 1. 맨 끝에 3요소를 추가했으므로 리액트가 1,2에 대해서는 변경되지 않았음을 인지하고 실제 DOM에서 건드리지 않는다.
+function App() {
+  // ..
+  if(flag) {
+    return (
+      <div>
+        <p>1</p>
+        <p>2</p>
+      </div>
+    )
+  } else {
+    return (
+      <div>
+        <p>1</p>
+        <p>2</p>
+        <p>3</p>
+      </div>      
+    )
+  }
+}
+
+// 2. 1과 2 사이에 1.5가 추가됨으로 인해 1.5뒤의 2는 변경되지 않았음에도 실제 DOM에서 제거됬다가 다시 추가된다.
+function App() {
+  // ..
+  if(flag) {
+    return (
+      <div>
+        <p>1</p>
+        <p>2</p>
+      </div>
+    )
+  } else {
+    return (
+      <div>
+        <p>1</p>
+        <p>1.5</p>
+        <p>2</p>
+      </div>      
+    )
+  }
+}
+
+// key를 사용해 1,2가 이전 요소와 동일한 요소임을 인지하고 실제 DOM에서 건드리지 않는다.
+function App() {
+  // ..
+  if(flag) {
+    return (
+      <div>
+        <p key={1}>1</p>
+        <p key={2}>2</p>
+      </div>
+    )
+  } else {
+    return (
+      <div>
+        <p key={1}>1</p>
+        <p key={1.}>1.5</p>
+        <p key={2}>2</p>
+      </div>      
+    )
+  }
+}
+```
+- 이러한 이유로, 배열을 순회해서 요소 생성시 각 요소에 고유한 `key`속성값이 없으면 에러가 난다.
+
+<br>
+
+## 5. 레거시 프로젝트를 위한 클래스형 컴포넌트
 
 
