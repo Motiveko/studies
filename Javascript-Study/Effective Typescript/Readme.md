@@ -1323,7 +1323,7 @@ type ReadonlyPerson =  Readonly<Person>;
 }
  */
 ```
-1depth의 property들은 모두 readonly가 붙었지만 2depth의 city, state들은 변경 가능하므로 address는 결국 mutable이다. `Deep Readonly`는 타입스크립트 자체에서는 제공하지 않고 `type-fest`나 `ts-essential`같은 서드파티 라이브러리를 사용해서 만들 수 있다. 아래는 `type-fest`의 `ReadonlyDeep`을 사용해 `Person`의 `deep readonly`타입을 정의하였다.
+1depth의 property들은 모두 readonly가 붙었지만 2depth의 city, state들은 변경 가능하므로 address는 결국 mutable이다. `Deep Readonly`는 타입스크립트 자체에서는 제공하지 않고 `type-fest`나 `ts-essential`같은 서드파티 라이브러리를 사용해서 만들 수 있다. 아래는 [`type-fest`의 `ReadonlyDeep`](https://github.com/sindresorhus/type-fest/blob/HEAD/source/readonly-deep.d.ts)을 사용해 `Person`의 `deep readonly`타입을 정의하였다.
 
 ```ts
 import {ReadonlyDeep} from 'type-fest/source/readonly-deep'
