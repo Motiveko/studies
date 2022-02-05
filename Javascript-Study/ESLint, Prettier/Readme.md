@@ -581,6 +581,9 @@ Prettier는 다양한 언어의 포맷팅을 지원한다. 지원 언어는 아�
     - `plugins`: `prettier` 플러그인 등록
     - `rules.prettier/prettier : error`: plugin이 제공하는 rule을 모두 킨다. `ESLint` 내에서 `Prettier`가 동작하게 되는것이다.
     - `arrow-body-style`, `prefer-arrow-callback` off : 안타깝게도 이 두가지 설정은 플러그인이 off해주지 못해 수동으로 해줘야 한다고 한다. 만약 `extends`에 `plugin:prettier/recommended`를 설정해주면 해주는 모양이다.
+    
+    > ❗️주의❗️ prettier 설정과 함께 `.eslintrc`에 위 설정을 추가 했는데도 prettier로 포맷은 하나 자꾸 lint에서 오류를 내면 vscode를 껏다 켜보자. lint 설정이 동기화가 안됐을 수 있다
+
 6. [`.prettierrc`](https://github.com/prettier/eslint-plugin-prettier#options) 작성법은 링크 타고 들어가서 한번 보자.
 
 <br>
