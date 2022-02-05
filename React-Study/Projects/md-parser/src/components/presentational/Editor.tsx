@@ -13,7 +13,8 @@ function Editor( props: { onChange: Dispatch<any>}) {
           as="textarea"
           style={{
             height: DISPLAY_STYLE.EDITOR_HEIGHT,
-            width: '100%'
+            width: '100%',
+            resize: "none"
           }}
           />
       </FloatingLabel>

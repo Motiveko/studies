@@ -3,6 +3,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { DISPLAY_STYLE } from "../../constant";
 
+/**
+ * 마크다운을 받아서 html 파싱후 랜더링한다.
+ * @param param
+ * @returns 
+ */
 function Preview({ text }: { text: string }) {
   return (
       <div className="container" style={{width: DISPLAY_STYLE.EDITOR_WIDTH}}>
@@ -22,7 +27,6 @@ function Preview({ text }: { text: string }) {
           />
         </div>
       </div>
-  
   )
 }
 

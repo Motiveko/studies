@@ -1,38 +1,114 @@
-.App {
-  text-align: center;
+/* .hljs {
+	display: block !important;
+	overflow-x: auto !important;
+	padding: .5em !important;
+	color: #abb2bf !important;
+	background: #282c34 !important;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.hljs-comment,
+.hljs-quote {
+	color: #5c6370 !important;
+	font-style: italic !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.hljs-doctag,
+.hljs-formula,
+.hljs-keyword {
+	color: #c678dd !important;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.hljs-deletion,
+.hljs-name,
+.hljs-section,
+.hljs-selector-tag,
+.hljs-subst {
+	color: #e06c75 !important;
 }
 
-.App-link {
-  color: #61dafb;
+.hljs-literal {
+	color: #56b6c2 !important;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta-string,
+.hljs-regexp,
+.hljs-string {
+	color: #98c379 !important;
 }
+
+.hljs-built_in,
+.hljs-class .hljs-title {
+	color: #e6c07b !important;
+}
+
+.hljs-attr,
+.hljs-number,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-pseudo,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable {
+	color: #d19a66 !important;
+}
+
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-symbol,
+.hljs-title {
+	color: #61aeee !important;
+}
+
+.hljs-emphasis {
+	font-style: italic !important;
+}
+
+.hljs-strong {
+	font-weight: 700 !important;
+}
+
+.hljs-link {
+	text-decoration: underline !important;
+} */
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}/*!
+   Theme: Agate
+   Author: (c) Taufik Nurrohman <hi@taufik-nurrohman.com>
+   Maintainer: @taufik-nurrohman
+   Updated: 2021-04-24
+
+   #333
+   #62c8f3
+   #7bd694
+   #888
+   #a2fca2
+   #ade5fc
+   #b8d8a2
+   #c6b4f0
+   #d36363
+   #fc9b9b
+   #fcc28c
+   #ffa
+   #fff
+*/
+/* higlight.js theme */
+.hljs{background:#333;color:#fff}.hljs-doctag,.hljs-meta-keyword,.hljs-name,.hljs-strong{font-weight:700}.hljs-code,.hljs-emphasis{font-style:italic}.hljs-section,.hljs-tag{color:#62c8f3}.hljs-selector-class,.hljs-selector-id,.hljs-template-variable,.hljs-variable{color:#ade5fc}.hljs-meta-string,.hljs-string{color:#a2fca2}.hljs-attr,.hljs-quote,.hljs-selector-attr{color:#7bd694}.hljs-tag .hljs-attr{color:inherit}.hljs-attribute,.hljs-title,.hljs-type{color:#ffa}.hljs-number,.hljs-symbol{color:#d36363}.hljs-bullet,.hljs-template-tag{color:#b8d8a2}.hljs-built_in,.hljs-keyword,.hljs-literal,.hljs-selector-tag{color:#fcc28c}.hljs-code,.hljs-comment,.hljs-formula{color:#888}.hljs-link,.hljs-regexp,.hljs-selector-pseudo{color:#c6b4f0}.hljs-meta{color:#fc9b9b}.hljs-deletion{background:#fc9b9b;color:#333}.hljs-addition{background:#a2fca2;color:#333}.hljs-subst{color:#fff}.hljs a{color:inherit}.hljs a:focus,.hljs a:hover{color:inherit;text-decoration:underline}.hljs mark{background:#555;color:inherit}
+
+/* 인용문 스타일 */
+blockquote{
+   width:100%;
+   padding:0.4rem;
+   overflow-wrap: break-word;
+   font-style:italic;
+   color: #555555;
+   border-left:8px solid #78C0A8 ; 
+   background:#EDEDED;
+ }
+ blockquote p {
+    padding: 0;
+    margin: 0.2rem 0;
+ }
+ 
