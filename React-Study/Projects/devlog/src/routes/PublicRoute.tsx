@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function PublicRoute() {
-  const authenticated = false;
-  return authenticated ? <Navigate to="/" replace={true} /> : <Outlet />;
+  const { currentUser } = useAuth();
+  return currentUser ? <Navigate to="/" replace={true} /> : <Outlet />;
 }

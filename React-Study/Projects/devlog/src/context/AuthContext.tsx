@@ -11,6 +11,7 @@ type SignUp = (email: string, password: string) => Promise<UserCredential>;
 type Login = (email: string, password: string) => Promise<UserCredential>;
 
 type AuthContext = {
+  currentUser: User | null;
   signUp: SignUp;
   login: Login;
 };
@@ -29,7 +30,7 @@ export const useAuth = () => {
 const auth = getAuth(app);
 
 export function AuthProvider({ children }: Prop) {
-  const [currentUser, setCurrentUser] = useState<User>();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const login: Login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: Prop) {
   return (
     <AuthContext.Provider
       value={{
+        currentUser,
         login,
         signUp,
       }}
