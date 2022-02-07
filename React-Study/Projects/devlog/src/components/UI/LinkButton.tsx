@@ -15,7 +15,7 @@ function LinkButton({ to, children, variant }: Prop) {
     color: variant === 'dark' ? 'white' : 'dark',
   };
 
-  const className = ['btn', `btn-${variant}`];
+  const className = ['btn', `btn-sm`, `btn-${variant}`];
   return (
     <>
       <Link to={to} className={className.join(' ')} style={style}>

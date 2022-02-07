@@ -11,7 +11,7 @@ function IconInput({ icon, onChange }: Prop) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <label className="btn btn-outline-dark mb-2">
+    <label className="btn btn-sm mb-2" style={{ border: '1px solid lightgrey' }}>
       <FontAwesomeIcon icon={icon} />
       <input type="file" ref={fileRef} onChange={onChange} style={{ opacity: 0, position: 'absolute', left: '-9999px' }} />
     </label>

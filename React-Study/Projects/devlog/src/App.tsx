@@ -9,7 +9,7 @@ import Auth from './routes/Auth';
 import Home from './routes/Home';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
-import PostEditor from './routes/MarkdownEditor';
+import PostEditor from './components/PostEditor';
 
 function App() {
   return (

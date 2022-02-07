@@ -1,0 +1,3 @@
+#preview p img {
+  max-width: calc(45vw - 2rem);
+}

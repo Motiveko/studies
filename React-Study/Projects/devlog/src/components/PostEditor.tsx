@@ -6,11 +6,9 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import rehypeHighlight from 'rehype-highlight';
-import MarkdownEditor from '../components/MarkdownEditor';
-import MarkdownPreview from '../components/MarkdownPreview';
+import MarkdownEditor from './MarkdownEditor';
+import MarkdownPreview from './MarkdownPreview';
 import remarkGfm from 'remark-gfm';
-// import rehypeFormat from 'rehype-format';
-// import { reporter } from 'vfile-reporter';
 
 export default function PostEditor() {
   const [text, setText] = useState('');
@@ -20,9 +18,14 @@ export default function PostEditor() {
   }, [text]);
 
   return (
-    <div className="d-flex align-items-center">
-      <MarkdownEditor onChange={setText} />
-      <MarkdownPreview code={parsedText} />
-    </div>
+    <>
+      <div
+        className="d-flex align-items-stretch"
+        //  style={{ height: '89vh' }}
+      >
+        <MarkdownEditor onChange={setText} />
+        <MarkdownPreview code={parsedText} />
+      </div>
+    </>
   );
 }

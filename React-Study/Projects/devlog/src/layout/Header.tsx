@@ -25,11 +25,11 @@ function Header() {
     // TODO : user 아바타 이미지 생기면 그거 가져다 쓰기
     const thumbnail = UI_CONST.ANONYMOUSE_THUMBNAIL[getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)];
 
-    return <Image src={`/assets/animals/${thumbnail}.png`} className="me-2" style={{ width: '2.5rem', height: '2.5rem', position: 'relative' }} />;
+    return <Image src={`/assets/animals/${thumbnail}.png`} className="me-2" style={{ width: '2rem', height: '2rem', position: 'relative' }} />;
   }, [currentUser]);
 
   return (
-    <Navbar>
+    <Navbar style={{ height: '60px' }}>
       <Container>
         <Navbar.Brand as={Link} to={{ pathname: '/' }}>
           🤖 Devlog
