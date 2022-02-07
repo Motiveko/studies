@@ -1,5 +1,5 @@
 import React, { FormEvent, useRef } from 'react';
-import { Button, Card, Form, Image } from 'react-bootstrap';
+import { Button, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCommon } from '../context/CommonContext';

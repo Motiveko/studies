@@ -9,6 +9,7 @@ import Auth from './routes/Auth';
 import Home from './routes/Home';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
+import PostEditor from './routes/MarkdownEditor';
 
 function App() {
   return (
@@ -17,8 +18,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />}>
             <Route path="user" element={<PrivateRoute />}>
+              <Route path="newPosts" element={<PostEditor />} />
               <Route path="settings" element={<div>회원정보</div>} />
-              <Route path="newPosts" element={<div>글쓰기</div>} />
               <Route path="tempPost" element={<div>임시 포스트</div>} />
             </Route>
           </Route>
