@@ -1,10 +1,10 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 type Prop = {
   children: JSX.Element | JSX.Element[];
 };
 
-type CommonContext = {
+export type CommonContext = {
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   isLoading: boolean;
@@ -24,6 +24,13 @@ export const useCommon = () => {
 export function CommonProvider({ children }: Prop) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // 에러는 3초만 보여주고 지운다.
+  useEffect(() => {
+    if (error != null) {
+      setTimeout(() => setError(null), 3000);
+    }
+  }, [error]);
 
   return <CommonContext.Provider value={{ error, setError, isLoading, setIsLoading }}>{children}</CommonContext.Provider>;
 }

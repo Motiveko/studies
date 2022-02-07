@@ -1,14 +1,18 @@
+import React from 'react';
 import { useRef } from 'react';
 import { FormEvent } from 'react';
-import { Button, Card, Form, Image } from 'react-bootstrap';
+import { Button, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCommon } from '../context/CommonContext';
+import CenteredSpinner from './UI/CenteredSpinner';
+import ErrorAlert from './UI/ErrorAlert';
+import GoogleButton from './UI/GoogleButton';
 
 export default function Register() {
   // const { signUp } = useOutletContext();
   const { signUp } = useAuth();
-  const { setIsLoading, setError } = useCommon();
+  const { isLoading, setIsLoading, error, setError } = useCommon();
   const navigate = useNavigate();
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -21,7 +25,6 @@ export default function Register() {
     const { email, password, passwordConfirm } = getRegisterInfo();
 
     if (!checkPassword(password, passwordConfirm)) {
-      // TODO : alert
       return;
     }
 
@@ -34,6 +37,7 @@ export default function Register() {
     }
     setIsLoading(false);
   };
+
   const getRegisterInfo: () => { email: string; password: string; passwordConfirm: string } = () => {
     if (!emailRef.current || !passwordRef.current || !passwordConfirmRef.current) {
       throw new Error('회원가입 폼 생성중 문제가 발생하였습니다.');
@@ -44,12 +48,12 @@ export default function Register() {
       passwordConfirm: passwordConfirmRef.current.value,
     };
   };
+
   const checkPassword: (password: string, passwordConfirm: string) => boolean = (password, passwordConfirm) => {
     if (password !== passwordConfirm) {
-      // TODO : 경고창 띄우기
+      setError('입력한 비밀번호가 일치하지 않습니다.');
       return false;
     }
-
     return true;
   };
 
@@ -58,8 +62,9 @@ export default function Register() {
       <Card style={{ width: '40vw', maxWidth: '350px', minWidth: '250px' }}>
         <Card.Body>
           <Card.Title style={{ textAlign: 'center' }}>회원가입</Card.Title>
-          <Form>
-            <Form.Group onSubmit={onSubmit}>
+          <ErrorAlert error={error} setError={setError} />
+          <Form onSubmit={onSubmit}>
+            <Form.Group>
               <Form.Label>이메일</Form.Label>
               <Form.Control ref={emailRef} type="email" placeholder="name@example.com" required />
             </Form.Group>
@@ -71,14 +76,16 @@ export default function Register() {
               <Form.Label>비밀번호 확인</Form.Label>
               <Form.Control ref={passwordConfirmRef} type="password" placeholder="비밀번호 확인" required />
             </Form.Group>
+            {isLoading && <CenteredSpinner />}
+            {!isLoading && (
+              <>
+                <Button type="submit" className="w-100 mt-3" variant="primary">
+                  회원가입
+                </Button>
+                <GoogleButton>구글계정으로 가입하기</GoogleButton>
+              </>
+            )}
           </Form>
-
-          <Button className="w-100 mt-3" variant="primary">
-            회원가입
-          </Button>
-          <Button variant="light" className="w-100 mt-2">
-            <Image src="/assets/google.png" style={{ width: '1.25rem', height: '1.25rem' }} className="me-2 p-0" /> 구글계정으로 가입하기
-          </Button>
         </Card.Body>
       </Card>
       <div className="text-center mt-2">
