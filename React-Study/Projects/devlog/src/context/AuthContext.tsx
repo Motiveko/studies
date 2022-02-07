@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, User, UserCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut, User, UserCredential } from 'firebase/auth';
 import { app } from '../firebase';
 import { useContext } from 'react';
 
@@ -9,11 +9,12 @@ type Prop = {
 
 type SignUp = (email: string, password: string) => Promise<UserCredential>;
 type Login = (email: string, password: string) => Promise<UserCredential>;
-
+type Logout = () => Promise<void>;
 type AuthContext = {
   currentUser: User | null;
   signUp: SignUp;
   login: Login;
+  logout: Logout;
 };
 
 // createContext 타입 및 초기값 설정 - https://stackoverflow.com/questions/61333188/react-typescript-avoid-context-default-value
@@ -40,9 +41,12 @@ export function AuthProvider({ children }: Prop) {
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
+  const logout: Logout = () => {
+    return signOut(auth);
+  };
+
   useEffect(() => {
     return auth.onAuthStateChanged(user => {
-      if (!user) return;
       setCurrentUser(user);
       // TODO : isLoading??
     });
@@ -54,6 +58,7 @@ export function AuthProvider({ children }: Prop) {
         currentUser,
         login,
         signUp,
+        logout,
       }}
     >
       {children}
