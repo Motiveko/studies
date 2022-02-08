@@ -21,7 +21,7 @@ export const useCommon = () => {
   return context;
 };
 
-export function CommonProvider({ children }: Prop) {
+export default function CommonProvider({ children }: Prop) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 

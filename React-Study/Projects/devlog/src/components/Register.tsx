@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCommon } from '../context/CommonContext';
 import CenteredSpinner from './UI/CenteredSpinner';
 import ErrorAlert from './UI/ErrorAlert';
-import GoogleButton from './UI/GoogleButton';
+import GoogleButton from './UI/Buttons/GoogleButton';
 
 export default function Register() {
   // const { signUp } = useOutletContext();
@@ -29,7 +29,8 @@ export default function Register() {
     }
 
     try {
-      await signUp(email, password);
+      const userCredentials = await signUp(email, password);
+      // userCredentials.user.
       navigate('/', { replace: true });
     } catch (e) {
       console.log(e);

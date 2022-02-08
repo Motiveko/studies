@@ -16,6 +16,12 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+          <Route path="/auth/*" element={<PublicRoute />}>
+            <Route path="" element={<Auth />}>
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+            </Route>
+          </Route>
           <Route path="/" element={<Home />}>
             <Route path="user" element={<PrivateRoute />}>
               <Route path="newPosts" element={<PostEditor />} />
@@ -23,13 +29,7 @@ function App() {
               <Route path="tempPost" element={<div>임시 포스트</div>} />
             </Route>
           </Route>
-          <Route path="/auth/*" element={<PublicRoute />}>
-            <Route path="" element={<Auth />}>
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-            </Route>
-          </Route>
-          <Route path="/*" element={<NotFound />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </>

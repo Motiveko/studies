@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCommon } from '../context/CommonContext';
 import CenteredSpinner from './UI/CenteredSpinner';
-import GoogleButton from './UI/GoogleButton';
+import GoogleButton from './UI/Buttons/GoogleButton';
 
 function Login() {
   const { login } = useAuth();

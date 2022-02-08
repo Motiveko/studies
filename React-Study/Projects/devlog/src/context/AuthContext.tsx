@@ -30,9 +30,8 @@ export const useAuth = () => {
 
 const auth = getAuth(app);
 
-export function AuthProvider({ children }: Prop) {
+export default function AuthProvider({ children }: Prop) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
   const login: Login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };

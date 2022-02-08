@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { AuthProvider } from './context/AuthContext';
-import { CommonProvider } from './context/CommonContext';
+import AuthProvider from './context/AuthContext';
+import CommonProvider from './context/CommonContext';
 
 ReactDOM.render(
   <CommonProvider>

@@ -1,3 +1,4 @@
+/* preview창 이미지 생길 때 최대 크기 */
 #preview p img {
   max-width: calc(45vw - 2rem);
 }
