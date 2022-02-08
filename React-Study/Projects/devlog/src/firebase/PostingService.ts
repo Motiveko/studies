@@ -6,11 +6,14 @@ export type Posting = {
   userId: string;
   title: string;
   content: string;
+  thumbnail: string;
+  description: string;
+  tags: string[];
   createdAt: FieldValue;
-  upadatedAt: FieldValue;
+  updatedAt: FieldValue;
 };
 
-type UploadPost = ({ uid, userId, title, content }: Pick<Posting, 'userId' | 'title' | 'content'> & { uid?: string | null }) => Promise<DocumentData> | Promise<void>;
+type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }: Omit<Posting, 'uid' | 'createdAt' | 'updatedAt'> & { uid?: string | null }) => Promise<DocumentData> | Promise<void>;
 type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<DocumentData>;
 
 type GetPosting = (id: string) => Promise<DocumentSnapshot<DocumentData>>;
@@ -20,7 +23,7 @@ type POSTING_CONSTANT = {
 
 const db = getFirestore();
 
-export const uploadPosting: UploadPost = ({ uid, userId, title, content }) => {
+export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail, tags, title, content }) => {
   console.log('uid', uid);
   if (!uid) {
     // 새로운 게시글 등록
@@ -28,12 +31,15 @@ export const uploadPosting: UploadPost = ({ uid, userId, title, content }) => {
       userId,
       title,
       content,
+      description,
+      thumbnail,
+      tags,
       createdAt: serverTimestamp(),
-      upadatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
   } else {
     // 게시글 업데이트
-    return updatePosting({ uid, title, content, upadatedAt: serverTimestamp() });
+    return updatePosting({ uid, title, content, description, thumbnail, tags, updatedAt: serverTimestamp() });
   }
 };
 

@@ -1,13 +1,10 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import IconButton from './IconButton';
 import { faFolderPlus } from '@fortawesome/free-solid-svg-icons';
 type Prop = {
   onChange: React.ChangeEventHandler<HTMLInputElement>;
-  buttonStyle?: {
-    width?: string;
-    height?: string;
-  };
+  buttonStyle?: CSSProperties;
 };
 
 function FileIconButton({ onChange, buttonStyle }: Prop) {
