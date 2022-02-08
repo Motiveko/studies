@@ -17,7 +17,7 @@ export const uploadImage: UploadPostingImage = (file: Blob) => {
 
 /**
  * 파일 업로드
- * @param path 파
+ * @param path 파일 경로
  * @param file
  * @returns 다운로드 URL
  */

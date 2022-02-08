@@ -1,19 +1,25 @@
-import React, { ChangeEventHandler, MouseEvent, useRef } from 'react';
+import React, { ChangeEventHandler, FormEvent, MouseEvent, useRef } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import UI_CONST from '../constants/ui-constants';
 import { faCode, faFolderPlus } from '@fortawesome/free-solid-svg-icons';
 import { uploadImage } from '../firebase/FileService';
 import FileIconButton from './UI/Buttons/FileIconButton';
 import IconButton from './UI/Buttons/IconButton';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { uploadPosting } from '../firebase/PostingService';
+import PostingConfirmModal from './PostingConfirmModal';
 
 type Prop = {
   onChange: React.Dispatch<React.SetStateAction<string>>;
 };
 
 function MarkdownEditor({ onChange }: Prop) {
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleFileChange: ChangeEventHandler<HTMLInputElement> = async e => {
     e.preventDefault();
@@ -21,36 +27,57 @@ function MarkdownEditor({ onChange }: Prop) {
       throw new Error('업로드 할 파일을 찾지 못했습니다');
     }
     const downloadURL = await uploadImage(e.target.files[0]);
-    addImageRef(downloadURL);
+    _addImageRef(downloadURL);
   };
 
   const addCodeBlock = (e: MouseEvent) => {
-    insertText('```\n코드를입력해주세요\n```');
+    _insertText('```\n코드를입력해주세요\n```');
   };
 
   // 마크다운 에디터의 현재 커서에 이미지 추가
-  const addImageRef = (imageUrl: string) => {
-    insertText(`![](${imageUrl})`);
+  const _addImageRef = (imageUrl: string) => {
+    _insertText(`![](${imageUrl})`);
   };
 
-  const insertText = (textToInsert: string) => {
-    if (!textAreaRef.current) {
+  const _insertText = (textToInsert: string) => {
+    if (!contentRef.current) {
       throw new Error('textarea가 존재하지 않습니다');
     }
-    const cursor = textAreaRef.current.selectionStart;
-    const text = textAreaRef.current.value;
+    const cursor = contentRef.current.selectionStart;
+    const text = contentRef.current.value;
     const textBeforeCursor = text.substring(0, cursor);
     const textAfterCursor = text.substring(cursor, text.length);
-    textAreaRef.current.value = `${textBeforeCursor}\n${textToInsert}\n${textAfterCursor}`;
-    onChange(textAreaRef.current.value);
+    contentRef.current.value = `${textBeforeCursor}\n${textToInsert}\n${textAfterCursor}`;
+    onChange(contentRef.current.value);
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    console.log(event);
+
+    const { title, content } = getFormValue();
+    const uid = searchParams.get('id');
+    const userId = currentUser!.uid;
+
+    const result = await uploadPosting({ uid, userId, title, content });
+    if (result) {
+      console.log(result);
+    }
+  };
+
+  const getFormValue = () => {
+    if (!titleRef.current || !contentRef.current) {
+      throw new Error('폼 생성에 실패했습니다');
+    }
+    return { title: titleRef.current.value, content: contentRef.current.value };
   };
 
   return (
     <div className="container" style={{ width: UI_CONST.EDITOR_WIDTH }}>
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <div className="d-flex mb-2" style={{ height: '2.5rem' }}>
           <textarea
-            ref={textAreaRef}
+            ref={titleRef}
             placeholder="제목을 입력하세요"
             style={{
               background: 'transparent',
@@ -67,29 +94,31 @@ function MarkdownEditor({ onChange }: Prop) {
           ></textarea>
           <div className="ms-auto d-flex">
             <IconButton icon={faCode} onClick={addCodeBlock} />
-            <FileIconButton icon={faFolderPlus} onChange={handleFileChange} />
+            <FileIconButton onChange={handleFileChange} />
           </div>
         </div>
 
         <Form.Control
           onChange={e => onChange(e.target.value)}
           as="textarea"
-          ref={textAreaRef}
+          ref={contentRef}
+          placeholder="내용을 입력하세요."
           style={{
             height: UI_CONST.EDITOR_HEIGHT,
             width: '100%',
             resize: 'none',
           }}
         />
+        <div className="d-flex justify-content-end mt-2" style={{ height: '4vh' }}>
+          <Button size="sm" variant="dark" onClick={() => navigate(-1)}>
+            취소
+          </Button>
+          <Button className="ms-2" type="submit" size="sm" variant="success">
+            출간하기
+          </Button>
+        </div>
       </Form>
-      <div className="d-flex justify-content-end mt-2" style={{ height: '4vh' }}>
-        <Button size="sm" variant="dark" onClick={() => navigate(-1)}>
-          취소
-        </Button>
-        <Button className="ms-2" size="sm" variant="success">
-          출간하기
-        </Button>
-      </div>
+      <PostingConfirmModal />
     </div>
   );
 }

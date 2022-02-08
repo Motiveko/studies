@@ -5,11 +5,15 @@ type Prop = {
   icon: IconProp;
   onClick?: React.MouseEventHandler<HTMLLabelElement>;
   children?: JSX.Element | JSX.Element[] | string;
+  style?: {
+    width?: string;
+    heigth?: string;
+  };
 };
 
-function IconButton({ icon, onClick, children }: Prop) {
+function IconButton({ icon, onClick, children, style }: Prop) {
   return (
-    <label className="btn btn-sm mb-2 ms-2" onClick={onClick} style={{ border: '1px solid lightgrey' }}>
+    <label className="btn mb-2 ms-2" onClick={onClick} style={{ border: '1px solid lightgrey', ...style }}>
       <FontAwesomeIcon icon={icon} />
       {children}
     </label>
