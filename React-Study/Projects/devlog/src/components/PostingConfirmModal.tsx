@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, KeyboardEvent, SetStateAction, useCallback, useRef, useState } from 'react';
+import React, { ChangeEventHandler, KeyboardEvent, KeyboardEventHandler, SetStateAction, useCallback, useRef, useState } from 'react';
 import { Badge, Button, Form, Modal } from 'react-bootstrap';
 import ThumbnailEditor from '../domain/Posting/ThumbnailEditor';
 import { uploadImage } from '../firebase/FileService';
@@ -30,7 +30,7 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
   const removeThumbnail = useCallback(() => setThumbnail(''), []);
 
   // tags
-  const [tags, setTags] = useState<string[]>(['z', 'd']);
+  const [tags, setTags] = useState<string[]>([]);
 
   const removeTag = useCallback(index => setTags(prev => prev.filter((e, i) => i !== index)), []);
   const tagInputRef = useRef<HTMLTextAreaElement>(null);
@@ -56,6 +56,10 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
     return { thumbnail, description: descRef.current.value, tags };
   };
 
+  const prohibitEnter: KeyboardEventHandler = e => {
+    if (e.key === 'Enter') e.preventDefault();
+  };
+
   return (
     <Modal show={show}>
       <Modal.Header>
@@ -65,12 +69,12 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
         <ThumbnailEditor thumbnail={thumbnail} removeThumbnail={removeThumbnail} handleChange={handleFileChange} />
 
         <h6 className="mt-2">포스트 설명</h6>
-        <Form.Control as="textarea" ref={descRef} style={{ resize: 'none' }} />
+        <Form.Control as="textarea" onKeyPress={prohibitEnter} ref={descRef} style={{ resize: 'none' }} />
 
         <div className="d-flex mt-2 align-items-baseline">
           {tags.map((tag, i) => (
             <Badge onClick={() => removeTag(i)} className="mx-1" pill bg="secondary" key={i}>
-              {tag}
+              {tag} &nbsp; X
             </Badge>
           ))}
           <TransparentTextarea placeholder="태그추가" style={tagStyle} ref={tagInputRef} onKeyPress={onKeyPress} />

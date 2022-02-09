@@ -9,7 +9,8 @@ import Auth from './routes/Auth';
 import Home from './routes/Home';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
-import PostEditor from './components/PostEditor';
+import PostEditor from './domain/Posting/PostEditor';
+import Dashboard from './domain/Dashboard/Dashboard';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             </Route>
           </Route>
           <Route path="/" element={<Home />}>
+            <Route path="/" element={<Dashboard />} />
             <Route path="user" element={<PrivateRoute />}>
               <Route path="newPosts" element={<PostEditor />} />
               <Route path="settings" element={<div>회원정보</div>} />

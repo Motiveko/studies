@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, DocumentData, DocumentSnapshot, FieldValue, getDoc, getFirestore, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, DocumentData, DocumentSnapshot, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { ReadonlyDeep } from 'type-fest';
 
 export type Posting = {
@@ -9,9 +9,10 @@ export type Posting = {
   thumbnail: string;
   description: string;
   tags: string[];
-  createdAt: FieldValue;
-  updatedAt: FieldValue;
+  createdAt: FieldValue | FirebaseTime;
+  updatedAt: FieldValue | FirebaseTime;
 };
+export type FirebaseTime = { seconds: number; nanoseconds: number };
 
 type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }: Omit<Posting, 'uid' | 'createdAt' | 'updatedAt'> & { uid?: string | null }) => Promise<DocumentData> | Promise<void>;
 type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<DocumentData>;
@@ -55,6 +56,14 @@ const updatePosting = (posting: Omit<Posting, 'userId' | 'createdAt'>) => {
 
 export const getPosting: GetPosting = id => {
   return getDoc(doc(db, POSTING_CONSTANT.DOC_POSTING, id));
+};
+
+/**
+ * 포스팅 가져오기
+ * @returns Promise<QuerySnapshot<DocumentData>>
+ */
+export const getPostings = () => {
+  return getDocs(query(collection(db, POSTING_CONSTANT.DOC_POSTING), orderBy('createdAt'), limit(25)));
 };
 
 export const POSTING_CONSTANT: ReadonlyDeep<POSTING_CONSTANT> = {

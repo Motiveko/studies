@@ -12,6 +12,7 @@ type CreateStorageRef = (path: string) => StorageReference;
  */
 export const uploadImage: UploadPostingImage = (file: Blob) => {
   const path = `post/images/${uuidV4()}`;
+  console.log(path);
   return uploadFile(path, file);
 };
 
