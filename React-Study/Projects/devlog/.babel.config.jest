@@ -1,0 +1,4 @@
+//.babel.config.jest
+{
+  "presets": ["@babel/preset-typescript", "@babel/preset-env"],
+}
