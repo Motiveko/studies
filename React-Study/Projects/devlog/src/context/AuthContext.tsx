@@ -32,6 +32,7 @@ const auth = getAuth(app);
 
 export default function AuthProvider({ children }: Prop) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
   const login: Login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
@@ -46,6 +47,7 @@ export default function AuthProvider({ children }: Prop) {
 
   useEffect(() => {
     return auth.onAuthStateChanged(user => {
+      console.log('user', user);
       setCurrentUser(user);
       // TODO : isLoading??
     });
