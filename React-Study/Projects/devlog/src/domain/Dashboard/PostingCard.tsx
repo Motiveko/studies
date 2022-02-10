@@ -1,27 +1,25 @@
 import React, { useMemo } from 'react';
 import { Card } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { FirebaseTime, Posting } from '../../firebase/PostingService';
 import { User } from '../../firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
 import './PostingCard.css';
 type Prop = {
-  // thumbnail: string;
-  // title: string;
-  // description: string;
-  // updatedAt: FirebaseTime;
   posting: Posting;
   user: User;
 };
 function PostingCard({ posting, user }: Prop) {
-  const { thumbnail, title, description, updatedAt } = posting;
+  const { uid, thumbnail, title, description, updatedAt } = posting;
   const { email, displayName } = useMemo(() => ({ email: user.email, displayName: user.displayName }), [user]);
-  const date = useMemo(() => parseDate((updatedAt as FirebaseTime).seconds * 1000), [posting]);
+  const date = parseDate((updatedAt as FirebaseTime).seconds * 1000);
+  const navigate = useNavigate();
 
   return (
     <div className="col my-4 d-flex justify-content-center">
-      <Card style={{ width: '18rem' }}>
+      <Card className="posting-card" style={{ width: '18rem' }} onClick={() => navigate(`/post/${uid}`)}>
         <Card.Img variant="top" src={thumbnail || 'assets/thumbnail.png'} style={thumbnailStyle} />
-        <Card.Body>
+        <Card.Body style={{ borderTop: '1px solid lightgrey' }}>
           <Card.Title className="lh-1 fs-6 w-100 text-truncate">{title}</Card.Title>
           <Card.Text
             className="w-100 text-secondary card-description"

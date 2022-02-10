@@ -1,9 +1,11 @@
 import React, { ChangeEventHandler, KeyboardEvent, KeyboardEventHandler, SetStateAction, useCallback, useRef, useState } from 'react';
 import { Badge, Button, Form, Modal } from 'react-bootstrap';
-import ThumbnailEditor from './ThumbnailEditor';
+import ImageButton from '../../components/ThumbnailEditor';
 import { uploadImage } from '../../firebase/FileService';
 import { Posting } from '../../firebase/PostingService';
 import TransparentTextarea from '../../components/TransparentTextarea';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import IconButton from '../../components/Buttons/IconButton';
 
 type Prop = {
   show: boolean;
@@ -66,7 +68,11 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
         <Modal.Title>정보 입력하기</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <ThumbnailEditor thumbnail={thumbnail} removeThumbnail={removeThumbnail} handleChange={handleFileChange} />
+        <div className="d-flex">
+          <h6 className="me-auto">썸네일 등록</h6>
+          {thumbnail && <IconButton icon={faTimes} onClick={removeThumbnail} />}
+        </div>
+        <ImageButton thumbnail={thumbnail} handleChange={handleFileChange} variant="thumbnail" />
 
         <h6 className="mt-2">포스트 설명</h6>
         <Form.Control as="textarea" onKeyPress={prohibitEnter} ref={descRef} style={{ resize: 'none' }} />

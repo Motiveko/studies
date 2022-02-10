@@ -11,6 +11,7 @@ import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
 import PostEditor from './routes/PostEditor';
 import Dashboard from './routes/Dashboard';
+import UserSettings from './routes/UserSettings';
 
 function App() {
   return (
@@ -25,10 +26,11 @@ function App() {
           </Route>
           <Route path="/" element={<HomeLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/post/:id" element={<div>포스트상세</div>} />
             <Route path="user" element={<PrivateRoute />}>
               <Route path="newPosts" element={<PostEditor />} />
-              <Route path="settings" element={<div>회원정보</div>} />
-              <Route path="tempPost" element={<div>임시 포스트</div>} />
+              <Route path="settings" element={<UserSettings />} />
+              <Route path="tempPost" element={<div>TODO : 임시 글 목록 구현할 것</div>} />
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
