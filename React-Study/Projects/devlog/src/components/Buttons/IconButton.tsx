@@ -10,7 +10,7 @@ type Prop = {
 
 function IconButton({ icon, onClick, children, style }: Prop) {
   return (
-    <label className="btn mb-2 ms-2 d-flex justify-content-center align-items-center" onClick={onClick} style={{ border: '1px solid lightgrey', ...style }}>
+    <label onClick={onClick} style={{ border: '1px solid lightgrey', marginLeft: '0.5rem', ...style }} className="btn d-flex justify-content-center align-items-center">
       <FontAwesomeIcon icon={icon} />
       {children}
     </label>
