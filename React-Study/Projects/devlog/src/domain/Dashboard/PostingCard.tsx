@@ -13,15 +13,15 @@ function PostingCard({ thumbnail, title, description, updatedAt }: Prop) {
   const date = useMemo(() => parseDate(updatedAt.seconds * 1000), [updatedAt]);
 
   return (
-    <div className="col my-4">
-      <Card className="d-flex flex-column" style={{ flexBasis: '25%', flex: 'none' }}>
+    <div className="col my-4 d-flex justify-content-center">
+      <Card style={{ width: '18rem' }}>
         <Card.Img variant="top" src={thumbnail || 'assets/thumbnail.png'} style={thumbnailStyle} />
         <Card.Body>
-          <Card.Title className="lh-1">{title}</Card.Title>
+          <Card.Title className="lh-1 fs-6 w-100 text-truncate">{title}</Card.Title>
           <Card.Text
             className="w-100 text-secondary card-description"
             style={{
-              height: '3rem',
+              height: '4rem',
               padding: '1px',
               lineHeight: '1rem',
               fontSize: '0.9rem',
@@ -37,11 +37,5 @@ function PostingCard({ thumbnail, title, description, updatedAt }: Prop) {
   );
 }
 const thumbnailStyle = { width: '100%', height: '10rem', background: 'lightgrey' };
-const descriptionStyle = {
-  maxWidth: '15rem',
-  height: '3.5rem',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-};
+
 export default React.memo(PostingCard);

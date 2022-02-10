@@ -1,10 +1,10 @@
 import React from 'react';
 import { useMemo, useState } from 'react';
 
-import MarkdownEditor from '../../components/MarkdownEditor';
-import MarkdownPreview from '../../components/MarkdownPreview';
+import MarkdownEditor from '../domain/Posting/MarkdownEditor';
+import MarkdownPreview from '../domain/Posting/MarkdownPreview';
 
-import { parseText } from '../../utils/markdown-parser-util';
+import { parseText } from '../utils/markdown-parser-util';
 
 export default function PostEditor() {
   const [text, setText] = useState('');

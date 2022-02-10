@@ -1,9 +1,9 @@
 import React, { ChangeEventHandler, KeyboardEvent, KeyboardEventHandler, SetStateAction, useCallback, useRef, useState } from 'react';
 import { Badge, Button, Form, Modal } from 'react-bootstrap';
-import ThumbnailEditor from '../domain/Posting/ThumbnailEditor';
-import { uploadImage } from '../firebase/FileService';
-import { Posting } from '../firebase/PostingService';
-import TransparentTextarea from './UI/TransparentTextarea';
+import ThumbnailEditor from './ThumbnailEditor';
+import { uploadImage } from '../../firebase/FileService';
+import { Posting } from '../../firebase/PostingService';
+import TransparentTextarea from '../../components/TransparentTextarea';
 
 type Prop = {
   show: boolean;

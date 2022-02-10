@@ -1,12 +1,12 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import HomeContentLayout from '../layout/HomeContentLayout';
-import Header from '../layout/Header';
+import HomeContentLayout from './HomeContentLayout';
+import Header from './Header';
 
 // type Prop = {
 //   children: JSX.Element | JSX.Element[];
 // };
-export default function Home() {
+export default function HomeLayout() {
   return (
     <>
       <Header />

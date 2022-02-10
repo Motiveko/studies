@@ -3,8 +3,8 @@ import { Button, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCommon } from '../context/CommonContext';
-import CenteredSpinner from './UI/CenteredSpinner';
-import GoogleButton from './UI/Buttons/GoogleButton';
+import CenteredSpinner from '../components/CenteredSpinner';
+import GoogleButton from '../components/Buttons/GoogleButton';
 
 function Login() {
   const { login } = useAuth();

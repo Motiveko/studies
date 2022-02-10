@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Container, Image, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import LinkButton from '../components/UI/Buttons/LinkButton';
+import LinkButton from '../components/Buttons/LinkButton';
 import UI_CONST from '../constants/ui-constants';
 import { useAuth } from '../context/AuthContext';
 import { getRandomNumber } from '../utils/random-util';

@@ -1,5 +1,5 @@
 import React from 'react';
-import UI_CONST from '../constants/ui-constants';
+import UI_CONST from '../../constants/ui-constants';
 import './MarkdownPreview.css';
 
 type Prop = {
@@ -14,7 +14,9 @@ function MarkdownPreview({ code }: Prop) {
           maxWidth: '45vw',
           padding: '1rem',
           border: '1px solid lightgrey',
+          borderRadius: '0.2rem',
           overflow: 'scroll',
+          backgroundColor: 'white',
         }}
       >
         <div id="preview" dangerouslySetInnerHTML={{ __html: code }}></div>

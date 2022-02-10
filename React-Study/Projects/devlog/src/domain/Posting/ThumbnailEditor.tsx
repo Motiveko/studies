@@ -1,8 +1,8 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import React, { ChangeEventHandler } from 'react';
 import { Image } from 'react-bootstrap';
-import FileIconButton from '../../components/UI/Buttons/FileIconButton';
-import IconButton from '../../components/UI/Buttons/IconButton';
+import FileIconButton from '../../components/Buttons/FileIconButton';
+import IconButton from '../../components/Buttons/IconButton';
 
 type Prop = {
   thumbnail: string;

@@ -1,5 +1,6 @@
 import { addDoc, collection, doc, DocumentData, DocumentSnapshot, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { ReadonlyDeep } from 'type-fest';
+import { FIRESTORE_DOC } from '../constants/firebase-constants';
 
 export type Posting = {
   uid: string;
@@ -18,10 +19,7 @@ type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }
 type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<DocumentData>;
 
 type GetPosting = (id: string) => Promise<DocumentSnapshot<DocumentData>>;
-type POSTING_CONSTANT = {
-  DOC_POSTING: string;
-};
-
+type GetPostings = () => Promise<Posting[]>;
 const db = getFirestore();
 
 export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail, tags, title, content }) => {
@@ -45,27 +43,24 @@ export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail,
 };
 
 const insertPosting: InsertPosting = posting => {
-  const newPostingRef = collection(db, POSTING_CONSTANT.DOC_POSTING);
+  const newPostingRef = collection(db, FIRESTORE_DOC.POSTING);
   return addDoc(newPostingRef, posting);
 };
 
 const updatePosting = (posting: Omit<Posting, 'userId' | 'createdAt'>) => {
-  const prevPostRef = doc(db, POSTING_CONSTANT.DOC_POSTING, posting.uid);
+  const prevPostRef = doc(db, FIRESTORE_DOC.POSTING, posting.uid);
   return updateDoc(prevPostRef, { ...posting });
 };
 
 export const getPosting: GetPosting = id => {
-  return getDoc(doc(db, POSTING_CONSTANT.DOC_POSTING, id));
+  return getDoc(doc(db, FIRESTORE_DOC.POSTING, id));
 };
 
 /**
  * 포스팅 가져오기
  * @returns Promise<QuerySnapshot<DocumentData>>
  */
-export const getPostings = () => {
-  return getDocs(query(collection(db, POSTING_CONSTANT.DOC_POSTING), orderBy('createdAt'), limit(25)));
-};
-
-export const POSTING_CONSTANT: ReadonlyDeep<POSTING_CONSTANT> = {
-  DOC_POSTING: 'posting',
+export const getPostings: GetPostings = async () => {
+  const querySnapshot = await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt'), limit(25)));
+  return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
 };

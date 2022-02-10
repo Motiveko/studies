@@ -5,9 +5,10 @@ import { Button, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCommon } from '../context/CommonContext';
-import CenteredSpinner from './UI/CenteredSpinner';
-import ErrorAlert from './UI/ErrorAlert';
-import GoogleButton from './UI/Buttons/GoogleButton';
+import CenteredSpinner from '../components/CenteredSpinner';
+import ErrorAlert from '../components/ErrorAlert';
+import GoogleButton from '../components/Buttons/GoogleButton';
+import { registerUser } from '../firebase/UserService';
 
 export default function Register() {
   // const { signUp } = useOutletContext();
@@ -30,7 +31,9 @@ export default function Register() {
 
     try {
       const userCredentials = await signUp(email, password);
-      // userCredentials.user.
+
+      const { uid, emailVerified, photoURL, displayName } = userCredentials.user;
+      await registerUser({ uid, email, emailVerified, photoURL, displayName });
       navigate('/', { replace: true });
     } catch (e) {
       console.log(e);

@@ -1,16 +1,16 @@
 import React from 'react';
-import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Login from './components/Login';
-import Register from './components/Register';
+import Login from './routes/Login';
+import Register from './routes/Register';
 import PublicRoute from './routes/PublicRoute';
 import Auth from './routes/Auth';
-import Home from './routes/Home';
+import HomeLayout from './layout/HomeLayout';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
-import PostEditor from './domain/Posting/PostEditor';
-import Dashboard from './domain/Dashboard/Dashboard';
+import PostEditor from './routes/PostEditor';
+import Dashboard from './routes/Dashboard';
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
               <Route path="register" element={<Register />} />
             </Route>
           </Route>
-          <Route path="/" element={<Home />}>
+          <Route path="/" element={<HomeLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="user" element={<PrivateRoute />}>
               <Route path="newPosts" element={<PostEditor />} />
