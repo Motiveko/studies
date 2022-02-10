@@ -1,6 +1,6 @@
 import { addDoc, collection, doc, DocumentData, DocumentSnapshot, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
-import { ReadonlyDeep } from 'type-fest';
 import { FIRESTORE_DOC } from '../constants/firebase-constants';
+import { getUser, User } from './UserService';
 
 export type Posting = {
   uid: string;
@@ -19,7 +19,7 @@ type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }
 type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<DocumentData>;
 
 type GetPosting = (id: string) => Promise<DocumentSnapshot<DocumentData>>;
-type GetPostings = () => Promise<Posting[]>;
+type GetPostings = () => Promise<(Posting & { user: User })[]>;
 const db = getFirestore();
 
 export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail, tags, title, content }) => {
@@ -57,10 +57,14 @@ export const getPosting: GetPosting = id => {
 };
 
 /**
- * 포스팅 가져오기
- * @returns Promise<QuerySnapshot<DocumentData>>
+ * 포스팅 가져오기(페이징)
+ * @returns Promise<(Posting & { user: User })[]>
  */
 export const getPostings: GetPostings = async () => {
-  const querySnapshot = await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt'), limit(25)));
-  return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
+  const querySnapshot = await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), limit(25)));
+
+  const postings = querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
+  const users = await Promise.all(postings.map(posting => getUser(posting.userId)));
+
+  return postings.map((posting, i) => ({ ...posting, user: users[i] }));
 };
