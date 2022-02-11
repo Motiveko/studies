@@ -1,11 +1,11 @@
 import React, { ChangeEventHandler, KeyboardEvent, KeyboardEventHandler, SetStateAction, useCallback, useRef, useState } from 'react';
 import { Badge, Button, Form, Modal } from 'react-bootstrap';
-import ImageButton from '../../components/ThumbnailEditor';
-import { uploadImage } from '../../service/firebase/FileService';
+import ImageEditor from '../../components/ImageEditor';
 import { Posting } from '../../service/firebase/PostingService';
 import TransparentTextarea from '../../components/TransparentTextarea';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import IconButton from '../../components/Buttons/IconButton';
+import { useThumbnail } from '../../hooks/useThumbnail';
 
 type Prop = {
   show: boolean;
@@ -16,20 +16,23 @@ type Prop = {
 type AdditionalData = Pick<Posting, 'thumbnail' | 'description' | 'tags'>;
 
 function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
-  const [thumbnail, setThumbnail] = useState<string>('');
+  const [{ thumbnail, setThumbnail }, upload] = useThumbnail('');
+
   const descRef = useRef<HTMLTextAreaElement>(null);
 
   // TODO : 파일 업로드 로직 중복 제거하기
-  const handleFileChange: ChangeEventHandler<HTMLInputElement> = useCallback(async e => {
-    e.preventDefault();
-    if (!e.target?.files || e.target.files.length === 0) {
-      throw new Error('업로드 할 파일을 찾지 못했습니다');
-    }
-    const downloadURL = await uploadImage(e.target.files[0]);
-    setThumbnail(downloadURL);
-  }, []);
+  const handleFileChange: ChangeEventHandler<HTMLInputElement> = useCallback(
+    async e => {
+      e.preventDefault();
+      if (!e.target?.files || e.target.files.length === 0) {
+        throw new Error('업로드 할 파일을 찾지 못했습니다');
+      }
+      upload(e.target.files[0]);
+    },
+    [upload],
+  );
 
-  const removeThumbnail = useCallback(() => setThumbnail(''), []);
+  const removeThumbnail = useCallback(() => setThumbnail(''), [setThumbnail]);
 
   // tags
   const [tags, setTags] = useState<string[]>([]);
@@ -72,7 +75,7 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
           <h6 className="me-auto">썸네일 등록</h6>
           {thumbnail && <IconButton icon={faTimes} onClick={removeThumbnail} />}
         </div>
-        <ImageButton thumbnail={thumbnail} handleChange={handleFileChange} variant="thumbnail" />
+        <ImageEditor thumbnail={thumbnail || ''} handleChange={handleFileChange} variant="thumbnail" />
 
         <h6 className="mt-2">포스트 설명</h6>
         <Form.Control as="textarea" onKeyPress={prohibitEnter} ref={descRef} style={{ resize: 'none' }} />
