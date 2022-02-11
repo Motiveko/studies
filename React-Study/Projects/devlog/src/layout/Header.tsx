@@ -2,16 +2,14 @@ import React, { useMemo } from 'react';
 import { Container, Image, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import LinkButton from '../components/Buttons/LinkButton';
-import UI_CONST from '../constants/ui-constants';
+import UI_CONST from '../constants/UIConstant';
 import { useAuth } from '../context/AuthContext';
 import { getRandomNumber } from '../utils/random-util';
 
 function Header() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-
   console.log(currentUser);
-
   const handleSelect = (eventKey: string | null) => {
     switch (eventKey) {
       case NAVBAR_EVENT_KEYS.LOGOUT:

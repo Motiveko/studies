@@ -1,5 +1,5 @@
 import React from 'react';
-import UI_CONST from '../../constants/ui-constants';
+import UI_CONST from '../../constants/UIConstant';
 import './MarkdownPreview.css';
 
 type Prop = {

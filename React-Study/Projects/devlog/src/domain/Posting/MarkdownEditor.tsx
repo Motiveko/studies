@@ -1,13 +1,13 @@
 import React, { ChangeEventHandler, FormEvent, MouseEvent, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import UI_CONST from '../../constants/ui-constants';
+import UI_CONST from '../../constants/UIConstant';
 import { faCode, faFolderPlus } from '@fortawesome/free-solid-svg-icons';
-import { uploadImage } from '../../firebase/FileService';
+import { uploadImage } from '../../service/firebase/FileService';
 import FileIconButton from '../../components/Buttons/FileIconButton';
 import IconButton from '../../components/Buttons/IconButton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Posting, uploadPosting } from '../../firebase/PostingService';
+import { Posting, uploadPosting } from '../../service/firebase/PostingService';
 import PostingConfirmModal from './PostingConfirmModal';
 import TransparentTextarea from '../../components/TransparentTextarea';
 

@@ -1,5 +1,5 @@
 import { addDoc, collection, doc, DocumentData, DocumentReference, getDoc, getFirestore, setDoc } from 'firebase/firestore';
-import { FIRESTORE_DOC } from '../constants/firebase-constants';
+import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
 
 // 회원정보 관련
 export type User = {

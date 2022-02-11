@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FirebaseTime, Posting } from '../../firebase/PostingService';
-import { User } from '../../firebase/UserService';
+import { FirebaseTime, Posting } from '../../service/firebase/PostingService';
+import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
 import './PostingCard.css';
 type Prop = {

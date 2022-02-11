@@ -8,7 +8,7 @@ import { useCommon } from '../context/CommonContext';
 import CenteredSpinner from '../components/CenteredSpinner';
 import ErrorAlert from '../components/ErrorAlert';
 import GoogleButton from '../components/Buttons/GoogleButton';
-import { registerUser } from '../firebase/UserService';
+import { registerUser } from '../service/firebase/UserService';
 
 export default function Register() {
   // const { signUp } = useOutletContext();

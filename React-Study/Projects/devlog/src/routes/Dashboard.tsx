@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { getPostings, Posting } from '../firebase/PostingService';
+import { getPostings, Posting } from '../service/firebase/PostingService';
 import PostingCard from '../domain/Dashboard/PostingCard';
-import { User } from '../firebase/UserService';
+import { User } from '../service/firebase/UserService';
 
 export default function Dashboard() {
   const [postings, setPostings] = useState<(Posting & { user: User })[]>([]);

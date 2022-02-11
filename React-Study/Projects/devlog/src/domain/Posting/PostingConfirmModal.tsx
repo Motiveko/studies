@@ -1,8 +1,8 @@
 import React, { ChangeEventHandler, KeyboardEvent, KeyboardEventHandler, SetStateAction, useCallback, useRef, useState } from 'react';
 import { Badge, Button, Form, Modal } from 'react-bootstrap';
 import ImageButton from '../../components/ThumbnailEditor';
-import { uploadImage } from '../../firebase/FileService';
-import { Posting } from '../../firebase/PostingService';
+import { uploadImage } from '../../service/firebase/FileService';
+import { Posting } from '../../service/firebase/PostingService';
 import TransparentTextarea from '../../components/TransparentTextarea';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import IconButton from '../../components/Buttons/IconButton';
