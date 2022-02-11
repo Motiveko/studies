@@ -3,17 +3,19 @@ import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, si
 import { app } from '../firebase';
 import { useContext } from 'react';
 import { getItem, removeItem, setItem } from '../service/LocalStorageService';
-import { getUser, User } from '../service/firebase/UserService';
+import { getUser, registerUser, User } from '../service/firebase/UserService';
 import { LOCAL_STORAGE_CONST } from '../constants/LocalStorageConstant';
+import { MyError } from '../core/MyError';
 
 type Prop = {
   children: JSX.Element | JSX.Element[];
 };
 
-type SignUp = (email: string, password: string) => Promise<UserCredential>;
-type Login = (email: string, password: string) => Promise<UserCredential>;
-type Logout = () => Promise<void>;
+type SignUp = (email: string, password: string) => void;
+type Login = (email: string, password: string) => void;
+type Logout = () => void;
 type IsAuthenticated = () => boolean;
+type _SetUser = (uid: string) => Promise<void>;
 type AuthContext = {
   currentUser: User | null;
   signUp: SignUp;
@@ -38,16 +40,28 @@ const auth = getAuth(app);
 export default function AuthProvider({ children }: Prop) {
   const [currentUser, setCurrentUser] = useState<User | null>(getItem(LOCAL_STORAGE_CONST.keyAuth));
 
-  const login: Login = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
+  const login: Login = async (email, password) => {
+    try {
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      await _setUser(user.uid);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      const message = e.message as string;
+      if (!!message && (message.includes('wrong-password') || message.includes('user-not-found'))) {
+        throw new MyError('이메일/비밀번호가 일치하지 않습니다.');
+      }
+      throw new MyError('로그인 중 문제가 발생하였습니다.');
+    }
   };
 
-  const signUp: SignUp = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const signUp: SignUp = async (email, password) => {
+    const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
+    const { uid, emailVerified, photoURL, displayName } = userCredentials.user;
+    await registerUser({ uid, email, emailVerified, photoURL, displayName });
   };
 
-  const logout: Logout = () => {
-    return signOut(auth);
+  const logout: Logout = async () => {
+    await signOut(auth);
   };
 
   const isAuthenticated: IsAuthenticated = () => currentUser !== null;
@@ -59,12 +73,17 @@ export default function AuthProvider({ children }: Prop) {
         setCurrentUser(null);
         return;
       }
-
-      const user = await getUser(fireUser.uid);
-      setItem(LOCAL_STORAGE_CONST.keyAuth, user);
-      setCurrentUser(user);
+      if (!getItem(LOCAL_STORAGE_CONST.keyAuth)) {
+        _setUser(fireUser.uid);
+      }
     });
   }, []);
+
+  const _setUser: _SetUser = async uid => {
+    const user = await getUser(uid);
+    setItem(LOCAL_STORAGE_CONST.keyAuth, user);
+    setCurrentUser(user);
+  };
 
   return (
     <AuthContext.Provider

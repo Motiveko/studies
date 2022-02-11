@@ -8,7 +8,6 @@ import { useCommon } from '../context/CommonContext';
 import CenteredSpinner from '../components/CenteredSpinner';
 import ErrorAlert from '../components/ErrorAlert';
 import GoogleButton from '../components/Buttons/GoogleButton';
-import { registerUser } from '../service/firebase/UserService';
 
 export default function Register() {
   // const { signUp } = useOutletContext();
@@ -31,9 +30,6 @@ export default function Register() {
 
     try {
       const userCredentials = await signUp(email, password);
-
-      const { uid, emailVerified, photoURL, displayName } = userCredentials.user;
-      await registerUser({ uid, email, emailVerified, photoURL, displayName });
       navigate('/', { replace: true });
     } catch (e) {
       console.log(e);

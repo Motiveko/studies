@@ -10,10 +10,11 @@ function Header() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   console.log(currentUser);
-  const handleSelect = (eventKey: string | null) => {
+  const handleSelect = async (eventKey: string | null) => {
     switch (eventKey) {
       case NAVBAR_EVENT_KEYS.LOGOUT:
-        logout().then(() => navigate('/'));
+        await logout();
+        navigate('/');
         break;
     }
   };
