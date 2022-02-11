@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Posting, uploadPosting } from '../../service/firebase/PostingService';
 import PostingConfirmModal from './PostingConfirmModal';
 import TransparentTextarea from '../../components/TransparentTextarea';
+import BackButton from '../../components/Buttons/BackButton';
 
 type Prop = {
   onChange: React.Dispatch<React.SetStateAction<string>>;
@@ -18,7 +19,6 @@ type Prop = {
 function MarkdownEditor({ onChange }: Prop) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -93,9 +93,10 @@ function MarkdownEditor({ onChange }: Prop) {
           }}
         />
         <div className="d-flex justify-content-end mt-2" style={{ height: '4vh' }}>
-          <Button size="sm" variant="dark" onClick={() => navigate(-1)}>
+          <BackButton size="sm" variant="dark">
             취소
-          </Button>
+          </BackButton>
+
           <Button className="ms-2" onClick={() => setShowModal(true)} size="sm" variant="success">
             출간하기
           </Button>
