@@ -18,7 +18,7 @@ export type FirebaseTime = { seconds: number; nanoseconds: number };
 type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }: Omit<Posting, 'uid' | 'createdAt' | 'updatedAt'> & { uid?: string | null }) => Promise<DocumentData> | Promise<void>;
 type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<DocumentData>;
 
-type GetPosting = (id: string) => Promise<DocumentSnapshot<DocumentData>>;
+type GetPosting = (id: string) => Promise<Posting & { user: User }>;
 type GetPostings = () => Promise<(Posting & { user: User })[]>;
 const db = getFirestore();
 
@@ -52,12 +52,20 @@ const updatePosting = (posting: Omit<Posting, 'userId' | 'createdAt'>) => {
   return updateDoc(prevPostRef, { ...posting });
 };
 
-export const getPosting: GetPosting = id => {
-  return getDoc(doc(db, FIRESTORE_DOC.POSTING, id));
+/**
+ * 포스팅 가져오기
+ * @param id
+ * @returns Promise<(Posting & { user: User })[]>
+ */
+export const getPosting: GetPosting = async id => {
+  const docSnap = await getDoc(doc(db, FIRESTORE_DOC.POSTING, id));
+  const posting = { uid: docSnap.id, ...docSnap.data() } as Posting;
+  const user = await getUser(posting.userId);
+  return { ...posting, user };
 };
 
 /**
- * 포스팅 가져오기(페이징)
+ * 포스팅 25개씩 가져오기(페이징)
  * @returns Promise<(Posting & { user: User })[]>
  */
 export const getPostings: GetPostings = async () => {

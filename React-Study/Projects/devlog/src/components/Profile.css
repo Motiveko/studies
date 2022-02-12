@@ -1,0 +1,10 @@
+.profile {
+  cursor: pointer;
+  transition: all 0.2s;
+
+}
+.profile:hover {
+  box-shadow: 1px 3px 5px 3px rgba(220,220,220,0.8);
+  transform: translateY(-3px);
+  font-weight: bold;
+}

@@ -13,26 +13,9 @@ import PostEditor from './routes/PostEditor';
 import Dashboard from './routes/Dashboard';
 import UserSettings from './routes/UserSettings';
 import GlobalLoading from './components/GlobalLoading';
+import Post from './routes/Post';
 
 function App() {
-  // const { setError } = useCommon();
-  // const ref = useRef<HTMLDivElement>(null);
-  // useEffect(() => {
-  //   if (!ref.current) {
-  //     throw new Error('라우터 구성에 문제가 발생하였습니다.');
-  //   }
-  //   console.log('아니 이런 씨빨');
-  //   const globalErrorHandler = (e: ErrorEvent) => {
-  //     console.log('쉬박새끼야');
-  //     if (e.error?.name === 'MyError') {
-  //       setError(e.error.message);
-  //       alert(e.error.message);
-  //     }
-  //   };
-  //   ref.current.addEventListener('error', globalErrorHandler);
-  //   return () => ref.current?.removeEventListener('error', globalErrorHandler);
-  // }, []);
-
   return (
     <>
       <BrowserRouter>
@@ -45,7 +28,7 @@ function App() {
           </Route>
           <Route path="/" element={<HomeLayout />}>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/post/:id" element={<div>포스트상세</div>} />
+            <Route path="/post/:id" element={<Post />} />
             <Route path="user" element={<PrivateRoute />}>
               <Route path="newPosts" element={<PostEditor />} />
               <Route path="settings" element={<UserSettings />} />

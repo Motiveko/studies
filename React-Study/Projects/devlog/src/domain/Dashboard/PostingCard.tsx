@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import Profile from '../../components/Profile';
 import { FirebaseTime, Posting } from '../../service/firebase/PostingService';
 import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
@@ -11,7 +12,7 @@ type Prop = {
 };
 function PostingCard({ posting, user }: Prop) {
   const { uid, thumbnail, title, description, updatedAt } = posting;
-  const { email, displayName } = useMemo(() => ({ email: user.email, displayName: user.displayName }), [user]);
+  const { email, displayName, photoURL } = useMemo(() => ({ email: user.email, photoURL: user.photoURL, displayName: user.displayName }), [user]);
   const date = parseDate((updatedAt as FirebaseTime).seconds * 1000);
   const navigate = useNavigate();
 
@@ -32,8 +33,8 @@ function PostingCard({ posting, user }: Prop) {
             dangerouslySetInnerHTML={{ __html: description }}
           ></Card.Text>
         </Card.Body>
-        <Card.Footer className="d-flex lh-1 text-muted" style={{ fontSize: '0.7rem' }}>
-          <div>{displayName || email.substring(0, email.indexOf('@'))}</div>
+        <Card.Footer className="d-flex align-items-center lh-1 text-muted" style={{ fontSize: '0.7rem' }}>
+          <Profile user={user} />
           <div className="ms-auto">{date}</div>
         </Card.Footer>
       </Card>
