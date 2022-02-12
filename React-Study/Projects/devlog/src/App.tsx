@@ -12,6 +12,7 @@ import NotFound from './routes/NotFound';
 import PostEditor from './routes/PostEditor';
 import Dashboard from './routes/Dashboard';
 import UserSettings from './routes/UserSettings';
+import GlobalLoading from './components/GlobalLoading';
 
 function App() {
   // const { setError } = useCommon();
@@ -54,6 +55,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      <GlobalLoading />
     </>
   );
 }

@@ -49,7 +49,6 @@ export default function UserSettings() {
     setGlobalLoading(true);
     try {
       const partialUser = _parseForm();
-      console.log(partialUser);
       await updateUser(partialUser);
       await refreshUser();
       setSuccess('프로필을 수정하였습니다.');
@@ -57,6 +56,7 @@ export default function UserSettings() {
       console.error(e);
       setError('회원정보 수정중 오류가 발생했습니다.');
     }
+    setGlobalLoading(false);
   };
 
   const _parseForm = () => {
@@ -97,7 +97,7 @@ export default function UserSettings() {
         </Card.Body>
       </Card>
       {error && <AlertSnackbar type="error" message={error} onClose={() => setError('')} />}
-      {success && <AlertSnackbar type="success" message={success} onClose={() => setError('')} />}
+      {success && <AlertSnackbar type="success" message={success} onClose={() => setSuccess('')} />}
     </>
   );
 }
