@@ -73,31 +73,33 @@ export default function UserSettings() {
 
   return (
     <>
-      <Card style={{ width: '40vw', maxWidth: '520px', minWidth: '400px' }}>
-        <Card.Body>
-          <Card.Title style={{ textAlign: 'center' }}>회원정보 수정</Card.Title>
-          <InlineFormControl label="프로필">
-            <ImageEditor thumbnail={thumbnail || ''} variant="avatar" isLoading={localLoading} onRemove={removeThumbnail} handleChange={handleThumbnailChange} />
-          </InlineFormControl>
-          <InlineFormControl label="이메일">
-            <Form.Control type="text" className="htmlForm-control-plaintext" id="staticEmail" value={email} readOnly />
-          </InlineFormControl>
-          <InlineFormControl label="이름">
-            <Form.Control type="text" className="htmlForm-control" id="inputName" ref={nameRef} />
-          </InlineFormControl>
-          <InlineFormControl label="깃 주소" prefix={COMMON_CONSTANT.GIT_PREFIX}>
-            <Form.Control type="text" className="htmlForm-control" id="inputGithub" ref={gitRef} />
-          </InlineFormControl>
-          <BackButton variant="secondary" className="w-100">
-            취소
-          </BackButton>
-          <Button onClick={onSubmit} className="w-100 mt-3" variant="success">
-            수정하기
-          </Button>
-        </Card.Body>
-      </Card>
-      {error && <AlertSnackbar type="error" message={error} onClose={() => setError('')} />}
-      {success && <AlertSnackbar type="success" message={success} onClose={() => setSuccess('')} />}
+      <div className="d-flex align-items-center" style={{ height: 'calc(100vh - 60px)' }}>
+        <Card style={{ width: '40vw', maxWidth: '400px', minWidth: '350px' }}>
+          <Card.Body>
+            <Card.Title style={{ textAlign: 'center' }}>회원정보 수정</Card.Title>
+            <InlineFormControl label="프로필">
+              <ImageEditor thumbnail={thumbnail || ''} variant="avatar" isLoading={localLoading} onRemove={removeThumbnail} handleChange={handleThumbnailChange} />
+            </InlineFormControl>
+            <InlineFormControl label="이메일">
+              <Form.Control type="text" className="htmlForm-control-plaintext" id="staticEmail" value={email} readOnly />
+            </InlineFormControl>
+            <InlineFormControl label="이름">
+              <Form.Control type="text" className="htmlForm-control" id="inputName" ref={nameRef} />
+            </InlineFormControl>
+            <InlineFormControl label="깃 주소" prefix={COMMON_CONSTANT.GIT_PREFIX}>
+              <Form.Control type="text" className="htmlForm-control" id="inputGithub" ref={gitRef} />
+            </InlineFormControl>
+            <BackButton variant="secondary" className="w-100">
+              취소
+            </BackButton>
+            <Button onClick={onSubmit} className="w-100 mt-3" variant="success">
+              수정하기
+            </Button>
+          </Card.Body>
+        </Card>
+        {error && <AlertSnackbar type="error" message={error} onClose={() => setError('')} />}
+        {success && <AlertSnackbar type="success" message={success} onClose={() => setSuccess('')} />}
+      </div>
     </>
   );
 }
