@@ -1,14 +1,14 @@
 import React, { FormEvent, useRef } from 'react';
 import { Button, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCommon } from '../context/CommonContext';
-import CenteredSpinner from '../components/CenteredSpinner';
-import GoogleButton from '../components/Buttons/GoogleButton';
+import { useAuth } from '../../context/AuthContext';
+import { useCommon } from '../../context/CommonContext';
+import CenteredSpinner from '../../components/CenteredSpinner';
+import GoogleButton from '../../components/Buttons/GoogleButton';
 
 function Login() {
   const { login } = useAuth();
-  const { isLoading, setIsLoading, error, setError } = useCommon();
+  const { localLoading, setLocalLoading, error, setError } = useCommon();
   const navigate = useNavigate();
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -16,18 +16,18 @@ function Login() {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setIsLoading(true);
+    setLocalLoading(true);
     const { email, password } = getLoginInfo();
 
     try {
       await login(email, password);
-      navigate('/', { replace: true });
+      navigate('/');
     } catch (e) {
       console.log(e);
       setError('이메일, 비밀번호를 확인해주세요.');
     }
 
-    setIsLoading(false);
+    setLocalLoading(false);
   };
 
   const getLoginInfo = () => {
@@ -54,8 +54,8 @@ function Login() {
               <Form.Control ref={passwordRef} type="password" placeholder="비밀번호" />
             </Form.Group>
             <>
-              {isLoading && <CenteredSpinner />}
-              {!isLoading && (
+              {localLoading && <CenteredSpinner />}
+              {!localLoading && (
                 <>
                   <Button type="submit" className="w-100 mt-3" variant="primary">
                     로그인

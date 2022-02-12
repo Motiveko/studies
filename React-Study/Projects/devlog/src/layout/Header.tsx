@@ -9,7 +9,6 @@ import { getRandomNumber } from '../utils/random-util';
 function Header() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-  console.log(currentUser);
   const handleSelect = async (eventKey: string | null) => {
     switch (eventKey) {
       case NAVBAR_EVENT_KEYS.LOGOUT:
@@ -20,11 +19,9 @@ function Header() {
   };
 
   const userAvatar = useMemo(() => {
-    const email = currentUser?.email;
-    // TODO : user 아바타 이미지 생기면 그거 가져다 쓰기
-    const thumbnail = UI_CONST.ANONYMOUSE_THUMBNAIL[getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)];
+    const thumbnail = currentUser?.photoURL || `/assets/animals/${UI_CONST.ANONYMOUSE_THUMBNAIL[getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)]}.png`;
 
-    return <Image src={`/assets/animals/${thumbnail}.png`} className="me-2" style={{ width: '2rem', height: '2rem', position: 'relative' }} />;
+    return <Image src={thumbnail} className="me-2" style={{ width: '2rem', height: '2rem', borderRadius: '50%', position: 'relative' }} />;
   }, [currentUser]);
 
   return (

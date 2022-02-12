@@ -1,6 +1,6 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import React, { ChangeEventHandler, CSSProperties, MouseEventHandler } from 'react';
-import { Image } from 'react-bootstrap';
+import { Image, Spinner } from 'react-bootstrap';
 import FileIconButton from './Buttons/FileIconButton';
 import IconButton from './Buttons/IconButton';
 
@@ -8,10 +8,11 @@ type Prop = {
   variant: 'thumbnail' | 'avatar';
   thumbnail: string;
   handleChange: ChangeEventHandler<HTMLInputElement>;
+  isLoading?: boolean;
   onRemove?: MouseEventHandler<HTMLLabelElement>;
 };
 
-function ImageEditor({ thumbnail, handleChange, variant, onRemove }: Prop) {
+function ImageEditor({ variant, thumbnail, handleChange, isLoading, onRemove }: Prop) {
   let imageStyle: CSSProperties | undefined;
   let fileIconButtonStyle: CSSProperties | undefined;
   switch (variant) {
@@ -36,7 +37,8 @@ function ImageEditor({ thumbnail, handleChange, variant, onRemove }: Prop) {
       {!thumbnail && (
         <div className="d-flex">
           <div className="d-flex justify-content-center align-items-center" style={imageStyle}>
-            <FileIconButton buttonStyle={{ margin: '0', border: 'none', ...fileIconButtonStyle }} onChange={handleChange} />
+            {!isLoading && <FileIconButton buttonStyle={{ margin: '0', border: 'none', ...fileIconButtonStyle }} onChange={handleChange} />}
+            {isLoading && <Spinner animation="border" />}
           </div>
         </div>
       )}

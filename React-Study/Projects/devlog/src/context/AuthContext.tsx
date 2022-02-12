@@ -16,11 +16,13 @@ type Login = (email: string, password: string) => void;
 type Logout = () => void;
 type IsAuthenticated = () => boolean;
 type _SetUser = (uid: string) => Promise<void>;
+type RefreshUser = () => Promise<void>;
 type AuthContext = {
   currentUser: User | null;
   signUp: SignUp;
   login: Login;
   logout: Logout;
+  refreshUser: RefreshUser;
   isAuthenticated: IsAuthenticated;
 };
 
@@ -85,6 +87,11 @@ export default function AuthProvider({ children }: Prop) {
     setCurrentUser(user);
   };
 
+  const refreshUser = async () => {
+    if (!currentUser) return;
+    await _setUser(currentUser.uid);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -92,6 +99,7 @@ export default function AuthProvider({ children }: Prop) {
         login,
         signUp,
         logout,
+        refreshUser,
         isAuthenticated,
       }}
     >

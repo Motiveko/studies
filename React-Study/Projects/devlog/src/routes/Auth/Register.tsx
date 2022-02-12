@@ -3,16 +3,16 @@ import { useRef } from 'react';
 import { FormEvent } from 'react';
 import { Button, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCommon } from '../context/CommonContext';
-import CenteredSpinner from '../components/CenteredSpinner';
-import ErrorAlert from '../components/ErrorAlert';
-import GoogleButton from '../components/Buttons/GoogleButton';
+import { useAuth } from '../../context/AuthContext';
+import { useCommon } from '../../context/CommonContext';
+import CenteredSpinner from '../../components/CenteredSpinner';
+import ErrorAlert from '../../components/ErrorAlert';
+import GoogleButton from '../../components/Buttons/GoogleButton';
 
 export default function Register() {
   // const { signUp } = useOutletContext();
   const { signUp } = useAuth();
-  const { isLoading, setIsLoading, error, setError } = useCommon();
+  const { localLoading: isLoading, setLocalLoading: setIsLoading, error, setError } = useCommon();
   const navigate = useNavigate();
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -30,7 +30,7 @@ export default function Register() {
 
     try {
       const userCredentials = await signUp(email, password);
-      navigate('/', { replace: true });
+      navigate('/');
     } catch (e) {
       console.log(e);
       setError('회원가입 정보를 확인해주세요.');

@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, DocumentData, DocumentReference, getDoc, getFirestore, setDoc } from 'firebase/firestore';
+import { doc, DocumentData, DocumentReference, getDoc, getFirestore, setDoc, updateDoc } from 'firebase/firestore';
 import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
 
 // 회원정보 관련
@@ -8,6 +8,7 @@ export type User = {
   emailVerified: boolean;
   photoURL: string | null;
   displayName: string | null;
+  gitURL?: string;
 };
 
 const db = getFirestore();
@@ -15,7 +16,7 @@ const db = getFirestore();
 type RegisterUser = (user: User) => Promise<void>;
 type GetUser = (uid: string) => Promise<User>;
 type GetUserRef = (uid: string) => DocumentReference<DocumentData>;
-
+type UpdateUser = (user: Partial<User> & { uid: string }) => Promise<void>;
 /**
  * firestore에 유저 정보 등록
  * @param user User
@@ -37,6 +38,15 @@ export const getUser: GetUser = async (uid: string) => {
     throw new Error(`id: ${uid} 인 유저를 찾을 수 없습니다.`);
   }
   return { uid: doc.id, ...doc.data() } as User;
+};
+
+/**
+ * 유저정보 업데이트
+ * @param user {uid} & Partail<User>
+ */
+export const updateUser: UpdateUser = async user => {
+  const userRef = getUserRef(user.uid);
+  await updateDoc(userRef, user);
 };
 
 const getUserRef: GetUserRef = uid => doc(db, FIRESTORE_DOC.USER, uid);

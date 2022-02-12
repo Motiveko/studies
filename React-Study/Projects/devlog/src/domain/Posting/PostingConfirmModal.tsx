@@ -6,6 +6,7 @@ import TransparentTextarea from '../../components/TransparentTextarea';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import IconButton from '../../components/Buttons/IconButton';
 import { useThumbnail } from '../../hooks/useThumbnail';
+import { useCommon } from '../../context/CommonContext';
 
 type Prop = {
   show: boolean;
@@ -17,6 +18,7 @@ type AdditionalData = Pick<Posting, 'thumbnail' | 'description' | 'tags'>;
 
 function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
   const [{ thumbnail, setThumbnail }, upload] = useThumbnail('');
+  const { localLoading, setLocalLoading, globalLoading, setGlobalLoading } = useCommon();
 
   const descRef = useRef<HTMLTextAreaElement>(null);
 
@@ -24,12 +26,14 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
   const handleFileChange: ChangeEventHandler<HTMLInputElement> = useCallback(
     async e => {
       e.preventDefault();
+      setLocalLoading(true);
       if (!e.target?.files || e.target.files.length === 0) {
         throw new Error('업로드 할 파일을 찾지 못했습니다');
       }
-      upload(e.target.files[0]);
+      await upload(e.target.files[0]);
+      setLocalLoading(false);
     },
-    [upload],
+    [setLocalLoading, upload],
   );
 
   const removeThumbnail = useCallback(() => setThumbnail(''), [setThumbnail]);
@@ -75,7 +79,7 @@ function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
           <h6 className="me-auto">썸네일 등록</h6>
           {thumbnail && <IconButton icon={faTimes} onClick={removeThumbnail} />}
         </div>
-        <ImageEditor thumbnail={thumbnail || ''} handleChange={handleFileChange} variant="thumbnail" />
+        <ImageEditor isLoading={localLoading} thumbnail={thumbnail || ''} handleChange={handleFileChange} variant="thumbnail" />
 
         <h6 className="mt-2">포스트 설명</h6>
         <Form.Control as="textarea" onKeyPress={prohibitEnter} ref={descRef} style={{ resize: 'none' }} />

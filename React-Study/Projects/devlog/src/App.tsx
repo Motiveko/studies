@@ -2,10 +2,10 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Login from './routes/Login';
-import Register from './routes/Register';
+import Login from './routes/Auth/Login';
+import Register from './routes/Auth/Register';
 import PublicRoute from './routes/PublicRoute';
-import Auth from './routes/Auth';
+import Auth from './routes/Auth/Auth';
 import HomeLayout from './layout/HomeLayout';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
@@ -14,6 +14,24 @@ import Dashboard from './routes/Dashboard';
 import UserSettings from './routes/UserSettings';
 
 function App() {
+  // const { setError } = useCommon();
+  // const ref = useRef<HTMLDivElement>(null);
+  // useEffect(() => {
+  //   if (!ref.current) {
+  //     throw new Error('라우터 구성에 문제가 발생하였습니다.');
+  //   }
+  //   console.log('아니 이런 씨빨');
+  //   const globalErrorHandler = (e: ErrorEvent) => {
+  //     console.log('쉬박새끼야');
+  //     if (e.error?.name === 'MyError') {
+  //       setError(e.error.message);
+  //       alert(e.error.message);
+  //     }
+  //   };
+  //   ref.current.addEventListener('error', globalErrorHandler);
+  //   return () => ref.current?.removeEventListener('error', globalErrorHandler);
+  // }, []);
+
   return (
     <>
       <BrowserRouter>

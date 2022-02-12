@@ -7,7 +7,7 @@ export type Posting = {
   userId: string;
   title: string;
   content: string;
-  thumbnail: string;
+  thumbnail: string | null;
   description: string;
   tags: string[];
   createdAt: FieldValue | FirebaseTime;

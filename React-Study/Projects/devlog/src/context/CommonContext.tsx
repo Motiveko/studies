@@ -7,8 +7,10 @@ type Prop = {
 export type CommonContext = {
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
-  isLoading: boolean;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  localLoading: boolean;
+  setLocalLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  globalLoading: boolean;
+  setGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 const CommonContext = React.createContext<CommonContext | undefined>(undefined);
 
@@ -23,14 +25,15 @@ export const useCommon = () => {
 
 export default function CommonProvider({ children }: Prop) {
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [localLoading, setLocalLoading] = useState<boolean>(false); // 부분 스피너
+  const [globalLoading, setGlobalLoading] = useState<boolean>(false); // 전역 스피너(작업을 막는다)
 
   // 에러는 3초만 보여주고 지운다.
   useEffect(() => {
     if (error != null) {
-      setTimeout(() => setError(null), 3000);
+      setTimeout(() => setError(null), 5000);
     }
   }, [error]);
 
-  return <CommonContext.Provider value={{ error, setError, isLoading, setIsLoading }}>{children}</CommonContext.Provider>;
+  return <CommonContext.Provider value={{ error, setError, localLoading, setLocalLoading, globalLoading, setGlobalLoading }}>{children}</CommonContext.Provider>;
 }
