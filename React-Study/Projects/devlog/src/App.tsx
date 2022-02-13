@@ -9,7 +9,7 @@ import Auth from './routes/Auth/Auth';
 import HomeLayout from './layout/HomeLayout';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
-import PostEditor from './routes/PostEditor';
+import EditPost from './routes/EditPost';
 import Dashboard from './routes/Dashboard';
 import UserSettings from './routes/UserSettings';
 import GlobalLoading from './components/GlobalLoading';
@@ -30,7 +30,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/post/:id" element={<Post />} />
             <Route path="user" element={<PrivateRoute />}>
-              <Route path="newPosts" element={<PostEditor />} />
+              <Route path="newPosts" element={<EditPost />} />
               <Route path="settings" element={<UserSettings />} />
               <Route path="tempPost" element={<div>TODO : 임시 글 목록 구현할 것</div>} />
             </Route>

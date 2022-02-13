@@ -23,3 +23,8 @@ blockquote{
  body {
   background-color: var(--bs-body-bg);  
  }
+
+/* TODO : 이미지 늘리지 않는 css, 추후 세부적인 개선이 필요하다. */
+ img {
+  object-fit: cover;
+ }

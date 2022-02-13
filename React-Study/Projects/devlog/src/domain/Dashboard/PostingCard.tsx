@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import Profile from '../../components/Profile';
+import SmallProfile from '../../components/SmallProfile';
+import { COMMON_CONSTANT } from '../../constants/CommonConstant';
 import { FirebaseTime, Posting } from '../../service/firebase/PostingService';
 import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
@@ -19,7 +20,7 @@ function PostingCard({ posting, user }: Prop) {
   return (
     <div className="col my-4 d-flex justify-content-center">
       <Card className="posting-card" style={{ width: '18rem' }} onClick={() => navigate(`/post/${uid}`)}>
-        <Card.Img variant="top" src={thumbnail || 'assets/thumbnail.png'} style={thumbnailStyle} />
+        <Card.Img variant="top" src={thumbnail || COMMON_CONSTANT.DEFAULT_THUMBNAIL} style={thumbnailStyle} />
         <Card.Body style={{ borderTop: '1px solid lightgrey' }}>
           <Card.Title className="lh-1 fs-6 w-100 text-truncate">{title}</Card.Title>
           <Card.Text
@@ -34,7 +35,7 @@ function PostingCard({ posting, user }: Prop) {
           ></Card.Text>
         </Card.Body>
         <Card.Footer className="d-flex align-items-center lh-1 text-muted" style={{ fontSize: '0.7rem' }}>
-          <Profile user={user} />
+          <SmallProfile user={user} />
           <div className="ms-auto">{date}</div>
         </Card.Footer>
       </Card>

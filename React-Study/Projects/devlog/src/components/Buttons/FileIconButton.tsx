@@ -1,5 +1,4 @@
 import React, { CSSProperties } from 'react';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import IconButton from './IconButton';
 import { faFolderPlus } from '@fortawesome/free-solid-svg-icons';
 type Prop = {
