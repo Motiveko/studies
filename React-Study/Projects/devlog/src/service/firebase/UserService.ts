@@ -7,7 +7,7 @@ export type User = {
   email: string;
   emailVerified: boolean;
   photoURL: string | null;
-  displayName: string | null;
+  displayName: string;
   gitURL?: string;
 };
 

@@ -2,9 +2,8 @@ import React, { useMemo } from 'react';
 import { Container, Image, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import LinkButton from '../components/Buttons/LinkButton';
-import UI_CONST from '../constants/UIConstant';
 import { useAuth } from '../context/AuthContext';
-import { getRandomNumber } from '../utils/random-util';
+import { getRandomProfile } from '../utils/random-util';
 
 function Header() {
   const { currentUser, logout } = useAuth();
@@ -19,7 +18,8 @@ function Header() {
   };
 
   const userAvatar = useMemo(() => {
-    const thumbnail = currentUser?.photoURL || `/assets/animals/${UI_CONST.ANONYMOUSE_THUMBNAIL[getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)]}.png`;
+    if (!currentUser) return;
+    const thumbnail = currentUser?.photoURL || getRandomProfile();
 
     return <Image src={thumbnail} className="me-2" style={{ width: '2rem', height: '2rem', borderRadius: '50%', position: 'relative' }} />;
   }, [currentUser]);

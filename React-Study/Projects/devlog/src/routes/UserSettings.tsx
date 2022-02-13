@@ -1,4 +1,4 @@
-import React, { ChangeEvent, ChangeEventHandler, useCallback, useEffect, useRef, useState } from 'react';
+import React, { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import { Button, Card, Form } from 'react-bootstrap';
 import BackButton from '../components/Buttons/BackButton';
 import InlineFormControl from '../components/InlineFormControl';
@@ -15,7 +15,7 @@ export default function UserSettings() {
   const { currentUser, refreshUser } = useAuth() as ReturnType<typeof useAuth> & { currentUser: User };
   const { localLoading, setLocalLoading, setGlobalLoading, error, setError } = useCommon();
 
-  const [{ thumbnail, setThumbnail }, upload] = useThumbnail(currentUser?.photoURL);
+  const [{ thumbnail, setThumbnail }, upload] = useThumbnail(currentUser!.photoURL);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const gitRef = useRef<HTMLInputElement>(null);
@@ -65,7 +65,7 @@ export default function UserSettings() {
     }
     return {
       uid,
-      photoURL: thumbnail,
+      photoURL: thumbnail || '',
       displayName: nameRef.current.value,
       gitURL: gitRef.current.value,
     };

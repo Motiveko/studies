@@ -6,6 +6,8 @@ import { getItem, removeItem, setItem } from '../service/LocalStorageService';
 import { getUser, registerUser, User } from '../service/firebase/UserService';
 import { LOCAL_STORAGE_CONST } from '../constants/LocalStorageConstant';
 import { MyError } from '../core/MyError';
+import UI_CONST from '../constants/UIConstant';
+import { getRandomNumber } from '../utils/random-util';
 
 type Prop = {
   children: JSX.Element | JSX.Element[];
@@ -58,7 +60,13 @@ export default function AuthProvider({ children }: Prop) {
 
   const signUp: SignUp = async (email, password) => {
     const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
-    const { uid, emailVerified, photoURL, displayName } = userCredentials.user;
+    const { uid, emailVerified, photoURL } = userCredentials.user;
+    let { displayName } = userCredentials.user;
+
+    if (!displayName) {
+      displayName = email.substring(0, email.indexOf('@'));
+    }
+
     await registerUser({ uid, email, emailVerified, photoURL, displayName });
   };
 
