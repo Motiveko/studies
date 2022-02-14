@@ -1,5 +1,6 @@
 import { Link } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+import DeleteEdit from '../../components/DeleteEdit';
 import SmallProfile from '../../components/SmallProfile';
 import { FirebaseTime, Posting } from '../../service/firebase/PostingService';
 import { User } from '../../service/firebase/UserService';
@@ -21,12 +22,7 @@ function PostHeader({ posting, user, isCurrentUser }: Prop) {
       <div className="d-flex align-items-center">
         {user && <SmallProfile user={user} imageSize={2} />}
         <div className="ms-2 text-muted">{date}</div>
-        {isCurrentUser && (
-          <div className="ms-auto">
-            <Link className="me-2">수정</Link>
-            <Link>삭제</Link>
-          </div>
-        )}
+        {isCurrentUser && <DeleteEdit onEdit={() => ({})} onDelete={() => ({})} className="ms-auto" />}
       </div>
     </>
   );

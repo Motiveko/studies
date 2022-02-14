@@ -23,7 +23,6 @@ type GetPostings = () => Promise<(Posting & { user: User })[]>;
 const db = getFirestore();
 
 export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail, tags, title, content }) => {
-  console.log('uid', uid);
   if (!uid) {
     // 새로운 게시글 등록
     return insertPosting({
