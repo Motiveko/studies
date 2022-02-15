@@ -653,3 +653,37 @@ eslint에서 `airbnb-confg`를 사용하면, 갑자기 모듈 import 부분에�
 아무리 검색해도 답이 안나왔는데, 몇주간 몇번의 노력 끝에 ***프로젝트 폴더명을 한글***로 하면 이런 에러가 발생한다는 사실을 알았다. 프로젝트 복사해서 폴더명 영어로 바꾸면 안뜬다.
 
 #### ***프로젝트의 폴더명은 꼭 영어로 하자.***
+
+<br>
+
+### ❗️ `import/un-resolved` 에러 관련 추가
+- 케이스: 앵귤러(타입스크립트)에서 `../../`상대경로가 너무 길어져 `src/...`로 참조할 때 `import/un-resolved` 에러 발생
+- 추가적으로 `tsconfig`에서 아래와 같이 path 변수 설정하고 해당 path를 사용해도 같은 현상 발생한다고 한다.
+```json
+// tsconfig.json
+{
+  ...
+  "paths": {
+      "@hooks/*": ["hooks/*"],
+      "@components/*": ["components/*"],
+      "@pages/*": ["pages/*"],
+    },
+  ...
+}
+```
+- 해결 : [`eslint-import-resolver-typescript`](https://www.npmjs.com/package/eslint-import-resolver-typescript) 설치하고 eslint 설정에 아래 내용을 추가한다.
+```
+npm i --save-dev eslint-import-resolver-typescript
+```
+```json
+//.eslintrc.json
+"settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {}
+    }
+}
+```
+- 혹시 에러 계속뜨면 vscode를 재실행해보도록 하자.
