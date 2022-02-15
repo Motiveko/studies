@@ -1,21 +1,4 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  DocumentData,
-  DocumentSnapshot,
-  FieldValue,
-  getDoc,
-  getDocs,
-  getFirestore,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, startAfter, updateDoc } from 'firebase/firestore';
 import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
 import { getUser, User } from './UserService';
 
@@ -36,7 +19,7 @@ type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }
 type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<Pick<Posting, 'uid'>>;
 
 type GetPosting = (id: string) => Promise<Posting & { user: User }>;
-type GetPostings = () => Promise<(Posting & { user: User })[]>;
+type GetPostings = (posting: Posting | null) => Promise<(Posting & { user: User })[]>;
 type DeletePosting = (uid: string) => Promise<void>;
 
 const db = getFirestore();
@@ -88,9 +71,10 @@ export const getPosting: GetPosting = async id => {
  * 포스팅 25개씩 가져오기(페이징)
  * @returns Promise<(Posting & { user: User })[]>
  */
-export const getPostings: GetPostings = async () => {
-  const querySnapshot = await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), limit(25)));
-
+export const getPostings: GetPostings = async postingAfter => {
+  const querySnapshot = !!postingAfter
+    ? await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), startAfter(postingAfter.createdAt), limit(FIRESTORE_DOC.POSTING_SIZE)))
+    : await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), limit(FIRESTORE_DOC.POSTING_SIZE)));
   const postings = querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
   const users = await Promise.all(postings.map(posting => getUser(posting.userId)));
 
