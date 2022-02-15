@@ -1,4 +1,21 @@
-import { addDoc, collection, doc, DocumentData, DocumentSnapshot, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  DocumentData,
+  DocumentSnapshot,
+  FieldValue,
+  getDoc,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
 import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
 import { getUser, User } from './UserService';
 
@@ -15,14 +32,16 @@ export type Posting = {
 };
 export type FirebaseTime = { seconds: number; nanoseconds: number };
 
-type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }: Omit<Posting, 'uid' | 'createdAt' | 'updatedAt'> & { uid?: string | null }) => Promise<DocumentData> | Promise<void>;
-type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<DocumentData>;
+type UploadPost = ({ uid, userId, title, description, thumbnail, tags, content }: Omit<Posting, 'uid' | 'createdAt' | 'updatedAt'> & { uid?: string | null }) => ReturnType<InsertPosting>;
+type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<Pick<Posting, 'uid'>>;
 
 type GetPosting = (id: string) => Promise<Posting & { user: User }>;
 type GetPostings = () => Promise<(Posting & { user: User })[]>;
+type DeletePosting = (uid: string) => Promise<void>;
+
 const db = getFirestore();
 
-export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail, tags, title, content }) => {
+export const uploadPosting: UploadPost = async ({ uid, userId, description, thumbnail, tags, title, content }) => {
   if (!uid) {
     // 새로운 게시글 등록
     return insertPosting({
@@ -37,18 +56,20 @@ export const uploadPosting: UploadPost = ({ uid, userId, description, thumbnail,
     });
   } else {
     // 게시글 업데이트
-    return updatePosting({ uid, title, content, description, thumbnail, tags, updatedAt: serverTimestamp() });
+    await updatePosting({ uid, title, content, description, thumbnail, tags, updatedAt: serverTimestamp() });
+    return { uid };
   }
 };
 
-const insertPosting: InsertPosting = posting => {
+const insertPosting: InsertPosting = async posting => {
   const newPostingRef = collection(db, FIRESTORE_DOC.POSTING);
-  return addDoc(newPostingRef, posting);
+  const data = await addDoc(newPostingRef, posting);
+  return { uid: data.id };
 };
 
-const updatePosting = (posting: Omit<Posting, 'userId' | 'createdAt'>) => {
+const updatePosting = async (posting: Omit<Posting, 'userId' | 'createdAt'>) => {
   const prevPostRef = doc(db, FIRESTORE_DOC.POSTING, posting.uid);
-  return updateDoc(prevPostRef, { ...posting });
+  await updateDoc(prevPostRef, { ...posting });
 };
 
 /**
@@ -74,4 +95,12 @@ export const getPostings: GetPostings = async () => {
   const users = await Promise.all(postings.map(posting => getUser(posting.userId)));
 
   return postings.map((posting, i) => ({ ...posting, user: users[i] }));
+};
+
+/**
+ * 포스팅 제거
+ * @param uid 포스팅 id
+ */
+export const deletePosting: DeletePosting = async uid => {
+  await deleteDoc(doc(db, FIRESTORE_DOC.POSTING, uid));
 };

@@ -57,7 +57,6 @@ export default function Post() {
 
             <div id="preview" dangerouslySetInnerHTML={{ __html: code }}></div>
 
-            {/* TODO : 댓글, 프로필 */}
             <Profile user={user} />
             <Comments postId={posting.uid} />
           </>

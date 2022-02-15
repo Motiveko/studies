@@ -9,8 +9,11 @@ import { useThumbnail } from '../../hooks/useThumbnail';
 import { useCommon } from '../../context/CommonContext';
 
 type Prop = {
+  /** 모달창 노출 여부 */
   show: boolean;
+  /** 모달창 노출 여부 setter */
   setShow: React.Dispatch<SetStateAction<boolean>>;
+  /** 출간하기 */
   onSubmit: (data: AdditionalData) => void;
 };
 

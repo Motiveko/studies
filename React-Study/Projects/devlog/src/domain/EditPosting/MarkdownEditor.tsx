@@ -11,6 +11,7 @@ import { Posting, uploadPosting } from '../../service/firebase/PostingService';
 import PostingConfirmModal from './PostingConfirmModal';
 import TransparentTextarea from '../../components/TransparentTextarea';
 import BackButton from '../../components/Buttons/BackButton';
+import { useCommon } from '../../context/CommonContext';
 
 type Prop = {
   onChange: React.Dispatch<React.SetStateAction<string>>;
@@ -52,15 +53,19 @@ function MarkdownEditor({ onChange }: Prop) {
     onChange(contentRef.current.value);
   };
 
+  const navigate = useNavigate();
+  const { setGlobalLoading } = useCommon();
   const uploadPost = async ({ thumbnail, description, tags }: Pick<Posting, 'thumbnail' | 'description' | 'tags'>) => {
+    if (!confirm('작성한 내용으로 출간하시겠습니까?')) return;
+    setGlobalLoading(true);
     const { title, content } = getFormValue();
     const uid = searchParams.get('id');
     const userId = currentUser!.uid;
 
     const result = await uploadPosting({ uid, userId, title, content, thumbnail, description, tags });
-    if (result) {
-      console.log(result);
-    }
+    setGlobalLoading(false);
+    alert('포스트를 출간하였습니다.');
+    navigate(`/post/${result.uid}`);
   };
 
   const getFormValue = () => {
