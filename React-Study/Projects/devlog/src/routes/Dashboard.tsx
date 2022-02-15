@@ -23,11 +23,13 @@ export default function Dashboard() {
     <div className="overflow-scroll w-100 flex-grow-1">
       <div className="container-xl">
         <div className="row row-cols-4">
+          {postings.map(({ user, ...posting }) => (
+            <PostingCard key={posting.uid} posting={posting} user={user} />
+          ))}
           {localLoading &&
             Array(8)
               .fill(0)
               .map((e, i) => <PostingCardSkeleton key={i} />)}
-          {!localLoading && postings.map(({ user, ...posting }) => <PostingCard key={posting.uid} posting={posting} user={user} />)}
         </div>
       </div>
     </div>
