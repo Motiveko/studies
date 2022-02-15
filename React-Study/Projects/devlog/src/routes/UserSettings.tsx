@@ -73,7 +73,7 @@ export default function UserSettings() {
 
   return (
     <>
-      <div className="d-flex align-items-center" style={{ height: 'calc(100vh - 60px)' }}>
+      <div className="d-flex flex-grow-1 justify-content-center align-items-center">
         <Card style={{ width: '40vw', maxWidth: '400px', minWidth: '350px' }}>
           <Card.Body>
             <Card.Title style={{ textAlign: 'center' }}>회원정보 수정</Card.Title>
