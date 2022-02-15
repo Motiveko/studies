@@ -25,7 +25,7 @@ function Header() {
   }, [currentUser]);
 
   return (
-    <Navbar style={{ height: '60px' }}>
+    <Navbar style={{ height: '60px', border: '1px solid #efefef' }}>
       <Container>
         <Navbar.Brand as={Link} to={{ pathname: '/' }}>
           🤖 Devlog

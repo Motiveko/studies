@@ -5,5 +5,9 @@ type Prop = {
 };
 
 export default function HomeContentLayout({ children }: Prop) {
-  return <div className="h-100 d-flex align-items-center justify-content-center">{children}</div>;
+  return (
+    <div style={{ height: '100vh' }} className="d-flex flex-column">
+      {children}
+    </div>
+  );
 }
