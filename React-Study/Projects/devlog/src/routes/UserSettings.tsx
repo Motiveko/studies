@@ -18,9 +18,10 @@ export default function UserSettings() {
   const [{ thumbnail, setThumbnail }, upload] = useThumbnail(currentUser!.photoURL);
 
   const nameRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const gitRef = useRef<HTMLInputElement>(null);
 
-  const { uid, email, displayName, gitURL } = currentUser as User;
+  const { uid, email, displayName, gitURL, description } = currentUser as User;
 
   const handleThumbnailChange: ChangeEventHandler<HTMLInputElement> = async e => {
     e.preventDefault();
@@ -37,12 +38,13 @@ export default function UserSettings() {
   };
 
   useEffect(() => {
-    if (!nameRef?.current || !gitRef?.current) {
+    if (!nameRef.current || !gitRef.current || !descriptionRef.current) {
       throw new Error('프로필 수정 로드중 문제가 발생했습니다.');
     }
     nameRef.current.value = displayName || '';
     gitRef.current.value = gitURL || '';
-  }, [displayName, gitURL]);
+    descriptionRef.current.value = description || '';
+  }, [displayName, gitURL, description]);
 
   const [success, setSuccess] = useState('');
   const onSubmit = async () => {
@@ -60,13 +62,14 @@ export default function UserSettings() {
   };
 
   const _parseForm = () => {
-    if (!nameRef.current || !gitRef.current) {
+    if (!nameRef.current || !gitRef.current || !descriptionRef.current) {
       throw new MyError('폼 정보 파싱중 오류가 발생했습니다.');
     }
     return {
       uid,
       photoURL: thumbnail || '',
       displayName: nameRef.current.value,
+      description: descriptionRef.current.value,
       gitURL: gitRef.current.value,
     };
   };
@@ -74,7 +77,7 @@ export default function UserSettings() {
   return (
     <>
       <div className="d-flex flex-grow-1 justify-content-center align-items-center">
-        <Card style={{ width: '40vw', maxWidth: '400px', minWidth: '350px' }}>
+        <Card style={{ width: '40vw', maxWidth: '550ㅔㅌ', minWidth: '400px' }}>
           <Card.Body>
             <Card.Title style={{ textAlign: 'center' }}>회원정보 수정</Card.Title>
             <InlineFormControl label="프로필">
@@ -85,6 +88,9 @@ export default function UserSettings() {
             </InlineFormControl>
             <InlineFormControl label="이름">
               <Form.Control type="text" className="htmlForm-control" id="inputName" ref={nameRef} />
+            </InlineFormControl>
+            <InlineFormControl label="소개">
+              <Form.Control as="textarea" placeholder={'나를 소개해보세요.'} ref={descriptionRef} style={{ resize: 'none', height: '7rem' }} />
             </InlineFormControl>
             <InlineFormControl label="깃 주소" prefix={COMMON_CONSTANT.GIT_PREFIX}>
               <Form.Control type="text" className="htmlForm-control" id="inputGithub" ref={gitRef} />

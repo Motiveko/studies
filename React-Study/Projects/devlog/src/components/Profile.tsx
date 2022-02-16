@@ -2,7 +2,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faEnvelope, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Avatar } from '@mui/material';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { COMMON_CONSTANT } from '../constants/CommonConstant';
 import { User } from '../service/firebase/UserService';
 import { getRandomProfile } from '../utils/random-util';
@@ -18,7 +18,10 @@ function Profile({ user }: Prop) {
     <>
       <div className="d-flex mt-5 pt-5 mb-5 align-items-center">
         <Avatar src={user.photoURL || getRandomProfile()} sx={{ width: '4.5rem', height: '4.5rem' }} />
-        <h4 className="ms-5">{user.displayName}</h4>
+        <div className="d-flex ms-5 flex-column" style={{ width: '30%' }}>
+          <h4 className="">{user.displayName}</h4>
+          <div className="text-muted text-truncate" style={userDescriptionStyle} dangerouslySetInnerHTML={{ __html: user.description || '' }}></div>
+        </div>
       </div>
       <hr />
       {user.gitURL && (
@@ -32,4 +35,13 @@ function Profile({ user }: Prop) {
     </>
   );
 }
+
+const userDescriptionStyle: CSSProperties = {
+  whiteSpace: 'pre-line',
+  // 3줄까지 표시 후 truncate
+  display: '-webkit-box',
+  WebkitLineClamp: 3,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+};
 export default React.memo(Profile);

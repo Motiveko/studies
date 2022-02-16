@@ -8,15 +8,18 @@ export type User = {
   emailVerified: boolean;
   photoURL: string | null;
   displayName: string;
+  description?: string;
   gitURL?: string;
 };
 
 const db = getFirestore();
 
-type RegisterUser = (user: User) => Promise<void>;
 type GetUser = (uid: string) => Promise<User>;
-type GetUserRef = (uid: string) => DocumentReference<DocumentData>;
+type RegisterUser = (user: User) => Promise<void>;
 type UpdateUser = (user: Partial<User> & { uid: string }) => Promise<void>;
+
+type GetUserRef = (uid: string) => DocumentReference<DocumentData>;
+
 /**
  * firestore에 유저 정보 등록
  * @param user User
