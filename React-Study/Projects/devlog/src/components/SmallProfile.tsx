@@ -12,14 +12,13 @@ type Prop = {
 function SmallProfile({ user, imageSize = 1 }: Prop) {
   const { photoURL, displayName, email, uid } = user;
   const navigate = useNavigate();
-
   return (
     <div
       className="d-flex align-items-center profile"
       style={{ cursor: 'pointer' }}
       onClick={e => {
         e.stopPropagation();
-        navigate(`/${uid}`);
+        navigate(`/user/${uid}`);
       }}
     >
       {photoURL && <Avatar src={photoURL} className="me-2" style={{ width: `${imageSize}rem`, height: `${imageSize}rem` }} />}

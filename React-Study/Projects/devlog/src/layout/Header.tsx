@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Container, Image, Navbar, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import LinkButton from '../components/Buttons/LinkButton';
+import CustomHR from '../components/CustomHR';
 import { useAuth } from '../context/AuthContext';
 import { getRandomProfile } from '../utils/random-util';
 
@@ -25,44 +26,47 @@ function Header() {
   }, [currentUser]);
 
   return (
-    <Navbar style={{ height: '60px', border: '1px solid #efefef' }}>
-      <Container>
-        <Navbar.Brand as={Link} to={{ pathname: '/' }}>
-          🤖 Devlog
-        </Navbar.Brand>
-        <Navbar.Collapse className="justify-content-end">
-          {currentUser && (
-            <>
-              <LinkButton to="/user/newPosts" variant="outline-dark">
-                새 글 작성
-              </LinkButton>
+    <>
+      <Navbar style={{ height: '60px' }}>
+        <Container>
+          <Navbar.Brand as={Link} to={{ pathname: '/' }}>
+            🤖 Devlog
+          </Navbar.Brand>
+          <Navbar.Collapse className="justify-content-end">
+            {currentUser && (
+              <>
+                <LinkButton to="/user/newPosts" variant="outline-dark">
+                  새 글 작성
+                </LinkButton>
+                <Navbar.Text>
+                  <NavDropdown title={userAvatar} id="navbarScrollingDropdown" onSelect={handleSelect}>
+                    <NavDropdown.Item as={Link} to={{ pathname: `/user/${currentUser.uid}` }}>
+                      내 블로그
+                    </NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to={{ pathname: '/user/settings' }}>
+                      설정
+                    </NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to={{ pathname: '/user/tempPost' }}>
+                      임시 글
+                    </NavDropdown.Item>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item eventKey={NAVBAR_EVENT_KEYS.LOGOUT}>로그아웃</NavDropdown.Item>
+                  </NavDropdown>
+                </Navbar.Text>
+              </>
+            )}
+            {!currentUser && (
               <Navbar.Text>
-                <NavDropdown title={userAvatar} id="navbarScrollingDropdown" onSelect={handleSelect}>
-                  <NavDropdown.Item as={Link} to={{ pathname: '/userID' }}>
-                    내 글 목록
-                  </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to={{ pathname: '/user/settings' }}>
-                    설정
-                  </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to={{ pathname: '/user/tempPost' }}>
-                    임시 글
-                  </NavDropdown.Item>
-                  <NavDropdown.Divider />
-                  <NavDropdown.Item eventKey={NAVBAR_EVENT_KEYS.LOGOUT}>로그아웃</NavDropdown.Item>
-                </NavDropdown>
+                <LinkButton to="/auth/login" variant="dark">
+                  로그인
+                </LinkButton>
               </Navbar.Text>
-            </>
-          )}
-          {!currentUser && (
-            <Navbar.Text>
-              <LinkButton to="/auth/login" variant="dark">
-                로그인
-              </LinkButton>
-            </Navbar.Text>
-          )}
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+            )}
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+      <CustomHR />
+    </>
   );
 }
 
