@@ -24,18 +24,16 @@ export default function Post() {
     if (!id) {
       throw new Error('posting id값이 없습니다');
     }
-    setLocalLoading(true);
     async function asyncSetPosting(id: string) {
+      setLocalLoading(true);
       const { user, ...posting } = await getPosting(id);
       setPosting(posting);
       setUser(user);
+      setTimeout(() => setLocalLoading(false), 300);
     }
 
     asyncSetPosting(id);
-
-    setTimeout(() => setLocalLoading(false), 300);
-    console.log(posting?.tags);
-  }, [id, posting?.tags, setLocalLoading]);
+  }, [id]);
 
   const code = useMemo(() => {
     if (!posting) return '';

@@ -44,7 +44,7 @@ export default function UserSettings() {
     nameRef.current.value = displayName || '';
     gitRef.current.value = gitURL || '';
     descriptionRef.current.value = description || '';
-  }, [displayName, gitURL, description]);
+  }, [description, displayName, gitURL]);
 
   const [success, setSuccess] = useState('');
   const onSubmit = async () => {

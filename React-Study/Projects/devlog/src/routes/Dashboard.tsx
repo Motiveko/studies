@@ -23,7 +23,7 @@ export default function Dashboard() {
     await setPostings(prev => [...prev, ...newPostings]);
 
     setLocalLoading(false);
-  }, [localLoading, postings, setLocalLoading]); // deps에 localLoading, posting.length 없으면 계속 같은값 참조해서 무한 요청 보내게된다.
+  }, [hasMore, localLoading, postings, setLocalLoading]); // deps에 localLoading, posting.length 없으면 계속 같은값 참조해서 무한 요청 보내게된다.
 
   /* 
     IntersectionObserver API를 이용한 무한스크롤 구현 참고
