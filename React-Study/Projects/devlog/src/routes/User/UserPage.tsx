@@ -8,9 +8,10 @@ function UserPage() {
   const { currentUser } = useAuth();
   const { id } = useParams();
   const [user] = useUser(id);
-  alert('개발중..');
+  // alert('개발중..');
   return (
     <div className="container d-flex flex-column">
+      <h1>개발중,,</h1>
       <div>{currentUser?.displayName} 의 페이지</div>
       {user && <Profile user={user} />}
     </div>

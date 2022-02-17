@@ -45,7 +45,7 @@ function SingleComment({ commentUser, onChange }: Prop) {
       throw new Error('수정 중 문제가 발생했습니다.');
     }
     commentRef.current.value = commentUser.comment;
-  }, [openEdit]);
+  }, [commentUser.comment, openEdit]);
 
   return (
     <div className="my-5">

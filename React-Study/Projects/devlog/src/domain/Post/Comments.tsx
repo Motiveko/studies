@@ -29,7 +29,7 @@ function Commments({ postId }: Prop) {
     await addComment({ userId: currentUser.uid, postId, comment: commentRef.current.value });
     commentRef.current.value = '';
     initComments();
-  }, [currentUser, postId]);
+  }, [currentUser, initComments, postId]);
   return (
     <div className="mt-5">
       <h5>{comments.length} 개의 댓글</h5>

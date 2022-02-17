@@ -35,7 +35,7 @@ export default function Post() {
 
     setTimeout(() => setLocalLoading(false), 300);
     console.log(posting?.tags);
-  }, []);
+  }, [id, posting?.tags, setLocalLoading]);
 
   const code = useMemo(() => {
     if (!posting) return '';

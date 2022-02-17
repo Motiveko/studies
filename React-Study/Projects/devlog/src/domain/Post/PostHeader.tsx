@@ -18,7 +18,7 @@ function PostHeader({ posting, user, isCurrentUser }: Prop) {
 
   useEffect(() => {
     setDate(parseDate((posting.updatedAt as FirebaseTime).seconds * 1000));
-  }, []);
+  }, [posting.updatedAt]);
 
   const navigate = useNavigate();
   const { setGlobalLoading } = useCommon();
@@ -31,7 +31,7 @@ function PostHeader({ posting, user, isCurrentUser }: Prop) {
       alert('포스트를 삭제하였습니다.');
       navigate('/');
     }
-  }, []);
+  }, [navigate, posting.uid, setGlobalLoading]);
 
   return (
     <>
