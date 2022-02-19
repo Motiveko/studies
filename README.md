@@ -1,6 +1,6 @@
 # studies
 
-개인적인 스터디, 블로그 포스팅 등에 사용된 코드 모음입니다.
+개인적인 스터디, 블로그 포스팅 등에 사용된 코드 모음입니다..
 
 ### [Javascript Studies](https://github.com/Motiveko/studies/tree/master/Javascript-Study)
 ### [Simple Studies](https://github.com/Motiveko/studies/tree/master/Simple%20Studies)
