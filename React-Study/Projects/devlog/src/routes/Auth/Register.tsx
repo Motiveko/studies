@@ -82,7 +82,7 @@ export default function Register() {
                 <Button type="submit" className="w-100 mt-3" variant="primary">
                   회원가입
                 </Button>
-                <GoogleButton>구글계정으로 가입하기</GoogleButton>
+                <GoogleButton onClick={() => alert('TODO : 구현할 것')}>구글계정으로 가입하기</GoogleButton>
               </>
             )}
           </Form>

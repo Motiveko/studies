@@ -60,7 +60,7 @@ function Login() {
                   <Button type="submit" className="w-100 mt-3" variant="primary">
                     로그인
                   </Button>
-                  <GoogleButton>구글계정으로 로그인하기</GoogleButton>
+                  <GoogleButton onClick={() => alert('TODO : 구현할 것')}>구글계정으로 로그인하기</GoogleButton>
                 </>
               )}
             </>

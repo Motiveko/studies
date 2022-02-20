@@ -13,7 +13,7 @@ type Prop = {
   onChange: () => void;
 };
 function SingleComment({ commentUser, onChange }: Prop) {
-  const date = useMemo(() => parseDate((commentUser.createdAt as FirebaseTime).seconds * 1000), [commentUser]);
+  const date = useMemo(() => parseDate((commentUser.updatedAt as FirebaseTime).seconds * 1000), [commentUser]);
 
   const commentRef = useRef<HTMLTextAreaElement>(null);
 
