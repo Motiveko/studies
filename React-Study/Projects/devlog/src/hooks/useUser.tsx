@@ -12,7 +12,7 @@ export const useUser = (id: string | undefined) => {
 
   useEffect(() => {
     setUserById();
-  });
+  }, [setUserById]);
 
   return [user];
 };

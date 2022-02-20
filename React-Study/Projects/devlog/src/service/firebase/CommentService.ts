@@ -15,6 +15,7 @@ type AddComment = (comment: Pick<Comment, 'userId' | 'postId' | 'comment'>) => P
 type UpdateComment = (comment: Pick<Comment, 'uid' | 'postId' | 'comment'>) => Promise<void>;
 type GetComments = (postId: string) => Promise<(Comment & { user: User })[]>;
 type DeleteComment = (uid: string) => Promise<void>;
+type GetCommentsCount = (postId: string) => Promise<number>;
 
 const db = getFirestore();
 
@@ -50,6 +51,15 @@ export const getComments: GetComments = async postId => {
 
   const users = await Promise.all(comments.map(comment => getUser(comment.userId)));
   return comments.map((comment, i) => ({ ...comment, user: users[i] }));
+};
+
+/**
+ * 코멘트 갯수 가져오기
+ * @param postId
+ * @returns Promise<number>
+ */
+export const getCommentsCount: GetCommentsCount = async postId => {
+  return (await getComments(postId)).length;
 };
 
 /**

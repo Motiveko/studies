@@ -21,7 +21,7 @@ type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<Pick<Posting, 'u
 type GetPosting = (id: string) => Promise<Posting & { user: User }>;
 type GetPostings = (posting: Posting | null, size?: number) => Promise<(Posting & { user: User })[]>;
 type DeletePosting = (uid: string) => Promise<void>;
-type GetUserPostings = (userId: string, prevPosting: Posting, size?: number) => Promise<Posting[]>;
+type GetUserPostings = (userId: string, prevPosting?: Posting, size?: number) => Promise<Posting[]>;
 const db = getFirestore();
 
 export const uploadPosting: UploadPost = async ({ uid, userId, description, thumbnail, tags, title, content }) => {
@@ -89,7 +89,14 @@ export const deletePosting: DeletePosting = async uid => {
   await deleteDoc(doc(db, FIRESTORE_DOC.POSTING, uid));
 };
 
-export const getUserPostings: GetUserPostings = async (userId: string, postingAfter: Posting, size = FIRESTORE_DOC.POSTING_SIZE) => {
+/**
+ * 유저의 포스팅 목록 가져오기
+ * @param userId 유저id
+ * @param postingAfter optional: 마지막 조회 포스팅
+ * @param size 페이지 사이즈
+ * @returns Promise<Posting[]>
+ */
+export const getUserPostings: GetUserPostings = async (userId: string, postingAfter?: Posting, size = FIRESTORE_DOC.POSTING_SIZE) => {
   const querySnapshot = !!postingAfter
     ? await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), where('userId', '==', userId), orderBy('createdAt', 'desc'), startAfter(postingAfter.createdAt), limit(size)))
     : await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(size)));

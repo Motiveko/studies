@@ -10,13 +10,14 @@ import CustomHR from './CustomHR';
 
 type Prop = {
   user: User;
+  style?: CSSProperties;
 };
 /**
  * 큰 프로필
  */
-function Profile({ user }: Prop) {
+function Profile({ user, style }: Prop) {
   return (
-    <div className="d-flex flex-column mt-5">
+    <div className="d-flex flex-column mt-5 w-100" style={style}>
       <div className="d-flex pt-5 mb-4 align-items-center">
         <Avatar src={user.photoURL || getRandomProfile()} sx={{ width: '4.5rem', height: '4.5rem' }} />
         <div className="d-flex ms-5 flex-column" style={{ width: '30%' }}>
