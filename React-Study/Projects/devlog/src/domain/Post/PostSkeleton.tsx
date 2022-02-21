@@ -1,5 +1,6 @@
 import { Skeleton, Typography } from '@mui/material';
 import React from 'react';
+import TagsSkeleton from '../../components/Skeletons/TagsSkeleton';
 
 function PostSkeleton() {
   return (
@@ -13,11 +14,7 @@ function PostSkeleton() {
       <div>
         {/* 프로필, tag */}
         <Skeleton variant="text" width={240} height={'3rem'} />
-        <div className="d-flex">
-          <Skeleton variant="circular" className="me-2" width={50} height={30} />
-          <Skeleton variant="circular" className="me-2" width={50} height={30} />
-          <Skeleton variant="circular" className="me-2" width={50} height={30} />
-        </div>
+        <TagsSkeleton />
       </div>
       <div className="container mt-5">
         {/* 컨텐츠 */}
