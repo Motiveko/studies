@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Profile from '../../components/Profile';
-import UserPostSummary from '../../components/UserPostSummary';
+import UserPostSummary from '../../domain/User/UserPostSummary';
 import { useAuth } from '../../context/AuthContext';
+import UserPostSummarySkeleton from '../../domain/User/UserPostSummarySkeleton';
 import { useUser } from '../../hooks/useUser';
 import { getCommentsCount } from '../../service/firebase/CommentService';
 import { getUserPostings, Posting } from '../../service/firebase/PostingService';
@@ -30,6 +31,7 @@ function UserPage() {
       <h1>개발중,,</h1>
       {/* <div>{currentUser?.displayName} 의 페이지</div> */}
       {user && <Profile user={user} style={{ marginBottom: '3rem' }} />}
+      <UserPostSummarySkeleton />
       {postings &&
         user &&
         postings.map(posting => {
