@@ -18,6 +18,7 @@ export default function Dashboard() {
       return;
     }
     setLocalLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
     const newPostings = await getPostings(postings.length > 0 ? postings[postings.length - 1] : null);
     if (newPostings.length < 25) setHasMore(false);
     await setPostings(prev => [...prev, ...newPostings]);

@@ -1,4 +1,5 @@
 import { addDoc, collection, deleteDoc, doc, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, startAfter, updateDoc, where } from 'firebase/firestore';
+import { Tagged } from 'type-fest/source/opaque';
 import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
 import { getUser, User } from './UserService';
 
@@ -21,7 +22,9 @@ type InsertPosting = (posting: Omit<Posting, 'uid'>) => Promise<Pick<Posting, 'u
 type GetPosting = (id: string) => Promise<Posting & { user: User }>;
 type GetPostings = (posting: Posting | null, size?: number) => Promise<(Posting & { user: User })[]>;
 type DeletePosting = (uid: string) => Promise<void>;
-type GetUserPostings = (userId: string, prevPosting?: Posting, size?: number) => Promise<Posting[]>;
+type GetUserPostings = (userId: string, tag?: string, prevPosting?: Posting, size?: number) => Promise<Posting[]>;
+type GetTags = (userId: string) => Promise<{ name: string; count: number }[]>;
+
 const db = getFirestore();
 
 export const uploadPosting: UploadPost = async ({ uid, userId, description, thumbnail, tags, title, content }) => {
@@ -72,6 +75,8 @@ export const getPosting: GetPosting = async id => {
  * @returns Promise<(Posting & { user: User })[]>
  */
 export const getPostings: GetPostings = async (postingAfter, size = FIRESTORE_DOC.POSTING_SIZE) => {
+  console.log(postingAfter);
+  console.log('쒸발쌔끼야');
   const querySnapshot = !!postingAfter
     ? await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), startAfter(postingAfter.createdAt), limit(size)))
     : await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), limit(FIRESTORE_DOC.POSTING_SIZE)));
@@ -96,9 +101,26 @@ export const deletePosting: DeletePosting = async uid => {
  * @param size 페이지 사이즈
  * @returns Promise<Posting[]>
  */
-export const getUserPostings: GetUserPostings = async (userId: string, postingAfter?: Posting, size = FIRESTORE_DOC.POSTING_SIZE) => {
-  const querySnapshot = !!postingAfter
-    ? await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), where('userId', '==', userId), orderBy('createdAt', 'desc'), startAfter(postingAfter.createdAt), limit(size)))
-    : await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(size)));
+export const getUserPostings: GetUserPostings = async (userId: string, tag?: string, postingAfter?: Posting, size = FIRESTORE_DOC.POSTING_SIZE) => {
+  console.log(postingAfter);
+  const queries = [where('userId', '==', userId), ...(tag ? [where('tags', 'array-contains', tag)] : []), ...(!!postingAfter ? [startAfter(postingAfter.createdAt)] : []), limit(size)];
+  const querySnapshot = await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), ...queries));
   return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
+};
+
+/**
+ * 유저 개시글의 전체 태그 조회 API
+ * 따로 이부분만 쿼리할 수 있는 방법이 없어 포스팅 통째로 조회한 후 가져온다.
+ * @param userId 유저아이디
+ * @returns {name: string, count: number}[]
+ */
+export const getTags: GetTags = async userId => {
+  const userPostings = await getUserPostings(userId, undefined, undefined, 2000);
+  const tagCountMap = userPostings
+    .flatMap(posting => posting.tags)
+    .reduce((acc: { [key: string]: number }, tag) => {
+      acc[tag] = acc[tag] ? acc[tag] + 1 : 1;
+      return acc;
+    }, {}); // { 태그명: count }
+  return Object.keys(tagCountMap).map(tag => ({ name: tag, count: tagCountMap[tag] })); // [{name: 태그명, count: 숫자}]
 };
