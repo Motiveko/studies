@@ -1,0 +1,19 @@
+
+@import './variables';
+@import './_header';
+
+header {
+  height: 100vh;
+  color: $textColor;
+  background-color: lightblue;
+  button {
+    background: $primaryBtn;  
+  }
+}
+
+.contact  {
+  @extend header;
+  background-color: aliceblue;
+  width: 100% - 20%
+}
+
