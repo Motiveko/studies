@@ -1,13 +1,14 @@
 
-@import './variables';
-@import './_header';
+// @import './variables';
+// @import './_header';
+@use  './variables' as var;
 
 header {
   height: 100vh;
-  color: $textColor;
+  color: var.$textColor;
   background-color: lightblue;
   button {
-    background: $primaryBtn;  
+    background: var.$primaryBtn;  
   }
 }
 

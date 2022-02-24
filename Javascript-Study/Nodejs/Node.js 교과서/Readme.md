@@ -773,3 +773,40 @@ Major는 하위 호환이 되지 않으므로, 주의를 기울여야한다. min
 <br>
 
 ## 6. 익스프레스 웹 서버 만들기
+
+### 6.1 익스프레스 프로젝트 시작하기
+`express`와 `nodemon`을 설치한다. `nodemon` node monitor의 약자로 개발시 파일이 수정되면 자동으로 노드 애플리케이션을 다시 시작하게 해준다.
+```
+npm i express
+npm i -D nodemon
+```
+아래와 같이 서버가 될 `app.js`를 작성한다.
+```js
+// app.js 
+const express = require('express');
+
+const app = express();
+// process.env.PORT나 3000번 포트에서 서버 실행
+app.set('port', process.env.PORT || 3000);
+
+// '/' 경로의 get 요청에 대해 'Hello Express' 응답 반환
+app.get('/', (req, res) => {
+  res.send('Hello Express');
+})
+
+// 3000번 포트 listen
+app.listen(app.get('port'), () => {
+  console.log(app.get('port'),'번 포트에서 대기중');
+})
+```
+`npm start`/`nodemon app`으로 실행할 수 있다.
+
+`res.sendFile`메서드를 사용하면 파일을 응답할 수 있다.
+```js
+// ./index.html 파일 반환
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '/index.html'));
+});
+// ...
+```
+<br>

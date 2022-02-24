@@ -17,7 +17,8 @@ function UserPage() {
 
   const { id } = useParams();
   const [user] = useUser(id);
-  const [selectedTag, setSelectedTag] = useState('너무많은');
+  // const [selectedTag, setSelectedTag] = useState('너무많은');
+  const [selectedTag, setSelectedTag] = useState('');
 
   // 포스팅 취득
   const retrievePostings = useCallback(async () => {
