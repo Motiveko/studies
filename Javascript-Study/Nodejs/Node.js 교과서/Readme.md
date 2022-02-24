@@ -810,3 +810,201 @@ app.get('/', (req, res) => {
 // ...
 ```
 <br>
+
+### 6.2 자주 사용하는 미들웨어
+- `미들웨어`는 익스프레스의 핵심으로, 요청/응답 사이에 위치하는 것들을 말한다. `핸들러`, `라우터` 등은 모두 미들웨어라고 한다. 
+- 미들웨어는 `function(req, res, next) {}`형태로, next를 호출하면 다음 미들웨어로 넘어간다. 
+- 미들웨어는 `use`, `get`, `post` 등의 메서드로 `app.use(url?, middleware)`의 형태로 적용한다.
+
+<br>
+
+### 6.2.1 morgan
+- `morgan`은 request logger 미들웨어로, request 요청에 대한 각종 정보를 콘솔에 출력해준다.
+- `dev`, `combined`, `common`, `short`, `tiny`등의 옵션을 쓸 수 있다. 주로 개발에서는 `dev`, 운영에서는 `combined`를 쓴다.
+```
+$ npm i --save-dev morgan
+```
+```js
+const morgan = require('morgan');
+app.use(morgan('dev'));
+```
+
+<br>
+
+### 6.2.2 static
+- `static` 미들웨어는 정적 파일을 응답할 때 사용하는 미들웨어로 익스프레스에 내장되어 있다.
+```js
+// /로 요청시 public 폴더의 리소스에 접근하게 된다.
+app.use('/', express.static(path.join(__dirname, 'public')));
+```
+- 해당 경로에 파일이 없으면 자동으로 `next`를 호출하고, 있으면 다음으로 넘어가지 않고 바로 응답한다.
+
+<br>
+
+### 6.2.3 body-parser
+- 요청 본문을 해석해 `req.body` 객체로 만들어주는 미들웨어로 익스프레스 4.16.0 이후부터 내장되어 있다.
+```js
+app.use(express.json());  // json 형식 해석
+app.use(express.urlencoded({extended: false})); //URL-encoded 형식 해석
+```
+- json, URL-encoded 외의 Raw(버퍼 데이터), Text(텍스트 데이터)를 처리할 때는 body parser를 설치하고 아래와 같이 사용한다.
+```
+npm i body-parser
+```
+
+```js
+const bodyParser = require('body-parser');
+app.use(bodyParser.raw());
+app.use(bodyParser.text());
+```
+
+<br>
+
+### 6.2.4 cookie-parser
+- `cookie-parser`는 요청의 쿠키를 해석해 `req.cookis` 객체로 만든다.
+- 유효기간이 지난 쿠키는 알아서 걸러낸다.
+- 서명된 쿠키가 있는 경우 `cookie-parser`에 비밀키를 인자로 제공해 해당 쿠키가 내 서버가 만든 쿠키임을 검증할 수 있다. 서명이 붙으면 쿠키가 `key=value.sign` 형태가 된다. 서명된 쿠키는 `req.signedCookies`객체에 들어있다.
+
+```js
+const cookieParser = require('cookie-parser');
+// app.use(cookieParser(비밀키));
+app.use(cookieParser(process.env.COOKIE_SECRET));
+```
+- 응답에 쿠키 생성/제거는 `res.cookie`, `res.clearCookie` 메서드로 한다. 대충 아래와 같다.
+
+```js
+// 쿠키 생성
+res.cookie('name', 'motiveko', {
+  expires: new Date(Date.now() + 900000),
+  httpOnly: true, 
+  secure: true
+});
+
+// 쿠키 지우기
+res.clearCookie('name', 'zerocho', { httpOnly: true, secure: true })
+```
+-  쿠키를 지울 땐 지우려는 쿠키의 키/값/옵션 모두 일치해야 지워진다.(`expires`, `maxAge`는 일치하지 않아도 됨)
+- 쿠키 옵션중 `signed`는 쿠키에 서명을 붙이는 옵션이다. `cookie-parser`에 지정한 비밀키로 서명된다.
+
+<br>
+
+### 6.2.5 express-session
+- `express-session`은 세션 관리용 미들웨어로, 로그인세션 등에 사용한다. 세션은 사용자별로 `req.session` 객체 안에 유지된다.
+- `session`은 `쿠키`로 관리된다. `express-session`은 사용자에게 쿠키를 보내고 이게 다시 서버에 요청이 올 때 해당 쿠키값으로 세션을 가져오게 되는 원리다.
+```js
+const session = require('express-session');
+
+app.use(session({
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.COOKIE_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+  },
+  name: 'session-cookie'
+}))
+```
+- `resave`는 요청이 올 때 세션에 수정사항이 없어도 다시 저장할 지
+- `saveUninitialized`는 세션에 저장할 내역이 없어도 처음부터 세션을 저장할 지
+- `secret`은 세션 쿠키에 사용될 서명용 비밀키, `cookie`는 세션 쿠키 옵션으로, `secure`,`httpOnly`는 가급적 켜고 쓰자.
+- `name`은 세션 쿠키 이름으로, 지정하지 않으면 `connect.sid`다.
+- 여기엔 없는 `store`옵션이 있는데, 세션을 저장하는 옵션이다. 없으면 기본 메모리 저장인데, 서버 재시작시 세션이 사라지기 때문에 보통 `redis`를 지정한다.
+- 참고로 `express-session`이 만들어 보내는 쿠키 값에는 `s%3A` 프리픽스가 붙는다. 이게 있으면 express 썻구나 하고 알면 된다.
+
+<br>
+
+### 6.2.6 미들웨어의 특성 활용하기
+- 미들웨어 간의 데이터를 이동하려면 `req` 객체에 담아서 보낸다. 
+```js
+req.data = '이 데이터는 미들웨어간에 계속 유지되고 요청이 끝나면 사라진다';
+```
+- key로 `data`를 썼는데, `body`와 같이 다른 미들웨어에서 쓸 수 있는 값을 쓰지 않도록 주의하자. `data`는 안전한가보다.
+- `app.set`으로도 데이터 공유가 가능한데, `app.set` 익스프레스 전역에서 사용되므로 사용자(요청) 개개의 값을 공유하기엔 부적절하다.
+
+- 미들웨어 내에 미들웨어를 넣어 미들웨어의 기능을 확장할 수 있다. 
+```js
+// 익스프레스 실행 환경에 따라 morgan 옵션 변경
+app.use((req, res, next) => {
+  if(process.env.NODE_ENV === 'production') {
+    morgan('combined')(req, res, next);
+  } else {
+    morgan('dev')(req, res, next);
+  }
+})
+```
+
+<br>
+
+### 6.2.7 multer
+- `multer`는 이미지, 동영상 등의 ***멀티파트 형식으로 파일 업로드시 사용***하는 미들웨어다.
+```js
+
+const path = require('path');
+const multer = require('multer');
+
+const upload = multer({
+  
+  storage: multer.diskStorage({
+    // 어디에 저장할것인지
+    destination(req, file, done) {
+      done(null, 'uploads/'); // uploads 폴더에 저장
+    },
+    // 무슨 이름으로 저장할 것인지
+    filename(req, file, done) {
+      // 파일명+현재시간.확장자로 저장
+      const ext = path.extname(file.originalname);
+      done(null, path.basename(file.originalname, ext) + Date.now() + ext);
+    }
+  }),
+  limits: { fileSize: 5*1024*1024}  // 파일 사이즈는 5kb까지만?
+});
+```
+- 위 설정은 `uploads` 폴더가 없을 경우 에러가 난다. `fs`모듈로 서버 실행시 upload 폴더가 없으면 만들어 주는 코드를 추가하자.
+
+```js
+const fs = require('fs');
+try{
+  fs.readdirSync('uploads');
+} catch(error) {
+  console.error('uploads 폴더가 없어 uploads 폴더 생성함');
+  fs.mkdirSync('uploads');
+}
+```
+
+- 이제 `upload`를 이용해 파일을 업로드 할 수 있다. 
+- ***단일 파일 업로드***를 위한 `single` 미들웨어를 라우터 앞에 놓으면 설정에 따라 파일 업로드 후 `req.file` 객체가 생성된다. 여기에는 파일에 대한 여러 정보가 담겨있게된다.
+
+```js
+app.post('/upload', upload.single('image'), (req, res) => {
+  console.log(req.file, req.body);
+  res.send('ok')
+})
+```
+
+- ***키값이 같은 여러 파일 업로드*** 에는 `array`미들웨어를 쓴다. 인자로 전달되는 값은 요청에서 파일들의 key값(input의 name 속성값)이다.
+- 업로드 후 `req.files` 객체가 생성된다.
+```js
+app.post('/upload', upload.array('many'), (req, res) => {
+  console.log(req.files, req.body);
+  res.send("ok");
+})
+```
+
+- ***키값이 다른 여러 파일 업로드***에는 `fields` 미들웨어를 사용한다. 미들웨어 인자가 조금 달라진다.
+```js
+app.post('/upload', upload.fields([{name: 'image1'}, {name: 'image2'}]), (req, res) => {
+  console.log(req.files, req.body);
+  res.send("ok");
+})
+```
+- 역시 업로드 결과 파일에 대한 정보는 `req.files.image1/image2`에 들어 있다
+
+- 특수하게 파일을 업로드 하지 않으면서 multipart 형식을 쓰는 경우 none 미들웨어를 쓴다. 인자는 없고 파일 업로드를 안하기 때문에 파일 정보가 들은 객체도 안생긴다.
+```js
+app.post('/upload', upload.none(), (req, res) => {
+  console.log(req.body);
+  res.send('ok')
+});
+```
+
