@@ -1,6 +1,7 @@
 import { Avatar } from '@mui/material';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { COMMON_CONSTANT } from '../constants/CommonConstant';
+import { useAuth } from '../context/AuthContext';
 import CommentForm from '../domain/Post/CommentForm';
 import { Comment, deleteComment, updateComment } from '../service/firebase/CommentService';
 import { FirebaseTime } from '../service/firebase/PostingService';
@@ -13,6 +14,7 @@ type props = {
   onChange: () => void;
 };
 function SingleComment({ commentUser, onChange }: props) {
+  const { currentUser } = useAuth();
   const date = useMemo(() => parseDate((commentUser.updatedAt as FirebaseTime).seconds * 1000), [commentUser]);
 
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -55,7 +57,7 @@ function SingleComment({ commentUser, onChange }: props) {
           <div className="fw-bold">{commentUser.user.displayName}</div>
           <div className="text-muted">{date}</div>
         </div>
-        {!openEdit && <DeleteEdit className="ms-auto" onDelete={removeComment} onEdit={() => setOpenEdit(true)} />}
+        {!openEdit && currentUser?.uid === commentUser.uid && <DeleteEdit className="ms-auto" onDelete={removeComment} onEdit={() => setOpenEdit(true)} />}
       </div>
       {!openEdit && (
         <div className="pt-2" style={{ borderTop: '1px solid #dfdfdf' }}>
