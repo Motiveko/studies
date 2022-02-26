@@ -68,12 +68,11 @@ function UserPage() {
     retrieveTags();
   }, [retrieveTags]);
 
-  const onSelectTag = useCallback(
-    (e: MouseEvent) => {
+  // UserPostSummary에서 태그 클릭시
+  const handleSelectTag = useCallback(
+    (tag: string) => {
       setHasMore(true);
       const asyncFunc = async () => {
-        const tag = (e.target as any)?.dataset?.tag || '';
-
         setSelectedTag(tag);
         setPostings([]);
         // await함수를 만나면 setState 함수가 일괄 배치 처리된다.
@@ -85,6 +84,15 @@ function UserPage() {
     [retrievePostings],
   );
 
+  // TagList에서 태그 클릭시
+  const onSelectTag = useCallback(
+    (e: MouseEvent) => {
+      const tag = (e.target as any)?.dataset?.tag || '';
+      handleSelectTag(tag);
+    },
+    [handleSelectTag],
+  );
+
   return (
     <div className="container d-flex align-items-center flex-column " style={{ position: 'relative', width: '60%' }}>
       {user && <Profile user={user} style={{ marginBottom: '3rem' }} />}
@@ -92,8 +100,9 @@ function UserPage() {
       {postings &&
         user &&
         postings.map(posting => {
-          return <UserPostSummary key={posting.uid} posting={posting} user={user} />;
+          return <UserPostSummary key={posting.uid} posting={posting} user={user} onClickTag={handleSelectTag} />;
         })}
+      {currentUser!.displayName && <div>쉬</div>}
       {localLoading &&
         Array(5)
           .fill(0)

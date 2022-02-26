@@ -2,7 +2,7 @@ import React from 'react';
 import CustomHR from '../../components/CustomHR';
 
 type props = {
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
 };
 function UserPostSummaryLayout({ children }: props) {
   return (
