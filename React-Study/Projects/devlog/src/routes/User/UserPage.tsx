@@ -36,6 +36,16 @@ function UserPage() {
     [id, setLocalLoading],
   );
 
+  useEffect(() => {
+    const initPosting = async () => {
+      setHasMore(true);
+      setPostings([]);
+      const initialPostings = await retrievePostings();
+      setPostings(initialPostings || []);
+    };
+    initPosting();
+  }, [id, retrievePostings]);
+
   // 무한스크롤 구현을 위한 IntersectionObserver 객체
   const observerRef = useRef<IntersectionObserver>();
   const [hasMore, setHasMore] = useState(true);
