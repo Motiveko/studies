@@ -102,7 +102,6 @@ function UserPage() {
         postings.map(posting => {
           return <UserPostSummary key={posting.uid} posting={posting} user={user} onClickTag={handleSelectTag} />;
         })}
-      {currentUser!.displayName && <div>쉬</div>}
       {localLoading &&
         Array(5)
           .fill(0)

@@ -1,7 +1,7 @@
 import React from 'react';
 
 type props = {
-  children: Reat.ReactNode;
+  children: React.ReactElement;
   label: string;
   prefix?: string;
 };
