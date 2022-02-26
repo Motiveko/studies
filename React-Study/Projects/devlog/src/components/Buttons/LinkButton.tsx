@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-type Prop = {
+type props = {
   to: string;
-  children: JSX.Element | JSX.Element[] | string;
+  children: React.ReactNode;
   variant: Variant;
 };
 
 type Variant = 'dark' | 'outline-dark';
 
-function LinkButton({ to, children, variant }: Prop) {
+function LinkButton({ to, children, variant }: props) {
   const style = {
     borderRadius: '30px',
     color: variant === 'dark' ? 'white' : 'dark',

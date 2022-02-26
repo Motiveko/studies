@@ -2,13 +2,13 @@ import React from 'react';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 
-type Prop = {
+type props = {
   message: string;
   type: 'success' | 'info' | 'warning' | 'error';
   open?: boolean;
   onClose?: () => void;
 };
-function AlertSnackbar({ open = true, type, message, onClose }: Prop) {
+function AlertSnackbar({ open = true, type, message, onClose }: props) {
   return (
     <Snackbar open={open} onClose={onClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
       <Alert onClose={onClose} severity={type} sx={{ width: '100%' }}>

@@ -13,11 +13,11 @@ import TransparentTextarea from '../../components/TransparentTextarea';
 import BackButton from '../../components/Buttons/BackButton';
 import { useCommon } from '../../context/CommonContext';
 
-type Prop = {
+type props = {
   onChange: React.Dispatch<React.SetStateAction<string>>;
 };
 
-function MarkdownEditor({ onChange }: Prop) {
+function MarkdownEditor({ onChange }: props) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const { currentUser } = useAuth();

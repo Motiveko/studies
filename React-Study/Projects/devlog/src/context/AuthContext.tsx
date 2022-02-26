@@ -9,8 +9,8 @@ import { MyError } from '../core/MyError';
 import UI_CONST from '../constants/UIConstant';
 import { getRandomNumber } from '../utils/random-util';
 
-type Prop = {
-  children: JSX.Element | JSX.Element[];
+type props = {
+  children: React.ReactNode;
 };
 
 type SignUp = (email: string, password: string) => void;
@@ -41,7 +41,7 @@ export const useAuth = () => {
 
 const auth = getAuth(app);
 
-export default function AuthProvider({ children }: Prop) {
+export default function AuthProvider({ children }: props) {
   const [currentUser, setCurrentUser] = useState<User | null>(getItem(LOCAL_STORAGE_CONST.keyAuth));
 
   const login: Login = async (email, password) => {

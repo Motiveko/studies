@@ -1,13 +1,13 @@
 import React, { CSSProperties, ForwardedRef } from 'react';
 import PropTypes from 'prop-types';
 
-type Prop = {
+type props = {
   placeholder: string;
   style?: CSSProperties;
   onKeyPress?: React.KeyboardEventHandler<HTMLTextAreaElement>;
 };
 
-const TransparentTextarea = React.forwardRef((props: Prop, ref: ForwardedRef<HTMLTextAreaElement>) => {
+const TransparentTextarea = React.forwardRef((props: props, ref: ForwardedRef<HTMLTextAreaElement>) => {
   const { placeholder, style, onKeyPress } = props;
   return (
     <textarea

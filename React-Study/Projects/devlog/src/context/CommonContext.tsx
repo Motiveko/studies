@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 
-type Prop = {
-  children: JSX.Element | JSX.Element[];
+type props = {
+  children: React.ReactNode;
 };
 
 export type CommonContext = {
@@ -23,7 +23,7 @@ export const useCommon = () => {
   return context;
 };
 
-export default function CommonProvider({ children }: Prop) {
+export default function CommonProvider({ children }: props) {
   const [error, setError] = useState<string | null>(null);
   const [localLoading, setLocalLoading] = useState<boolean>(false); // 부분 스피너
   const [globalLoading, setGlobalLoading] = useState<boolean>(false); // 전역 스피너(작업을 막는다)

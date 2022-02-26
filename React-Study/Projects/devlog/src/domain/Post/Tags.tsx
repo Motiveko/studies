@@ -1,11 +1,11 @@
 import { Chip } from '@mui/material';
 import React from 'react';
-type Prop = {
+type props = {
   tags: string[];
   clickable?: boolean;
   onClick?: (tag: string) => void;
 };
-function Tags({ tags, clickable = false, onClick }: Prop) {
+function Tags({ tags, clickable = false, onClick }: props) {
   return (
     <div className="d-flex mt-3">
       {tags.map((tag, i) => {

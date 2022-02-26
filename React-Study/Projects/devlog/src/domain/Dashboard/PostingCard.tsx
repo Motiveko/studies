@@ -7,11 +7,11 @@ import { FirebaseTime, Posting } from '../../service/firebase/PostingService';
 import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
 import './PostingCard.css';
-type Prop = {
+type props = {
   posting: Posting;
   user: User;
 };
-function PostingCard({ posting, user }: Prop) {
+function PostingCard({ posting, user }: props) {
   const { uid, thumbnail, title, description, updatedAt } = posting;
   const { email, displayName, photoURL } = useMemo(() => ({ email: user.email, photoURL: user.photoURL, displayName: user.displayName }), [user]);
   const date = parseDate((updatedAt as FirebaseTime).seconds * 1000);

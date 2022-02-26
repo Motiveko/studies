@@ -2,13 +2,13 @@ import React, { useCallback } from 'react';
 import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-type Prop = {
+type props = {
   children: string;
   variant: string;
   className?: string;
   size?: 'sm' | 'lg';
 };
-function BackButton({ children, variant, className, size }: Prop) {
+function BackButton({ children, variant, className, size }: props) {
   const navigate = useNavigate();
   const goBack = useCallback(() => navigate(-1), [navigate]);
   return (

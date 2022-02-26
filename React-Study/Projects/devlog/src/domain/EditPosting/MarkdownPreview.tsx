@@ -2,10 +2,10 @@ import React from 'react';
 import UI_CONST from '../../constants/UIConstant';
 import './MarkdownPreview.css';
 
-type Prop = {
+type props = {
   code: string;
 };
-function MarkdownPreview({ code }: Prop) {
+function MarkdownPreview({ code }: props) {
   return (
     <div className="container" style={{ width: UI_CONST.EDITOR_WIDTH }}>
       <div

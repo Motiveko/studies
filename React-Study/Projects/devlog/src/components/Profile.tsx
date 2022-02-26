@@ -8,14 +8,14 @@ import { User } from '../service/firebase/UserService';
 import { getRandomProfile } from '../utils/random-util';
 import CustomHR from './CustomHR';
 
-type Prop = {
+type props = {
   user: User;
   style?: CSSProperties;
 };
 /**
  * 큰 프로필
  */
-function Profile({ user, style }: Prop) {
+function Profile({ user, style }: props) {
   return (
     <div className="d-flex flex-column mt-5 w-100" style={style}>
       <div className="d-flex pt-5 mb-4 align-items-center">

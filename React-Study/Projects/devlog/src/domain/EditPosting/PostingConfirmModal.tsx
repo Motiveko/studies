@@ -8,7 +8,7 @@ import IconButton from '../../components/Buttons/IconButton';
 import { useThumbnail } from '../../hooks/useThumbnail';
 import { useCommon } from '../../context/CommonContext';
 
-type Prop = {
+type props = {
   /** 모달창 노출 여부 */
   show: boolean;
   /** 모달창 노출 여부 setter */
@@ -19,7 +19,7 @@ type Prop = {
 
 type AdditionalData = Pick<Posting, 'thumbnail' | 'description' | 'tags'>;
 
-function PostingConfirmModal({ show, setShow, onSubmit }: Prop) {
+function PostingConfirmModal({ show, setShow, onSubmit }: props) {
   const [{ thumbnail, setThumbnail }, upload] = useThumbnail('');
   const { localLoading, setLocalLoading, globalLoading, setGlobalLoading } = useCommon();
 

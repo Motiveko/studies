@@ -5,10 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import { addComment, Comment, getComments } from '../../service/firebase/CommentService';
 import { User } from '../../service/firebase/UserService';
 
-type Prop = {
+type props = {
   postId: string;
 };
-function Commments({ postId }: Prop) {
+function Commments({ postId }: props) {
   const [comments, setComments] = useState<(Comment & { user: User })[]>([]);
   const commentRef = useRef<HTMLTextAreaElement>(null);
   const { currentUser } = useAuth();

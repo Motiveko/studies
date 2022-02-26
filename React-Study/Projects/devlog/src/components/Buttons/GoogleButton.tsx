@@ -1,7 +1,7 @@
 import React, { MouseEventHandler, useMemo } from 'react';
 import { Button, Image } from 'react-bootstrap';
 
-type Prop = {
+type props = {
   children: string | JSX.Element | JSX.Element[] | undefined;
   size?: {
     width: string;
@@ -9,7 +9,7 @@ type Prop = {
   };
   onClick?: MouseEventHandler | undefined;
 };
-function GoogleButton({ children, size, onClick }: Prop) {
+function GoogleButton({ children, size, onClick }: props) {
   const buttonSize = useMemo(() => {
     if (size) return size;
     return { width: '1.25rem', height: '1.25rem' };

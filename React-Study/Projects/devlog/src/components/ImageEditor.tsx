@@ -4,7 +4,7 @@ import { Image, Spinner } from 'react-bootstrap';
 import FileIconButton from './Buttons/FileIconButton';
 import IconButton from './Buttons/IconButton';
 
-type Prop = {
+type props = {
   variant: 'thumbnail' | 'avatar';
   thumbnail: string;
   handleChange: ChangeEventHandler<HTMLInputElement>;
@@ -12,7 +12,7 @@ type Prop = {
   onRemove?: MouseEventHandler<HTMLLabelElement>;
 };
 
-function ImageEditor({ variant, thumbnail, handleChange, isLoading, onRemove }: Prop) {
+function ImageEditor({ variant, thumbnail, handleChange, isLoading, onRemove }: props) {
   let imageStyle: CSSProperties | undefined;
   let fileIconButtonStyle: CSSProperties | undefined;
   switch (variant) {

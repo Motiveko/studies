@@ -9,12 +9,12 @@ import { parseDate } from '../../utils/date-utils';
 import { useNavigate } from 'react-router-dom';
 import { Link } from '@mui/material';
 
-type Prop = {
+type props = {
   posting: Posting & { commentsCount: number };
   user: User;
   onClickTag: (tag: string) => void;
 };
-function UserPostSummary({ posting, user, onClickTag }: Prop) {
+function UserPostSummary({ posting, user, onClickTag }: props) {
   const date = useMemo(() => parseDate((posting.updatedAt as FirebaseTime).seconds * 1000), [posting]);
 
   const navigate = useNavigate();

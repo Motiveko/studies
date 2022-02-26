@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import UI_CONST from '../constants/UIConstant';
 import { User } from '../service/firebase/UserService';
 import './SmallProfile.css';
-type Prop = {
+type props = {
   user: User;
   /** 단위: rem */
   imageSize?: number;
 };
-function SmallProfile({ user, imageSize = 1 }: Prop) {
+function SmallProfile({ user, imageSize = 1 }: props) {
   const { photoURL, displayName, email, uid } = user;
   const navigate = useNavigate();
   return (

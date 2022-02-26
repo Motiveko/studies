@@ -1,13 +1,13 @@
 import React, { ForwardedRef, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
-type Prop = {
+type props = {
   onSumbit: () => void;
   buttonName?: string;
   placeHolder?: string;
   useCancel?: boolean;
   onCancel?: () => void;
 };
-export default React.forwardRef(function CommentForm(props: Prop, ref: ForwardedRef<HTMLTextAreaElement>) {
+export default React.forwardRef(function CommentForm(props: props, ref: ForwardedRef<HTMLTextAreaElement>) {
   return (
     <>
       <Form.Control as="textarea" placeholder={props.placeHolder || '댓글을 입력하세요.'} ref={ref} className="my-2" style={{ resize: 'none' }} />

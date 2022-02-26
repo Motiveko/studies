@@ -2,9 +2,9 @@ import React, { useCallback } from 'react';
 import { Alert } from 'react-bootstrap';
 import { CommonContext } from '../context/CommonContext';
 
-type Prop = Pick<CommonContext, 'error' | 'setError'>;
+type props = Pick<CommonContext, 'error' | 'setError'>;
 
-function ErrorAlert({ error, setError }: Prop) {
+function ErrorAlert({ error, setError }: props) {
   const onClose = useCallback(() => setError(null), [setError]);
 
   return (

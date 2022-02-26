@@ -1,12 +1,12 @@
 import React from 'react';
 
-type Prop = {
-  children: JSX.Element;
+type props = {
+  children: Reat.ReactNode;
   label: string;
   prefix?: string;
 };
 
-function InlineFormControl({ children, label, prefix }: Prop) {
+function InlineFormControl({ children, label, prefix }: props) {
   return (
     <div className="mb-3 row">
       <label htmlFor={children.props.id} className="col-sm-2 pe-0">

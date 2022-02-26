@@ -8,11 +8,11 @@ import { User } from '../service/firebase/UserService';
 import { parseDate } from '../utils/date-utils';
 import DeleteEdit from './DeleteEdit';
 
-type Prop = {
+type props = {
   commentUser: Comment & { user: User };
   onChange: () => void;
 };
-function SingleComment({ commentUser, onChange }: Prop) {
+function SingleComment({ commentUser, onChange }: props) {
   const date = useMemo(() => parseDate((commentUser.updatedAt as FirebaseTime).seconds * 1000), [commentUser]);
 
   const commentRef = useRef<HTMLTextAreaElement>(null);

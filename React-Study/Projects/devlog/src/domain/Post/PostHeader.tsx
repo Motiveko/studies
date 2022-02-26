@@ -8,12 +8,12 @@ import { deletePosting, FirebaseTime, Posting } from '../../service/firebase/Pos
 import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
 
-type Prop = {
+type props = {
   posting: Posting;
   user: User;
   isCurrentUser: boolean;
 };
-function PostHeader({ posting, user, isCurrentUser }: Prop) {
+function PostHeader({ posting, user, isCurrentUser }: props) {
   const [date, setDate] = useState<string>('');
 
   useEffect(() => {
