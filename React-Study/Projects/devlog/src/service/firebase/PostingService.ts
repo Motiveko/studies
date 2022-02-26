@@ -75,8 +75,6 @@ export const getPosting: GetPosting = async id => {
  * @returns Promise<(Posting & { user: User })[]>
  */
 export const getPostings: GetPostings = async (postingAfter, size = FIRESTORE_DOC.POSTING_SIZE) => {
-  console.log(postingAfter);
-  console.log('쒸발쌔끼야');
   const querySnapshot = !!postingAfter
     ? await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), startAfter(postingAfter.createdAt), limit(size)))
     : await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), limit(FIRESTORE_DOC.POSTING_SIZE)));
@@ -102,8 +100,13 @@ export const deletePosting: DeletePosting = async uid => {
  * @returns Promise<Posting[]>
  */
 export const getUserPostings: GetUserPostings = async (userId: string, tag?: string, postingAfter?: Posting, size = FIRESTORE_DOC.POSTING_SIZE) => {
-  console.log(postingAfter);
-  const queries = [where('userId', '==', userId), ...(tag ? [where('tags', 'array-contains', tag)] : []), ...(!!postingAfter ? [startAfter(postingAfter.createdAt)] : []), limit(size)];
+  const queries = [
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+    ...(tag ? [where('tags', 'array-contains', tag)] : []),
+    ...(!!postingAfter ? [startAfter(postingAfter.createdAt)] : []),
+    limit(size),
+  ];
   const querySnapshot = await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), ...queries));
   return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
 };

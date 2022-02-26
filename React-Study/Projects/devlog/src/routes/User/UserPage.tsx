@@ -21,17 +21,20 @@ function UserPage() {
   const [selectedTag, setSelectedTag] = useState('');
 
   // 포스팅 취득
-  const retrievePostings = useCallback(async () => {
-    setLocalLoading(true);
-    if (id) {
-      await new Promise(resolve => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
-      const newPostings = await getUserPostings(id, selectedTag, postings.slice(-1)[0], pageCount);
-      const commentsCounts = await Promise.all(newPostings.map(posting => getCommentsCount(posting.uid)));
-      if (newPostings.length !== 10) setHasMore(false);
-      setPostings(prev => [...prev, ...newPostings.map((posting, i) => ({ ...posting, commentsCount: commentsCounts[i] }))]);
-    }
-    setLocalLoading(false);
-  }, [id, postings, selectedTag, setLocalLoading]);
+  const retrievePostings = useCallback(
+    async (tagSelected?: string, lastPosting?: Posting) => {
+      if (id) {
+        setLocalLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
+        const newPostings = await getUserPostings(id, tagSelected, lastPosting, pageCount);
+        const commentsCounts = await Promise.all(newPostings.map(posting => getCommentsCount(posting.uid)));
+        if (newPostings.length !== 10) setHasMore(false);
+        setLocalLoading(false);
+        return [...newPostings.map((posting, i) => ({ ...posting, commentsCount: commentsCounts[i] }))];
+      }
+    },
+    [id, setLocalLoading],
+  );
 
   // 무한스크롤 구현을 위한 IntersectionObserver 객체
   const observerRef = useRef<IntersectionObserver>();
@@ -43,9 +46,10 @@ function UserPage() {
       observerRef.current.disconnect();
     }
 
-    observerRef.current = new IntersectionObserver(([entry]) => {
+    observerRef.current = new IntersectionObserver(async ([entry]) => {
       if (entry.isIntersecting && hasMore) {
-        retrievePostings();
+        const nextPostings = await retrievePostings(selectedTag, postings.slice(-1)[0]);
+        setPostings(prev => [...prev, ...(nextPostings || [])]);
       }
     });
 
@@ -66,13 +70,17 @@ function UserPage() {
 
   const onSelectTag = useCallback(
     (e: MouseEvent) => {
-      const tag = (e.target as any)?.dataset?.tag;
-      if (!tag) {
-        setSelectedTag('');
-      }
-      setSelectedTag(tag);
-      // TODO: 태그 선택시 현재 포스팅 데이터를 비우고 조회해야하는데, 이게 불가능하다. await setPostings([]) 와 같은 코드를 실행시켜 해결할 수 있을까?
-      // retrievePostings();
+      setHasMore(true);
+      const asyncFunc = async () => {
+        const tag = (e.target as any)?.dataset?.tag || '';
+
+        setSelectedTag(tag);
+        setPostings([]);
+        // await함수를 만나면 setState 함수가 일괄 배치 처리된다.
+        const newPostings = await retrievePostings(tag);
+        setPostings(newPostings || []);
+      };
+      asyncFunc();
     },
     [retrievePostings],
   );
@@ -80,7 +88,7 @@ function UserPage() {
   return (
     <div className="container d-flex align-items-center flex-column " style={{ position: 'relative', width: '60%' }}>
       {user && <Profile user={user} style={{ marginBottom: '3rem' }} />}
-      {/* <TagList tags={tags} selectedTag={selectedTag} onSelect={onSelectTag} /> */}
+      <TagList tags={tags} selectedTag={selectedTag} onSelect={onSelectTag} />
       {postings &&
         user &&
         postings.map(posting => {
