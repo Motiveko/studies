@@ -3,6 +3,7 @@ import { faEnvelope, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Avatar } from '@mui/material';
 import React, { CSSProperties } from 'react';
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { COMMON_CONSTANT } from '../constants/CommonConstant';
 import { User } from '../service/firebase/UserService';
 import { getRandomProfile } from '../utils/random-util';
@@ -26,7 +27,7 @@ function Profile({ user, style }: props) {
         </div>
       </div>
       <CustomHR />
-      <div>
+      <div className="mt-2 d-flex">
         {user.gitURL && (
           <FontAwesomeIcon
             icon={faGithub as IconDefinition}
@@ -34,7 +35,11 @@ function Profile({ user, style }: props) {
             onClick={() => window.open(`${COMMON_CONSTANT.GIT_PREFIX}/${user.gitURL}`, '_blank')}
           />
         )}
-        <FontAwesomeIcon icon={faEnvelope} className="ms-4" style={{ color: 'grey', width: '2.5rem', height: '2.5rem', cursor: 'pointer' }} />
+        <OverlayTrigger placement="top" overlay={<Tooltip id={'tooltip-top'}>{user.email}</Tooltip>}>
+          <div className="ms-4">
+            <FontAwesomeIcon icon={faEnvelope} style={{ color: 'grey', width: '2.5rem', height: '2.5rem', cursor: 'pointer' }} />
+          </div>
+        </OverlayTrigger>
       </div>
     </div>
   );
