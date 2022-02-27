@@ -8,10 +8,11 @@ import { useCommon } from '../../context/CommonContext';
 import CenteredSpinner from '../../components/CenteredSpinner';
 import ErrorAlert from '../../components/ErrorAlert';
 import GoogleButton from '../../components/Buttons/GoogleButton';
+import AlertSnackbar from '../../components/Snackbars/AlertSnackbar';
 
 export default function Register() {
   // const { signUp } = useOutletContext();
-  const { signUp } = useAuth();
+  const { signUp, authWithGoogle } = useAuth();
   const { localLoading: isLoading, setLocalLoading: setIsLoading, error, setError } = useCommon();
   const navigate = useNavigate();
 
@@ -21,13 +22,14 @@ export default function Register() {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setIsLoading(true);
     const { email, password, passwordConfirm } = getRegisterInfo();
 
     if (!checkPassword(password, passwordConfirm)) {
+      setError('비밀번호값이 일치하지 않습니다. 입력값을 확인해주세요');
       return;
     }
 
+    setIsLoading(true);
     try {
       const userCredentials = await signUp(email, password);
       navigate('/');
@@ -62,7 +64,6 @@ export default function Register() {
       <Card style={{ width: '40vw', maxWidth: '350px', minWidth: '250px' }}>
         <Card.Body>
           <Card.Title style={{ textAlign: 'center' }}>회원가입</Card.Title>
-          <ErrorAlert error={error} setError={setError} />
           <Form onSubmit={onSubmit}>
             <Form.Group>
               <Form.Label>이메일</Form.Label>
@@ -82,7 +83,7 @@ export default function Register() {
                 <Button type="submit" className="w-100 mt-3" variant="primary">
                   회원가입
                 </Button>
-                <GoogleButton onClick={() => alert('TODO : 구현할 것')}>구글계정으로 가입하기</GoogleButton>
+                <GoogleButton onClick={authWithGoogle}>구글계정으로 시작하기</GoogleButton>
               </>
             )}
           </Form>
@@ -91,6 +92,7 @@ export default function Register() {
       <div className="text-center mt-2">
         이미 계정이 있으신가요? <Link to="/auth/login">로그인</Link>
       </div>
+      {error && <AlertSnackbar type="error" message={error} onClose={() => setError('')} />}
     </>
   );
 }

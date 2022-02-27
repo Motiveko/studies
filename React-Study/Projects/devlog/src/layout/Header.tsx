@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import LinkButton from '../components/Buttons/LinkButton';
 import CustomHR from '../components/CustomHR';
 import { useAuth } from '../context/AuthContext';
-import { getRandomProfile } from '../utils/random-util';
 
 function Header() {
   const { currentUser, logout } = useAuth();
@@ -20,7 +19,7 @@ function Header() {
 
   const userAvatar = useMemo(() => {
     if (!currentUser) return;
-    const thumbnail = currentUser?.photoURL || getRandomProfile();
+    const thumbnail = currentUser?.photoURL;
 
     return <Image src={thumbnail} className="me-2" style={{ width: '2rem', height: '2rem', borderRadius: '50%', position: 'relative' }} />;
   }, [currentUser]);
@@ -46,9 +45,9 @@ function Header() {
                     <NavDropdown.Item as={Link} to={{ pathname: '/user/settings' }}>
                       설정
                     </NavDropdown.Item>
-                    <NavDropdown.Item as={Link} to={{ pathname: '/user/tempPost' }}>
+                    {/* <NavDropdown.Item as={Link} to={{ pathname: '/user/tempPost' }}>
                       임시 글
-                    </NavDropdown.Item>
+                    </NavDropdown.Item> */}
                     <NavDropdown.Divider />
                     <NavDropdown.Item eventKey={NAVBAR_EVENT_KEYS.LOGOUT}>로그아웃</NavDropdown.Item>
                   </NavDropdown>

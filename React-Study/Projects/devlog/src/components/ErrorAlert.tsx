@@ -4,6 +4,12 @@ import { CommonContext } from '../context/CommonContext';
 
 type props = Pick<CommonContext, 'error' | 'setError'>;
 
+/**
+ * 디자인 구려서 mui snackbar로 갈아탐
+ * @deprecated
+ * @param param0
+ * @returns
+ */
 function ErrorAlert({ error, setError }: props) {
   const onClose = useCallback(() => setError(null), [setError]);
 

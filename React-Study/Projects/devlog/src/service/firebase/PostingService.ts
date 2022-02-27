@@ -67,7 +67,7 @@ const updatePosting = async (posting: Omit<Posting, 'userId' | 'createdAt'>) => 
 export const getPosting: GetPosting = async id => {
   const docSnap = await getDoc(doc(db, FIRESTORE_DOC.POSTING, id));
   const posting = { uid: docSnap.id, ...docSnap.data() } as Posting;
-  const user = await getUser(posting.userId);
+  const user = (await getUser(posting.userId)) as unknown as User;
   return { ...posting, user };
 };
 
@@ -80,7 +80,7 @@ export const getPostings: GetPostings = async (postingAfter, size = FIRESTORE_DO
     ? await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), startAfter(postingAfter.createdAt), limit(size)))
     : await getDocs(query(collection(db, FIRESTORE_DOC.POSTING), orderBy('createdAt', 'desc'), limit(FIRESTORE_DOC.POSTING_SIZE)));
   const postings = querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Posting));
-  const users = await Promise.all(postings.map(posting => getUser(posting.userId)));
+  const users = await Promise.all(postings.map(posting => getUser(posting.userId) as unknown as User));
 
   return postings.map((posting, i) => ({ ...posting, user: users[i] }));
 };

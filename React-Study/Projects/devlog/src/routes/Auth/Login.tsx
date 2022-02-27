@@ -5,9 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useCommon } from '../../context/CommonContext';
 import CenteredSpinner from '../../components/CenteredSpinner';
 import GoogleButton from '../../components/Buttons/GoogleButton';
+import AlertSnackbar from '../../components/Snackbars/AlertSnackbar';
 
 function Login() {
-  const { login } = useAuth();
+  const { login, authWithGoogle } = useAuth();
   const { localLoading, setLocalLoading, error, setError } = useCommon();
   const navigate = useNavigate();
 
@@ -16,9 +17,12 @@ function Login() {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setLocalLoading(true);
     const { email, password } = getLoginInfo();
-
+    if (!email || !password) {
+      setError('이메일/비밀번호는 필수값입니다!');
+      return;
+    }
+    setLocalLoading(true);
     try {
       await login(email, password);
       navigate('/');
@@ -47,11 +51,11 @@ function Login() {
           <Form onSubmit={onSubmit}>
             <Form.Group>
               <Form.Label>이메일</Form.Label>
-              <Form.Control ref={emailRef} type="email" placeholder="name@example.com" />
+              <Form.Control ref={emailRef} type="email" placeholder="name@example.com" required />
             </Form.Group>
             <Form.Group className="mt-2">
               <Form.Label>비밀번호</Form.Label>
-              <Form.Control ref={passwordRef} type="password" placeholder="비밀번호" />
+              <Form.Control ref={passwordRef} type="password" placeholder="비밀번호" required />
             </Form.Group>
             <>
               {localLoading && <CenteredSpinner />}
@@ -60,7 +64,7 @@ function Login() {
                   <Button type="submit" className="w-100 mt-3" variant="primary">
                     로그인
                   </Button>
-                  <GoogleButton onClick={() => alert('TODO : 구현할 것')}>구글계정으로 로그인하기</GoogleButton>
+                  <GoogleButton onClick={authWithGoogle}>구글계정으로 시작하기</GoogleButton>
                 </>
               )}
             </>
@@ -70,6 +74,7 @@ function Login() {
       <div className="text-center mt-2">
         계정이 없으신가요? <Link to="/auth/register">회원가입</Link>
       </div>
+      {error && <AlertSnackbar type="error" message={error} onClose={() => setError('')} />}
     </>
   );
 }

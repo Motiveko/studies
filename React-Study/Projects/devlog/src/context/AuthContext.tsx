@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut, UserCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, UserCredential } from 'firebase/auth';
 import { app } from '../firebase';
 import { useContext } from 'react';
 import { getItem, removeItem, setItem } from '../service/LocalStorageService';
 import { getUser, registerUser, User } from '../service/firebase/UserService';
 import { LOCAL_STORAGE_CONST } from '../constants/LocalStorageConstant';
 import { MyError } from '../core/MyError';
-import UI_CONST from '../constants/UIConstant';
-import { getRandomNumber } from '../utils/random-util';
+import { getRandomProfile } from '../utils/random-util';
 
 type props = {
   children: React.ReactNode;
@@ -26,6 +25,7 @@ type AuthContext = {
   logout: Logout;
   refreshUser: RefreshUser;
   isAuthenticated: IsAuthenticated;
+  authWithGoogle: () => Promise<void>;
 };
 
 // createContext 타입 및 초기값 설정 - https://stackoverflow.com/questions/61333188/react-typescript-avoid-context-default-value
@@ -60,11 +60,14 @@ export default function AuthProvider({ children }: props) {
 
   const signUp: SignUp = async (email, password) => {
     const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
-    const { uid, emailVerified, photoURL } = userCredentials.user;
-    let { displayName } = userCredentials.user;
+    const { uid, emailVerified } = userCredentials.user;
+    let { displayName, photoURL } = userCredentials.user;
 
     if (!displayName) {
       displayName = email.substring(0, email.indexOf('@'));
+    }
+    if (!photoURL) {
+      photoURL = getRandomProfile();
     }
 
     await registerUser({ uid, email, emailVerified, photoURL, displayName });
@@ -100,6 +103,30 @@ export default function AuthProvider({ children }: props) {
     await _setUser(currentUser.uid);
   };
 
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+  const authWithGoogle = async () => {
+    const { user } = await signInWithPopup(auth, provider);
+
+    const existingUser = await getUser(user.uid);
+
+    // 기존 유저가 있으면 db에 다시 저장하지 않는다
+    if (existingUser) return;
+
+    const { uid, emailVerified } = user;
+    let { photoURL } = user;
+    const email = user.email as string;
+    let { displayName } = user;
+
+    if (!displayName) {
+      displayName = email?.substring(0, email?.indexOf('@'));
+    }
+    if (!photoURL) {
+      photoURL = getRandomProfile();
+    }
+
+    await registerUser({ uid, email, emailVerified, photoURL, displayName });
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -109,6 +136,7 @@ export default function AuthProvider({ children }: props) {
         logout,
         refreshUser,
         isAuthenticated,
+        authWithGoogle,
       }}
     >
       {children}

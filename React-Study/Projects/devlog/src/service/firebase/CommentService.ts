@@ -49,7 +49,7 @@ export const getComments: GetComments = async postId => {
 
   const comments = querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Comment));
 
-  const users = await Promise.all(comments.map(comment => getUser(comment.userId)));
+  const users = await Promise.all(comments.map(comment => getUser(comment.userId) as unknown as User));
   return comments.map((comment, i) => ({ ...comment, user: users[i] }));
 };
 

@@ -6,7 +6,6 @@ import React, { CSSProperties } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { COMMON_CONSTANT } from '../constants/CommonConstant';
 import { User } from '../service/firebase/UserService';
-import { getRandomProfile } from '../utils/random-util';
 import CustomHR from './CustomHR';
 
 type props = {
@@ -20,7 +19,7 @@ function Profile({ user, style }: props) {
   return (
     <div className="d-flex flex-column mt-5 w-100" style={style}>
       <div className="d-flex pt-5 mb-4 align-items-center">
-        <Avatar src={user.photoURL || getRandomProfile()} sx={{ width: '4.5rem', height: '4.5rem' }} />
+        <Avatar src={user.photoURL} sx={{ width: '4.5rem', height: '4.5rem' }} />
         <div className="d-flex ms-5 flex-column" style={{ width: '30%' }}>
           <h4 className="">{user.displayName}</h4>
           <div className="text-muted text-truncate" style={userDescriptionStyle} dangerouslySetInnerHTML={{ __html: user.description || '' }}></div>

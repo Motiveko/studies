@@ -6,7 +6,7 @@ export type User = {
   uid: string;
   email: string;
   emailVerified: boolean;
-  photoURL: string | null;
+  photoURL: string;
   displayName: string;
   description?: string;
   gitURL?: string;
@@ -14,7 +14,7 @@ export type User = {
 
 const db = getFirestore();
 
-type GetUser = (uid: string) => Promise<User>;
+type GetUser = (uid: string) => Promise<User | null>;
 type RegisterUser = (user: User) => Promise<void>;
 type UpdateUser = (user: Partial<User> & { uid: string }) => Promise<void>;
 
@@ -37,8 +37,9 @@ export const registerUser: RegisterUser = user => {
  */
 export const getUser: GetUser = async (uid: string) => {
   const doc = await getDoc<DocumentData>(getUserRef(uid));
+
   if (!doc.exists()) {
-    throw new Error(`id: ${uid} 인 유저를 찾을 수 없습니다.`);
+    return null;
   }
   return { uid: doc.id, ...doc.data() } as User;
 };
