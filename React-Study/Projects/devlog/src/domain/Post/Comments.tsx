@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import SingleComment from '../../components/SingleComment';
 import { useAuth } from '../../context/AuthContext';
@@ -22,25 +22,31 @@ function Commments({ postId }: props) {
     initComments();
   }, [initComments]);
 
-  const uploadComment = useCallback(async () => {
-    if (!currentUser || !commentRef.current) {
-      throw new Error('댓글을 달 수 없습니다.');
-    }
-    await addComment({ userId: currentUser.uid, postId, comment: commentRef.current.value });
-    commentRef.current.value = '';
-    initComments();
-  }, [currentUser, initComments, postId]);
+  const uploadComment = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!currentUser || !commentRef.current) {
+        throw new Error('댓글을 달 수 없습니다.');
+      }
+      await addComment({ userId: currentUser.uid, postId, comment: commentRef.current.value });
+      commentRef.current.value = '';
+      initComments();
+    },
+    [currentUser, initComments, postId],
+  );
   return (
     <div className="mt-5">
       <h5>{comments.length} 개의 댓글</h5>
       {currentUser && (
         <>
-          <Form.Control as="textarea" placeholder="댓글을 입력하세요." ref={commentRef} className="my-2" style={{ resize: 'none' }} />
-          <div className="text-end">
-            <Button onClick={uploadComment} variant="success">
-              댓글 작성
-            </Button>
-          </div>
+          <Form onSubmit={uploadComment}>
+            <Form.Control as="textarea" placeholder="댓글을 입력하세요." ref={commentRef} className="my-2" style={{ resize: 'none' }} required />
+            <div className="text-end">
+              <Button type="submit" variant="success">
+                댓글 작성
+              </Button>
+            </div>
+          </Form>
         </>
       )}
       {comments.map(cmt => {
