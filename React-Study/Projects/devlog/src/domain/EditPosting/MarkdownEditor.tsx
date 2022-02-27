@@ -1,28 +1,26 @@
-import React, { ChangeEventHandler, FormEvent, MouseEvent, useRef, useState } from 'react';
+import React, { ChangeEvent, ChangeEventHandler, MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import UI_CONST from '../../constants/UIConstant';
-import { faCode, faFolderPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCode } from '@fortawesome/free-solid-svg-icons';
 import { uploadImage } from '../../service/firebase/FileService';
 import FileIconButton from '../../components/Buttons/FileIconButton';
 import IconButton from '../../components/Buttons/IconButton';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { Posting, uploadPosting } from '../../service/firebase/PostingService';
 import PostingConfirmModal from './PostingConfirmModal';
 import TransparentTextarea from '../../components/TransparentTextarea';
 import BackButton from '../../components/Buttons/BackButton';
-import { useCommon } from '../../context/CommonContext';
+import { usePost } from '../../context/PostContext';
 
-type props = {
-  onChange: React.Dispatch<React.SetStateAction<string>>;
-};
-
-function MarkdownEditor({ onChange }: props) {
+function MarkdownEditor() {
+  const { posting, mergePosting } = usePost();
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
-  const { currentUser } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
+
   const [showModal, setShowModal] = useState(false);
+
+  /**
+   * 내용에 이미지 삽입
+   * @param e ChangeEvent
+   */
   const handleFileChange: ChangeEventHandler<HTMLInputElement> = async e => {
     e.preventDefault();
     if (!e.target?.files || e.target.files.length === 0) {
@@ -32,54 +30,57 @@ function MarkdownEditor({ onChange }: props) {
     _addImageRef(downloadURL);
   };
 
+  /** 내용에 코드블럭 삽입 */
   const addCodeBlock = (e: MouseEvent) => {
     _insertText('```\n코드를입력해주세요\n```');
   };
 
-  // 마크다운 에디터의 현재 커서에 이미지 추가
+  /** 작성중이던 포스팅이 있으면 해당 포스팅 내용으로 폼 */
+  useEffect(() => {
+    // 기존 작성하던 포스팅 있으면 초기화
+    titleRef.current!.value = posting.title;
+    contentRef.current!.value = posting.content;
+    // setPosting(prev => ({ ...prev, content: posting.content }));
+  }, [posting]);
+
+  /** 마크다운 에디터의 현재 커서에 이미지 추가 */
   const _addImageRef = (imageUrl: string) => {
     _insertText(`![](${imageUrl})`);
   };
 
+  /** 콘텐츠의 현재 커서 위치에 추가 내용 삽입 */
   const _insertText = (textToInsert: string) => {
     if (!contentRef.current) {
       throw new Error('textarea가 존재하지 않습니다');
     }
+
     const cursor = contentRef.current.selectionStart;
     const text = contentRef.current.value;
     const textBeforeCursor = text.substring(0, cursor);
     const textAfterCursor = text.substring(cursor, text.length);
-    contentRef.current.value = `${textBeforeCursor}\n${textToInsert}\n${textAfterCursor}`;
-    onChange(contentRef.current.value);
+    const changedContent = `${textBeforeCursor}\n${textToInsert}\n${textAfterCursor}`;
+    contentRef.current.value = changedContent;
+
+    mergePosting({ content: changedContent });
   };
+  /** 제목 변경 */
+  const onChangeTitle = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => mergePosting({ title: e.target.value }), []);
 
-  const navigate = useNavigate();
-  const { setGlobalLoading } = useCommon();
-  const uploadPost = async ({ thumbnail, description, tags }: Pick<Posting, 'thumbnail' | 'description' | 'tags'>) => {
-    if (!confirm('작성한 내용으로 출간하시겠습니까?')) return;
-    setGlobalLoading(true);
-    const { title, content } = getFormValue();
-    const uid = searchParams.get('id');
-    const userId = currentUser!.uid;
+  /** 컨텐츠 변경 */
+  const onChangeConent = useCallback((e: ChangeEvent<HTMLInputElement>) => mergePosting({ content: e.target.value }), []);
 
-    const result = await uploadPosting({ uid, userId, title, content, thumbnail, description, tags });
-    setGlobalLoading(false);
-    alert('포스트를 출간하였습니다.');
-    navigate(`/post/${result.uid}`);
-  };
-
-  const getFormValue = () => {
-    if (!titleRef.current || !contentRef.current) {
-      throw new Error('폼 생성에 실패했습니다');
+  const nextStep = useCallback(() => {
+    if (!posting.content || !posting.title) {
+      alert('게시물의 제목, 내용은 필수값입니다!');
+      return;
     }
-    return { title: titleRef.current.value, content: contentRef.current.value };
-  };
-
+    setShowModal(true);
+  }, [posting]);
   return (
     <div className="container" style={{ width: UI_CONST.EDITOR_WIDTH }}>
       <Form>
         <div className="d-flex mb-2" style={{ height: '2.5rem' }}>
-          <TransparentTextarea placeholder="제목을 입력하세요" ref={titleRef} />
+          <TransparentTextarea placeholder="제목을 입력하세요" ref={titleRef} onChange={onChangeTitle} />
           <div className="ms-auto d-flex">
             <IconButton icon={faCode} onClick={addCodeBlock} />
             <FileIconButton onChange={handleFileChange} />
@@ -87,7 +88,7 @@ function MarkdownEditor({ onChange }: props) {
         </div>
 
         <Form.Control
-          onChange={e => onChange(e.target.value)}
+          onChange={onChangeConent}
           as="textarea"
           ref={contentRef}
           placeholder="내용을 입력하세요."
@@ -102,12 +103,12 @@ function MarkdownEditor({ onChange }: props) {
             취소
           </BackButton>
 
-          <Button className="ms-2" onClick={() => setShowModal(true)} size="sm" variant="success">
+          <Button className="ms-2" onClick={nextStep} size="sm" variant="success">
             출간하기
           </Button>
         </div>
       </Form>
-      <PostingConfirmModal show={showModal} setShow={setShowModal} onSubmit={uploadPost} />
+      <PostingConfirmModal show={showModal} setShow={setShowModal} />
     </div>
   );
 }

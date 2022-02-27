@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import UI_CONST from '../../constants/UIConstant';
+import { usePost } from '../../context/PostContext';
+import { parseText } from '../../utils/markdown-parser-util';
 import './MarkdownPreview.css';
 
-type props = {
-  code: string;
-};
-function MarkdownPreview({ code }: props) {
+function MarkdownPreview() {
+  // md -> html
+  const { posting } = usePost();
+  const code = useMemo(() => {
+    return parseText(posting.content || '');
+  }, [posting.content]);
   return (
     <div className="container" style={{ width: UI_CONST.EDITOR_WIDTH }}>
       <div

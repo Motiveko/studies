@@ -1,14 +1,15 @@
-import React, { CSSProperties, ForwardedRef } from 'react';
+import React, { ChangeEventHandler, CSSProperties, ForwardedRef } from 'react';
 import PropTypes from 'prop-types';
 
 type props = {
   placeholder: string;
   style?: CSSProperties;
+  onChange?: ChangeEventHandler<HTMLTextAreaElement>;
   onKeyPress?: React.KeyboardEventHandler<HTMLTextAreaElement>;
 };
 
 const TransparentTextarea = React.forwardRef((props: props, ref: ForwardedRef<HTMLTextAreaElement>) => {
-  const { placeholder, style, onKeyPress } = props;
+  const { placeholder, style, onChange, onKeyPress } = props;
   return (
     <textarea
       ref={ref}
@@ -26,6 +27,7 @@ const TransparentTextarea = React.forwardRef((props: props, ref: ForwardedRef<HT
         ...style,
       }}
       onKeyPress={onKeyPress}
+      onChange={onChange}
     ></textarea>
   );
 });

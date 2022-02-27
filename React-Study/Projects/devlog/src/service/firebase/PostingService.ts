@@ -1,5 +1,4 @@
 import { addDoc, collection, deleteDoc, doc, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, startAfter, updateDoc, where } from 'firebase/firestore';
-import { Tagged } from 'type-fest/source/opaque';
 import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
 import { getUser, User } from './UserService';
 
@@ -24,6 +23,8 @@ type GetPostings = (posting: Posting | null, size?: number) => Promise<(Posting 
 type DeletePosting = (uid: string) => Promise<void>;
 type GetUserPostings = (userId: string, tag?: string, prevPosting?: Posting, size?: number) => Promise<Posting[]>;
 type GetTags = (userId: string) => Promise<{ name: string; count: number }[]>;
+
+export type PartialPosting = Omit<Posting, 'createdAt' | 'updatedAt'>;
 
 const db = getFirestore();
 

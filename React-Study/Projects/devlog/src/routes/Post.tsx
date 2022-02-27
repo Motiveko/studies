@@ -48,7 +48,7 @@ export default function Post() {
         {!localLoading && posting && user && (
           <>
             <PostHeader user={user} posting={posting} isCurrentUser={user.uid === currentUser?.uid} />
-            <Tags tags={posting.tags} />
+
             <hr />
 
             <Image src={posting.thumbnail || COMMON_CONSTANT.DEFAULT_THUMBNAIL} className="d-block w-100" />

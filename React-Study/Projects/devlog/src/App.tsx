@@ -31,7 +31,8 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/post/:id" element={<Post />} />
             <Route path="user" element={<PrivateRoute />}>
-              <Route path="newPosts" element={<EditPost />} />
+              <Route path="post" element={<EditPost />} />
+              <Route path="post/:id" element={<EditPost />} />
               <Route path="settings" element={<UserSettings />} />
               <Route path=":id" element={<UserPage />} />
               <Route path="tempPost" element={<div>TODO : 임시 글 목록 구현할 것</div>} />

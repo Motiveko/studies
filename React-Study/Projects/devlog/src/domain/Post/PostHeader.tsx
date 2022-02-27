@@ -7,6 +7,7 @@ import { useCommon } from '../../context/CommonContext';
 import { deletePosting, FirebaseTime, Posting } from '../../service/firebase/PostingService';
 import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';
+import Tags from './Tags';
 
 type props = {
   posting: Posting;
@@ -39,8 +40,9 @@ function PostHeader({ posting, user, isCurrentUser }: props) {
       <div className="d-flex align-items-center">
         {user && <SmallProfile user={user} imageSize={2} />}
         <div className="ms-2 text-muted">{date}</div>
-        {isCurrentUser && <DeleteEdit onEdit={() => ({})} onDelete={deletePost} className="ms-auto" />}
+        {isCurrentUser && <DeleteEdit onEdit={() => navigate(`/user/post/${posting.uid}`)} onDelete={deletePost} className="ms-auto" />}
       </div>
+      <Tags tags={posting.tags} />
     </>
   );
 }

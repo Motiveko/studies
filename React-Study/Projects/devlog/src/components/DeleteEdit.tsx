@@ -1,11 +1,11 @@
 import React from 'react';
 
-type Prop = {
+type props = {
   onEdit: () => void;
   onDelete: () => void;
   className?: string;
 };
-function DeleteEdit({ onEdit, onDelete, className }: Prop) {
+function DeleteEdit({ onEdit, onDelete, className }: props) {
   return (
     <div className={`text-muted ${className}`}>
       <span className="me-2" onClick={onEdit} style={{ cursor: 'pointer' }}>

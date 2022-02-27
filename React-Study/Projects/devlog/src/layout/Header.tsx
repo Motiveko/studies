@@ -35,7 +35,7 @@ function Header() {
           <Navbar.Collapse className="justify-content-end">
             {currentUser && (
               <>
-                <LinkButton to="/user/newPosts" variant="outline-dark">
+                <LinkButton to="/user/post" variant="outline-dark">
                   새 글 작성
                 </LinkButton>
                 <Navbar.Text>
