@@ -1415,3 +1415,324 @@ function App() {
 <br>
 
 ### 6.2 리덕스의 주요 개념 이해하기
+
+![리덕스-구조](https://blog.kakaocdn.net/dn/dg9DeB/btqKgFZuNN9/lxjSoNEjL2Nu94Tckvz9ik/img.png)
+
+<div style="text-align: center; color: #a9a9a9; font-size: 12px;">
+리덕스의 상태값 변화 과정
+</div>
+
+<br>
+
+### 6.2.1 액션
+- 액션은 `type`속성을 가진 객체로 `dispatch` 메서드의 호출 인자로 사용된다.
+- `type`외에 여러 속성값을 가지고(ngrx의 `props`), 이를 이용해 상태 변화 가능하다.
+- `type` 속성은 고유한 값을 가져야 하므로 일반적으로 관련 상태를 접두사로 쓰고 해당 값은 `상수`로 정의한다. 각 **액션에 대해 생성자 함수를 정의해서 호출**하는 방식으로 사용한다.
+
+```js
+// 액션 정의의 예
+export const ADD = 'todo/ADD';
+export const REMOVE = 'todo/REMOVE';
+export const REMOVE_ALL = 'todo/REMOVE_ALL';
+
+export function addTodo({ title, priority }) {
+  return { type: ADD, title, priority };
+}
+export function removeTodo({ id }) {
+  return { type: REMOVE, id };
+}
+export function removeAllTodo() {
+  return { type: REMOVE_ALL };
+}
+```
+
+<br>
+
+### 6.2.2 미들웨어
+- 미들웨어는 ***리듀서가 액션을 처리하기 전에 실행되는 `함수`*** 다. 상태값 변경시 로그를 출력하거나, 리듀서에서 발생한 예외를 서버에 보내거나 하는 등의 동작을 만들 수 있겠다. 따로 설정 안하면 액션은 바로 리듀서로 향한다.
+- 미들웨어 구조는 아래와 같다.
+
+```js
+// 연속 화살표 함수
+const middleware = store => next => action => next(action);
+
+// 쉽게 중첩함수로 풀어보면..
+const middleware = function(store) {
+  return function(next) {
+    return function(action) {
+      return next(action);
+    }
+  }
+}
+```
+- 중첩 화살표 함수에서 뒤의 `action => next(action)`는 `dispatch`와 같다는것에 유념하자. 
+- 아래와 같이 미들웨어를 정의하고 결과를 살펴보자.
+```js
+import { createStore, applyMiddleware } from 'redux';
+const middleware1 = store => next => action => {
+  console.log('middleware1 start');
+  next(action);
+  console.log('middleware1 end');
+}
+
+const middleware2 = store => next => action => {
+  console.log('middleware2 start');
+  next(action);
+  console.log('middleware2 end');
+}
+
+const reducer = (state, action) => {
+  console.log('reducer');
+  return state;
+}
+
+const store = createStore(reducer, applyMiddleware(middleware1, middleware2));
+store.dispatch({ type: 'someAction' });
+
+/**
+  === 출력 결과 ===
+  middleware1 start
+  middleware2 start
+  reducer
+  middleware2 end
+  middleware1 end
+*/
+```
+- `next(action)`은 다음 미들웨어 혹은 store의 `dispatch`함수를 실행하게 된다.
+- `applyMiddleware`함수의 구조는 아래와 같다
+
+```js
+const applyMiddleware = (...middlewares) => createStore => (...args) => {
+  const store = createStore(...args);
+  const funcsWithStore = middlewares.map(middleware => middleware(store));
+  const chainedFunc = funcsWithStore.reduce((a, b) => next => a(b(next)));
+  return {
+    ...store,
+    dispatch: chainedFunc(sotre.dispatch);
+  }
+}
+```
+- `functionWithStore`는 미들웨어 함수의 첫 번째 함수를 호출한 결과들이다.
+- `chainedFunc`는 `functionWithStore`를 체이닝 한 결과다. 미들웨어가 a~d 네개라면 결과는 `next => a(b(c(d(next))))`가 될 것이다.
+- 마지막 반환되는 객채의 `dispatch`함수는 `chainedFunc`의 next에 store의 `dispatch`함수를 전달한 것으로 `a(b(c(d(store.dispatch))))`가 된다. 즉 ***store에서 action을 dispatch하면 a->b->c->d->store.dispatch->d->c->b->a 순으로 처리하게 되는것***이다. 앞서 설명했듯 `action => next(action)`은 `dispatch`와 같다고 했는데, 결국 `d(next)`는 `d(store.dispatch)`가 되는것이다.
+
+<br>
+
+- 추가적으로 store의 `dispatch` 함수는 아래와 같이 생겼다.
+```js
+function dispatch(action) {
+  currentState = currentReducer(currentState, action);
+  for(let i = 0; i < listeners.length; i++) {
+    listeners[i]();
+  }
+  return action;
+}
+```
+- `reducer`에 `state`와 `action`을 전달해 상태값을 변경하고 모든 이벤트 처리 함수를 호출한 후 `action`을 반환한다.
+
+<br>
+
+> [apply middleware](https://redux.js.org/api/applymiddleware) 에 따르면 applyMiddleware [`Store enhancer`](https://redux.js.org/understanding/thinking-in-redux/glossary#store-enhancer)의 하나라고 한다. 공식 메뉴얼을 살펴보자.
+
+<br>
+
+### 미들웨어 활용 예
+1. 로그 출력 미들웨어
+ - 아래는 액션 발생간에 상태값 변화를 로그로 남기는 미들웨어다. 상태변경은 모든 미들웨어의 next 호출 후에 이뤄지기 때문에 가능하다.
+```js
+const printLog = store => next => action => {
+  console.log(`prev state = ${store.getState()}`)  
+  const result = next(action);
+  console.log(`next state = ${store.getState()}`)
+  return result;
+}
+```
+
+<br>
+
+2. 에러 정보 전송 미들웨어
+- 아래 미들웨어는 리듀서와 하위 미들웨어에서 예외 발생시 내용을 서버로 전송할 수 있는 미들웨어다.
+```js
+const reportCrash = store => next => action => {
+  try {
+    return next(action);
+  } catch(err) {
+    // 캐치된 에러를 서버로 저송
+  }
+}
+```
+- 생각해보면 알겠지만 상위 미들웨어의 에러는 캐치하지 못한다. 최상위 미들웨어로 적용하면 좋겠다.
+
+<br>
+
+3. 실행을 연기할 수 있는 미들웨어
+- 사용자가 원하는 경우 액션 처리를 일정시간 연기할 수 있는 미들웨어다. 참 머리좋은사람 많다.
+```js
+const delayAction = store => next => action => {
+  const delay = action.meta?.delay;
+  if(!delay) {
+    return next(action); // delay 없으면 바로 next 호출
+  }
+
+  const timeoutId = setTimeout(() => next(action), delay);
+  return () => clearTimeout(timeoutId); // 딜레이를 취소할 수 있는 함수 반환
+}
+const cancel = sotre.dispatch({ type: 'action', meta: { delay: 1000 }});
+cancel(); // 1초 안지나면 취소함
+```
+
+<br>
+
+4. 로컬 스토리지에 값을 저장하는 미들웨어
+- 발생한 액션 타입이 'SET_NAME'이면 액션 이름을 저장한다.
+```js
+const saveLoaclStorage = store => next => action => {
+  if(action.type === 'SET_NAME') {
+    localStorage.setItem('name', action.name);
+  }
+  return next(action);
+}
+```
+
+<br>
+
+### 6.2.3 리듀서
+- 리듀서는 액션 발생시 새로운 상태값을 만드는 `함수`다. 아래와 같이 생겼다.
+```js
+(currentState, action) => nextState;
+```
+- todolist를 관리하는 간단한 리듀서다.
+```js
+function reducer(state = INITIAL_STATE, action) {
+  switch(action.type) {
+    // ...
+    case REMOVE:
+      return {
+        ...state,
+        todos: state.todos.filter(todo => todo.id !== action.id)
+      };
+
+    default:
+      return state;
+  }
+}
+const INITIAL_STATE = { todos: [] };
+```
+- 상태는 불변객체로 관리해야하므로 필연적으로 `...`와 같이 객체 복사가 필요한데, 자바스크립트에서 기본 재공하는 스프레드 연산자 등은 `얕은 복사`이므로 객체의 깊이가 깊어지면 이런 방식으로는 불변을 유지하기 힘들어진다. [`immer`](https://www.npmjs.com/package/immer) 패키지를 이용하면 쉽게 불변으로 관리 가능하다.
+
+- `immer`의 `proudce`를 이용한 객체 복사는 아래와 같은 형태로 한다.
+```js
+import produce from 'immer';
+const person = { name: 'motiveko', age: 23};
+const newPerson = produce(person, draft => {
+  draft.age = 32;
+})
+```
+- `draft`는 첫 번째 인자로 받은 `person`의 복사본과 같다고 보면 되는데, 이걸 고치면 `produce` 함수는 고친 부분을 반영한 새로운 객체를 반환한다. `draft`를 수정해도 원본 `person`은 영향이 없다.
+- ***`produce`를 이용해 리팩토링한 리듀서는 아래와 같다.***
+```js
+function reducer(state = INITIAL_STATE, action) {
+  return produce(state, draft => {
+    switch(action.type) {
+      // ...
+      case REMOVE:
+        // 값을 반환하지 않고 draft를 수정하기만 한다!
+        draft.todos = draft.todos.filter(todo => todo.id !== action.id );
+        break;
+      default: 
+        break;
+    }
+  })
+}
+```
+- 액션이 발생할 때 리듀서가 호출되면 내부의 `produce` 함수를 호출해 새로운 상태를 생성하게된다.
+
+<br>
+
+### 리듀서 작성 시 주의할 점 : 데이터 참조
+- 상태값은 불변이기 때문에, ***현재 상태의 참조는 언제든 변할 수 있다.*** 즉 현재 상태의 참조를 어딘가에 할당하는 식으로 참조하면, 상태가 변경되었을 때 할당된 값은 알지 못하게 된다. ***상태 참조는 반드시 `id`를 이용해서 하자.***
+```js
+// 잘못된 예
+function reducer(state = INITIAL_STATE, action) {
+  return produce(state, draft => {
+    switch(action.type) {
+      case SET_SELECT_PEOPLE: 
+        //  selectedPeople이 특정 people의 참조를 가지고 있다. people이 변해도 selectedPeople은 예전 값을 참조하게 될 것이다.
+        draft.selectedPeople = draft.peopleList.find(people => people.id === action.id);
+        break;
+      //...
+    }
+  })
+}
+
+// 올바른 예
+function reducer(state = INITIAL_STATE, action) {
+  return produce(state, draft => {
+    switch(action.type) {
+      case SET_SELECT_PEOPLE: 
+        // 참조하고 잇는 id는 변하지 않을것이다. 값이 필요하면 id를 이용해 찾으면 된다.
+        draft.selectedPeople = action.id
+        break;
+      //...
+    }
+  })
+}
+```
+
+<br>
+
+### 리듀서 작성시 주의할 점 : 순수 함수
+- 리듀서는 `순수 함수`로 작성해야 한다. 순수 함수가 아니라는건 `부수 효과`를 발생시키는 함수다.
+- 대표적인 부수 효과는 `외부 API 호출`이다. 외부 API가 순수 함수일지라도 부수 효과이므로, **부수 효과(API 호출)은 반드시 `미들웨어`에서 하도록 하도록 한다.**
+
+<br>
+
+### `createReducer` 함수로 리듀서 작성하기
+- `createReducer`함수를 이용하면 switch문 없이 간결하게 리듀서를 작성할 수 있다. 참고로 createReducer는 리덕스에서 제공하는 함수는 아니라고 한다.
+```js
+// immer의 produce를 사용해서 정의한 createReducer함수
+function createReducer(initialState, handlerMap) {
+  return function(state = initialState, action) {
+    return produce(state, draft => {
+      const handler = handlerMap[action.type];
+      if(handler) {
+        handler(draft, action);
+      }
+    })
+  }
+}
+// createReducer함수를 이용해 생성한 reducer
+const reducer = createReducer(INITIAL_STATE, {
+  [ADD]: (state, action) => state.todos.push(action.todo),
+  [REMOVE]: (state, action) => (state.todos = state.todos.filter(todo => todo.id !== action.id))
+  // ..
+})
+```
+- 따로 라이브러리에서 가져오는 함수는 아니고 그냥 구현하면 되는 듯 하다. switch문을 쓰지 않고 henalderMap을 사용한다는 점이 다르고, 리듀서 생성을 펙토리 매서드로 분리했다는 차이가 있다고 보면 될 듯 하다.
+
+<br>
+
+### 6.2.4 스토어
+- `스토어`는 리덕스의 상태값을 가지는 객체다. 액션을 발생시키는 `dispatch` 메서드도 가지고 있다.
+- 스토어는 액션 발생시 '미들웨어 함수 실행 -> 리듀서 함수로 상태 변경 -> 사전에 등록된 모든 이벤트 리스너 함수 호출' 의 순서로 동작한다.
+- 리덕스 첫번째 원칙 `애플리케이션 상태값을 하나의 스토어에 저장`에 따라 스토어는 하나만 만든다. 단, ***데이터를 종류에 따라 구분하기 위해 리듀서를 여러개 만들고 `combineReducer`를 이용해 합치기도 한다.***
+- 스토어에 리스너 등록(구독)은 `subscribe` 메서드를 이용해서 한다.
+```js
+// 리듀서 생성
+
+const store = createStore(reducer);
+let prevState;
+// 스토어 리스너 등록
+store.subscribe(() => {
+  const state = store.getState();
+  if(state === prevState) {
+    console.log('상태값 같음');
+  } else {
+    console.log('상태값 변경됨');
+  }
+  prevState = state;
+})
+```
+- 상태값은 불변이기 때문에, 단순 비교로 상태값 변경 여부를 검사할 수 있다.
+
+<br>
