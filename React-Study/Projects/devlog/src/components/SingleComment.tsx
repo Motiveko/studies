@@ -57,7 +57,7 @@ function SingleComment({ commentUser, onChange }: props) {
           <div className="fw-bold">{commentUser.user.displayName}</div>
           <div className="text-muted">{date}</div>
         </div>
-        {!openEdit && currentUser?.uid === commentUser.uid && <DeleteEdit className="ms-auto" onDelete={removeComment} onEdit={() => setOpenEdit(true)} />}
+        {!openEdit && currentUser?.uid === commentUser.userId && <DeleteEdit className="ms-auto" onDelete={removeComment} onEdit={() => setOpenEdit(true)} />}
       </div>
       {!openEdit && (
         <div className="pt-2" style={{ borderTop: '1px solid #dfdfdf' }}>
