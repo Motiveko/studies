@@ -1847,6 +1847,26 @@ export default function mergeReducers(reducers) {
 
 <br>
 
+- 최종적으로 timeline 리듀서와 friends 리듀서를 리덕스의 `combineReducers`로 합치고, `createStore`로 스토어를 생성한다.
+
+```js
+// index.js
+import { createStore, combineReducers } from 'redux'
+import timelineReducer from './timeline/state';
+import friendReducer from './friend/state';
+
+const reducer = combineReducers({
+  timeline: timelineReducer,
+  friend: friendReducer,
+});
+
+const store = createStore(reducer);
+```
+
+- store의 `subscribe`함수로 리스너를 등록하거나 `dispatch`함수로 액션을 발생시킬 수 있다!
+
+<br>
+
 > 🍓 `덕스패턴` 
 <br>
 리듀서 공식 문서는 액션타입, 액션 생성자 함수, 리듀서 함수를 파일을 따로 나눠서 생성한다. 이러면 상태 하나 고치는데도 파일 죄다열어서 고쳐야 해서 매우 불편해진다. 리덕스 코드가 작을경우 덕스패턴으로 하나의 파일에 작성하고 커지면 코드를 별도로 분리해서 작성한다.
