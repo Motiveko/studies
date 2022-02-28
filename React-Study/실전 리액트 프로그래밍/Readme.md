@@ -1885,3 +1885,71 @@ const store = createStore(reducer);
 <br>
 
 ### 6.4 리액트 상탯값을 리덕스로 관리하기
+- 리액트에서 리덕스를 쓸 땐 보통 `react-redux` 패키지를 쓰지만, 없이도 리덕스를 사용할 수 있다. `react-redux`를 사용하지 않은 예와 이를 `react-redux`를 사용하는 예로 바꿔보자.
+
+<br>
+
+### 6.4.1 react-redux 패키지 없이 직접 구현하기
+- 6.3에서 작성한 내용을 컴포넌트에서 어떻게 사용하는지를 알려준다. timeline 컴포넌트만 다룬다. friends 컴포넌트의 동작도 똑같다.
+```js
+// timeline/components/TimelineList.js
+import React from 'react';
+
+function TimelineList({ timelines }) {
+  return (
+    <ul>
+      {timelines.map(timeline => (
+        <li key={timeline.id}>{timeline.desc}</li>
+      ))}
+    </ul>
+  )
+}
+export default TimelineList;
+```
+- `TimelineList`는 `프레젠테이션` 컴포넌트다. 부모로부터 timelines를 받아 화면에 뿌려준다. 다음은 `컨테이너` 컴포넌트다.
+```js
+// timeline/container/TimelineMain.js
+import React, { useEffect, useReducer } from 'react';
+import { getNextTimeline } from '../../common/mockData';
+import store
+ from '../../common/store';
+import TimelineList from '../components/TimelineList';
+import { addTimeline } from '../state';
+function TimelineMain() {
+  const [, forceUpdate] = useReducer(v => v+1, 0);
+  
+  useEffect(() => {
+    let prevState = store.getState().timeline;
+    const unsubscribe = store.subscribe(() => {
+      const state = store.getState().timeline;
+      if(prevState !== state) {
+        forceUpdate()
+        prevState = state;
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  function onAdd() {
+    const timeline = getNextTimeline();
+    store.dispatch(addTimeline(timeline));
+  }
+
+  console.log('TimelineMain render');
+  const timelines = store.getState().timeline.timelines;
+
+  return (
+    <div>
+      <button onClick={onAdd}>타임라인 추가</button>
+      <TimelineList timelines={timelines} />
+    </div>
+  )
+
+}
+export default TimelineMain;
+```
+- 컨테이너 컴포넌트지만 상태값은 없다. 상태는 리덕스 스토어에 저장되어 있기 때문. 따라서 상태 변화에 따라서 리랜더링이 자동으로 안되는데, 이를 위해서 `useReducer`의 `forceUpdate`를 정의하였다. `useReducer`의 상태를 변경하는 `forceUpdate`가 호출되면 컴포넌트가 다시 랜더링 될 것이다.
+- 이를 위해 `useEffect` 훅에서 스토어에 `리스너`를 등록했고, 여기서는 타임라인 상태 변화만 감지하고 싶기 때문에 prevState로 타임라인 상태값만 참고하게 만들었다. 
+- 나머지는 중요하지 않으므로 다루지 않는다.
+
+<br>
