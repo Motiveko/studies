@@ -1736,3 +1736,132 @@ store.subscribe(() => {
 - 상태값은 불변이기 때문에, 단순 비교로 상태값 변경 여부를 검사할 수 있다.
 
 <br>
+
+### 6.3 데이터 종류별로 상탯값 나누기
+- 책에서는 먼저 리듀서와 스토어를 만들고, 유틸 함수로 공통부분을 묶는 형식으로 리팩토링 했지만 그건 내 머릿속에 넣고 최종 코드만 정리한다.
+- 페이스북을 예로 타임라인과 친구목록을 상태값으로 관리하는 스토어를 작성한다.
+```js
+// common/createReducer.js
+import produce from 'immer';
+
+export default function createReducer(initialState, handlerMap) {
+  return function(state = initialState, action) {
+    return produce(state, draft => {
+      const handler = handlerMap[action.type];
+      if(handler){
+         handler(draft, action);
+      }
+    })
+  }
+}
+```
+- 앞에서 다뤘던, immer를 이용해서 상태값을 쉽게 불변으로 관리하는 리듀서를 생성하는 함수다.
+```js
+import createReducer from "./createReducer";
+
+// 리듀서, 액션 생성간의 공통 로직 분리
+export default function createItemsLogic(name) {
+  
+  const ADD = `${name}/ADD`;
+  const REMOVE =`${name}/REMOVE`;
+  const EDIT =`${name}/EDIT`;
+
+  const add = item => ({ type: ADD, item });
+  const remove = item => ({ type: REMOVE, item });
+  const edit = item => ({ type: EDIT, item });
+
+
+  const reducer = createReducer({ [name]: [] }, {
+    [ADD]: (state, action) => state[name].push(action.item),
+    [REMOVE]: (state, action) => {
+      const index = state[name].findIndex(item => item.id === action.item.id);
+      if(index >= 0) state[name].splice(index, 1);
+    },
+    [EDIT]: (state, action) => {
+      const index = state[name].findIndex(item => item.id === action.item.id);
+      if(index >= 0) {
+        state[name][index] = action.item;
+      }
+    }
+  })
+
+  return { add, remove, edit, reducer };
+}
+```
+- `배열 형태의 상태`와 관련된 `액션`과 `리듀서` 생성을 한방에 해결하는 함수다. 이를 이용해 친구 목록 상태를 관리하는 리듀서를 아래와 같이 쉽게 작성한다.
+```js
+// friend/state.js
+import createItemsLogic from "../common/createItemsLogic";
+
+const { add, remove, edit, reducer} = createItemsLogic('friends');
+export const addFriend = add;
+export const removeFriend = remove;
+export const editFriend = edit;
+
+export default reducer;
+```
+- 타임라인도 이와 비슷하다. 그런데 타임라인은 무한스크롤 구현을 위해 페이징 값도 상태로 관리해야한다. 아래와 같이 리듀서를 구현할 수 있다.
+```js
+// timeline/state.js
+import createItemsLogic from "../common/createItemsLogic";
+import createReducer from "../common/createReducer";
+import mergeReducers from '../common/mergeReducers'
+const { add, remove, edit, reducer: timelinesReducer } = createItemsLogic('timelines');
+
+const INCREASE_NEXT_PAGE = 'timeline/INCREASE_NEXT_PAGE';
+
+export const addTimeline = add;
+export const removeTimeline = remove;
+export const editTimeline = edit;
+export const increaseNextPage = () => ({type: INCREASE_NEXT_PAGE});
+
+const INITIAL_STATE = { nextPage: 0 };
+const reducer = createReducer(INITIAL_STATE, {
+  [INCREASE_NEXT_PAGE]: (state, action) => (state.nextPage += 1)
+});
+
+export default mergeReducers([timelinesReducer, reducer]);
+```
+- `createItemsLogic`로 만든 타임라인 상태 리듀서가 있고, `nextPage` 상태를 관리하는 리듀서가 있다. 이 둘을 `mergeReducers`라는 함수를 이용해서 합쳤다. 리듀서를 어떻게 합친걸까?
+```js
+// common/mergeReducers.js
+export default function mergeReducers(reducers) {
+  return function (state, action) {
+    if(!state) {
+      // 인자로 상태값이 없다 => 각 리듀서에서 초기값 모두 합쳐서 반환
+      return reducers.reduce((acc, r) => ({...acc, ...r(state, action)}), {});
+    } else {
+      // 인자로 상태값 있다 => 전체 리듀서 돌려서 상태값 변환시켜본다.(같은 액션에 대한 핸들러 있을경우 연달아 호출될것이다.)
+      let nextState = state;
+      for(const r of reducers) {
+        nextState = r(nextState, action);
+      }
+      return nextState;
+    }
+  }
+}
+```
+- 리듀서는 결국 `(state, action) => state` 형태이므로 `mergeReducers`의 반환값도 같은 형태다. 리듀서는 `initialState`와 `handlerMap`의 참조를 지니는 클로저 함수인데, 참조를 꺼내서 합칠 수 있다면 베스트지만 그건 불가능하므로, ***리듀서들을 참조하는 리듀서 함수(클로저)를 반환***하게 한다. 이 함수는 액션 발생시 자신이 참조하는 리듀서들을 순회하면서 호출하여 새로운 상태를 생성한다.
+- state가 null/undefined 일 때는 초기값을 반환해야 하므로, `reduce`연산자를 이용해 모든 리듀서들이 반환하는 초기값을 머지해서 반환한다.
+- staet가 있으면 모든 리듀서들을 순회하며 상태를 변화시킨다. 혹시 같은 액션에 대한 핸들러가 여럿 존재하면 다 호출하게 될 것이다.
+
+<br>
+
+> 🍓 `덕스패턴` 
+<br>
+리듀서 공식 문서는 액션타입, 액션 생성자 함수, 리듀서 함수를 파일을 따로 나눠서 생성한다. 이러면 상태 하나 고치는데도 파일 죄다열어서 고쳐야 해서 매우 불편해진다. 리덕스 코드가 작을경우 덕스패턴으로 하나의 파일에 작성하고 커지면 코드를 별도로 분리해서 작성한다.
+<br><br>
+덕스 패턴은 아래와 같은 패턴을 따라 리듀서를 작성한다.
+>- 연관된 액션 타입, 액션 생성자 함수, 리듀서 함수를 `하나의 파일`로 작성한다.
+>- 리듀서 함수는 `export default`키워드로 내보낸다.
+> - 액션 생성자 함수는 `export` 키워드로 내보낸다.
+> - 액션 타입은 접두사와 액션 이름을 조합해서 만든다.
+<br>
+
+> `createStore(reducer)` 호출 시 자체적으로 reducer에 `{type: @@redux/INIT...}` 형태의 기본 액션을 넣는다. 리듀서의 구조를 생각해 봤을때, ***핸들러가 존재하지 않는 액션***을 넣어서 `initial state`를 꺼내서 store가 들고 있기 위해서 이런 행위가 이뤄지는 것 같다. 따라서 액션에 대한 핸들러가 없을경우 핸들러 호출하지 않도록 처리해줘야한다.(switch 문의 default 처리와 같다)
+
+> 🍓 자바스크립트 함수는 `값에 의한 호출`이다. 매개변수로 전달한 변수는 값이 변경되지 않는다.(`함수에서 매개변수를 재할당해도 원본 변수는 변하지 않는다`)
+
+<br>
+
+### 6.4 리액트 상탯값을 리덕스로 관리하기
