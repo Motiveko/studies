@@ -2098,3 +2098,52 @@ function FriendMain() {
 - `shallowEqaul`까지 착실하게 걸었기대문에 불필요한 랜더링은 없다. useSelector훅 하나로 처리하는게 아닌 각 값별로 훅을 사용해도 무방하다.
 
 <br>
+
+### 6.5.3~4 reselect에서 컴포넌트 속성값 이용하기
+- 셀렉터에 컴포넌트 속성값을 사용할 수 있다. 컴포넌트가 `ageLimit`을 속성값으로 받아 `friends`를 필터링한다고 가정해보자.
+```js
+// index.js
+ReactDOM.render(
+  <Provider store={store}>
+    <div>
+      <FriendMain ageLimit={40} />
+      <FriendMain ageLimit={25} />
+    </div>
+  </Provider>,
+  document.getElementById('root')
+)
+```
+
+```js
+// state/selector.js 
+export const getAgeLimit = (_, ageLimit) => ageLimit; // _는 state가 될 것이다.
+```
+
+```js
+// friend/container/FriendMain.js
+function FriendMain({ ageLimit }) {
+  const friends = useSelector(state => getFriendsWithAgeLimit(state, ageLimit));
+  //...
+}
+```
+- `getFriendsWithAgeLimit`는 (아마) 인자로 받은걸 전개 연산자 등으로 각각의 셀렉터에게 전달하는 모양이다. 두개 전달하면 결국 각각의 하위 셀렉터 함수들은 `(state, ageLimit) => 셀렉트` 로 동작할 것이다.
+- 이렇게 했을 때 ageLimit값이 컴포넌트에 따라 다른데, 셀렉터 함수는 하나라서 매 액션 발생시 인자가 달라 ***메모아이제이션이 작동하지 않을 것이다.*** `셀렉터 함수의 생성자 함수`를 정의하고, 각 컴포넌트에서 이를 호출하도록 고치면 된다.
+```js
+// state/selector.js 
+const getFriendsWithAgeLimit = createSelector([getFriends, getAgeLimit],(friends, ageLimit) => friends.filter(friend => friend.age <= ageLimit));
+// 셀렉터 함수의 생성자 함수
+export const makeGetFriendsWithAgeLimit = () => getFriendsWithAgeLimit;
+```
+
+```js
+// friend/container/FriendMain.js
+function FriendMain({ ageLimit }) {
+  
+  const getFriendsWithAgeLimit = useMemo(makeGetFriendsWithAgeLimit, [])
+  const friends = useSelector(state => getFriendsWithAgeLimit(state, ageLimit));
+  //...
+}
+```
+- 이제 각 컴포넌트는 다른 `getFriendsWithAgeLimit`를 가질 것이므로 메모아이제이션은 컴포넌트 단위로 작동할 것이다.
+
+<br>

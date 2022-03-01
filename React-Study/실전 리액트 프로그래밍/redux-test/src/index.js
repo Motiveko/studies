@@ -8,7 +8,8 @@ import store from './common/store';
 ReactDOM.render(
   <Provider store={store}>
     <div>
-      <FriendMain />
+      <FriendMain ageLimit={40} />
+      <FriendMain ageLimit={25} />
       <TimelineMain />
     </div>
   </Provider>,
