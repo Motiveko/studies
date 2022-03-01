@@ -1,33 +1,20 @@
-import React, { useEffect, useReducer } from 'react';
-import store from '../../common/store';
+import React from 'react';
 
 import FriendList from '../components/FriendList'
 import {getNextFriend} from '../../common/mockData'
 import { addFriend } from '../state';
+import { useSelector, useDispatch } from 'react-redux';
 
 function FriendMain() {
-
-  const [, forceUpdate] = useReducer(v => v+1, 0);
-
-  useEffect(() => {
-    let prevState = store.getState().friend;
-    const unsubscribe = store.subscribe(() => {
-      const state = store.getState().friend;
-      if(prevState !== state) {
-        forceUpdate();
-        prevState = state;
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
+  const friends = useSelector(state => state.friend.friends);
+  const dispatch = useDispatch();
   console.log('FriendMain Render');
 
-  const friends = store.getState().friend.friends;
   function onAdd() {
     const newFriend = getNextFriend();
-    store.dispatch(addFriend(newFriend));
+    dispatch(addFriend(newFriend));
   }
+  
   return (
     <div>
       <button onClick={onAdd}>친구추가</button>

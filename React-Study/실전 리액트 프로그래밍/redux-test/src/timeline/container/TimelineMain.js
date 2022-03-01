@@ -1,40 +1,31 @@
-import React, { useEffect, useReducer } from 'react';
+import React from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { getNextTimeline } from '../../common/mockData';
-import store
- from '../../common/store';
+
 import TimelineList from '../components/TimelineList';
-import { addTimeline } from '../state';
+import { addTimeline, increaseNextPage } from '../state';
 function TimelineMain() {
-  const [, forceUpdate] = useReducer(v => v+1, 0);
-  
-  useEffect(() => {
-    // 상태 변경시 useReducer 상태 업데이트해 강제 랜더링 발생시킨다.(리덕스는 컴포넌트 state/props가 아니라서 변경해도 랜더링 다시 안됨)
-    let prevState = store.getState().timeline;
-    const unsubscribe = store.subscribe(() => {
-      const state = store.getState().timeline;
-      if(prevState !== state) {
-        forceUpdate()
-        prevState = state;
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+  const [timelines, nextPage] = useSelector(state => [state.timeline.timelines, state.timeline.nextPage], shallowEqual);
+  const dispatch = useDispatch();
 
   function onAdd() {
     const timeline = getNextTimeline();
-    store.dispatch(addTimeline(timeline));
+    dispatch(addTimeline(timeline));
+  }
+  function onNextPage() {
+    dispatch(increaseNextPage());
   }
 
   console.log('TimelineMain render');
-  const timelines = store.getState().timeline.timelines;
 
   return (
     <div>
       <button onClick={onAdd}>타임라인 추가</button>
+      <button onClick={onNextPage}>다음페이지</button>
+      nextPage : {nextPage}
       <TimelineList timelines={timelines} />
     </div>
   )
-
 }
 
 export default TimelineMain;

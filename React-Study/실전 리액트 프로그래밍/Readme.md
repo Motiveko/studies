@@ -1953,3 +1953,94 @@ export default TimelineMain;
 - 나머지는 중요하지 않으므로 다루지 않는다.
 
 <br>
+
+### 6.4.2 react-redux 패키지 사용하기
+- `react-redux` 패키지를 사용하면 상태값 변화시 `forceUpdate` 같은 함수를 정의해서 강제로 랜더링하게 만들 필요가 없다. 자체적으로 제공하는 훅이 이런 부분을 처리해 주기 때문.
+```
+npm i react-redux
+```
+- react-redux는 `Provider` 컴포넌트를 이용해 store를 관리한다. 최상위에 Provider를 정의하고 store를 주입하면, 내부적으로 `store.subscribe`로 스토어를 구독하고, 구독함수가 호출 될 때 마다 `Context API`를 이용해 하위 컴포넌트에 리덕스의 상태값을 전달한다.
+
+```js
+// index.js
+import { Provider } from 'react-redux';
+import store from './common/store';
+ReactDOM.render(
+  <Provider store={store}>
+    <div>
+      <FriendMain />
+      <TimelineMain />
+    </div>
+  </Provider>,
+  document.getElementById('root')
+)
+```
+
+- 하위 컴포넌트에서 상태를 가져오는데는 `useSelector`훅을 사용하고 액션 디스패치에는 `useDispatch`훅을 사용한다.
+```js
+// friend/container/FriendMain.js
+import { useSelector, useDispatch } from 'react-redux';
+  const friends = useSelector(state => state.friend.friends);
+  const dispatch = useDispatch();
+
+  function onAdd() {
+    const newFriend = getNextFriend();
+    dispatch(addFriend(newFriend));
+  }
+
+  return (
+    //...
+  )
+}
+```
+- `useSelector`훅은 아래와 같이 생겼다. 
+```js
+const result: any = useSelector(selector: Function, equalityFn?: Function)
+```
+- 첫번째 인자 `selector` 함수는 상태를 가공해 새로원하는 상태값을 방출한다. 두번째 `equalityFn`는 이전에 방출된 상태값을 기억해 현재 상태값과 비교해 랜더링 여부를 결정한다. 따로 정의하지 않으면 단순비교(`===`)를 수행한다.
+- 위의 `FriendMain`컴포넌트의 경우처럼 단순히 상태를 조회해 그대로 가져오는 경우 문제가 되지 않는다. 그런데 상태를 가공해 ***새로운 객체를 반환하는 경우*** 어떤 경우든 새로운 객체가 생성돼 참조가 변하므로 매번 랜더링 되는 문제가 생긴다. 이를 해결하기 위한 방법으로 `shallowEqual` 함수가 있다.
+```js
+// timeline/container/TimelineMain.js
+
+function TimelineMain() {
+  const [timelines, nextPage] = useSelector(state => [state.timeline.timelines, state.timeline.nextPage], shallowEqual);
+  // ...
+}
+```
+> 🍓 사실 위의 경우에는 state.timeline을 반환하고 객체 디스트럭처링 할당 문법을 쓰면 `shallowEqual`이 필요 없다. 뭔가 실질적인 가공이 필요할 때 이게 필요하다.
+
+- `shallowEqual`은 객체의 첫 번째 뎁스의 모든 속성값을 단순비교한다. 예를들어
+```js
+const object = {
+  a: {
+    x: 3,
+    y: 2,
+    z: 1
+  },
+  b: 1,
+  c: [{ id: 1 }]
+}
+```
+- 위와 같은 상태값을 가져온다고 했을 때 `obj.a`,  `obj.b`, `obj.c`를 단순비교한다. `obj.a.x` 같은건 비교하지 않는다는 것.
+- shallowEqual 사용을 `커스텀 훅`을 정의해 사용할 수도 있다.
+```js
+// 커스텀 훅
+function useMySelector(selector) {
+  return useSelector(selector, shallowEqual);
+}
+
+// 커스텀 훅 사용
+function MyComponent() {
+  const [val1, val2] = useMySelector(state => [state.val1, state.val2]);
+}
+```
+- `useMySelector`같은 형태의 훅 사용시, 단순히 객체를 가져오는 경우 불필요하게 객체 속성값 전체를 비교하게 돼 손해를 볼 수 있다. 이 때 `selector` 함수의 반환핪을 배열로 한번 감싸주면 객체를 통으로 비교하게 된다.
+```js
+function MyComponent() {
+  // obj 객체 하나만 가져오는데, obj의 모든 1뎁스 속성을 비교하는 낭비를 []로 감싸면 막을 수 있다.
+  const [obj] = useMySelector(state => [obj])
+}
+```
+
+<br>
+
