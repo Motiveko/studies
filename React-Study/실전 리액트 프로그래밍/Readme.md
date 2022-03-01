@@ -2044,3 +2044,23 @@ function MyComponent() {
 
 <br>
 
+### 6.5 reselect 패키지로 선택자 함수 만들기
+- 상태값을 컴포넌트에서 사용하기 위해서는 다양한 방식으로 가공하게 된다. 이 때 `reselect`패키지를 사용할 수 있는데, 먼저 사용하지 않은 케이스를 살펴본다.
+### 6.5.1 reselect 패키지 없이 구현하기
+- 친구 목록에 `보여줄 친구 수`와 `친구 연령 제한`으로 필터링을 한다고 해보자. 필요한 부분만 살펴본다. 나머지는 책/소스코드 참고.
+```js
+// friend/container/FriendMain.js
+
+function FriendMain() {
+  const {friends, ageLimit, showLimit} = useSelector(state => {
+    const {friends, ageLimit, showLimit} = state.friend
+    const filterdFriends = friends.filter(friend => friend.age <= ageLimit);
+    return {friends: filterdFriends.splice(0, showLimit), ageLimit, showLimit};
+  }, shallowEqual);
+  
+  //...
+}
+```
+- friends를 ageLimit과 showLimit 값을 이용해 필터링 한 결과를 셀렉트했다. `shallowEqual`을 사용했으므로 세가지 값이 변하지 않으면 컴포넌트는 다시 랜더링 되진 않는다. 문제는 ***액션 발생시 매번  필터링된 friends를 생성하는 연산이 불필요하게 수행된다는 것***이다. `reselect`를 적용해보자.
+
+<br>
