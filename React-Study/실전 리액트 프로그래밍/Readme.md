@@ -1618,7 +1618,7 @@ function reducer(state = INITIAL_STATE, action) {
 }
 const INITIAL_STATE = { todos: [] };
 ```
-- 상태는 불변객체로 관리해야하므로 필연적으로 `...`와 같이 객체 복사가 필요한데, 자바스크립트에서 기본 재공하는 스프레드 연산자 등은 `얕은 복사`이므로 객체의 깊이가 깊어지면 이런 방식으로는 불변을 유지하기 힘들어진다. [`immer`](https://www.npmjs.com/package/immer) 패키지를 이용하면 쉽게 불변으로 관리 가능하다.
+- 상태는 불변객체로 관리해야하므로 기존 상태를 복사해서 수정한 후 반환해야한다. 이 때  `...` 연산자로 객체를 복사할 수 있는데, 상태값이 거대해지면 이런 방식으로는 한계가 있다.[`immer`](https://www.npmjs.com/package/immer) 패키지의 `produce` 를 이용하면 객체를 쉽게 복사해 수정해 불변으로 관리할 수 있다.
 
 - `immer`의 `proudce`를 이용한 객체 복사는 아래와 같은 형태로 한다.
 ```js
