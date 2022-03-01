@@ -2147,3 +2147,105 @@ function FriendMain({ ageLimit }) {
 - 이제 각 컴포넌트는 다른 `getFriendsWithAgeLimit`를 가질 것이므로 메모아이제이션은 컴포넌트 단위로 작동할 것이다.
 
 <br>
+
+### 6.6 리덕스 사가를 이용한 비동기 액션 처리
+- Ngrx에서는 `@ngrx/effects`로 비동기 부수효과를 처리하는 것 처럼 redux에는 `redux-saga`, `redux-thunk`, `redux-observable` 등의 비동기 부수효과 처리 패키지가 있다. 리덕스 사가는 자바스크립트 `제너레이터`을 사용해서 동작하므로 이에 대한 이해가 필요하다.
+```
+npm i redux-saga
+```
+
+<br>
+
+### 6.6.1 리덕스 사가 시작하기
+- 타임라인에 좋아요 기능을 추가한다. 좋아요를 클릭하면 서버에 요청을 보내고 해당 타임라인의 좋아요 상태를 1 증가시킨다.
+- 마찬가지로 사가 관련해서 필요한 내용만 다룬다. 커밋의 소스 코드를 참고하자 
+- `timeline/state/` 폴더를 만들고 state.js를 index.js로 바꿔 옮기고 리팩터링한다.
+```js
+// timeline/state/index.js
+
+// ...
+export const types = {
+  INCREASE_NEXT_PAGE: 'timeline/INCREASE_NEXT_PAGE',
+  REQUEST_LIKE: 'timeline/REQUEST_LIKE',
+  ADD_LIKE: 'timeline/ADD_LIKE',
+  SET_LOADING: 'timeline/SET_LOADING'
+}
+
+export const actions = {
+  // ...
+  requestLike: timeline => ({ type: types.REQUEST_LIKE, timeline }),
+  addLike: (timelineId, value) => ({type: types.ADD_LIKE, timelineId, value }),
+  setLoading: (isLoading) => ({ type: types.SET_LOADING, isLoading })
+}
+
+const INITIAL_STATE = { nextPage: 0, isLoading: false };
+const reducer = createReducer(INITIAL_STATE, {
+  // ...
+  [types.ADD_LIKE]: (state, action) => {
+    const timeline = state.timelines.find(timeline => timeline.id === action.timelineId);
+    if(timeline) {
+      timeline.likes += action.value;
+    }
+  },
+  [types.SET_LOADING]: (state, action) => state.isLoading = action.isLoading
+});
+
+export default mergeReducers([timelinesReducer, reducer]);
+```
+- 리덕스 사가에서는 액션 타입이 필요하다. 액션을 타입으로 필터링해 동작할지 여부를 판단한다.
+- `requestLike` 액션은 리덕스 사가에서 처리되고, 사가는 `addLike`를 방출시켜 리듀서가 상태값을 변화시킨다.
+- `리덕스 사가`에서는 API 통신, 액션 발생 등의 부수 효과를 처리할 수 있는 `부수 효과 함수`를 제공한다. 부수 효과 함수를 이용해 하나의 완성된 로직을 담은 함수를 `사가 함수`라고 한다. 아래와 같이 좋아요 이벤트를 처리하는 사가 함수를 작성한다.
+```js
+// timeline/state/saga.js
+import { all, call, put, take, fork } from 'redux-saga/effects';
+import { actions, types } from './index';
+import { callApiLike } from '../../common/api';
+
+export function* fetchData(action) {
+  while(true) {
+    const { timeline } = yield take(types.REQUEST_LIKE);
+    yield put(actions.setLoading(true));
+    yield put(actions.addLike(timeline.id, 1));
+    yield call(callApiLike);
+    yield put(actions.setLoading(false));
+  }
+}
+
+export default function* watcher() {
+  yield all([fork(fetchData)]);
+}
+```
+- `all`, `call`, `put`, `take`, `fork`는 리덕스 사가 부수효과 함수들이다. 
+  - `take`함수는 인수로 전달된 액션 타입을 기다린다.
+  - `put`함수는 새로운 액션을 발생시킨다.
+  - `call` 함수는 입력된 함수를 대신 호출해준다. 만약 `Promise`를 반환하는 비동기 처리 함수면 `fulfilled` 상태가 될 때 까지 기다린다.
+  - `all`, `fork`함수는 여러개의 사가 함수를 모으는데 사용된다. `all([fork(f1), fork(k2), ...])` 형태로 작성할 수 있다.
+
+- `callApiLike`는 서버에 http request를 날리는 함수다. 실제 서버는 없으므로 아래와 같이 작성한다.
+```js
+// common/api.js
+export function callApiLike() {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, 1000);
+  });
+}
+```
+
+> `take`, `put`, `call`와 같은 부수효과 함수들은 인자로 전달된 값을 토대로 ***해야 할 일을 설명하는 자바스크립트 객체를 반환***한다. 이게 사가 미들웨어에 전달되어 설명대로 일을 처리하고 실행 흐름을 다시 사가 함수로 넘긴다. ***`제너레이터`를 이용해 우리가 작성한 `사가 함수`와 `사가 미들웨어`가 협업할 수 있게 되는것이다!***
+
+- 사가 미들웨어를 만들어 사가 함수를 넣고 스토어의 미들웨어에 추가해야한다. 스토어를 아래와 같이 고친다.
+```js
+// common/store.js
+
+import createSagaMiddleware from 'redux-saga';
+import timelineSaga from '../timeline/state/saga'
+
+// ...
+const sagaMiddleware = createSagaMiddleware(); // 사가 미들웨어 함수 생성
+const store = createStore(reducer, applyMiddleware(sagaMiddleware)); // 미들웨어 등록
+sagaMiddleware.run(timelineSaga); // 사가 함수 등록(실행?)
+
+//...
+```
+
+<br>
