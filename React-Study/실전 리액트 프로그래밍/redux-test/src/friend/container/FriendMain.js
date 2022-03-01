@@ -2,17 +2,14 @@ import React from 'react';
 
 import FriendList from '../components/FriendList'
 import {getNextFriend} from '../../common/mockData'
-import { addFriend, setAgeLimit, setShowLimit } from '../state';
+import { addFriend, setAgeLimit, setShowLimit } from '../state/state';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { MAX_AGE_LIMIT, MAX_SHOW_LIMIT } from '../common';
 import NumberSelect from '../components/NumberSelect';
-
+import { getAgeLimit, getFriendsWithAgeShowLimit, getShowLimit } from '../state/selector'
 function FriendMain() {
-  const {friends, ageLimit, showLimit} = useSelector(state => {
-    const {friends, ageLimit, showLimit} = state.friend
-    const filterdFriends = friends.filter(friend => friend.age <= ageLimit);
-    return {friends: filterdFriends.splice(0, showLimit), ageLimit, showLimit};
-  }, shallowEqual);
+  
+  const [friends, ageLimit, showLimit] = useSelector(state => [getFriendsWithAgeShowLimit(state), getAgeLimit(state), getShowLimit(state)], shallowEqual)
 
   const dispatch = useDispatch();
   console.log('FriendMain Render');

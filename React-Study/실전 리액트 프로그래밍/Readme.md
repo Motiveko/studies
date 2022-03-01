@@ -2064,3 +2064,37 @@ function FriendMain() {
 - friends를 ageLimit과 showLimit 값을 이용해 필터링 한 결과를 셀렉트했다. `shallowEqual`을 사용했으므로 세가지 값이 변하지 않으면 컴포넌트는 다시 랜더링 되진 않는다. 문제는 ***액션 발생시 매번  필터링된 friends를 생성하는 연산이 불필요하게 수행된다는 것***이다. `reselect`를 적용해보자.
 
 <br>
+
+### 6.5.2 reselect 패키지 사용하기
+- **`reselect` 패키지는 `Ngrx`의 `selector`와 같다.** 셀렉터에 `메모아이제이션 기능`이 들어 있어, 인자가 같으면 연산을 수행하지 않고 기억해뒀던 이전값을 방출해주는 것.
+```
+npm i reselect
+```
+- `state`폴더를 만들고 selector.js, state.js를 넣는다. selector가 많아지므로 파일을 분리한다.
+```js
+// friend/state/selector.js
+import { createSelector } from 'reselect';
+
+export const getFriends = state => state.friend.friends;
+export const getAgeLimit = state => state.friend.ageLimit;
+export const getShowLimit = state => state.friend.showLimit;
+
+// getFriends, getAgeLimit 값이 이전과 같다면 연산을 수행하지 않고 이전값을 방출한다.
+export const getFriendsWithAgeLimit = createSelector([getFriends, getAgeLimit],(friends, ageLimit) => friends.filter(friend => friend.age <= ageLimit));
+
+// 마찬가지로 메모아이제이션 적용됨
+export const getFriendsWithAgeShowLimit = createSelector([getFriendsWithAgeLimit, getShowLimit],(friends, showLimit) => friends.slice(0, showLimit));
+```
+- 메모아이제이션의 `인자가 같으면 같은 값을 방출한다`라는 기능은 순수 함수와 같은 말이다. 셀렉터는 반드시 순수함수여야한다.
+- 셀렉터 사용은 아래와 같다
+```js
+// friend/container/FriendMain.js
+
+function FriendMain() { 
+  const [friends, ageLimit, showLimit] = useSelector(state => [getFriendsWithAgeShowLimit(state), getAgeLimit(state), getShowLimit(state)], shallowEqual)
+  //...
+}
+```
+- `shallowEqaul`까지 착실하게 걸었기대문에 불필요한 랜더링은 없다. useSelector훅 하나로 처리하는게 아닌 각 값별로 훅을 사용해도 무방하다.
+
+<br>

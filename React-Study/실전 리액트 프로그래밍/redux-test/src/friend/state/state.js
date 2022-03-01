@@ -1,7 +1,7 @@
-import createItemsLogic from "../common/createItemsLogic";
-import createReducer from "../common/createReducer";
-import mergeReucers from '../common/mergeReducers'
-import { MAX_SHOW_LIMIT, MAX_AGE_LIMIT } from './common';
+import createItemsLogic from "../../common/createItemsLogic";
+import createReducer from "../../common/createReducer";
+import mergeReucers from '../../common/mergeReducers'
+import { MAX_SHOW_LIMIT, MAX_AGE_LIMIT } from '../common';
 
 
 const { add, remove, edit, reducer: friendsReducer} = createItemsLogic('friends');
