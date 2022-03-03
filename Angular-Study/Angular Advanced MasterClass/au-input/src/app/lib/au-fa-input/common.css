@@ -1,0 +1,28 @@
+/* structural style */
+.icon {
+  width: 20px;
+  text-align: center;
+  padding-left: 5px;
+  padding-right: 2px;
+}
+
+:host {
+  
+  border: 1px solid;
+  padding-bottom: 1px;
+  /* inline-block이어야 height 정의 가능 */
+  display: inline-block;  
+}
+
+:host(.input-focus) {
+  outline: none;  
+}
+
+:host ::ng-deep input {
+  border: none;
+  outline: none;
+  margin: 1px 0;
+  /* border-box: 높이에 content, padding가 계산되고 border는 제외된다. */
+  box-sizing: border-box;
+  height: 100%;
+}

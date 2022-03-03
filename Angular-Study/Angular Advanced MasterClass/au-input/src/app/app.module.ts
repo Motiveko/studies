@@ -3,11 +3,13 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import { AuFaInputComponent } from './lib/au-fa-input/au-fa-input.component';
+import { InputRefDirective } from './lib/common/input-ref.directive';
 
 @NgModule({
   declarations: [
     AppComponent,
-    AuFaInputComponent
+    AuFaInputComponent,
+    InputRefDirective
   ],
   imports: [
     BrowserModule
