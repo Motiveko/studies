@@ -97,5 +97,41 @@
   ```
   - host요소에 input-foucs클래스가 있으면 위의 스타일(파랑 테두리)를 적용한다! 이로써 컴포넌트와 Content Projection 요소간의 상호작용이 구현되었다!😱
 
-### Component Theme Styles
+<br>
 
+### Scss 적용
+> 여기서부터는 scss로 작성한다. 
+- css로 작성하던 프로젝트의 scss적용방법은 아래와 같다. 우선 `angular.json`를 아래와같이 수정한다.
+  ```json
+  // angular.json
+  "schematics": {
+    "@schematics/angular:component": {
+      "style": "scss"
+    },
+    //...
+
+    "build": {
+      "options": {
+        "inlineStyleLanguage": "scss",
+        // ...
+  ```
+- ***모든 css를 scss로 바꾼다.*** css에 scss를 import해서 쓰면 뭔가 컴파일이 제대로 안돼서 동작하지 않는다. ***반드시 scss로 다 바꾸자.***
+
+<br>
+
+### Component Theme Styles
+- `:host-context` 셀렉터 : 호스트 요소(컴포넌트)와 그 부모요소들을 의미한다. 근데 컴파일되어 적용되는건 호스트요소
+  - 예) `:host-context(.au-fa-input-red-theme) .input` 이라고 하면 호스트 요소와 부모중 `.au-fa-input-red-theme`가 있는애가 있으면, 호스트 요소의 자식중 `.input`인 애를 셀렉트한다.
+  - 따라서 :host-context를 쓰면서 호스트 요소를 셀렉트하려면 `:host-context(.au-fa-input-red-theme).input` 형태가 되어야 한다.
+  ```scss
+  /* _au-fa-input-red-theme.scss */
+  $border-color: red;
+  :host-context(.au-fa-input-red-theme) {
+    border-color: $border-color;
+    &.input-focus {
+      -webkit-box-shadow: 0px 0px 5px  $border-color;
+      box-shadow: 0px 0px 5px  $border-color;
+    }
+  }
+  ```
+  - 위와 같이 작성하고 기본 scss에 default theme 아래에 import한다.
