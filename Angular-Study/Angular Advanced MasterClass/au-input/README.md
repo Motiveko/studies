@@ -135,3 +135,72 @@
   }
   ```
   - 위와 같이 작성하고 기본 scss에 default theme 아래에 import한다.
+
+<br>
+
+### Component Style Encapsulation
+- 앵귤러의 기본 전략은 컴포넌트마다 `...nghost...`, `...ngcontent...` 어트리뷰트를 자동생성하고 css 셀렉터에도 이를 붙여 컴포넌트 단위로 스타일을 고립시키는 것이다(.`Emulated View Encapsulation`)
+- 이런 방식으로 해결하지 못하는 문제는 `style.css`나 `index.html`등에 정의한 css는 고립되지 않은채 모든 컴포넌트에 영향을 줄 수 있다는 것이다.
+- `ShadowDOM`으로 컴포넌트를 Encapsulation하면 애플리케이션에서 컴포넌트를 완전히 고립시킬 수 있다. 그러나 서드파티 라이브러리를 사용할 수 없다는(예를들면 font-awesome 아이콘) 치명적인 문제가 발생한다.(아마 해결 방법은 있을듯)
+
+<br>
+
+### NgModule로 결합 및 AOT 컴파일러 작동 테스트
+- `ng serve`로 동작되는 개발 서버 모드는 JIT으로 컴파일한다(소스코드에 컴파일러 포함). 빌드 속도도 빠르고 개발시 브라우저에서 동작을 확인해야하기 때문
+- 프로덕션 빌드시 `AoT`로 컴파일 하게되는데, 이를 따로 테스트해야한다고 한다. 컴파일시 에러를 잡아주기 때문인 것 같다. 아래 명령어로 개발서버에 aot로 컴파일해서 올려보자
+```bash
+$ ng serve  --aot -c production
+```
+
+<br>
+
+### 모듈 배포
+- 프로젝트 루트 폴더에 index.ts를 만들고 아래와 같이 module export 해준다.
+```ts
+// index.ts
+export { AuInputModule } from './src/app/lib/au-input.module';
+```
+
+<br>
+
+### 컴포넌트 테스트하기
+- 랜더링 테스트를 하기 때문에 Interation Testing이다.
+- 아래 내용을 테스트한다.
+  - `au-fa-input`을 잘 랜더링했는지
+  - projection이 잘 됐는지
+  - icon이 잘 생성됐는지
+  - icon에 적절한 클래스가 지정되었는지
+
+- 테스트 가독성을 높이기 위해서 test suite를 최대한 잘게 쪼갠다(한테스트당 하나의 기능 테스트). 대신 공통 로직을 `beforeEach`로 분리해야한다.(분리할 수 있는 단위로 `describe`를 작성)
+```ts
+  let fixture: ComponentFixture<AppComponent>,
+    component: AppComponent,
+    el: DebugElement,
+    emailField: DebugElement;
+    
+  beforeEach(async() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        AppComponent, AuFaInputComponent, InputRefDirective
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.debugElement.componentInstance;
+    el = fixture.debugElement;
+    emailField = el.query(By.css('#email-field'));
+    fixture.detectChanges();
+  })
+
+  it('should create a font awesome email input', () => {
+    expect(emailField).toBeTruthy();
+
+  })
+  it('should include the correct email icon inside the email input ', () => {
+    console.log(emailField.nativeElement);
+    expect(emailField.query(By.css('i.icon.fa.fa-envelope'))).toBeTruthy();
+  })
+
+  it('should have projected the correct test input inside the email field', () => {
+    expect(emailField.query(By.css('input'))).toBeTruthy();
+  })
+```

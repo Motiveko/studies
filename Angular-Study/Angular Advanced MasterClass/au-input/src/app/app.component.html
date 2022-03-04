@@ -25,21 +25,21 @@
       </div>
       <div class="form-row">
           <label>Email:</label>
-          <au-fa-input icon="envelope">
-            <input placeholder="Email">
+          <au-fa-input id="email-field" icon="envelope">
+            <input placeholder="Email" name="email" placeholder="Email" autocomplete="false" class="test-class">
           </au-fa-input>
       </div>
       
       <div class="form-row">
         <label>Pasword:</label>
-        <au-fa-input icon="lock" placeholder="Password">
-          <input placeholder="Password">
+        <au-fa-input icon="lock" id="password-field" placeholder="Password">
+          <input placeholder="Password" class="test-class">
         </au-fa-input>
       </div>  
 
-      <div class="form-row au-fa-input-red-theme">
+      <div class="form-row stripe-field">
         <label>Stripe:</label>
-        <au-fa-input icon="cc-stripe" placeholder="Stripe" class="">
+        <au-fa-input icon="cc-stripe" placeholder="Stripe">
           <input placeholder="Stripe">
         </au-fa-input>
       </div>  
