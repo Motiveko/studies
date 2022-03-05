@@ -204,3 +204,19 @@ export { AuInputModule } from './src/app/lib/au-input.module';
     expect(emailField.query(By.css('input'))).toBeTruthy();
   })
 ```
+
+<br>
+
+### Publishing
+- 앵귤러 프로젝트에는 [Angular Package Format(APF)](https://angular.io/guide/angular-package-format)라는게 있다. `@angular/core`, `@angular/material`등과 같은 앵귤러 프로젝트들이 따르는 프로젝트 구조. 강의의 APF는 Deprecated된 옛날 구조로 [Angular-Quickstart-lib](https://github.com/angular/angular-cli)을 따른다. 그냥 한번 쭉 보고 분석해보자. 지금은 `Angular cli`로 만들라고 한다.
+- npm에 올리고 싶지 않은 파일이 `.gitignore`과 다르면 `.npmignore`를 작성하면 된다.(작성 안하면 기본적으로 `.gitignore`를 읽는다)
+- package.json에 아래 내용 정리하고 올린다.
+  - name: 다른 public repo와 중복되지 않는 이름
+  - private: false
+- APF를 따라서 구조화된 패키지는 Agnular cli 프로젝트에서 사용가능하며, UMD를 쓰는 System.js에서도 사용 가능하다고 한다. 이 부분은 `UMD`에 대한 추가적인 스터디가 필요한것으로 보인다. bundles/au-input.umd.js 등이 umd 모듈인듯하다.
+> https://www.zerocho.com/category/JavaScript/post/5b67e7847bbbd3001b43fd73
+- README.md에는 라이센스, 설치, 사용방법을 적어준다. 많은 오픈소스 라이브러리들을 참고해서 작성하면 될 듯.
+<!-- https://github.com/angular-university/au-input 의 Readme 참고 -->
+
+<br>
+
