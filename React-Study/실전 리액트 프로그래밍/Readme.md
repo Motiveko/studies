@@ -2249,3 +2249,103 @@ sagaMiddleware.run(timelineSaga); // 사가 함수 등록(실행?)
 ```
 
 <br>
+
+### 6.6.2 여러 개의 액션이 협업하는 사가 함수
+- 서로 연관된 다수의 액션을 하나의 사가함수에 적용할 수도 있다. 예를들어 로그인과 로그아웃은 서로 연결된 액션이다. 로그인을 해야만 로그아웃을 할 수 있다.
+```js
+function* loginFlow() {
+  // 로그인
+  const { id, password } = yield take(types.LOGIN);
+  const userInfo = yield call(callApiLogin, id, password);
+  yield put(types.SET_USER_INFO, userInfo);
+  // 로그인 하면 로그아웃을 할 수 있다.
+  yield take(types.LOGOUT);
+  yield call(callApiLogout, id);
+  yield put(types.SET_USER_INFO, null);
+}
+```
+
+<br>
+
+### 6.6.3 사가 함수의 예외 처리
+- 예외 처리는 별거 없다. 상태값에 `error` 속성을 추가하고, 사가 함수에서 try/catch로 에러를 잡아 에러 발생시 error 상태를 업데이트 해주면 된다. 자세한 내용은 생략한다.
+```js
+// timeline/state/sage.js
+export function* fetchData() {
+  // ...
+
+    try {
+      yield call(callApiLike);
+    } catch(error) {
+      yield put(actions.setError(error));
+      yield put(actions.setLoading(false));
+    }
+    yield put(actions.setLoading(false));
+}
+```
+
+<br>
+
+### 6.6.4 리덕스 사가로 디바운스 구현하기
+- 리덕스 사가의 `debounce`를 이용하면 부수효과를 debounce 시킬 수 있다. debounce가 있으니 아마 `throttle`도 있을것이라 생각된다.
+- 사용자가 input에 입력시 `TRY_SET_TEXT` 액션을 발생시키고, 이를 사가함수가 debounce해서 리듀서에서 처리할 `SET_TEXT` 액션을 발생시키게 한다. 사가함수 등록 방식이 조금 다르다.
+```js
+// timeline/state/saga.js
+import { 
+  // ...
+  debounce 
+} from 'redux-saga/effects';
+export function* trySetText(action) {
+  const { text } = action;
+  yield put(actions.setText(text));
+}
+
+export default function* watcher() {
+  yield all([
+    // ...
+    debounce(500, types.TRY_SET_TEXT, trySetText)
+  ]);
+}
+```
+- 이외 자세한 내용은 역시 생략
+
+<br>
+
+### 6.6.5 사가 함수 테스트하기
+- 리덕스 사가는 테스트 작성시 매우 편하다. 비동기 테스트는 일반적으로 mock 객체를 만들어야하지만 리덕스 사가에서는 필요가 없다. 
+- 리덕스사가에서는 `testing-utils` 패키지를 제공한다.
+```
+npm i @redux-saga/testing-utils
+```
+- `fetchData` 함수를 테스트한다. 이 함수에는 에러가 발생할 수 있는 `callApiLike` api 호출부가 있다. 테스트 케이스는 크게 callApiLike가 성공/실패하는 두가지 경우로 나뉘게 된다.
+- 함수의 테스트 코드를 아래와 같이 작성한다.
+```js
+// timeline/state/saga.test.js
+describe('fetchData', () => {
+  const timeline = { id: 1 };
+  const action = actions.requestLike(timeline);
+  const gen = cloneableGenerator(fetchData)();
+
+  expect(gen.next().value).toEqual(take(types.REQUEST_LIKE));
+  expect(gen.next(action).value).toEqual(put(actions.setLoading(true)));
+  expect(gen.next().value).toEqual(put(actions.addLike(timeline.id, 1)));
+  expect(gen.next().value).toEqual(call(callApiLike))
+
+  test('on fail callApiLike', () => {
+    const gen2 = gen.clone();
+    const errorMsg = "error";
+    expect(gen2.throw(errorMsg).value).toEqual(put(actions.setError(errorMsg)));
+    expect(gen2.next().value).toEqual(put(actions.setLoading(false)));
+  });
+
+  test('on success callApiLike', () => {
+    const gen3 = gen.clone();
+    expect(gen3.next().value).toEqual(put(actions.setLoading(false)));
+  })
+```
+
+- testing-utils에서 제공하는 `cloneableGenerator`함수는 사가의 제너레이터 함수가 `복제 가능한 제너레이터 객체`를 반환하게 해준다. 한 제너레이터에서 테스트 케이스가 여러가지 경우로 나뉠 때 굉장히 편하다.
+- 사가의 함수들은 `자바스크립트 객체`를 반환하므로 `generator.next/throw` 과정에서 반환되는 객체를 테스트하기만 하면 된다.
+- `try/catch`문 이전까지 제너레이터를 실행해 테스트하고, 이후 ***제너레이터 객체를 `복제`해 next/throw를 호출하며 api 호출 성공/실패를 테스트한다.***
+
+<br>

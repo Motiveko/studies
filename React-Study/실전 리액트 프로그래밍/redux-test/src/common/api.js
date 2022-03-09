@@ -1,5 +1,12 @@
 export function callApiLike() {
-  return new Promise((res, rej) => {
-    setTimeout(res, 1000);
+  return new Promise((resolve, reject) => {
+    
+    setTimeout(() => {
+      if(Math.random() * 10 < 5) {
+        resolve();
+      } else {
+       reject('CallApiLike 실패.');
+      }
+    }, 1000);
   })
 }
