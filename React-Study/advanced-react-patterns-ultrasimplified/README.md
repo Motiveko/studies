@@ -2,6 +2,69 @@
 
 > Udemy의 리액트 컴포넌트 디자인 패턴 강의 [The Complete Guide to Advanced React Component Patterns](https://www.udemy.com/course/the-complete-guide-to-advanced-react-patterns/)
 
+### 9. Building and styling the medium clap
+- `MediumClap` 컴포넌트는 3개의 자식 컴포넌트를 가지는 Container Component인 버튼이다. 
+- 기본적으로 버튼은 박수모양 SVG 아이콘 `ClapIcon`과 클릭시 내가 몇 번 박수쳤는지 나타내는 `ClapCount`, 그리고 게시글의 총 박수 횟수를 나타내는 `CountTotal`로 구성된다. 자식은 `Stateless Component`다.
+```js
+const MediumClap = () => {
+  return (
+    <button>
+      <ClapIcon />
+      <ClapCount />
+      <CountTotal />
+    </button>
+  )
+}
+```
+- 자식 컴포넌트들은 한번에 보여지는게 아닌 클릭과 함께 변하는 `부모 컴포넌트의 상태`에 따라 보여진다.
+- 앵귤러와 같은 방식의 컴포넌트의 `encapsulated style`을 구현하는 법을 몰랐는데 아래와 같은 방식으로 한다.
+```css
+/* index.css */
+.clap {
+  position: relative;
+  outline: 1px solid transparent;
+  border-radius: 50%;
+...
+```
+```js
+import React from 'react';
+import styles from './index.css'
+
+const MediumClap = () => {
+  return (
+    <button className={styles.clap}>
+      <div className={styles.clap}></div>
+      <ClapIcon />
+      <ClapCount />
+      <CountTotal />
+    </button>
+  )
+}
+```
+- 이렇게 하면 css에서 `.clap`에 구현한 스타일을 `className={styles.clap}`을 지정한 요소에 추가할 수 있는데, 고유한 해시값이 할당된다.(컴포넌트 내에서 해시값은 같다)
+```HTML
+<button class="_1rhF2AtahLt0Armnpt0Dp1">
+  <div class="_1rhF2AtahLt0Armnpt0Dp1">...</div>
+</button>
+```
+- `._1rhF2AtahLt0Armnpt0Dp1` 셀렉터에 style.css에서 작성한 스타일이 적용된다. 이게 별도 설정 없이 동작하는것인지 다른 앱에서 테스트 해봐야 알 것 같다.
+
+<br>
+
+### 10. Handling User Interactivity
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ![Advanced React Patterns Ultrasimplified](assets/hero@3x.png)
 
