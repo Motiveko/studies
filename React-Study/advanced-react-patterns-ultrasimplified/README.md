@@ -52,16 +52,87 @@ const MediumClap = () => {
 <br>
 
 ### 10. Handling User Interactivity
+- `MediumClap`의 상태값은 `count`, `totalCount`, `isClicked`로 세가지다.(isClicked는 count로 추론 가능한데 굳이 추가해야 하는지 의문)
+- `useState` 훅으로 상태를 만들고 자식 컴포넌트 props로 전달한다.
+```js
+const initialState = {
+  count: 0,
+  countTotal: 267,
+  isClicked: false
+}
+const MediumClap = () => {
+  const MAXIMIUM_USER_CLAP = 50;
+  const [clapState, setClapState] = useState(initialState);
+  const { count, isClicked, countTotal} = clapState;
+  const handleClapClick = () => {
+    setClapState(prev => ({
+      isClicked: true,
+      count: Math.min(count + 1, MAXIMIUM_USER_CLAP), 
+      countTotal: count < MAXIMIUM_USER_CLAP ? prev.countTotal + 1 : prev.countTotal
+    }))
+  }
+  return (
+    <button className={styles.clap} onClick={handleClapClick}>
+      <ClapIcon isClicked={isClicked}/>
+      <ClapCount count={count}  />
+      <CountTotal countTotal={countTotal} />
+    </button>
+  )
+}
+```
+- `ClapIcon`은 클릭되는 순간 초록색으로 채워진다. css의 `.icon.checked`에 구현되어있는데, `isClicked` props에 따라 아래와 같이 스타일을 넣을 수 있다.
+```js
+const ClapIcon = ({ isClicked }) => {
+  return <span>
+    <svg 
+      className={`${styles.icon} ${isClicked && styles.checked}`}
+      //...
+```
+
+<br>
+
+### 11. High Order Components recap
+- [HOC(High Order Component, 고차 컴포넌트)](https://ko.reactjs.org/docs/higher-order-components.html)는 Component를 인자로 받아 일부 레이어(공통로직 등)가 추가된 Component*를 반환하는 `함수`다. 인자로 전달되는 컴포넌트를 보통 `WrappedComponent`라고 부른다.
+- 우리의 `MediumClap`컴포넌트에 에니메이션(레이어)를 추가하는 HOC `withClapAnimation`를 아래와 같이 작성한다.
+```js
+const withClapAnimation = WrappedComponent => {
+  class WithClapAnimation extends Component {
+    // this handles animation logic
+    
+    animate = () => { /* 에니메이션 로직 */ }
+    render() {
+      return <WrappedComponent {...this.props} animate={this.animate} />
+    }
+  }
+  return WithClapAnimation;
+}
 
 
+const Usage = () => {
+  const AnimatedMediumClap = withClapAnimation(MediumClap);
+  return <AnimatedMediumClap />
+}
 
+export default Usage;
+```
+- `export default MediumClap withClapAnimation(MediumClap);`라고 구현하지 않고 Usage 함수를 만든 이유는 잘 모르겠다. 강의에서 컴포넌트의 재사용성을 언급했는데 지금은 봐도 어디서 재사용정이 생기는건지 모르겠음.
 
+<br>
 
+### 12 - 17. Animation
+> 재미있어서 정리한다. 이 강좌의 목적은 animation은 아니다.
 
-
-
-
-
+- `MediumClap`의 애니메이션은 [`mojs`](https://mojs.github.io/) 라이브러리를 이용한다.
+- `mojs`는 시간의 경과에 따른 상태 변화를 나타내는 `Timeline`객체를 만들고, `replay` 메서드를 이용해 t=0 ~ t=end 까지의 에니메이션을 재생시킬 수 있다.
+- Timeline에는 mojs의 여러 객체들을 추가할 수 있다. 이 객체는 타임라인 실행간 각 요소별 타임라인을 의미한다. HTML요소에 대해 타임라인을 만들기 위해서는 해당 DOM 요소를 쿼리해야하는데, 따라서 컴포넌트 랜더링 이후에 만들어 져야 하므로 `componentDidMount` 훅에 만들어야한다.
+- HTML요소에 대한 타임라인은 `new mojs.HTML()`로 만들 수 있다. mojs가 직접 요소를 만들어 주기도 하는데, 예를들어 MediumClap 클릭시 흩뿌려지는 삼각형, 원 등의 도형이 있다. 이를 `Burst`라고 하고 이에 대한 타임라인은 `new mojs.Burst()`로 만든다.
+- HTML 요소에 대한 타임라인을 만들 때, HTML에 에니메이션을 발생시켜 한번 초기화 해줘야 한다. 그러지 않으면 요소는 t=0일때의 상태로 초기화 된다.(t=end 상태가 되어야 함) 아래는 transform을 발생시켜 #clap의 Timeline을 초기화한다.
+  ```js
+    const clap = document.getElementById('clap');
+    clap.style.transform = 'scale(1,1)';
+  ```
+- Timeline객체는 `then` 메서드로 여러 타임라인을 계속에서 체이닝 할 수 있다.
+- 기타 API는 [mojs-API](https://mojs.github.io/api/) 문서를 참고하자. 튜토리얼도 있다. 자세한 구현 코드 정리는 생략.
 
 
 
