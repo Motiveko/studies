@@ -134,6 +134,13 @@ export default Usage;
 - Timeline객체는 `then` 메서드로 여러 타임라인을 계속에서 체이닝 할 수 있다.
 - 기타 API는 [mojs-API](https://mojs.github.io/api/) 문서를 참고하자. 튜토리얼도 있다. 자세한 구현 코드 정리는 생략.
 
+<br>
+
+### 19-23 Custom Hook Animation
+- 앞서 HOC로 MediumClap 컴포넌트의 props에 animationTimeline을 전달했는데, Custom Hook으로도 구현 가능하다.
+- 컴포넌트의 캡슐화를 위해 [Callback Ref](https://ko.reactjs.org/docs/refs-and-the-dom.html#callback-refs)를 사용한다.
+
+
 
 
 
