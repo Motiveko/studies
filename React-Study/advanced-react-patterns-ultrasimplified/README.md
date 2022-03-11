@@ -203,9 +203,78 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 
 <br><br>
 
+### 24-30 Compound Component Pattern
+- 03.js에 구현한다.
+- Compound Component Pattern`은 자식 컴포넌트를 부모컴포넌트 바깥으로 노출(public API)시키는 패턴이다. 이 패턴은 아래와 같은 장점이 있다.
+  1. 노출된 자식 컴포넌트는 바깥에서 커스터마이징 하기 쉬워진다.
+  2. 자식 컴포넌트가 노출되며 사용자가 API 구조를 이해하기 쉬워진다.
+  3. 컴포넌트의 자식 컴포넌트 각각에 `props`를 전달하기 훨씬 편해진다. (`Props Overload`)
+    - 만약 자식컴포넌트가 공개되지 않으면? 아래와 같이 다소 직관적이지 못한 방식으로 props를 전달해야한다.
+      ```js
+      <MediumClap 
+        clapProps={...} 
+        clapCountProps={...} 
+        clapTotalProps={...}
+      />
+      ```
+- 부모 컴포넌트는의 역할은 기본적으로 자식 컴포넌트들의 동작을 총괄하는데, 이 때 `ContextAPI`를 사용한다.(props는 이 컴포넌트를 쓰는 사람이 전달할 것)
+- 자식컴포넌트의 공개와 컴포넌트 사용은 아래와 같은 방식으로 한다.
+```js
+// ...
+
+MediumClap.Icon = ClapIcon;
+MediumClap.Count = ClapCount;
+MediumClap.Total = CountTotal;
+
+const Usage = () => {
+  return(
+    <MediumClap>
+      <MediumClap.Icon />
+      <MediumClap.Count />
+      <MediumClap.Total />
+    </MediumClap>
+  )
+}
+```
+- 자식 컴포넌트 공개 외에 컴포넌트의 상태값도 공개 가능해야한다. callback을 이용한다.
+```js
+const MediumClap = ({ onClap, children }) => {
+  // ...
+
+  const componentDidMount = useRef(true);
+  useEffect(()=> {
+    if(!componentDidMount.current) {
+      onClap && onClap(clapState);
+    }
+    componentDidMount.current = false;
+  }, [count])
+  
+  //...
+}
 
 
+const Usage = () => {
+  const [count, setCount] = useState(0);
 
+  const handleClap = (clapState) => {
+    setCount(clapState.count);
+  }
+  return(
+    <div style={{width: '100%'}}>
+      <MediumClap onClap={handleClap}>
+        <MediumClap.Icon />
+        <MediumClap.Count />
+        <MediumClap.Total />
+      </MediumClap>
+      {!!count && <div>{`You have clapped ${count} times`}</div>}
+    </div>
+  )
+}
+```
+- useRef를 이용해서 `componentDidMount`를 구현하면 컴포넌트가 마운트 된 후 기본으로 onClap이 호출되는것을 막을 수 있다.
+- 예제에서는 자식 컴포넌트의 props를 사용하진 않았지만 얼마든지 사용 가능함을 알 수 있다.
+
+<br><br>
 
 
 ![Advanced React Patterns Ultrasimplified](assets/hero@3x.png)
