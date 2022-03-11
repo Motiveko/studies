@@ -165,5 +165,8 @@ const CountTotal = ({ countTotal, setRef }) => {
 }
 
 
+const Usage = () => {
+  return <MediumClap />
+}
 
-export default MediumClap;
+export default Usage;
