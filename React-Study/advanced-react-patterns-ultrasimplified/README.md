@@ -137,8 +137,72 @@ export default Usage;
 <br>
 
 ### 19-23 Custom Hook Animation
-- 앞서 HOC로 MediumClap 컴포넌트의 props에 animationTimeline을 전달했는데, Custom Hook으로도 구현 가능하다.
-- 컴포넌트의 캡슐화를 위해 [Callback Ref](https://ko.reactjs.org/docs/refs-and-the-dom.html#callback-refs)를 사용한다.
+- 소스코드 : patterns/02.js
+- 앞서 HOC로 MediumClap 컴포넌트의 props에 animationTimeline을 전달했는데, Custom Hook으로도 구현 가능하다. 
+```js
+const useClapAnimation = () => {
+  const [animationTimeline, setAnimationTimeline] = useState(() => new mojs.Timeline())
+  useEffect(() => {
+    const tlDuration = 300;
+    const scaleButton = new mojs.Html({
+      el: '#clap', 
+      duration: tlDuration,
+      scale: { 1.3: 1 }, 
+      easing: mojs.easing.ease.out,
+    });
+    // ...
+
+    const newAnimationTimeline = animationTimeline.add([
+      scaleButton, 
+      // ...
+    ]);
+    setAnimationTimeline(newAnimationTimeline);
+  }, []);
+
+  return animationTimeline;
+}
+```
+- 클래스 컴포넌트의 `componentDidMount` 훅은 `useEffect`훅에 대응되고, `state`는 `useState`에 대응된다.
+
+- 이런 방식은 사실 문제가 있다. id로 참조하는것은 컴포넌트가 전역에서 참조 가능하기 때문에 캡슐화가 되지 않았다. 
+- `컴포넌트의 캡슐화`를 위해 [Callback Ref](https://ko.reactjs.org/docs/refs-and-the-dom.html#callback-refs)를 사용한다. ref에 setState 함수를 호출하는 setRef함수를 넣는 방식인데, `useCallback`을 지정하지 않으면 setRef호출시 상태 변경으로 인해 컴포넌트가 리랜더링 되면서 maximum call stack 오류가 발생한다.
+```js
+const MediumClap = () => {
+  // ...
+  
+  const [ {clapRef, clapCountRef, clapTotalRef}, setRefState ] = useState({});
+  const setRef = useCallback((node) => {
+    setRefState(prevRefState => ({
+      ...prevRefState,
+      [node.dataset.refkey]: node
+    }))
+  }, []);
+
+  // ...
+  return (
+    <button ref={setRef} data-refkey="clapRef" className={styles.clap} onClick={handleClapClick}>
+      ...
+    </button>
+  ) 
+}
+```
+- 총 3개의 ref( `clap`, `clapCount`, `clapCountTotal` )가 필요한데, `animationTimeline`을 한번에 세 개 모두 생성하므로, 모두 참조가 생겼을 때 `useEffect`훅이 실행되어야한다. 따라서 useEffect훅 시작부에 조건문을 걸고 deps를 추가해줘야 한다. 아래와 같이 하면 된다.
+```js
+const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
+
+  // ...
+  useEffect(() => {
+    if(!clapEl || !clapCountEl || !clapTotalEl) return;
+    
+    // animation timeline 생성로직
+  }, [clapEl, clapCountEl, clapTotalEl]);
+}
+```
+- `deps`를 빼먹으면 ref들이 평생 undefined만 참조하니 주의하고, 위 조건문을 useClapAnimation 훅의 최 상단에 위치시면 `useState`/`useEffect` 초반엔 실행되지 않아, ***훅의 실행 순서가 꼬여 앱이 터진다***. 근데 이를 아주 상세히 에러메시지로 알려주는 리액트는 너무 똑똑하다!
+- 추가적으로 커스텀 훅의 `useEffect`훅을 `useLayoutEffect` 훅으로 바꿔 최적화가 가능하다. [❗️useEffect vs useLayoutEffect 🥨](https://blog.logrocket.com/useeffect-vs-uselayouteffect-examples/ )를 참고하자.
+
+<br><br>
+
 
 
 

@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css'
 
@@ -11,20 +11,24 @@ const initialState = {
 /**
  * Custom Hook for animation
  */
-const useClapAnimation = () => {
+const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
+  
+  
   // lazy-initial-state(https://ko.reactjs.org/docs/hooks-reference.html#lazy-initial-states), 훅 밖에 변수로 선언하는것과 동일한 효과
   const [animationTimeline, setAnimationTimeline] = useState(() => new mojs.Timeline())
-  useEffect(() => {
+  
+  useLayoutEffect(() => {
+    if(!clapEl || !clapCountEl || !clapTotalEl) return;
     const tlDuration = 300;
     const scaleButton = new mojs.Html({
-      el: '#clap', // target element
+      el: clapEl, // target element
       duration: tlDuration, // 에니메이션 시간
       scale: { 1.3: 1 }, // { start: end }로 작성한다
       easing: mojs.easing.ease.out,
     });
 
     const triangleBurst = new mojs.Burst({
-      parent: '#clap',
+      parent: clapEl,
       radius: { 50 : 95}, 
       count: 5,
       angle: 30,  // 전체 파티클의 회전
@@ -42,7 +46,7 @@ const useClapAnimation = () => {
     });
 
     const circleBurst = new mojs.Burst({
-      parent: '#clap',
+      parent: clapEl,
       radius: { 50 : 75}, 
       angle: 25,  // 전체 파티클의 회전
       duration: tlDuration,
@@ -58,7 +62,7 @@ const useClapAnimation = () => {
     });
 
     const countAnimation = new mojs.Html({
-      el: '#clapCount',
+      el: clapCountEl,
       opacity: { 0: 1},
       y: {0: -30},
       duration: tlDuration,
@@ -69,7 +73,7 @@ const useClapAnimation = () => {
     })
 
     const countTotalAnimation = new mojs.Html({
-      el: '#clapCountTotal',
+      el: clapTotalEl,
       opacity: {0: 1},
       delay: (3 * tlDuration)/2,
       duration: tlDuration,
@@ -77,8 +81,12 @@ const useClapAnimation = () => {
     })
 
     // 초기 scale 1로 설정, 이걸 안하면 최초 1.3인 상태다.
-    const clap = document.getElementById('clap');
-    clap.style.transform = 'scale(1,1)';
+    if(typeof clapEl === 'string') {
+      const clap = document.getElementById('clap');
+      clap.style.transform = 'scale(1,1)';
+    } else {
+      clapEl.style.transform = 'scale(1,1)';
+    }
 
     const newAnimationTimeline = animationTimeline.add([
       scaleButton, 
@@ -88,7 +96,7 @@ const useClapAnimation = () => {
       countTotalAnimation
     ]);
     setAnimationTimeline(newAnimationTimeline);
-  }, []);
+  }, [clapEl, clapCountEl, clapTotalEl]);
 
   return animationTimeline;
 }
@@ -98,8 +106,21 @@ const MediumClap = () => {
   const MAXIMIUM_USER_CLAP = 50;
   const [clapState, setClapState] = useState(initialState);
   const { count, isClicked, countTotal} = clapState;
-  const animationTimeline = useClapAnimation();
+  const [ {clapRef, clapCountRef, clapTotalRef}, setRefState ] = useState({});
+
+  const setRef = useCallback((node) => {
+    setRefState(prevRefState => ({
+      ...prevRefState,
+      [node.dataset.refkey]: node
+    }))
+  }, [])
   
+  const animationTimeline = useClapAnimation({
+    clapEl: clapRef,
+    clapCountEl: clapCountRef,
+    clapTotalEl: clapTotalRef
+  });
+
   const handleClapClick = () => {
     animationTimeline.replay();
     setClapState(prev => ({
@@ -109,10 +130,10 @@ const MediumClap = () => {
     }))
   }
   return (
-    <button id="clap" className={styles.clap} onClick={handleClapClick}>
+    <button ref={setRef} data-refkey="clapRef" className={styles.clap} onClick={handleClapClick}>
       <ClapIcon isClicked={isClicked}/>
-      <ClapCount count={count}  />
-      <CountTotal countTotal={countTotal} />
+      <ClapCount setRef={setRef} count={count}  />
+      <CountTotal setRef={setRef} countTotal={countTotal} />
     </button>
   )
 }
@@ -135,12 +156,12 @@ const ClapIcon = ({ isClicked }) => {
   </span>  
 }
 
-const ClapCount = ({ count }) => {
-  return <span id="clapCount" className={styles.count}>+ {count}</span>
+const ClapCount = ({ count, setRef }) => {
+  return <span ref={setRef} data-refkey="clapCountRef" className={styles.count}>+ {count}</span>
 }
 
-const CountTotal = ({ countTotal }) => {
-  return <span id="clapCountTotal" className={styles.total}>{countTotal}</span>
+const CountTotal = ({ countTotal, setRef }) => {
+  return <span ref={setRef} data-refkey="clapTotalRef" className={styles.total}>{countTotal}</span>
 }
 
 
