@@ -279,7 +279,9 @@ const Usage = () => {
 ### 31-33 Patterns for Crafting Reusable Patterns
 - 04.js에 구현한다.
 - Compound Component 패턴에서 컴포넌트의 각 자식을 공개해서 props를 사용하기 쉽게 만들었다. 스타일 커스터마이징은 이 때 빛을 발한다.
-- `style`, `className`같은 props를 자식에게 바로 주입하고 자식은 이를 받아 컴포넌트에 적용하는 간단한 형태다.  아래는 `style props`를 받아 사용할 수 있도록 구현한 예다.
+- `style`, `className`같은 props를 자식에게 바로 주입하고 자식은 이를 받아 컴포넌트에 적용하는 간단한 형태다.
+
+1. `style props`를 받아 사용할 수 있도록 구현한 예다.
 ```js
 const MediumClap = ({ onClap, children, style: userStyles = {}}) => {
   // ...
@@ -319,8 +321,46 @@ const Usage = () => {
   )
 }
 ```
+2. `className props`를 받아 사용할 수 있도록 구현한 예다. class selector에 대한 스타일을 정의한 stylesheet 를 작성하고 이를 import한 뒤 컴포넌트의 `className props`에 styles.className을 주입하면 스타일이 적용된다.
+```js
+// ...
+import userCustomStyles from './usage.css'
 
-<br>
+// ...
+const MediumClap = ({ onClap, children, style: userStyles = {}, className }) => {
+  // ...
+  const classNames = [styles.clap, className].join(' ').trim();
+  return (
+    <Provider value={memoizedValue}>
+      <button 
+        className={classNames} 
+      />
+      </Provider>
+  )
+}
+const Usage = () => {
+  const [count, setCount] = useState(0);
+
+  const handleClap = (clapState) => {
+    setCount(clapState.count);
+  }
+  return(
+    <div style={{ width: '100%' }}>
+      <MediumClap onClap={handleClap} className={userCustomStyles.icon}>
+        <MediumClap.Icon className={userCustomStyles.icon} />
+        <MediumClap.Count className={userCustomStyles.count} />
+        <MediumClap.Total className={userCustomStyles.total} />
+      </MediumClap>
+      {!!count && (
+        <div className={styles.info}>{`You have clapped ${count} times`}</div>
+      )}
+    </div>
+  )
+}
+// ...
+```
+
+<br><br>
 
 
 <!-- 
