@@ -276,7 +276,54 @@ const Usage = () => {
 
 <br><br>
 
+### 31-33 Patterns for Crafting Reusable Patterns
+- 04.js에 구현한다.
+- Compound Component 패턴에서 컴포넌트의 각 자식을 공개해서 props를 사용하기 쉽게 만들었다. 스타일 커스터마이징은 이 때 빛을 발한다.
+- `style`, `className`같은 props를 자식에게 바로 주입하고 자식은 이를 받아 컴포넌트에 적용하는 간단한 형태다.  아래는 `style props`를 받아 사용할 수 있도록 구현한 예다.
+```js
+const MediumClap = ({ onClap, children, style: userStyles = {}}) => {
+  // ...
+  return (
+    <Provider value={memoizedValue}>
+      <button 
+        style={userStyles}
+      />
+    </Provider>
+  )
+}
+const ClapCount = ({style: userStyles = {}}) => {
+  // ...
+  return <span 
+    style={userStyles}
+  >
+    {countTotal}
+  </span>
+}
+const Usage = () => {
+  const [count, setCount] = useState(0);
 
+  const handleClap = (clapState) => {
+    setCount(clapState.count);
+  }
+  return(
+    <div style={{ width: '100%' }}>
+      <MediumClap onClap={handleClap} style={{ border: '1px solid blue', background: '#fefefe' }}>
+        <MediumClap.Icon />
+        <MediumClap.Count style={{ background: '#8cacea' }} />
+        <MediumClap.Total style={{ background: '#8cacea' }}/>
+      </MediumClap>
+      {!!count && (
+        <div className={styles.info}>{`You have clapped ${count} times`}</div>
+      )}
+    </div>
+  )
+}
+```
+
+<br>
+
+
+<!-- 
 ![Advanced React Patterns Ultrasimplified](assets/hero@3x.png)
 
 **Welcome to Advanced React Patterns Ultrasimplified!**
@@ -352,4 +399,5 @@ yarn dev
 
 ---
 
-[![cc-by-4.0](https://licensebuttons.net/l/by/4.0/80x15.png)](http://creativecommons.org/licenses/by/4.0/)
+[![cc-by-4.0](https://licensebuttons.net/l/by/4.0/80x15.png)](http://creativecommons.org/licenses/by/4.0/) 
+-->
