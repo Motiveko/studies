@@ -459,8 +459,93 @@ const Usage = () => {
 > 🍏🍎🍐🍊 `isControlled`에 따라서 클릭시 `onClap`을 호출할지 `setClapState`를 호출할 지 분기처리하는 부분이 처음엔 잘 이해가 안됐다. 잘 생각해보면 이렇게 분기처리 함으로써 상태변경 로직을 컴포넌트 사용자가 완전히 재정의 할 수 있게 된다. ***물론, isController 여부에 관계 없이 클릭시 `내부 상태변경 -> onClap콜백에 전달 -> onClap에서 내부 상태변경 로직 무시하고 그냥 상태변경 로직 정의` 방식으로 작성되어도 오류없이 동작하게 할 수는 있다.***
 
 
+<br><br>
+
+### 38 - 42 Custom Hooks: A Deeper Look at the Foundational Patterns
+- `02.js`(CustomeHook)을 리팩토링하여 `06.js`를 작성한다.
+- 기존에 MediumClap의 복잡한 Animation Logic을 `useClapAnimation` 훅으로 분리했는데, 나머지 로직들도 커스텀 훅으로 분리한다. `useDOMRef`, `useClapState`, `useEffectAfterMount` 이다.
+- 커스텀훅을 사용하면 가독성도 좋아지지만 훅 자체를 사용자에게 제공해서 재사용하게 할 수 있다. 여기서 구현한 훅들 대부분이 재사용 가능하고, `useClapAnimation` 훅 역시 `useAnimation`이란 훅으로 만들어 ***좀 더 범용성 있게 만들 어 앱 전체의 애니메이션 로직을 훅 하나로 해결 가능하다.***
+
+1. `useDOMRef` 
+- MediumClap컴포넌트에 요소에 `data-refkey` 어트리뷰트 값을 가지는 element의 DOM Reference를 저장하는 로직이 있다. 이를 분리할 수 있다. 이를 훅으로 분리한다.
+```js
+const useDOMRef = () => {
+  const [DOMRef, setRefState ] = useState({});
+
+    const setRef = useCallback((node) => {
+    setRefState(prevRefState => ({
+      ...prevRefState,
+      [node.dataset.refkey]: node
+    }))
+  }, [])
+  return [DOMRef, setRef];
+}
+
+const MediumClap = () => {
+  const [{clapRef, clapCountRef, clapTotalRef}, setRef] = useDOMRef();
+  // ...
+
+}
+```
+- `data-refkey`만 적용된 Element가 있다면 어디서든 사용 가능한 훅이다.
+
+2. `useClapState` 
+- MediumClap 컴포넌트에만 사용 가능하다고 볼 수 있다. `setState로직에 제약조건`이 있는데 이를 묶을 수 있다는 장점이 있다.
+```js
+const useClapState = (initialState) => {
+  const MAXIMIUM_USER_CLAP = 50;
+  const [clapState, setClapState] = useState(initialState);
+  const updateClapState = useCallback(() => {
+    setClapState(({count, countTotal}) => ({
+      isClicked: true,
+      count: Math.min(count + 1, MAXIMIUM_USER_CLAP), 
+      countTotal: 
+        count < MAXIMIUM_USER_CLAP 
+          ? countTotal + 1 
+          : countTotal
+    }))
+  }, [])
+  return [clapState, updateClapState];
+}
+
+const MediumClap = () => {
+  const [clapState, updateClapState] = useClapState(INITIAL_STATE);
+  const { count, isClicked, countTotal } = clapState;
+  // ...
+
+}
+```
+
+3. `useEffectAfterMount`
+- `02.js`에서는 안나오고 `04.js`에서 콜백 함수를 props로 받을 때 DOM이 랜더링 된 후에 클릭시에만 콜백이 호출되도록 하기 위한 로직을 훅으로 만든다. 
+- 분리하려는 로직은 `useEffect`훅에 `콜백`, `deps`를 가진다.
+```js
+const useEffectAfterMount = (cb, deps) => {
+  const componentDidMount = useRef(true);
+  useEffect(()=> {
+    if(!componentDidMount.current) {
+      return  cb();
+    }
+    componentDidMount.current = false;
+    // lint 꺼줘야함
+  }, deps)
+}
+
+const MediumClap = () => {
+  // ...
+
+  useEffectAfterMount(() => {
+    animationTimeline.replay();
+  }, [animationTimeline, clapState]);
+
+  // ...
+}
+```
+- deps를 인자로 받는데, 동적이기 때문에 eslint에서 경고를 보낸다. 주석을 추가해 끄면 된다.
+- 콜백이 값을 반환할 수도 있기때문에 `return cb()`와 같은 형태로 호출한다.
 
 
+<br><br>
 
 
 <!-- 
