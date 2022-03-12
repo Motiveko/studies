@@ -362,6 +362,106 @@ const Usage = () => {
 
 <br><br>
 
+### 34-37 Control Props Pattern
+- `05.js`에 구현한다.
+
+- HTML의 Form Element( ex - input)는 이 자체가 상태값을 가지는 엘리먼트로, 리액트에서 이 상태값을 조작하기 위해 두가지 방법이 있다. 두가지 방법이 있다.
+  1. [Controlled Component(제어 컴포넌트)](https://ko.reactjs.org/docs/forms.html#controlled-components)
+    - 리액트 상태를 input의 value에 연결하고, change 이벤트 핸들러를 등록해 상태를 변경하는 방식.
+
+  2. [Uncontrolled Component(비제어 컴포넌트)](https://ko.reactjs.org/docs/uncontrolled-components.html)
+    - 엘리먼트의 `ref` 속성을 이용하는 방식
+
+- Controlled Props 패턴은 제어 컴포넌트의 방식과 같은 방식으로 컴포넌트 상태를 제어하는것을 말한다. `values`, `onChange` props로 컴포넌트의 상태를 제어한다. value는 상태값 주입, onChange는 상태변화를 캐치하는 콜백이다.
+- 단, `values`, `onChange` 두개를 다 전달하지 않을 경우에는 ***컴포넌트에 상태값이 존재해야 한다.*** 이를 판단하기 위해 컴포넌트 함수 내에 `isControlled`라는 변수를 선언하고 이에 따라 다르게 동작하게 설계한다. 
+```js
+/**
+ * 컴포넌트
+ */
+
+const MediumClap = ({ 
+  onClap, 
+  children, 
+  style: userStyles = {}, 
+  className,
+  values = null
+}) => {
+
+  // ...
+  
+
+  // 외부 상태와 상태변경 콜백 모두 넘어오면 Controlled Component로 여긴다.
+  const isControlled = !!values && !!onClap;
+  // ...  
+  const handleClapClick = () => { 
+  animationTimeline.replay();
+  // Controlled Component라면 컴포넌트 상태를 변경하지 않는다 -> 이렇게 함으로써 MAXIMIUM_CLAP_VAL 등을 외부에서 다시 정의하고 상태 변경 로직을 외부에서 override 할 수 있게 된다.
+  isControlled 
+    ? onClap() 
+    : setClapState(prev => ({
+        // ...
+      }));
+  }
+  useEffect(()=> {
+    if(!componentDidMount.current && !isControlled) {
+      // 컴포넌트 내부 상태(clapState) 콜백으로 내보내는건 Controlled Component가 아닐때에만
+      onClap && onClap(clapState);
+    }
+    componentDidMount.current = false;
+  }, [clapState, onClap, isControlled]);
+
+  // ...
+
+```
+```js
+/**
+ * Usage
+ */
+const INITIAL_STATE = {
+  count: 0,
+  countTotal: 2100,
+  isClicked: false
+}
+// 컴포넌트 내에 50개로 정의했는데, 이는 onClap 로직상에 구현된다. handleClap에서 상태를 변경하는 부분을 사용자가 정의하므로 이런 조건들을 밖에서 커스터마이징 할 수 있게 되었다.
+const MAXIMIUM_CLAP_VAL = 10;
+const Usage = () => {
+  const [state, setState] = useState(INITIAL_STATE);
+
+  const handleClap = useCallback(() => {
+    setState(({count, countTotal})=> ({
+      count: Math.min(count + 1, MAXIMIUM_CLAP_VAL),
+      countTotal: count < MAXIMIUM_CLAP_VAL ? countTotal + 1 : countTotal,
+      isClicked: true
+    }));
+  }, [setState]);
+
+  return(
+    <div style={{ width: '100%' }}>
+      <MediumClap values={state} onClap={handleClap} className={userCustomStyles.icon}>
+        <MediumClap.Icon className={userCustomStyles.icon} />
+        <MediumClap.Count className={userCustomStyles.count} />
+        <MediumClap.Total className={userCustomStyles.total} />
+      </MediumClap>
+      <MediumClap values={state} onClap={handleClap} className={userCustomStyles.icon}>
+        <MediumClap.Icon className={userCustomStyles.icon} />
+        <MediumClap.Count className={userCustomStyles.count} />
+        <MediumClap.Total className={userCustomStyles.total} />
+      </MediumClap>
+      {!!state.count && (
+        <div className={styles.info}>{`You have clapped ${state.count} times`}</div>
+      )}
+    </div>
+  )
+}
+```
+- 이렇게 하면 `MediumClap` 버튼이 여러개일 때에도 모두 동일한 상태를 공유할 수 있게 된다. 또 장점으로 maximum value 같은 값들을 MediumClap 컴포넌트 밖에서 제어할 수 있게 되었다는 점이다.
+
+> 🍏🍎🍐🍊 `isControlled`에 따라서 클릭시 `onClap`을 호출할지 `setClapState`를 호출할 지 분기처리하는 부분이 처음엔 잘 이해가 안됐다. 잘 생각해보면 이렇게 분기처리 함으로써 상태변경 로직을 컴포넌트 사용자가 완전히 재정의 할 수 있게 된다. ***물론, isController 여부에 관계 없이 클릭시 `내부 상태변경 -> onClap콜백에 전달 -> onClap에서 내부 상태변경 로직 무시하고 그냥 상태변경 로직 정의` 방식으로 작성되어도 오류없이 동작하게 할 수는 있다.***
+
+
+
+
+
 
 <!-- 
 ![Advanced React Patterns Ultrasimplified](assets/hero@3x.png)
