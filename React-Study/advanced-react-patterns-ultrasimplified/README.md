@@ -630,7 +630,7 @@ const Usage = () => {
 <br><br>
 
 ### 47 - 49 The Props Getters Pattern
-- `07.js`를 Props Getters Pattern으로 리팩토링한다.
+- `08.js`에 작성한다.
 - `Props Collection`은 자바스크립트 객체다. 이를 컴포넌트들의 props로 전달해서 사용하는데, 이 때 사용자가 커스터마이징 하기 위해서는 두가지 방법이 있다.
   1. props collection에 새로운 props를 넣어서 복사하기
   ```js
