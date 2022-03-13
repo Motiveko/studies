@@ -549,10 +549,7 @@ const MediumClap = () => {
 
 ### 43 - 46 The Props Collection Pattern
 - 06.js -> `07.js`에 구현한다.
-- 이전에는 MediumClap 컴포넌트를 정의하고, 여기에 기본 로직을 다 담았었다.(animation, state, ...) 이를 ClapContainer 분리하고, Container는 `props`로 기본 로직을 받는다. 이렇게 하면 사용자의 커스터마이징이 쉬워진다.
-- 이 때, 기본 로직들은 다 Custom Hook으로 구현했었는데, 그러면 컴포넌트 사용자는 ***매 사용마다 커스텀훅을 다 불러와서 Container/UI 컴포넌트에 props로 전달하는 코드를 작성해야한다.*** 로직이 복잡해지면 사용하기 어려워진다.
-- 이를 편리하게 하는 패턴이 `Props Collection Pattern`이다. 기본 제공하는 props들을 collection형태로 제공해서, collection만 불러다가 props로 전달해주면 된다. 
-- 우선 `MediumClap`을 `ClapContainer`로 리팩토링한다.
+- 이전에는 MediumClap 컴포넌트를 정의하고, 여기에 기본 로직을 다 담았었다.(animation, state, ...) 이를 ClapContainer 분리하고, Container는 `props`로 기본 로직을 받는다.
 ```js
 const ClapContainer = ({children, setRef, onClick, ...restProps }) => {
   return <button 
@@ -582,8 +579,10 @@ const Usage = () => {
   )
 }
 ```
-- 컴포넌트들에 `...restProps` 를 작성했다. 이건 어떻게보면 비 필수 props를 정의하는거라고 볼 수 있다. `data-refkey`도 여기로 들어가게 만들었다. 
-- `clapState`와 관련되서 각각의 컴포넌트들의 사용하는 값들이 다르다. 컴포넌트 사용자가 이를 다 판단해서 분리작성하는건 너무 힘들다! 이를 ***컬렉션으로 분리하고 각 컴포넌트에 주입***한다. 컬렉션이란 여러개 값의 집합이므로, 의도적으로 몇 개 더 넣어본다.
+- 위의 리팩토링에서 `ClapContainer` 를 비롯한 컴포넌트들에 `...restProps` 를 작성했다. 이건 어떻게보면 비 필수 props를 정의하는거라고 볼 수 있다. `data-refkey`도 여기로 들어가게 된다. 
+- 이 때, 기본 로직들은 다 Custom Hook으로 구현했었는데, 그러면 컴포넌트 사용자는 ***매 사용마다 커스텀훅을 다 불러와서 Container/UI 컴포넌트에 props로 전달하는 코드를 작성해야한다.*** 로직이 복잡해지면 사용하기 어려워진다.
+- 이를 편리하게 하는 패턴이 `Props Collection Pattern`이다. 기본 제공하는 props들을 collection형태로 제공해서, collection만 불러다가 props로 전달해주면 된다. 
+- 예를들어 `clapState`와 관련되서 각각의 컴포넌트들의 사용하는 값들이 다르다. 컴포넌트 사용자가 이를 다 판단해서 분리작성하는건 너무 힘들다! 이를 ***`컬렉션`으로 분리하고 각 컴포넌트에 주입***한다. 컬렉션이란 여러개 값의 집합이므로, 의도적으로 몇 개 더 넣어본다. 아래와 같이 `useClapState`훅을 리팩토링 해보자.
 ```js
 const useClapState = (initialState) => {
   // 기존 훅 코드 ... 
