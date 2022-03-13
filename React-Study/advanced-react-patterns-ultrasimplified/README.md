@@ -627,6 +627,76 @@ const Usage = () => {
 - `ClapContainer`, `ClapCount`에 props collection을 전달했고, `...restProps`에 의해서 각 컴포넌트 내부에 잘 펼쳐져 전달될 것이다. ***사용자는 `useClapState`훅의 데이터를 하나하나 살펴보고 어떤 컴포넌트에 어떤 속성을 넣을지 고민하지 않아도 된다.***
 
 
+<br><br>
+
+### 47 - 49 The Props Getters Pattern
+- `07.js`를 Props Getters Pattern으로 리팩토링한다.
+- `Props Collection`은 자바스크립트 객체다. 이를 컴포넌트들의 props로 전달해서 사용하는데, 이 때 사용자가 커스터마이징 하기 위해서는 두가지 방법이 있다.
+  1. props collection에 새로운 props를 넣어서 복사하기
+  ```js
+    const newColloction = {...propsCollection, prop1: value1, prop2: value2};
+  ```
+  2. props collection을 컴포넌트에 전달하고 그 뒤에 다른 props 추가하기
+
+- 둘 다 가능한 방법이지만 ***props collection의 `커스터마이징`이 단순히 덮어쓰기가 아닐 경우 문제가 된다.*** 예를 들어 `onClick`핸들러 함수와 같은 경우 덮어쓰면 어떻게 될까? 기본 제공하는 함수에 의해 count가 올라가고 이에 따라 애니메이션이 동작하는데, 이를 덮어쓰려면 ***상세 로직을 다 알아서 이 로직 위에 새로운 로직이 추가된 핸들러를 만들어야 한다. 이는 현실적으로 불가능하다.***
+- 이렇게 함수를 덮어써야 하는 경우와 같이 overriding에 제약이 있을 경우, 이를 `Props Getter 함수`에 구현해놓으면 사용자를 이를 사용하기만 하면 된다. 
+- 아래와 같이 `useClapState`를 Props Getter Pattern으로 리팩토링한다.
+```js
+
+// 중첩 화살표 함수, 함수를 인자로 받아놓고, 호출시 전체 함수가 순서대로 호출되도록 구성되었다.
+const callFnsInSequence = (...fns) => (...args) => {
+  fns.forEach(fn => fn && fn(...args));
+}
+
+const useClapState = (initialState) => {
+  // ...
+  
+  // props collection => props getter function
+  const getTogglerProps = ({onClick, ...otherProps} = {}) => ({
+    onClick: callFnsInSequence(updateClapState, onClick),
+    'aria-pressed': clapState.isClicked,
+    ...otherProps
+  });
+
+  const getCounterProps = ({...otherProps}) => ({
+    count: clapState.count,
+    'aria-valuemax': MAXIMIUM_USER_CLAP,
+    'aria-valuemin': 0,
+    'aria-valuenow': clapState.count,
+    ...otherProps
+  });
+  return {clapState, updateClapState, getTogglerProps, getCounterProps};
+```
+- `getTogglerProps`의 onClick 핸들러는 유저의 함수에 의해 기존 함수가 덮어써지면 안되고 추가되어야 한다.`callFnsInSequence`를 props getter 함수 내부에서 사용하도록 구성했다.
+- props getter는 아래와 같이 사용될것이다.
+
+```js
+const Usage = () => {
+  const {clapState, updateClapState, getTogglerProps, getCounterProps} = useClapState(INITIAL_STATE);
+  // ...
+
+  // onClick 핸들러에 추가할 함수
+  const handleOnClick = () => {
+    console.log('클릭합시다!!');
+  }
+
+  return (
+    <ClapContainer 
+      setRef={setRef} 
+      data-refkey="clapRef" 
+      {...getTogglerProps({
+        onClick: handleOnClick
+      })}
+    >
+      <ClapIcon isClicked={isClicked}/>
+      {/* <span ref={setRef} count={count}  className={styles.count} data-refkey="clapCountRef">+ {count}</span> */}
+      <ClapCount setRef={setRef} data-refkey="clapCountRef" {...getCounterProps()} />
+      <CountTotal setRef={setRef} countTotal={countTotal} data-refkey="clapTotalRef"/>
+    </ClapContainer>
+  )
+}
+```
+- 사용자는 뭔진 모르겠지만 onClick에 핸들러를 등록했고, props getter 함수는 기존 함수와 더불어서 사용자가 제공한 함수를 호출한다! props collection이었다면 사용자가 이를 판단하고 `callFnsInSequence`와 같은 함수를 정의했어야 할 것이다!
 
 
 
