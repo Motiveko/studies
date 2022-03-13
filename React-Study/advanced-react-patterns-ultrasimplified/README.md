@@ -698,10 +698,102 @@ const Usage = () => {
 ```
 - 사용자는 뭔진 모르겠지만 onClick에 핸들러를 등록했고, props getter 함수는 기존 함수와 더불어서 사용자가 제공한 함수를 호출한다! props collection이었다면 사용자가 이를 판단하고 `callFnsInSequence`와 같은 함수를 정의했어야 할 것이다!
 
+<br><br>
 
+### 50-54 The State Initializer Pattern
+- `09.js`에 작성한다.
+- 컴포넌트 사용시 사용자는 컴포넌트의 초기 상태를 정의할 수 있어야 하고, 컴포넌트 사용 중 언제든 상태값을 초기상태로 되돌릴 수 있어야 한다. `State Initializer Pattern`는 이를 구현하는 패턴이다.
+- 단순한 초기값 전달과 초기값으로 reset하는 함수 작성은 쉽다.
+```js
+const useClapState = (initialState = INITIAL_STATE) => {
 
+  const [clapState, setClapState] = useState(initialState);
 
+  const initialStateRef = useRef(initialState);
+  const reset = useCallback(() => {
+    setClapState(initialStateRef.current);
+  }, [resetRef.curent]);
+  return {
+    //...
+    reset
+  }
+}
+```
+- 초기값을 굳이 initialStateRef에 담은 이유는 매개변수 initialState 를 직접 참조할 경우 eslint에서 deps 관련 경고를 내기 때문이다. 저렇게하면 안낸다.
+- 그런데 보통 컴포넌트 상태 초기화같은 동작은 `부수효과`를 동반한다. 예를들면 ***상태 초기화를 서버에 요청***하는 것과 같은 일이다. 
+- 여러가지 방식이 있을 수 있겠는데, 우선 강의에서 처리하는 방법은
+  1. ***reset 함수 호출을 알려줄 수 있는 deps***를 useClapState에서 제공한다.(`resetDeps`) 
+  2. `resetDeps`를 의존성 배열로 가지는 `useEffect`(`useEffectAfterMount`) 훅을 작성한다. useEffect의 의미는 부수효과를 처리하는 훅이다! 이 훅에 서버 요청 등을 넣으면 된다.
 
+```js
+const useClapState = (initialState = INITIAL_STATE) => {
+
+  // ...
+  const resetRef = useRef(0);
+  const reset = useCallback(() => {
+    setClapState(initialStateRef.current);
+    resetRef.current++;
+  }, [resetRef.curent]);
+
+  return {
+    // ...
+    reset,
+    resetDeps: resetRef.current
+  }
+}
+```
+```js
+const Usage = () => {
+  const { 
+    reset, 
+    resetDeps, 
+    // ...
+  } = useClapState(userInitialState);
+
+  // 로딩중..
+  const [uploadingReset, setUpload] = useState(false);
+  useEffectAfterMount(() => {
+    setUpload(true);
+    // 서버에 요청을 보내고 3초뒤 응답 받는다고 가정한다.
+    const id = setTimeout(() => {
+      setUpload(false);
+    }, 3000);
+
+    return () => clearTimeout(id);
+  }, [resetDeps])
+}
+```
+- 언뜻 잘 동작하는걸로 보이겠지만, 약간의 문제가 있다. ***상태값이 이미 초기값을 때에는 reset 호출시 부수효과가 호출되지 않아야 한다.***
+- 이를 구현하려면 초기 상태일 때 reset을 호출해도 `resetDeps`가 변하지 않아야 한다. reset 의 useCallback 내 함수가 호출되지 않아야 하는데, 조건문 처리로 이를 구현한다.
+- 조건문은 ***이전 상태값과 현재 상태의 count 가 같을 때***로 구현한다. 이전 상태값을 참조하려면 [usePrevious 훅](https://ko.reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state)을 사용하면 된다.
+> 왜 이렇게 구현하는지 의문이다. 그냥 `if(initialStateRef.current.count !== count) { reset 로직 }`로 구현하면 안되는건가?? 일단 군말없이 따라보자.
+```js
+// value의 이전값을 반환한다. 물론 ref.current에는 현재값이 저장되어있다.(랜더링 후 저장됨)
+const usePrevious = (value) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value 
+  });
+  return ref.current;
+}
+
+const useClapState = (initialState = INITIAL_STATE) => {
+
+  // ...
+  const prevCount = usePrevious(count);
+
+  const resetRef = useRef(0);
+  const reset = useCallback(() => {
+    if(prevCount !== count) {
+      setClapState(initialStateRef.current);
+      resetRef.current++;
+    }
+  }, [prevCount, count, resetRef.curent]);
+  // ...
+}
+
+```
+- `usePrevious`으로 prevCount를 만들고, 현재 값이 이전값과 동일하다면 reset 함수를 호출할 수 없도록 구성하였다. 구성은 의문이지만 그래도 usePrevious 훅은 여러곳에서 쓰이는 좋은 훅이다!
 
 <br><br>
 
