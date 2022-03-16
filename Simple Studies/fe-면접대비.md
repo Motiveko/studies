@@ -398,7 +398,27 @@
 - React 사용 이유
 - 클래스컴포넌트 - 함수형 컴포넌트
 - **컴포넌트 생명주기 메서드**
-  - 
+    - 클래스형 컴포넌트
+  ![생명주기](https://cdn.filestackcontent.com/ApNH7030SAG1wAycdj3H)
+        - Mount
+            - `costructor` - `componenetWillMount` - `render`(Mount) - `componentDidMount`
+            - `componenetWillMount`에서 props/state 변경하면 안됨. 또한 render 전이므로 DOM 접근 불가
+            - `componentDidMount`에서는 DOM 접근 가능, 여기서 ajax요청, 호출 스케줄링
+        - Props Update
+            - props 업데이트 감지
+            - `componentWillReceiveProps` - `shouldComponentUpdate` - `componentWillUpdate` - `render` - `componentDidMount`
+        - State Update
+            - `componentWillReceiveProps`를 제외하고 Props Update 과정과 동일하다.
+        - Unmount
+            - `componentWillUnmount`
+        - Error
+            - `componentDidCatch`는 리액트16에서 추가된 매서드로, 최상위 컴포넌트에 한번만 넣어주면 된다. 에러 로깅용으로 용이하다.
+    - 함수형 컴포넌트
+        - https://www.zerocho.com/category/React/post/5f9a6ef507be1d0004347305
+        - 이것도 생명주기라면 생명주기다. 클래스가 컴포넌트 위주의 생명주기 메서드를 가진다면, 함수형 컴포넌트는 일종의 `데이터 위주의 생명주기`를 가진다.
+        - `useEffect`훅의 deps에 설정된 데이터가 변경될 때 컴포넌트가 마운트 된 후 실행된다.
+        - `useEffect`훅의 반환 함수는 훅의 다음 실행 이전에 실행된다. 리소스 정리 등을 처리하면 된다.
+        - `useLayoutEffect`는 useEffect와 동일한 시그니처를 가지는데, DOM 변경 후 브라우저가 화면을 그리기 이전 시점에 동작된다는 차이가 있다.
 - useState를 왜써야하는가
   - useState를 안쓰면 상태가 안변해도 매 랜더링시 상태값이 재할당된다. 
 - 렌더링 성능 향상을 위해 해야하는 것
@@ -406,20 +426,53 @@
   - 요소의 타입을 바꾸는 일을 지양한다.
   
 - Context Api
-  - React.create로 컨텍스트 생성
+  - React.createContext로 컨텍스트 생성
   - Provider로 자식요소 감싸고 value로 컨텍스트 제공
-  - 하위 요소에서 
+  - 자식 요소에서 Context 접근 방법은 `Context.Consumer`, `useContext 훅` 두가지가 있다.
+    1. 자식에서 Context.Consumer를 랜더링하고, 그 하위에서 Provider의 value 속성으로 전달한 값들을 사용 가능하다.
+    2. useContext(CONTEXT)를 통해 value 참조 가능. 어쨋든 둘 다 Provider하위여야한다.
+  - 개인적으로 useContext훅 결과를 반환하는 useCommon, useUser, userFolder... 같은 훅을 만들어서 그걸 export 해서 사용했었다.
+  - Context를 사용하면 부모->자식으로 상태를 전달할 필요가 없어 prop drilling이 개선된다.
+
 
 ## FE
+- 웹 표준이란
+    - '웹에서 표준적으로 사용되는 기술이나 규칙'
+    - 표준화 단체인 W3C가 권고한 표준안에 따라 웹사이트를 작성할 때 이용하는 HTML, CSS, JavaScript 등에 대한 규정이 담겨 있다.
+    - 어떤 운영체제나 브라우저를 사용하더라도 웹페이지가 동일하게 보이고 정상 작동해야함을 의미.
+    - 표준 스펙을 잘 지키는 것 뿐만 아니라 구조적 마크업(XHTML)과 표현 및 레이아웃(CSS) 및 사용자 행위 제어(DOMScripting)를 잘 분리하는 고급 홈페이지 구축 방식.
+    - CSS 와 HTML(XHTML)로 웹 문서를 작성하는 것의 명확한 용어는 권고(recommend)라고 하며 버전과 상관없이 HTML, XHTML은 그 자체로 표준이라고 한다.
 
-- 브라우저의 렌더링 과정
-- 웹 표준이란?
-- 이벤트 루프, 태스크 큐에 대해
-- 
 
 ## HTML/CSS
 
 - Flexbox
 - Cascading에 대해 설명좀
+    - 스타일 우선순위.
+    - 중요도 : `웹페이지 사용자가 만든 시트` > `제작자가 만든 !important` > `제작자가 만든 일반 시트` > `기본적인 브라우저 스타일`
+    - 적용 범위 : `인라인 스타일` > `id 스타일` > `class 스타일` > `태그 스타일`
 - CSS에니메이션과 JS에니메이션 차이
+    - CSS에니메이션과
+        - CSS의 `transform`, `translate`, `animation` 등을 이용한 에니메이션, 단순한 에니메이션에는 최적이다. 
+    - JS에니메이션
+        - CSS로 처리하기에 훨씬 복잡하고 무거운 에니메이션을 세밀하게 다룬다. 리플로우/리페인트가 계속 발생되므로 부드럽진 않았는데, `RequestAnimationFrame API`가 등장한 이후 60fs를 보장한다고 한다. `velocity`, `GSAP`같은 라이브러리를 쓴다. 
+        - js코드로 세밀한 구성 가능, GPU를 통한 하드웨어 가속 제어 가능, 브라우저 호환성 측면에서 transition, animation 등 보다 훨씬 뛰어나다
+    
 - position 속성
+    - `static`
+        - 기본값, HTML 문서상 있어야 하는 원래 위치
+        - top, left, bottom.. 등이 무시된다.
+    - `relative`
+        - 요소의 원래 위치(static)을 기준으로 상대적(relative)으로 재배치 해준다.
+        - top, left, bootom, right 를 이용해 재배치한다.
+    - `absolute`
+        - 자신의 `상위 요소중 position이 static이 아닌 요소`를 찾아 그 요소를 기준으로 상대적으로 재배치 하게 된다. 없으면 body기준이다.
+        - 기준이 꽤 복잡한데, 이때문에 보통 absolute를 적용한 요소의 부모요소에 relative를 지정해준다.
+    - `fixed`
+        - 뷰포트에 고정된 상태로 배치된다.(고정된 상단바 등에 사용)
+        - top, left, bottom, right 속성은 브라우저 뷰포트 기준의 값이다.
+    - `sticky`
+        - https://tech.lezhin.com/2019/03/20/css-sticky
+        - 평소에는 `static` 과 같은 상태이지만 스크롤 위치가 임계점에 이르면 `fixed`와 같이 뷰포트에 고정된다.
+        - sticky는 top, left, bottom, right 속성값이 `필수`
+        - sticky 요소는 자신의 가장 가까운 부모요소의 scroll에 고정된다. 부모 박스가 스크롤을 벗어나면 일반적인 흐름으로 간다.
