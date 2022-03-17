@@ -71,6 +71,7 @@
 ## LEVEL1
 
 - 브라우저 저장소 WebStorage - Cookie
+    - https://han41858.tistory.com/54
     - HTML5에는 웹의 데이터를 클라이언트의 디스크에 저장할 수 있는 새로운 자료구조인 **Web Storage** 스펙이 포함되어 있다. **WebStorage에는 로컬/세션 스토리지가 있고, 쿠키는 이전부터 존재했다.**
     - 공통점은 아래와 같다
         - 도메인 단위로 접근된다.
@@ -335,9 +336,9 @@
 ## CS
 
 - 브라우저에 [www.google.com](http://www.google.com) 을 입력하면 일어나는 일
-- 
+    - https://devjin-blog.com/what-happen-browser-search/
 - 객체지향 프로그래밍
-
+    - https://jeong-pro.tistory.com/95
 - 프로세스 vs 스레드
   - `프로세스는` 운영체제로 부터 ***자원을 할당받는 작업의 단위***, `스레드`는 ***할당 받은 자원을 이용하는 단위***
   - 하나의 프로세스에 여러 스레드가 생길 수 있다. 애플리케이션은 하나의 프로세스고 그 안에서 스레드로 분기처리 될 수 있는것.
@@ -433,6 +434,11 @@
     2. useContext(CONTEXT)를 통해 value 참조 가능. 어쨋든 둘 다 Provider하위여야한다.
   - 개인적으로 useContext훅 결과를 반환하는 useCommon, useUser, userFolder... 같은 훅을 만들어서 그걸 export 해서 사용했었다.
   - Context를 사용하면 부모->자식으로 상태를 전달할 필요가 없어 prop drilling이 개선된다.
+- [Redux vs Context](https://ridicorp.com/story/how-to-use-redux-in-ridi/#:~:text=%EC%97%AC%EA%B8%B0%EC%84%9C%20%EC%9E%A0%EA%B9%90%2C%20%EC%98%A4%ED%95%B4%ED%95%A0%20%EB%A7%8C%ED%95%9C,%EC%84%B1%EB%8A%A5%20%EB%A9%B4%EC%97%90%EC%84%9C%20%EB%82%98%ED%83%80%EB%82%98%EA%B2%8C%20%EB%90%A9%EB%8B%88%EB%8B%A4.)
+    - 단순히 글로벌 상태 구현을 원하면 Context로도 가능하다.
+    - Context는 상태관리 수단일 뿐, 실질적으로 상태 관리는 useState/useRedcuer가 한다.
+    - Context 하나에 상태를 다 박아놓으면, 상태가 조금만 변해도 그 상태에 의존하지 않는 컴포넌트까지 전부 리렌더링된다. 최적화가 안되어 있는건데, 따라서 Context를 사용할 때에는 관심사 분리가 굉장히 중요해진다. (예를들어 1컴포넌트가 setState를 쓰고 2컴포너트가 state를 참조할 때 setState를 호출하면 불필요하게 1컴포넌트도 다시 랜더링한다. React.memo를 걸면 되긴 하겠지만 수많은 컴포넌트에 전부?)
+    - 리덕스를 사용하는 이유는 위의 이유와 더불어 saga와 같은 미들웨어를 통해 부수효과를 처리할 수 있기 때문. 사가함수는 제너레이터로 사가에서 제공하는 함수의 결과는 js object로 테스트하기 쉽다.
 
 
 ## FE
@@ -476,3 +482,52 @@
         - 평소에는 `static` 과 같은 상태이지만 스크롤 위치가 임계점에 이르면 `fixed`와 같이 뷰포트에 고정된다.
         - sticky는 top, left, bottom, right 속성값이 `필수`
         - sticky 요소는 자신의 가장 가까운 부모요소의 scroll에 고정된다. 부모 박스가 스크롤을 벗어나면 일반적인 흐름으로 간다.
+
+
+---
+
+## 실전
+- 객체지향 vs 함수형 프로그래밍
+    - https://wooono.tistory.com/270
+    1. 절차지향 프로그래밍
+        - 절차적 프로그래밍이란, 프로그램을 재사용 가능한 함수 단위로 나누는 프로그래밍 구조를 의미한다.
+        - 변수나 상수 등의 값들을 관리하는 `자료형`과 해당 자료형을 사용하는 `함수`가 분리되어 사용된다.
+
+    2. 객체지향 프로그래밍
+        - 객체지향 프로그래밍은 절차지향 프로그래밍에서 자료형과 함수를 객체 단위로 묶어서 관리하기 시작한다. 각각 필드와 메서드가 된다
+        
+    3. 함수형 프로그래밍
+        - 함수형 프로그래밍의 경우, 값의 연산 및 결과 도출 중심으로 코드작성이 이루어진다. 함수 내부에서 인자로 받은 값을 별도로 저장하거나 하지 않고, 간결한 과정으로 처리하고 매핑하는데에 주 목적을 둔다. 
+        - 함수형 프로그래밍은 순수 함수들로 이뤄져 있어 상태가 없다.
+
+    - 함수형 언어에서는 `함수`(Function) 자체가 `일급 객체`가 되겠지만, 객체지향 언어에서는 `클래스`(또는 객체, Object)가 `일급 객체`가 됩니다
+
+- script tag의 async/defer
+    - 공통점은 js 파일의 로드가 비동기로 동시에 진행된다. 코드 실행시점에 차이가 있다.
+    - `async` : HTML 파싱과 JS로드가 비동기로 동시진행되고 ***JS파일의 로드가 끝나면 바로 평가/실행된다.*** JS가 실행되며 HTML 파싱은 블로킹된다. DOM 접근하는 코드는 이렇게 작성되면 안된다.
+    - `defer`: HTML 파싱과 JS로드가 비동기로 동시진행되고, ***JS파일의 평가/실행은 DOM 생성 완료 후(DOMContentLoaded 이벤트 발생 후) 실행된다.*** DOM 조작이 필요하면 defer 키워드를 적용하자.
+
+- javascript `strict` 모드
+    - https://github.com/Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive#20-strict-mode
+    - 발생할 수 있는 에러
+        - 솔직히 항상 strict로 개발하는거나 마찬가지라서 당연하다고만 느껴진다.
+        - `implicit global` -> 선언하지 않은 변수를 참조하면 reference error 발생
+        - delete 연산자로 변수, 함수, 매개변수 삭제시 SyntaxError 발생
+        - 매개변수 이름 중복시 SyntaxError
+        - with문 사용시 SyntaxError
+    - strict mode 적용에 의한 변화
+        - 일반 함수의 this는 원래 global인데 strict에서는 undefined
+        - 함수의 매개변수에 전달된 인수를 재할당하여 변경해도 arguments 객체가 변하지 않는다.(원래는 변하나봄)
+- 즉시실행함수
+    - 즉시실행 함수는 함수 정의와 동시에 단 한번만 실행된다.
+    - 즉시실행 함수 내 변수들은 지역 변수가 되어 실행후 사라진다. 전역변수를 생성하지 않으므로 라이브러리 등에서 사용된다고 한다.
+    - [즉시 실행 함수는 `클로저 함수를` 만드는데 유용](https://github.com/Motiveko/studies/tree/master/Javascript-Study/Modern-Javascript-Deep-Dive#244-%ED%81%B4%EB%A1%9C%EC%A0%80%EC%9D%98-%ED%99%9C%EC%9A%A9)하다. 아래 함수에서 increase는 num에대한 참조를 가진 유일한 함수로 클로저 함수다. num은 increase만 변경할 수 있다.
+    ```js
+    const increase = (function() {
+        let num = 0;
+        return function () {
+            return ++num;
+        }
+    }());
+    ```
+
