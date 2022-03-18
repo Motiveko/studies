@@ -797,6 +797,127 @@ const useClapState = (initialState = INITIAL_STATE) => {
 
 <br><br>
 
+### 55 - 58 The State Reducer Pattern
+- `10.js` 에 구현한다.
+- Control Props Pattern에서는 `state`와 `onChange` 를 props로 전달해서 컴포넌트의 상태를 관리했다. 이는 결국 컴포넌트/커스텀 훅 내부에서 상태관리가 이뤄지는 것이다.
+- `State Reducer Pattern`은 이름에 Reducer가 나오는것에서 알 수 있듯, props로 `리듀서`를 전달하고, 리듀서에서 상태를 관리하는것을 말한다. 이는 `제어의 역전(Inversion of Control, IoC)`와 같은 형태로 상태를 관리하는것이다.
+- 우선 useClapState의 useState를 useReducer로 리팩토링 한다.
+```js
+const MAXIMIUM_USER_CLAP = 50;
+const reducer = ({count, countTotal}, { type, payload }) => {
+  switch(type) {
+    case 'clap':
+      return {
+        isClicked: true,
+        count: Math.min(count + 1, MAXIMIUM_USER_CLAP), 
+        countTotal:
+          count < MAXIMIUM_USER_CLAP 
+            ? countTotal + 1 
+            : countTotal
+      };
+    case 'reset': 
+      return payload
+    default:
+      break;
+  }
+}
+const useClapState = (
+  initialState = INITIAL_STATE
+) => {
+  
+  const [clapState, dispatch] = useReducer(reducer, initialState);
+
+  // ..
+
+  const updateClapState = () => dispatch({type: 'clap'});
+
+  // ..
+  const reset = useCallback(() => {
+    if(prevCount !== count) {
+      dispatch({type: 'reset', payload: initialStateRef.current});
+      resetRef.current++;
+    }
+  }, [prevCount, count]);
+  
+  // ..
+}
+```
+- 여기까진 간단하다. 이제 사용자가 `useClapState`에 props로 커스텀 리듀서를 전달할 수 있어야 한다. 이 때 생각해야할 부분이 있다.
+  1. ***사용자는 어떤 종류의 타입의 액션이 있는지를 모른다.*** 
+  2.  리듀서를 살짝만 override 하고싶다.(`callFnsInSequence`로 함수에 동작을 추가하는 것 처럼)
+
+- 이 부분을 해결하기 위해 `reducer`(기본리듀서), `action type`을 useClapState의 속성으로 지정한다. useClapState는 export될 텐데, 사용법은 약간 Compound Component Pattern이랑 비슷해진다. 아래와 같이 리팩토링한다.
+```js
+const MAXIMIUM_USER_CLAP = 50;
+const internalReducer = ({count, countTotal}, { type, payload }) => {
+  switch(type) {
+    case 'clap':
+      return {
+        isClicked: true,
+        count: Math.min(count + 1, MAXIMIUM_USER_CLAP), 
+        countTotal:
+          count < MAXIMIUM_USER_CLAP 
+            ? countTotal + 1 
+            : countTotal
+      };
+    case 'reset': 
+      return payload
+    default:
+      break;
+  }
+}
+
+const useClapState = (
+  initialState = INITIAL_STATE, 
+  reducer = internalReducer
+) => {
+  const [clapState, dispatch] = useReducer(reducer, initialState);
+
+  // ..
+  const reset = useCallback(() => {
+    if(prevCount !== count) {
+      dispatch({type: 'reset', payload: initialStateRef.current});
+      resetRef.current++;
+    }
+  }, [prevCount, count]);
+  
+  // ..
+}
+
+// useClapState를 export하기 전 reducer과 action type을 합쳐서 내보내자
+useClapState.reducer = internalReducer;
+useClapState.types = {
+  clap: 'clap',
+  reset: 'reset'
+}
+```
+- 이걸 사용하는 법은 아래와 같다.
+```js
+// import { useClapState, ... } from '...' 가 있을것이다.
+const Usage = () => {
+  const [timesClapped, setTimesClapped] = useState(0);
+  const isClappedTooMuch = timesClapped >= 7;
+  
+  // 리듀서에 약간의 동작을 추가했다.
+  const reducer = (state, action) => {
+    if(action.type === useClapState.types.clap) {
+      setTimesClapped(prev => prev + 1);
+    }
+    // 기본 리듀서는 
+    return useClapState.reducer(state, action);
+  }
+
+  // ...
+}
+```
+- 이외에 `dispatch` 함수도 직접 내보내서 원하는 경우에 액션을 발생시키도록 할 수도 있겠다.
+
+
+
+
+
+
+<br><br>
 
 <!-- 
 ![Advanced React Patterns Ultrasimplified](assets/hero@3x.png)
