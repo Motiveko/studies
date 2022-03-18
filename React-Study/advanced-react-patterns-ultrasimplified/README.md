@@ -13,7 +13,7 @@
   - ### [The Props Getters Pattern](#47---49-the-props-getters-pattern)
   - ### [The State Initializer Pattern](#50-54-the-state-initializer-pattern)
   - ### [The State Reducer Pattern](#55---58-the-state-reducer-pattern)
-  
+  - ### [Classifying the Patterns: How to choose the best API](#59---60-Classifying-the-Patterns:-How-to-choose-the-best-API)
 
 ### 9. Building and styling the medium clap
 - `MediumClap` 컴포넌트는 3개의 자식 컴포넌트를 가지는 Container Component인 버튼이다. 
@@ -925,9 +925,16 @@ const Usage = () => {
 ```
 - 이외에 `dispatch` 함수도 직접 내보내서 원하는 경우에 액션을 발생시키도록 할 수도 있겠다.
 
+<br><br>
 
+### 59-60 Classifying the Patterns: How to choose the best API
+- 패턴에 정답은 없다. 기능의 중심이 UI냐 Logic이냐에 따라 다르고, 사용 난이도에 따라 선택을 고려해야 한다. 아래는 기능 분류에 따라 좋은 패키지의 예다.
+  - User Interface : [`Rebass`](https://github.com/rebassjs/rebass)
+  - Logic : [`beautiful-react-hooks`](https://github.com/antonioru/beautiful-react-hooks)(no UI)
+  
+  <br>
 
-
+![Pattern Classification](./assets/pattern-classification.png)
 
 
 <br><br>
