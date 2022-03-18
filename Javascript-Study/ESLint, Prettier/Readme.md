@@ -39,7 +39,8 @@
   - ### [실전 설정](#실전-설정-1)
     - ### [@typescript-eslint/unbound-method rule 관련 이슈](#typescript-eslintunbound-method-rule-관련-이슈-1)
     - ### [eslint plugin 전체 disable](#eslint-plugin-전체-disable-1)
-
+    - ### [eslint-plugin-airbnb + prettier](#eslint-plugin-airbnb-+-prettier-1)
+    - ### [object-curly-newline](#object-curly-newline-1)
 
 <br>
 
@@ -725,3 +726,14 @@ npm install eslint-plugin-disable --save-dev
 
 > [참고] https://stackoverflow.com/questions/55449133/how-to-remove-eslint-plugin-eslint-plugin-jsx-a11y
 > https://www.npmjs.com/package/eslint-plugin-disable
+
+<br>
+
+### eslint-plugin-airbnb + prettier
+- 어쩐지 뭔가 부딪힌다 싶었는데, 둘은 같이쓰면 안되는것이었다. 각자 자신의 규칙을 강제한다. prettier를 사용하지 않는게 좋다.
+
+<br>
+
+### [object-curly-newline](https://eslint.org/docs/rules/object-curly-newline)
+- 객체 관련하여, 줄바꿈 설정을 할 수 있는 rule
+- `객체 리터럴`, `디스트럭처링`, `import`, `export`에 따라 각각 규칙을 지정할 수 있다. 나름 꿀규칙인듯 하니 참고하자.
