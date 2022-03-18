@@ -13,7 +13,7 @@
   - ### [The Props Getters Pattern](#47---49-the-props-getters-pattern)
   - ### [The State Initializer Pattern](#50-54-the-state-initializer-pattern)
   - ### [The State Reducer Pattern](#55---58-the-state-reducer-pattern)
-  - ### [Classifying the Patterns: How to choose the best API](#59---60-Classifying-the-Patterns:-How-to-choose-the-best-API)
+  - ### [Classifying the Patterns: How to choose the best API](#59-60-classifying-the-patterns-how-to-choose-the-best-api)
 
 ### 9. Building and styling the medium clap
 - `MediumClap` 컴포넌트는 3개의 자식 컴포넌트를 가지는 Container Component인 버튼이다. 
