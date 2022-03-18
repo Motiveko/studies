@@ -38,6 +38,7 @@
       - ### [2.2 Editor Integration](#22-editor-integration-1)
   - ### [실전 설정](#실전-설정-1)
     - ### [@typescript-eslint/unbound-method rule 관련 이슈](#typescript-eslintunbound-method-rule-관련-이슈-1)
+    - ### [eslint plugin 전체 disable](#eslint-plugin-전체-disable-1)
 
 
 <br>
@@ -687,3 +688,40 @@ npm i --save-dev eslint-import-resolver-typescript
 }
 ```
 - 혹시 에러 계속뜨면 vscode를 재실행해보도록 하자.
+
+<br>
+
+### eslint plugin 전체 disable
+- 케이스 : 리액트에 `eslint-config-airbnb`적용시 `jsx-a11y`라고 하는 웹 접근성 관련한 린트 플러그인이 포함된다. 내부 툴 프로젝트나 개인 프로젝트, 회사 제출 과제에 이걸 일일이 지켜가면서 코딩하면 힘들다. rule을 하나씩 끌 수도 있겠으나 몇개나 되는지도 모르기때문에 한번에 다끄고 싶다.
+- 해결 : stackoverflow 검색 결과 `eslint-plugin-disable`을 사용하거나, 직접 스크립트를 만들어서 플러그인을 끄는 법이 있었다. `eslint-plugin-disable`은 원래 eslint8 지원이 안됐었는데 [issue](https://github.com/mradionov/eslint-plugin-disable/issues/35)에 따르면 2021년 12월경 패치로 지원이 되는 모양이다 !
+
+- 플러그인 설치
+```
+npm install eslint-plugin-disable --save-dev
+```
+- 설정
+```json
+// .eslintrc
+{
+  // ...
+  "plugins": [
+    // .. 
+    "disable"
+  ],
+  "processor": "disable/disable",
+  "overrides": [
+    {
+      "files": ["src/**/*.tsx"],
+      "settings": {
+        "disable/plugins": ["jsx-a11y"]
+      }
+    }
+  ],
+  //..
+}
+```
+- 이외에도 추가로 끄고싶은게 생기면 이걸로 끄면 된다.
+
+
+> [참고] https://stackoverflow.com/questions/55449133/how-to-remove-eslint-plugin-eslint-plugin-jsx-a11y
+> https://www.npmjs.com/package/eslint-plugin-disable
