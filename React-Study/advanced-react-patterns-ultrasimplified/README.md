@@ -2,6 +2,19 @@
 
 > Udemy의 리액트 컴포넌트 디자인 패턴 강의 [The Complete Guide to Advanced React Component Patterns](https://www.udemy.com/course/the-complete-guide-to-advanced-react-patterns/)
 
+## 목차
+  - 컴포넌트 기본 구성은 생략
+  - ### [Custom Hook Animation](#19-23-custom-hook-animation)
+  - ### [Compound Component Pattern](24-30-compound-component-pattern)
+  - ### [Patterns for Crafting Reusable Patterns](#31-33-patterns-for-crafting-reusable-patterns)
+  - ### [Control Props Pattern](#34-37-control-props-pattern)
+  - ### [Custom Hooks: A Deeper Look at the Foundational Patterns](38---42-custom-hooks-a-deeper-look-at-the-foundational-patterns)
+  - ### [The Props Collection Pattern](#43---46-the-props-collection-pattern)
+  - ### [The Props Getters Pattern](#47---49-the-props-getters-pattern)
+  - ### [The State Initializer Pattern](#50-54-the-state-initializer-pattern)
+  - ### [The State Reducer Pattern](#55---58-the-state-reducer-pattern)
+  
+
 ### 9. Building and styling the medium clap
 - `MediumClap` 컴포넌트는 3개의 자식 컴포넌트를 가지는 Container Component인 버튼이다. 
 - 기본적으로 버튼은 박수모양 SVG 아이콘 `ClapIcon`과 클릭시 내가 몇 번 박수쳤는지 나타내는 `ClapCount`, 그리고 게시글의 총 박수 횟수를 나타내는 `CountTotal`로 구성된다. 자식은 `Stateless Component`다.
@@ -119,7 +132,7 @@ export default Usage;
 
 <br>
 
-### 12 - 17. Animation
+### 12 - 17. Animation(HOC)
 > 재미있어서 정리한다. 이 강좌의 목적은 animation은 아니다.
 
 - `MediumClap`의 애니메이션은 [`mojs`](https://mojs.github.io/) 라이브러리를 이용한다.
