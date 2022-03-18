@@ -39,7 +39,7 @@
   - ### [실전 설정](#실전-설정-1)
     - ### [@typescript-eslint/unbound-method rule 관련 이슈](#typescript-eslintunbound-method-rule-관련-이슈-1)
     - ### [eslint plugin 전체 disable](#eslint-plugin-전체-disable-1)
-    - ### [eslint-plugin-airbnb + prettier](#eslint-plugin-airbnb-+-prettier-1)
+    - ### [eslint-plugin-airbnb + prettier](#eslint-plugin-airbnb--prettier-1)
     - ### [object-curly-newline](#object-curly-newline-1)
 
 <br>
