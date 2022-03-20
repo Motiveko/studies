@@ -41,6 +41,7 @@
     - ### [eslint plugin 전체 disable](#eslint-plugin-전체-disable-1)
     - ### [eslint-plugin-airbnb + prettier](#eslint-plugin-airbnb--prettier-1)
     - ### [object-curly-newline](#object-curly-newline-1)
+    - ### [ESLint extends vs plugin](#ESLint-extends-vs-plugin-1)
 
 <br>
 
@@ -741,3 +742,25 @@ npm install eslint-plugin-disable --save-dev
 ### [object-curly-newline](https://eslint.org/docs/rules/object-curly-newline)
 - 객체 관련하여, 줄바꿈 설정을 할 수 있는 rule
 - `객체 리터럴`, `디스트럭처링`, `import`, `export`에 따라 각각 규칙을 지정할 수 있다. 나름 꿀규칙인듯 하니 참고하자.
+
+<br>
+
+### ESLint extends(config) vs plugin
+> [참고] https://prateeksurana.me/blog/difference-between-eslint-extends-and-plugins/#:~:text=ESLint%20plugins%20allow%20you%20to,configuration%20via%20the%20plugins%20key.
+
+- eslint의 설정에서 `extends`와 `plugins`은 어떻게 다른걸까? `eslint-plugin-xxx` 와 `eslint-config-xxx` 는 또 어떻게 다른걸까?
+
+#### 1. plugin
+- ESLint는 [여러가지 좋은 규칙](https://eslint.org/docs/user-guide/configuring/rules)들을 기본적으로 제공한다. 
+- React나 Vue, 기타 라이브러리를 쓰면 이런 기본 규칙들로는 린팅이 안되는 내용이 너무 많다. 바로 이 때 ***이런 프레임워크나 라이브러리에 맞는 새로운 룰을 제공하는게 `플러그인`이다.***
+
+- `eslint-plugin-xxx`플러그인을 설치하고, eslintrc 설정파일 plugins에 플러그인을 추가한다. 이렇게 하면 설정의 `rules`에 플러그인에서 제공하는 규칙을 추가할 수 있다. 근데 ***자동으로 규칙을 추가해주지 않는다.*** 단지 추가할 수 있게된 상태다.
+
+### 2. config
+- ESLint를 쓰다보면 지금 만든 rule 설정을 그대로 다른 프로젝트에서 쓰고싶을때가 있다. `eslint-config-xxx`는 바로 이런 만들어진 설정을 제공한다.
+- plugin과 마찬가지로 패키지 설치 후 eslintrc의 `extends`에서 `eslint-config-`를 떼고 뒷부분만 넣어주면 된다.
+- 이런 설정의 가장 대표적인 예가 [`eslint-config-airbnb`](https://www.npmjs.com/package/eslint-config-airbnb)인데, 설정이 기본반찬으로만 구성될 수도 있겠으나, airbnb같은 경우 react 기반의 프로젝트에 대한 설정을 제공해, react관련 플러그인이 필요하다. 따라서 npm 설명에도 나왔듯이 이 패키지는 `eslint-plugin-import`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, ... 등의 플러그인에 의존한다.(***리액트 프로젝트가 아니라면 [`eslint-config-airbnb-base`](https://www.npmjs.com/package/eslint-config-airbnb-base)를 사용하면 된다***고 명시되어 있다. 리액트 의존성이 없는것이다.)
+
+### 3. Plugins with configs
+- 플러그인 중 `eslint-config-xxx`와 같이 sharable configuration을 제공하는 애들이 있다. 이런 친구들은 `extends`에서 `plugin:`프리픽스를 붙여 추가할 수 있다. 대부분 `plugin:@typescript-eslint/recommended`와 같이 recommended config를 제공한다. `eslint-plugin-react`는 `recommended`, `all`, `jsx-runtime`로 세가지 config를 제공한다. 
+- plugin의 설정을 `extends`에 추가하면, `plugins`에는 plugin을 추가하지 않아도 된다.
