@@ -105,8 +105,77 @@
 - 아래 `replaceCamelWithSpaces`와 같이 간단한 함수들은 functional test에 포함시켜도 좋다.(꼭 여러 케이스에 대응하는 unit test가 없어도 된다.)
 ```js
 export function replaceCamelWithSpaces(colorName) {
-  return colorName.replace(/\B([A-Z])\B/g, ' $1');  // 대문자를 찾으면 앞에 공백을 붙인다
+  return colorName.replace(/\B([A-Z])\B/g, ' $1');  // 대문자를 찾으면 앞에 공백을 붙인다https://www.npmjs.com/package/eslint-plugin-testing-library
 }
 ```
 - 하지만 좀 복잡한 함수라면 functional test에서 실패에 대해 디버깅이 힘드니 꼭 unit test를 작성하자.
 - functional test의 경우 `describe`함수를 이용해 **테스트를 그룹핑**하는게 좋다.
+
+<br>
+
+## ESLint, Prettier
+- 각각에 대한 기본설명은 생략
+
+### 1. ESLint
+
+- [`jest-dom`](https://www.npmjs.com/package/eslint-plugin-jest-dom), [`testing-library`](https://www.npmjs.com/package/eslint-plugin-testing-library)은 eslint plugin을 제공한다. 이를 적용해서 각각의 라이브러리에 대한 린팅 규칙을 추가할 수 있고, 플러그인이 config를 상속할 수도 있다.
+- 플러그인 적용 순서는 아래와 같다.
+  1. 플러그인 설치
+  ```
+  npm i eslint-plugin-testing-library eslint-plugin-jest-dom --save-dev
+  ```
+  2. package.json의 `eslintConfig` 설정부 제거
+  3. .eslintrc.json 생성 및 작성
+  ```json
+  {
+    "plugins": [
+      "testing-library",
+      "jest-dom"
+    ],
+    "extends": [
+      "react-app",
+      "react-app-jest",
+      "plugin:testing-library/react",
+      "plugin:jest-dom/recommended"
+    ]
+  }
+  ```
+- `VSCode ESLint 플러그인`도 사용한다. 관련 설정은 에디터 단위로 설정할 수 있고, 프로젝트 단위로도 설정 가능. 프로젝트단위로 설정하려면 프로젝트 루트에 `.vscode/setting.json`를 만들고 설정을 작성한다. 예전에는 아래와 같은 설정이 필요했다.
+```json
+{
+  "eslint.options": {
+    "configFile": ".eslintrc.json"
+  },
+  "eslint.validate": ["javascript", "javascriptreaact"],
+  "editor.condeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+}
+```
+- 플러그인의 2.0.4버전 이후 지금은 딱 이것만 추가하면 된다. 딴거 넣으면 오히려 에러발생할 수 있다.
+```json
+"editor.codeActionsOnSave":
+ {
+  "source.fixAll.eslint": true
+ }
+```
+- gitignore에 아래 내용을 추가한다.
+```
+.vscode
+.eslintcache
+```
+
+<br>
+
+### 2. Prettier
+- `.vscode/settings.json`에 아래와 같은 내용을 추가한다.
+```json
+{
+  // ...
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
+```
+- 이렇게 하면 아마 기본 룰로 작동하는듯 하다. `"prettier.configPath": ".prettierrc",`을 추가하면 별도 설정으로 포맷팅한다.
+
+<br>
