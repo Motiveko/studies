@@ -113,10 +113,10 @@ export function replaceCamelWithSpaces(colorName) {
 
 <br>
 
-## ESLint, Prettier
+## 3. ESLint, Prettier
 - 각각에 대한 기본설명은 생략
 
-### 1. ESLint
+### 3.1. ESLint
 
 - [`jest-dom`](https://www.npmjs.com/package/eslint-plugin-jest-dom), [`testing-library`](https://www.npmjs.com/package/eslint-plugin-testing-library)은 eslint plugin을 제공한다. 이를 적용해서 각각의 라이브러리에 대한 린팅 규칙을 추가할 수 있고, 플러그인이 config를 상속할 수도 있다.
 - 플러그인 적용 순서는 아래와 같다.
@@ -167,7 +167,7 @@ export function replaceCamelWithSpaces(colorName) {
 
 <br>
 
-### 2. Prettier
+### 3.2. Prettier
 - `.vscode/settings.json`에 아래와 같은 내용을 추가한다.
 ```json
 {
@@ -180,14 +180,14 @@ export function replaceCamelWithSpaces(colorName) {
 
 <br>
 
-## 3. Sundaes on Demand: Form Review and Popover
+## 4. Sundaes on Demand: Form Review and Popover
 - Sundaes on Demand는 아이스크림 주문 앱이다. 이를 TDD로 구현한다.
 - 주문의 Entry, Summary, Confirm 3개 페이지로 구성된다. 여기에 폼과 popover 요소가 들어가고 이는 bootstrap-react로 구현한다. 구현하기 전 bootstrap이 어떻게 해당 내용을 구현하는지 파악하고 이에 맞는 테스트 코드를 작성한다.
 - 서버의 동작은 [`mock-service-worker`](https://mswjs.io/)를 이용해서 목킹한다.
 
 <br>
 
-### Popover test
+### 4.1 Popover test
 - 서비스 약관에 마우스 hover시 팝오버가 나오는 내용을 테스트한다. react-bootstrap의 구현을 살펴보면 팝오버 요소가 DOM에 나타났다가 사라진다. 이에 맞춰서 테스트를 작성한다.
 - [`fireEvent`](https://testing-library.com/docs/dom-testing-library/api-events)는 click과 같은 hover 이벤트 메서드를 제공하지 않는다. testing-library는 사용자의 이벤트를 발생시킬 수 있는 [`user-event`](https://testing-library.com/docs/user-event/intro/) 패키지를 제공하는데, 여기 있는 이벤트는 가급적 여기 있는걸 이용하자. 없다면 이벤트 객체를 만들고 fireEvenet 메서드를 사용해야한다.
   > `@testing-library/user-event`는 이제 cra에서 기본으로 넣어주는듯하다. 그냥 들어있다.
@@ -222,7 +222,7 @@ test("popover respodes to hover", async () => {
 
   > act와 관련하여 [`secrets of the act(...) api`](https://github.com/threepointone/react-act-examples/blob/master/sync.md)를 참고하자. 리액트의 동작에 대해 좀 더 이해할 수 있게 된다.
 
-### [screen Query Method](https://testing-library.com/docs/react-testing-library/cheatsheet#queries)
+### 4.2 [screen Query Method](https://testing-library.com/docs/react-testing-library/cheatsheet#queries)
 > `command`[`All`]By`QueryType`
 - command
   - `get` : DOM에 element가 있다고 가정한다.
