@@ -236,3 +236,27 @@ test("popover respodes to hover", async () => {
 
 <br>
 
+## 5. Simulating Server Response with Mock Service Worker
+Sundae Demand의 OrderEntry 컴포넌트를 테스트한다. 이 컴포넌트는 서버로부터 `scoops`, `toppings` 데이터를 받아 주문을 구성할 수 있는 options를 랜더링하고, 사용자가 체크한 값에 맞춰 total price를 계산해준다.
+
+### 5.1 Tests
+테스트는 아래의 내용으로 구성된다.
+- 옵션 이미지 랜더링 테스트
+- Mock Service Worker
+- Mock server response - scoops, toppings
+
+### 5.2 [Mock Service Worker](https://mswjs.io/)
+- 사용 목적
+  - network call 인터셉트
+  - 응답 정의(mock)
+- 설치
+```
+npm install msw --save-dev
+```
+- [Create handler](https://mswjs.io/docs/getting-started/mocks/rest-api)
+- [Create test server](https://mswjs.io/docs/getting-started/integrate/node)
+  - jest를 이용한 테스트시 런타임은 node
+  
+- Make sure test server listens during all tests
+  - reset after each test
+  
