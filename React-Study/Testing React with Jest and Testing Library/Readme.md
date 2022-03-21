@@ -190,8 +190,11 @@ export function replaceCamelWithSpaces(colorName) {
 ### Popover test
 - 서비스 약관에 마우스 hover시 팝오버가 나오는 내용을 테스트한다. react-bootstrap의 구현을 살펴보면 팝오버 요소가 DOM에 나타났다가 사라진다. 이에 맞춰서 테스트를 작성한다.
 - [`fireEvent`](https://testing-library.com/docs/dom-testing-library/api-events)는 click과 같은 hover 이벤트 메서드를 제공하지 않는다. testing-library는 사용자의 이벤트를 발생시킬 수 있는 [`user-event`](https://testing-library.com/docs/user-event/intro/) 패키지를 제공하는데, 여기 있는 이벤트는 가급적 여기 있는걸 이용하자. 없다면 이벤트 객체를 만들고 fireEvenet 메서드를 사용해야한다.
+  > `@testing-library/user-event`는 이제 cra에서 기본으로 넣어주는듯하다. 그냥 들어있다.
 
-- popover 테스트시, 생기는건 동기인데, 사라지는건 비동기이다!?(아마 애니메이션 때문인듯). 이로인해 그냥 순차적으로 테스트 작성시 오류가 발생한다. 아래와 같이 asyc/await와 [`waitForElementToBeRemoved`](https://testing-library.com/docs/dom-testing-library/api-async/#waitforelementtoberemoved)메서드를 이용해 처리한다.
+  > cra의 dependencies에 테스팅 관련 패키지가 들어있는데, cra에서는 굳이 dependencies - devDependencies를 구분하지 않는다고 한다.
+
+- popover 테스트시, 생기는건 동기인데, 사라지는건 비동기이다!. 동기로 동작하는 assertion을 그냥 수행하면 에러가 발생한다.[`waitForElementToBeRemoved`](https://testing-library.com/docs/dom-testing-library/api-async/#waitforelementtoberemoved)메서드를 이용해 처리한다.
 ```js
 // SummaryForm.test.jsx
 
@@ -209,9 +212,15 @@ test("popover respodes to hover", async () => {
   await waitForElementToBeRemoved(() => screen.queryByText(popoverRegexp));
 })
 ```
-> `@testing-library/user-event`는 이제 cra에서 기본으로 넣어주는듯하다. 그냥 들어있다.
+- `waitForElementToBeRemoved` 메서드는 첫째 인자로 요소/요소반환 함수를 받는다. 이 요소가 함수 실행 시점에 존재하다가 비동기로 사라지면 통과한다. 만약 애초에 존재하지 않거나 동기로 사라지는 요소를 여기에 넣으면 아래와 같은 에러를 보게 된다.
 
-> cra의 dependencies에 테스팅 관련 패키지가 들어있는데, cra에서는 굳이 dependency - devDependency를 구분하지 않는다고 한다.
+![에러](./images/waitForElementToBeRemoved_Error_1.png)
+
+- 뭔가 비동기로 appear/disapper 하는 요소에 대한 테스트는 [여기](https://testing-library.com/docs/guide-disappearance)를 참고하자. 
+
+  > 🍎 🍎 참고로 리액트에서는 [랜더링이나 이벤트 발생 코드를 act()로 래핑하도록 권장](https://ko.reactjs.org/docs/test-utils.html#act)하는데, `testing-library` 사용시 랜더링, 이벤트 발생 코드가 내부적으로 [자동으로 act()에 래핑된다](https://testing-library.com/docs/preact-testing-library/api/#act)고 한다. (테스트에서 랜더링시 testing-library의 `render`를 쓰고, `screen`을 이용해 쿼리하고 이벤트는 `fireEvent`, `userEvent`를 이용하기 때문에 가능한 일. 랜더로 예를들면 리액트의 네이티브 메서드인 `ReactDOM.render`를 사용할 경우 상태업데이트, 리랜더링 같은 동작들은 테스트에 반영되기 전에 테스트가 먼저 실행될것이다.)
+
+  > act와 관련하여 [`secrets of the act(...) api`](https://github.com/threepointone/react-act-examples/blob/master/sync.md)를 참고하자. 리액트의 동작에 대해 좀 더 이해할 수 있게 된다.
 
 ### [screen Query Method](https://testing-library.com/docs/react-testing-library/cheatsheet#queries)
 > `command`[`All`]By`QueryType`
