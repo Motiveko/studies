@@ -179,3 +179,51 @@ export function replaceCamelWithSpaces(colorName) {
 - 이렇게 하면 아마 기본 룰로 작동하는듯 하다. `"prettier.configPath": ".prettierrc",`을 추가하면 별도 설정으로 포맷팅한다.
 
 <br>
+
+## 3. Sundaes on Demand: Form Review and Popover
+- Sundaes on Demand는 아이스크림 주문 앱이다. 이를 TDD로 구현한다.
+- 주문의 Entry, Summary, Confirm 3개 페이지로 구성된다. 여기에 폼과 popover 요소가 들어가고 이는 bootstrap-react로 구현한다. 구현하기 전 bootstrap이 어떻게 해당 내용을 구현하는지 파악하고 이에 맞는 테스트 코드를 작성한다.
+- 서버의 동작은 [`mock-service-worker`](https://mswjs.io/)를 이용해서 목킹한다.
+
+<br>
+
+### Popover test
+- 서비스 약관에 마우스 hover시 팝오버가 나오는 내용을 테스트한다. react-bootstrap의 구현을 살펴보면 팝오버 요소가 DOM에 나타났다가 사라진다. 이에 맞춰서 테스트를 작성한다.
+- [`fireEvent`](https://testing-library.com/docs/dom-testing-library/api-events)는 click과 같은 hover 이벤트 메서드를 제공하지 않는다. testing-library는 사용자의 이벤트를 발생시킬 수 있는 [`user-event`](https://testing-library.com/docs/user-event/intro/) 패키지를 제공하는데, 여기 있는 이벤트는 가급적 여기 있는걸 이용하자. 없다면 이벤트 객체를 만들고 fireEvenet 메서드를 사용해야한다.
+
+- popover 테스트시, 생기는건 동기인데, 사라지는건 비동기이다!?(아마 애니메이션 때문인듯). 이로인해 그냥 순차적으로 테스트 작성시 오류가 발생한다. 아래와 같이 asyc/await와 [`waitForElementToBeRemoved`](https://testing-library.com/docs/dom-testing-library/api-async/#waitforelementtoberemoved)메서드를 이용해 처리한다.
+```js
+// SummaryForm.test.jsx
+
+test("popover respodes to hover", async () => {
+  // ...
+
+// 3. unhover checkbox label : popover disappears
+  userEvent.unhover(termsAndConditions);
+
+  // popover가 비동기로 사라진다. -> 테스트는 이미 끝났다 -> testing library가 화를 낸다. 
+  const nullPopoverAgain = screen.queryByText(popoverRegexp);
+  expect(screen.queryByText(popoverRegexp)).not.toBeInTheDocument();
+
+  // async/await와 waitForElementToBeRemoved메서드를 이용해 비동기로 사라지는게 완료된 후 쿼리한다.
+  await waitForElementToBeRemoved(() => screen.queryByText(popoverRegexp));
+})
+```
+> `@testing-library/user-event`는 이제 cra에서 기본으로 넣어주는듯하다. 그냥 들어있다.
+
+> cra의 dependencies에 테스팅 관련 패키지가 들어있는데, cra에서는 굳이 dependency - devDependency를 구분하지 않는다고 한다.
+
+### [screen Query Method](https://testing-library.com/docs/react-testing-library/cheatsheet#queries)
+> `command`[`All`]By`QueryType`
+- command
+  - `get` : DOM에 element가 있다고 가정한다.
+  - `query`: DOM에 elment가 없다고 가정한다.
+  - `find` : DOM에 element가 비동기로 생긴다고 가정한다. 
+- All : 붙일경우 여러개, 생략할 경우 1개만 있다고 가정한다.
+- QueryType
+  - `Role`, `AltText`, `Text`, `PlaceholderText`, ...
+
+- Query method를 잘 선택해서 구성해야 하는 이유는 예를들어 없는 요소를 `getByRole`메서드로 쿼리하면 에러를 던져 테스트가 실패하기 때문이다. 없을거란걸 안다면 `queryByRole`을 해야한다.
+
+<br>
+
