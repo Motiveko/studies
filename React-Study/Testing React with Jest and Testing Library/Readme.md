@@ -409,5 +409,27 @@ export default function AlertBanner({
 }
 ```
 - 추가 꿀팁 : jest watch모드에서 option으로 p를 입력하면 원하는 파일에 대해서만 테스트 실행 가능하다. 이런 유틸리티는 아마 리액트에서 제공하는듯 하다.
+- 추가 : 강의는 functional testing을 강조하며 해당 방법에 대해 알려준다. 이로인해 msw를 이용해 서버를 띄워서 테스트하는데, unit 테스트를 작성한다면 axios module을 jest를 이용해 목킹하면 된다. 아래와 같다.(사실 컴포넌트가 3개나 섞여있으므로 unit test라고 할 순 없겠다.)
 
-<!-- TODO : functional test에서는 실제 axios 객체를 사용했는데, 이거를 그냥 jest를 이용해 모듈을 mocking 하면 되는거 아닌지? -->
+```js
+// OrderEntry.unit.test.jsx
+// ...
+import axios from "axios";
+
+jest.mock("axios");
+test("jest mocking module axios", async () => {
+  const baseUrl = "http://localhost:3030";
+  axios.get.mockImplementation((url) => {
+    if (url === `${baseUrl}/scoops`) {
+      return Promise.reject("scoops 요청 실패");
+    }
+    if (url === `${baseUrl}/toppings`) {
+      return Promise.reject("toppings 요청 실패");
+    }
+    throw new Error("요청이 이상한데로 가고 있습니다.");
+  });
+
+  // render, assert, ...
+});
+```
+
