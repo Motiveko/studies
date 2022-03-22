@@ -7,6 +7,7 @@ describe('ProductAddForm', () => {
   let spyAddProduct;
   let form;
   let spyReset;
+
   beforeEach(() => {
     productForm = new ProductAddForm();
     spyAddProduct = jest.spyOn(model, 'addProduct').mockImplementation(() => true);
