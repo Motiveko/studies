@@ -98,7 +98,10 @@
 <br>
 
 - `screen`의 accessible 관련 쿼리에서 optional을 작성하는것을 생활화 하자. 여러 요소가 있을 경우 특정 요소만 찝을 수 있도록 도와준다.
-- `optional.name`은 role 등에 따라 쿼리하는 값이 달라진다.(button: 버튼명, checkbox: label의 text content, ...)
+- `option.name`은 role 등에 따라 쿼리하는 값이 달라진다.(button: 버튼명, checkbox: label의 text content, ...)
+> [추가] ByRole API의 option.name은 Accessible name을 사용한다. 이건 role에 따라 달라지는데 아래 페이지를 참고하자. 가끔 이걸 잘못이해해서 쿼리가 실패하는 경우가 있다. 
+> 1. [ByRole API](https://testing-library.com/docs/queries/byrole/)
+> 2. [Accessible Name](https://www.tpgi.com/what-is-an-accessible-name/)
 
 <br>
 
