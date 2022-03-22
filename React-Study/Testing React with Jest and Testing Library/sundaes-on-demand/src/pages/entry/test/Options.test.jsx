@@ -16,8 +16,6 @@ test("displays image for each scoop option from the server", async () => {
 });
 
 test("displays image for each topping option from the server", async () => {
-  console.log("Hello");
-
   render(<Options optionType={"toppings"} />);
 
   const toppingImages = await screen.findAllByRole("img", {

@@ -259,7 +259,155 @@ npm install msw --save-dev
 - [Create handler](https://mswjs.io/docs/getting-started/mocks/rest-api)
 - [Create test server](https://mswjs.io/docs/getting-started/integrate/node)
   - jest를 이용한 테스트시 런타임은 node
+  - 리액트에서 테스트코드 작성시 `setupTests.js`을 부트스트랩하는데, 여기에서 msw 서버를 서버를 실행한다. 아래는 [공식 메뉴얼에 나오는 코드](https://mswjs.io/docs/getting-started/integrate/node#using-create-react-app다.
+  ```js
+  // ...
+  import { server } from "./mocks/server.js";
   
-- Make sure test server listens during all tests
-  - reset after each test
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+  ```
+
+### 5.3 Server 응답 성공시 컴포넌트 랜더링 테스트
+- 서버에서 json 데이터를 응답받고 이를 이용해서 자식 컴포넌트 랜더링 하는 로직을 TDD로 개발한다.
+- http client는 [`axios`](https://www.npmjs.com/package/axios)를 이용한다.
+- 컨테이너 컴포넌트(`Options.jsx`)의 useEffect 훅에서 axios를 이용해 요청하고 응답이 오면 setState 호출하고 자식을 랜더링 한다.
+- 이 때, 이 로직에 axios의 비동기 로직이 추가되므로, 해당 로직 이후 랜더링 되는 자식컴포넌트 쿼리를 위해서는 `screen.findBy` 쿼리 메서드를 이용해야한다.(await 포함)
+```js
+// Options.jsx
+export default function Options({ optionType }) {
+  const [items, setItems] = useState([]);
+
+  // optionType is 'scoops' or 'toopings'
+  useEffect(() => {
+    axios
+      .get(`http://localhost:3030/${optionType}`)
+      .then((response) => {
+        setItems(response.data);
+      })
+      .catch((error) => {
+        // TODO : 에러처리 할 것
+      });
+  }, [optionType]);
+
+  const ItemComponent = optionType === "scoops" ? ScoopOtion : ToppingOption;
+
+  const optionsItems = items.map(({ name, imagePath }) => (
+    <ItemComponent key={name} name={name} imagePath={imagePath} />
+  ));
+  return <Row>{optionsItems}</Row>;
+}
+```
+```js
+// Options.test.jsx
+test("displays image for each scoop option from the server", async () => {
+  render(<Options optionType={"scoops"} />);
+
+  // img는 비동기 동작 처리 후 이뤄지므로 find~ 메서드로 쿼리해야 랜더링 될때까지 기다린다. get~으로 쿼리하면 랜더링하기 전에 테스트가 끝남.
+  const scoopImages = await screen.findAllByRole("img", { name: /scoop$/i }); 
+  expect(scoopImages).toHaveLength(2);
+
+  // ...
+});
+```
+
+<br>
+
+### 5.4 Server 에러 응답시 컴포넌트 랜더링 테스트
+- 5.3에서 이어 서버에서 에러 응답시, alert를 랜더링 하는 로직을 TDD로 개발한다.
+- `OptionsEntry`의 두개의 자식 컴포넌트 `Options`가 모두 서버 요청에 실패해 alert창을 띄운다고 가정한다.
+- 테스트 코드상의 이슈는 두가지다.
+  1. `setUpTests.js`에서 설정한 서버의 핸들러가 에러를 반환하도록 reset해야한다.
+    - `server.resetHandlers()` 메서드를 이용한다.
+  2. `role: alert`요소에 대한 쿼리시 `option.name`은 `aria-label` 어트리뷰트값을 의미한다.
+    - bootstrap-react의 Alert 컴포넌트는 role은 붙여주나 aria-label을 안붙여준다. 내가 붙여줘야한다.(웹 접근성 어디?)
+  3. 두개의 alert요소는 각각의 http 요청에 대한 실패 결과로 랜더링 된다. 즉 동시에 되지 않는다. 이로 인해 `findAllByRole`로 동시에 쿼리하게 되면 먼저 랜더링 되는 하나만 쿼리된다. 여기서 `waitFor`를 사용해야 한다.
+
+- [`waitFor`](https://testing-library.com/docs/dom-testing-library/api-async#waitfor) vs [`findBy Query`](https://testing-library.com/
+docs/dom-testing-library/api-async#findby-queries)
+  - `findAllBy`는 단 한개라도 쿼리에 성공할 경우(비동기로 랜더링 완료) Promise가 fulfilled 상태가 되면서 테스트가 넘어간다.
+  - `waitFor`는 내부의 **콜백이 성공**할 때 까지, ***`option.timeout` 시간동안 콜백을 계속 재시도한다.*** 즉, 독립적으로 비동기 랜더링 되는 요소들에 대한 쿼리는 waitFor를 사용해야 하는 것이다.
+
+- 작성한 테스트와 구현코드는 아래와 같다.
+```js
+// OrderEntry.test.jsx
+test("handles error for scoops and toppings routes", async () => {
+  // 기본 설정한 서버를 에러를 던지도록 reset
+  server.resetHandlers(
+    rest.get("http://localhost:3030/scoops", (req, res, ctx) =>
+      res(ctx.status(500))
+    ),
+    rest.get("http://localhost:3030/toppings", (req, res, ctx) =>
+      res(ctx.status(500))
+    )
+  );
+
+  render(<OrderEntry />);
   
+  await waitFor(
+    async () => {
+      const alerts = await screen.findAllByRole("alert", {
+        name: "An unexpected error occureed. Please try again later",
+      });
+      console.log("슉슈슈슉");  // 테스트 결과 콘솔에 슉슈슈슉은 두번 찍힌다!
+      expect(alerts).toHaveLength(2);
+    },
+    { timeout: 100 }
+  );
+});
+```
+- waitFor 내부의 콜백은 alert을 쿼리하고 결과가 2개인지 체크하는 함수다. ***첫번째시도에서는 실패할거고(length = 1),  두번째 시도에서는 성공할것이다.*** timeout인 100ms동안 성공할때까지 재시도한다.
+
+```js
+// OrderEntry.js
+export default function OrderEntry() {
+  return (
+    <div>
+      <Options optionType={"scoops"} />
+      <Options optionType={"toppings"} />
+    </div>
+  );
+}
+```
+```js
+// Options.js
+export default function Options({ optionType }) {
+  // ...
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    axios
+      .get(`http://localhost:3030/${optionType}`)
+      .then((response) => {
+        setItems(response.data);
+      })
+      .catch((error) => setError(true));
+  }, [optionType]);
+
+  if (error) {
+    return <AlertBanner />;
+  }
+  // ...
+}
+```
+```js
+// AlertBanner.js
+export default function AlertBanner({
+  message = "An unexpected error occureed. Please try again later",
+  variant = "danger",
+}) {
+  return (
+    // aria-label 은 role:alert 요소에 필수다.
+    <Alert
+      variant={variant}
+      style={{ backgroundColor: "red" }}
+      aria-label="An unexpected error occureed. Please try again later"
+    >
+      {message}
+    </Alert>
+  );
+}
+```
+- 추가 꿀팁 : jest watch모드에서 option으로 p를 입력하면 원하는 파일에 대해서만 테스트 실행 가능하다. 이런 유틸리티는 아마 리액트에서 제공하는듯 하다.
+
+<!-- TODO : functional test에서는 실제 axios 객체를 사용했는데, 이거를 그냥 jest를 이용해 모듈을 mocking 하면 되는거 아닌지? -->
