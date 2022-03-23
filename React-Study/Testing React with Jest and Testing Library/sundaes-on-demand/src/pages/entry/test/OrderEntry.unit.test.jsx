@@ -1,5 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+} from "../../../test-utils/testing-library-util";
 import axios from "axios";
+
 import OrderEntry from "../OrderEntry";
 
 jest.mock("axios");

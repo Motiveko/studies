@@ -433,3 +433,43 @@ test("jest mocking module axios", async () => {
 });
 ```
 
+<br>
+
+## 6. Testing Components Wrapped in a Context
+- `ContextAPI` 기반으로 상태가 관리되는 컴포넌트를 테스트한다.
+- `OrderEntry`내의 `Options`는 선택한 scoop/toppings와 이에 따른 금액 총계를 `OrderDetails`Context로 관리한다.
+- `ContextAPI`기반의 컴포넌트를 테스트 할 시, 랜더링은 아래와 같이 ContextProvider를 wrapper 속성에 추가해서 할 수 있다.
+```js
+test('some test', () => {
+  render(<Options optionType="scoops" />, {
+    wrapper: OrderDetailsProvider,
+  });
+})
+```
+- 보통 ContextProvider는 App.js와 같이 최상위 컴포넌트에서 자식들을 래핑한다. `Functional Test`를 기반으로 개발할 경우, 테스트에 연관되는 여러개의 컴포넌트들이 전부 동작하는데, 이로 인해 ***많은 테스트에서 ContextProvider를 render 메서드에 일일이 추가해줘야 하는 일이 발생***한다. 이를 중앙화 시켜 반복을 줄일 수 있는데, testing-library의 [`Custom Render`](https://testing-library.com/docs/react-testing-library/setup#custom-render)를 활용한다.
+```js
+// testing-library-utils.js
+import { render } from "@testing-library/react";
+import OrderDetailsProvider from "../context/OrderDetails";
+
+const custumRender = (ui, options) =>
+  render(ui, { wrapper: OrderDetailsProvider, ...options });
+
+// re-export everything
+export * from "@testing-library/react";
+// overrides render
+export { custumRender as render };
+```
+- render 메서드를 기본적으로 `OrderDetailsProvider`로 래핑하도록 override 했다. render 메서드만 유틸을 쓰고 나머지를 `@testing-library/react`에서 가져올 수도 있겠으나 render 메서드를 잘못 가져오는 식의 실수가 나올 가능성이 많다. `@testing-library/react`의 모든 내용을 re-export하고 앞으로는 `testing-library-utils.js`에서만 모듈들을 꺼내서 쓴다. 아래는 usage case다.
+```js
+// Options.test.js
+import { render, screen } from "../../../test-utils/testing-library-util";
+// ...
+
+test("displays image for each scoop option from the server", async () => {
+  // OrderDetailsProvider가 래핑되었다!
+  render(<Options optionType={"scoops"} />);
+  // ...
+}
+```
+
