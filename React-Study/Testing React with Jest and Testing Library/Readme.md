@@ -472,4 +472,29 @@ test("displays image for each scoop option from the server", async () => {
   // ...
 }
 ```
+<br>
 
+- `UnmountedComponent` 에러
+  ![Unmounted Component](./images/Unmounted%20Component.png)
+- 비동기 업데이트 되는 컴포넌트가 있는데, `await waitFor`, `await findBy`과 같은 메서드로 해당 랜더링이 끝날때까지 기다리는 메서드가 없으면, 테스트 완료 후 상태가 업데이트되면서 에러가 발생한다.(`Option.jsx`)
+- 아래와 같은 해결법이 존재한다.
+  - [Skip auto cleanup](https://testing-library.com/docs/react-testing-library/setup#skipping-auto-cleanup)
+    - testing-library는 매 테스트마다 컴포넌트 unmounting을 포함하는 cleanup 로직을 수행하는데, 이걸 끄는것이다. -> ***테스트 단위로 끌 수 없으므로 안된다.***
+  - Mock useEfect to Bypass server call
+    - 이건 테스트 단위로 적용할 수 있으나 권장하지 않는다. mocking을 하면 실제 프로덕션 코드와 점점 괴리가 생긴다고.
+  - Include in the beggining of a test that asserts on state changes
+    - 테스트 초반에 `axios`등에 의해 발생하는 비동기 상태 업데이트 및 랜더링 동작이 끝날때까지 기다리는 코드 넣기(`waitFor`, `findBy`) 
+    - 테스트의 끝에 넣어도 상관없다.
+    ```js
+    // totalUpadate.test.tsx
+    test.only("grand total의 초기값은 0", async () => {
+      render(<OrderEntry />);
+      // role: spinbutton 요소는 axios 요청이 끝난 후 응답값으로 랜더링된다.
+      await waitFor(async () => {
+        await screen.findAllByRole("spinbutton");
+      });
+      const grandTotal = screen.getByRole("heading", { name: /Grand total/i });
+      expect(grandTotal).toHaveTextContent("0.00");
+    });
+    ```
+  - ***Best case는 이런 에러를 발생시키는 테스트를 비동기 처리를 기다리는 테스트에 합치는 것이다.***
