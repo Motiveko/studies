@@ -513,4 +513,50 @@ test("displays image for each scoop option from the server", async () => {
 
 <br>
 
+### [[추가] Common Mistakes with React Testing Library](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library#not-using-screen)
+- `eslint-plugin-testing-library`, `eslint-plugin-jest-dom`을 반드시 사용하자
+- `act()`는 사용하지 말자. testing-library의 `render`와 `firEvent`, `userEvent`는 이미 `act()`로 래핑되어있다.
+- [`query`는 가급적 accessibility - semantic - test-id 순으로 사용하자.](https://testing-library.com/docs/queries/about/#priority)
+- query시 actual-text(`option.name`)를 이용하자.
+- HTML 요소에 쓸데없는 `role`을 집어넣지 말자. 보통 시멘틱 태그가 알아서 해결해준다. 만약 내가 직접 만들어야 하는 상황이면 [WAI-ARIA practie](https://www.w3.org/TR/wai-aria-practices/examples/accordion/accordion.html)를 참고하자.
+- `fireEvent`보다 가급적 `userEvent`를 사용하자.
+  - userEvent는 fireEvent를 기반으로 만들어졌다. ***userEvent는 좀 더 사용자의 실제 사용에 가까운 이벤트를 발생시킨다.***
+  - 예를들어 `change`이벤트를 fireEvent로 발생시키면 그냥 change 이벤트만 발생하지만, userEvent의 `type`메서드를 이용하면 `keyDown`, `keyPress`. `keyUp`이벤트를 모두 발생시킨다. 실제 사용에 훨씬 가까운 방식이다.
+- `find*`쿼리로 처리할 수 있는 부분을 `waitFor`메서드를 사용해서 구현하지 말자.
+  ```js
+  // ❌
+  const submitButton = await waitFor(() =>
+    screen.getByRole('button', {name: /submit/i}),
+  )
+
+  // ✅
+  const submitButton = await screen.findByRole('button', {name: /submit/i})
+  ```
+- 아무 콜백도 없는 `waitFor`를 쓰지 말자.(비동기 로직 테스트시 event loop를 한번 돌리려고 쓰는 경우가 있나봄)
+- `waitFor` 콜백에 여러개의 assertion을 작성하지 말자.
+  - 잘못된 assertion을 넣었어도 `timeout`시간동안 `interval`마다 재시도 할것이다. 에러를 보는게 늦어질 수 있다.
+  - 테스트가 깨지거나 하는건 아니다. 따라서 '가급적' 한개의 assertion만 작성하자.
+- `waitFor`콜백에 side-effect를 일으키는 코드를 작성하지 말자.
+  ```js
+  // ❌
+  await waitFor(() => {
+    fireEvent.keyDown(input, {key: 'ArrowDown'})
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
+  })
+
+  // ✅
+  fireEvent.keyDown(input, {key: 'ArrowDown'})
+  await waitFor(() => {
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
+  })
+  ```
+  - 첫번째 코드에서 assertion이 실패하면 콜백은 재시도 되어 keyDown 이벤트를 다시 발생시킬 것이다. 딱봐도 문제가 될 수 있으니 side-effect는 waitFor 밖에 작성한다.
+
+- `get*`메서드로 쿼리했어도 `toBeInTheDocument` assertion은 작성하자.
+  - 안써도 테스트에 문제가 있는건 아니지만 코드의 의미를 다른사람이 이해할 수 있어야 하기 때문.
+  - 굳이 테스트하는게 아니면 안써도 될 듯 하다.
+
+
+
+
 
