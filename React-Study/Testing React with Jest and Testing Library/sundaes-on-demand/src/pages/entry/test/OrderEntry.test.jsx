@@ -9,7 +9,7 @@ import { rest } from "msw";
 import { server } from "../../../mocks/server";
 import userEvent from "@testing-library/user-event";
 
-test.only("주문하기 버튼은 scoop을 추가해야 enabled 상태로 변한다.", async () => {
+test("주문하기 버튼은 scoop을 추가해야 enabled 상태로 변한다.", async () => {
   render(<OrderEntry />);
 
   // 초기상태

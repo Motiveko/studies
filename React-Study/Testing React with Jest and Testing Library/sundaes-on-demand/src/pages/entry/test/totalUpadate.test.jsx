@@ -66,7 +66,7 @@ test("topping의 subtotal 업데이트 테스트", async () => {
   expect(toppginsSubtotal).toHaveTextContent("$3.00");
 });
 
-describe.only("grand total update 테스트", () => {
+describe("grand total update 테스트", () => {
   test("scoop 선택시 grand total도 업데이트 된다.", async () => {
     render(<OrderEntry />);
 
