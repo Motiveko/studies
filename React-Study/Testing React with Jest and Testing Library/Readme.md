@@ -1,5 +1,20 @@
 # Testing React with Jest and Testing Library
 - Udemy의 리액트 테스트 강의 [Testing React with Jest and Testing Library](https://www.udemy.com/course/react-testing-library/)
+- functional testing을 기반 TDD로 개발하는것을 목표로 한다.
+
+
+## 목차
+  - 컴포넌트 기본 구성은 생략
+  - ### [1. Introduction](#1-introduction-1)
+  - ### [2. Simple App: Color Button](#2-simple-app-color-button-1)
+  - ### [3. ESLint, Prettier](#3-eslint-prettier-1)
+  - ### [4. Sundaes on Demand: Form Review and Popover](#4-sundaes-on-demand-form-review-and-popover-1)
+  - ### [5. Simulating Server Response with Mock Service Worker](#5-simulating-server-response-with-mock-service-worker-1)
+  - ### [6. Testing Components Wrapped in a Context](#6-testing-components-wrapped-in-a-context-1)
+  - ### [7. Order Phases](#7-order-phases-1)
+  - ### [[추가] Common Mistakes with React Testing Library](#추가-common-mistakes-with-react-testing-library-1)
+
+
 
 <br>
 
@@ -555,8 +570,3 @@ test("displays image for each scoop option from the server", async () => {
 - `get*`메서드로 쿼리했어도 `toBeInTheDocument` assertion은 작성하자.
   - 안써도 테스트에 문제가 있는건 아니지만 코드의 의미를 다른사람이 이해할 수 있어야 하기 때문.
   - 굳이 테스트하는게 아니면 안써도 될 듯 하다.
-
-
-
-
-
