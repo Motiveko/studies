@@ -4,7 +4,6 @@
 
 
 ## 목차
-  - 컴포넌트 기본 구성은 생략
   - ### [1. Introduction](#1-introduction-1)
   - ### [2. Simple App: Color Button](#2-simple-app-color-button-1)
   - ### [3. ESLint, Prettier](#3-eslint-prettier-1)
@@ -22,9 +21,9 @@
 - React Testing Library vs Jest
   - React Testing Library
     - https://testing-library.com/docs/react-testing-library/intro
-    - 테스트에 필요한 `Virtual DOM`을 제공한다. 이를 이용해서 컴포넌트를 Virtual DOM에 랜더링 할 수 있다.
-    - Virtual DOM에 대한 `쿼리 기능`을 제공한다.(getByText... )
-    - Virtual DOM과의 Interaction을 제공한다.
+    - 테스트에 필요한 `Virtual DOM`을 제공한다. 이를 이용해서 컴포넌트를 Virtual DOM에 랜더링 할 수 있다.(`render`)
+    - Virtual DOM에 대한 `쿼리 기능`을 제공한다.(`screen`)
+    - Virtual DOM과의 Interaction을 제공한다.(`fireEvent`, `userEvent`)
   - Jest
     - 테스트러너로 테스트를 찾고, 실행하며, 성공 여부를 확인한다.
     - 테스트 실패 여부는 테스트 함수 내부에서 Error가 throw 되는지 여부다. assertion도 실패하면 Error를 던지도록 되어있다.
@@ -36,7 +35,7 @@
 
 <br>
 
-- `setupTests.js` - `jest-dom`
+- `jest-dom`
   - cra로 프로젝트 생성시 setupTests.js가 생성되고 내부에 `@testing-library/jest-dom`를 import한다.
   - 이렇게하면 [jest-dom](https://github.com/testing-library/jest-dom)에서 제공하는 DOM-based Custom matchers들이 추가된다. 
   - 아래는 cra로 앱 생성시 기본 제공되는 App.js의 테스트 코드다.
@@ -63,25 +62,25 @@
 - Types of Tests
   - Unit tests : Test one unit of code in isoloation(예 - 단일 컴포넌트)
   - Integration tests : How multiple units work together(예 - 두개의 컴포넌트)
-  - Functional tests : Tests a particular function of a software
+  - ***Functional tests*** : Tests a particular function of a software
     - 예 - 폼에 값을 채우고 submit button을 클릭한 후 원하는대로 동작하는지
     - [`The more your tests resemble the way your software is used, the more confidence they can give you.`](https://testing-library.com/docs/guiding-principles/)
-    - Testing library가 추구하는 테스트
-  - Acceptance/ E2E tests : 실제 브라우저와 서버를 이용한 테스트(Cypress, Selenium)
+    - ***Testing library가 추구하는 테스트, 강의 역시 Functional Test 기반의 TDD를 수행한다.***
+  - Acceptance / E2E tests : 실제 브라우저와 서버를 이용한 테스트(Cypress, Selenium)
 
 <br>
 
 - Unit Testing vs Functional Testing
   - Unit Testing
     - `Isolation`: mock dependencies, test internals
-    - 실패의 이유를 찾기 매우 쉽다.
-    - 유저가 실제로 앱을 사용하는것과 괴리가 있다.
+    - 테스트 실패를 **디버깅하기 쉽다.**
+    - 유저가 **실제로 앱을 사용하는것과 괴리**가 있다.
     - 리팩토링시 테스트가 깨지기 쉽다.
   - Functional Testing
     - Include all relavant units, test behavior
-    - 실제 유저가 앱을 사용하는것과 비슷하다.
+    - 실제 유저가 **앱을 사용하는것과 비슷**하다.
     - 리팩토링에 강하다.
-    - 테스트 실패를 디버깅하기 힘들다.
+    - 테스트 실패를 **디버깅하기 힘들다.**
 
 <br>
 
@@ -98,7 +97,7 @@
 ## 2. Simple App: Color Button
 - `color-button`에 구현한다. 클릭시 색깔과 버튼명이 바뀌는 간단한 버튼.
 - DOM 쿼리 후 assertion의 matcher는 가급적 jest-dom의 matcher를 사용한다.(DOM에서 텍스트를 꺼내서 `.toEqual()`을 호출하는게 아닌 DOM 자체에 `.toHaveTextContent()`를 검사하는 형식. 이게 훨씬 가독성 좋다)
-- 가급적 컴포넌트의 `초기 상태` 테스트와 이후 `유저 인터렉션에 의한 상태 변화` 테스트는 분리하여 작성한다. **테스트가 너무 커지면 디버깅하기 힘들어진다.**
+- 가급적 컴포넌트의 `초기 상태` 테스트와 이후 `유저 인터렉션에 의한 상태 변화` 테스트는 분리하여 작성한다. ***테스트가 너무 커지면 디버깅하기 힘들어진다.***
 - `fireEvent.click`으로 클릭 이벤트 트리거 할 수 있다.
 
 <br>
@@ -112,7 +111,7 @@
 
 <br>
 
-- `screen`의 accessible 관련 쿼리에서 optional을 작성하는것을 생활화 하자. 여러 요소가 있을 경우 특정 요소만 찝을 수 있도록 도와준다.
+- `screen`의 accessible 관련 쿼리에서 ***optional을 작성하는것을 생활화*** 하자. 여러 요소가 있을 경우 특정 요소만 찝을 수 있도록 도와준다.
 - `option.name`은 role 등에 따라 쿼리하는 값이 달라진다.(button: 버튼명, checkbox: label의 text content, ...)
 > [추가] ByRole API의 option.name은 Accessible name을 사용한다. 이건 role에 따라 달라지는데 아래 페이지를 참고하자. 가끔 이걸 잘못이해해서 쿼리가 실패하는 경우가 있다. 
 > 1. [ByRole API](https://testing-library.com/docs/queries/byrole/)
@@ -120,7 +119,7 @@
 
 <br>
 
-- 아래 `replaceCamelWithSpaces`와 같이 간단한 함수들은 functional test에 포함시켜도 좋다.(꼭 여러 케이스에 대응하는 unit test가 없어도 된다.)
+- 아래 `replaceCamelWithSpaces`와 같이 간단한 함수들은 별도의 unit test없이 functional test에 포함시켜도 좋다.(꼭 여러 케이스에 대응하는 unit test가 없어도 된다.)
 ```js
 export function replaceCamelWithSpaces(colorName) {
   return colorName.replace(/\B([A-Z])\B/g, ' $1');  // 대문자를 찾으면 앞에 공백을 붙인다https://www.npmjs.com/package/eslint-plugin-testing-library
@@ -170,7 +169,7 @@ export function replaceCamelWithSpaces(colorName) {
   },
 }
 ```
-- 플러그인의 2.0.4버전 이후 지금은 딱 이것만 추가하면 된다. 딴거 넣으면 오히려 에러발생할 수 있다.
+- 플러그인의 `2.0.4`버전 이후 지금은 딱 이것만 추가하면 된다. 딴거 넣으면 오히려 에러발생할 수 있다.
 ```json
 "editor.codeActionsOnSave":
  {
@@ -339,8 +338,7 @@ test("displays image for each scoop option from the server", async () => {
     - bootstrap-react의 Alert 컴포넌트는 role은 붙여주나 aria-label을 안붙여준다. 내가 붙여줘야한다.(웹 접근성 어디?)
   3. 두개의 alert요소는 각각의 http 요청에 대한 실패 결과로 랜더링 된다. 즉 동시에 되지 않는다. 이로 인해 `findAllByRole`로 동시에 쿼리하게 되면 먼저 랜더링 되는 하나만 쿼리된다. 여기서 `waitFor`를 사용해야 한다.
 
-- [`waitFor`](https://testing-library.com/docs/dom-testing-library/api-async#waitfor) vs [`findBy Query`](https://testing-library.com/
-docs/dom-testing-library/api-async#findby-queries)
+- [`waitFor`](https://testing-library.com/docs/dom-testing-library/api-async#waitfor) vs [`findBy Query`](https://testing-library.com/docs/dom-testing-library/api-async#findby-queries)
   - `findAllBy`는 단 한개라도 쿼리에 성공할 경우(비동기로 랜더링 완료) Promise가 fulfilled 상태가 되면서 테스트가 넘어간다.
   - `waitFor`는 내부의 **콜백이 성공**할 때 까지, ***`option.timeout` 시간동안 콜백을 계속 재시도한다.*** 즉, 독립적으로 비동기 랜더링 되는 요소들에 대한 쿼리는 waitFor를 사용해야 하는 것이다.
 
