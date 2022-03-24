@@ -1,8 +1,17 @@
+import { useState } from "react";
 import { Col, Form, Row } from "react-bootstrap";
 
 export default function ScoopOtion({ name, imagePath, updateItemCount }) {
+  const [isInvalid, setIsInvalid] = useState(false);
   const handleChange = (e) => {
-    updateItemCount(name, e.target.value);
+    const inputValue = e.target.value;
+    updateItemCount(name, inputValue);
+    const floatInputValue = parseFloat(inputValue);
+    setIsInvalid(
+      floatInputValue < 0 ||
+        floatInputValue > 10 ||
+        !Number.isInteger(floatInputValue)
+    );
   };
   return (
     <Col xs={12} sm={6} md={4} style={{ textAlign: "center" }}>
@@ -24,6 +33,7 @@ export default function ScoopOtion({ name, imagePath, updateItemCount }) {
             type="number"
             defaultValue={0}
             onChange={handleChange}
+            isInvalid={isInvalid}
           />
         </Col>
       </Form.Group>
