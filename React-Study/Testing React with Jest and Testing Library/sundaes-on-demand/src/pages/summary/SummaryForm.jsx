@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { Popover, Form, Button, OverlayTrigger } from "react-bootstrap";
 
-function SummaryForm() {
+function SummaryForm({ onNext }) {
   const [tcChecked, setTcChecked] = useState(false);
-
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onNext();
+  };
   const popover = (
     <Popover id="termsandconditions-popover">
       <Popover.Body>No ice cream will actually be delivered</Popover.Body>
@@ -17,8 +20,9 @@ function SummaryForm() {
       </OverlayTrigger>
     </span>
   );
+
   return (
-    <Form>
+    <Form onSubmit={handleSubmit}>
       <Form.Group controlId="terms-and-conditions">
         <Form.Check
           type="checkbox"

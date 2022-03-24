@@ -498,3 +498,19 @@ test("displays image for each scoop option from the server", async () => {
     });
     ```
   - ***Best case는 이런 에러를 발생시키는 테스트를 비동기 처리를 기다리는 테스트에 합치는 것이다.***
+
+<br>
+
+### 7. Order Phases
+- stepper처럼 `OrderEntry -> OrderSummary -> OrderConfirm -> OrderEntry` 컴포넌트 순서로 이어지는 동작을 테스트한다. 아래의 시나리오가 된다.
+  1. `OrderEntry` : icecream, topping을 추가하고 order button을 클릭한다.
+  2. `OrderSummary` : summary 내용이 선택한 내용이 맞는지 확인하고, 약관 동의 후 order button을 클릭한다.
+  3. `Confirmation` : 서버로부터 응답받은 order number가 랜더링 되는지 확인한다. new order 버튼을 클릭해 새로운 주문으로 이동한다.
+  4. `OrderEntry` : 컴포넌트가 초기 상태인지 체크한다.
+- 이렇게 사용자가 문제없이 동작을 전부 수행하는 시나리오를 `happy path`라고 한다. 
+- OrderPhase 테스트로 인해 다른 테스트가 깨진다.각 phase별로 `setPhase`메서드를 props로 전달하기 때문. phase별 function test시 컴포넌트에 `setPhase={jest.fn()}`을 넣어주도록 하자. 어차피 호출은 안한다.
+- 한개의 test spec이 무쟈게 커지기 때문에 디버깅이 좀 힘들다.
+
+<br>
+
+

@@ -15,17 +15,19 @@ export const useOrderDetails = () => {
 };
 
 export default function OrderDetailsProvider({ children, ...props }) {
-  const [optionCount, setOptionCount] = useState({
+  const initialOptionCount = {
     scoops: new Map(),
     toppings: new Map(),
-  });
-
+  };
   const zeroCurrency = formatCurrency(0);
-  const [totals, setTotals] = useState({
+  const initialTotals = {
     scoops: zeroCurrency,
     toppings: zeroCurrency,
     grandTotal: zeroCurrency,
-  });
+  };
+  const [optionCount, setOptionCount] = useState(initialOptionCount);
+
+  const [totals, setTotals] = useState(initialTotals);
 
   const calculateSubtotal = (optionType, optionCounts) => {
     let optionCount = 0;
@@ -52,7 +54,11 @@ export default function OrderDetailsProvider({ children, ...props }) {
       optionCountMap.set(itemName, parseInt(newItemCount));
       setOptionCount(newOptionCount);
     };
-    return [{ ...optionCount, totals }, updateItemCount];
+    const resetOrder = () => {
+      setOptionCount(initialOptionCount);
+      setTotals(initialTotals);
+    };
+    return [{ ...optionCount, totals }, updateItemCount, resetOrder];
   }, [optionCount, totals]);
 
   return (
