@@ -5,13 +5,14 @@ export default function ScoopOtion({ name, imagePath, updateItemCount }) {
   const [isInvalid, setIsInvalid] = useState(false);
   const handleChange = (e) => {
     const inputValue = e.target.value;
-    updateItemCount(name, inputValue);
     const floatInputValue = parseFloat(inputValue);
-    setIsInvalid(
+    const isInvalid =
       floatInputValue < 0 ||
-        floatInputValue > 10 ||
-        !Number.isInteger(floatInputValue)
-    );
+      floatInputValue > 10 ||
+      !Number.isInteger(floatInputValue);
+
+    setIsInvalid(isInvalid);
+    isInvalid || updateItemCount(name, inputValue);
   };
   return (
     <Col xs={12} sm={6} md={4} style={{ textAlign: "center" }}>
