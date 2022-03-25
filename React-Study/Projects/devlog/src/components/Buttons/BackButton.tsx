@@ -8,7 +8,9 @@ type props = {
   className?: string;
   size?: "sm" | "lg";
 };
-function BackButton({ children, variant, className, size }: props) {
+function BackButton({
+  children, variant, className, size,
+}: props) {
   const navigate = useNavigate();
   const goBack = useCallback(() => navigate(-1), [navigate]);
   return (
@@ -22,5 +24,8 @@ function BackButton({ children, variant, className, size }: props) {
     </Button>
   );
 }
-
+BackButton.defaultProps = {
+  className: '',
+  size: 'sm',
+};
 export default React.memo(BackButton);

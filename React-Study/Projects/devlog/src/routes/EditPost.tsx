@@ -28,11 +28,9 @@ export default function EditPost() {
   }, [id, setGlobalLoading, mergePosting, initPosting]);
 
   return (
-    <>
-      <div className="d-flex align-items-stretch">
-        <MarkdownEditor />
-        <MarkdownPreview />
-      </div>
-    </>
+    <div className="d-flex align-items-stretch">
+      <MarkdownEditor />
+      <MarkdownPreview />
+    </div>
   );
 }

@@ -85,19 +85,18 @@ export const uploadPosting: UploadPost = async ({
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-  } else {
-    // 게시글 업데이트
-    await updatePosting({
-      uid,
-      title,
-      content,
-      description,
-      thumbnail,
-      tags,
-      updatedAt: serverTimestamp(),
-    });
-    return { uid };
   }
+  // 게시글 업데이트
+  await updatePosting({
+    uid,
+    title,
+    content,
+    description,
+    thumbnail,
+    tags,
+    updatedAt: serverTimestamp(),
+  });
+  return { uid };
 };
 
 const insertPosting: InsertPosting = async (posting) => {
@@ -107,7 +106,7 @@ const insertPosting: InsertPosting = async (posting) => {
 };
 
 const updatePosting = async (
-  posting: Omit<Posting, "userId" | "createdAt">
+  posting: Omit<Posting, "userId" | "createdAt">,
 ) => {
   const prevPostRef = doc(db, FIRESTORE_DOC.POSTING, posting.uid);
   await updateDoc(prevPostRef, { ...posting });
@@ -131,29 +130,29 @@ export const getPosting: GetPosting = async (id) => {
  */
 export const getPostings: GetPostings = async (
   postingAfter,
-  size = FIRESTORE_DOC.POSTING_SIZE
+  size = FIRESTORE_DOC.POSTING_SIZE,
 ) => {
-  const querySnapshot = !!postingAfter
+  const querySnapshot = postingAfter
     ? await getDocs(
-        query(
-          collection(db, FIRESTORE_DOC.POSTING),
-          orderBy("createdAt", "desc"),
-          startAfter(postingAfter.createdAt),
-          limit(size)
-        )
-      )
+      query(
+        collection(db, FIRESTORE_DOC.POSTING),
+        orderBy("createdAt", "desc"),
+        startAfter(postingAfter.createdAt),
+        limit(size),
+      ),
+    )
     : await getDocs(
-        query(
-          collection(db, FIRESTORE_DOC.POSTING),
-          orderBy("createdAt", "desc"),
-          limit(FIRESTORE_DOC.POSTING_SIZE)
-        )
-      );
+      query(
+        collection(db, FIRESTORE_DOC.POSTING),
+        orderBy("createdAt", "desc"),
+        limit(FIRESTORE_DOC.POSTING_SIZE),
+      ),
+    );
   const postings = querySnapshot.docs.map(
-    (doc) => ({ uid: doc.id, ...doc.data() } as Posting)
+    (doc) => ({ uid: doc.id, ...doc.data() } as Posting),
   );
   const users = await Promise.all(
-    postings.map((posting) => getUser(posting.userId) as unknown as User)
+    postings.map((posting) => getUser(posting.userId) as unknown as User),
   );
 
   return postings.map((posting, i) => ({ ...posting, user: users[i] }));
@@ -178,20 +177,20 @@ export const getUserPostings: GetUserPostings = async (
   userId: string,
   tag?: string,
   postingAfter?: Posting,
-  size = FIRESTORE_DOC.POSTING_SIZE
+  size = FIRESTORE_DOC.POSTING_SIZE,
 ) => {
   const queries = [
     where("userId", "==", userId),
     orderBy("createdAt", "desc"),
     ...(tag ? [where("tags", "array-contains", tag)] : []),
-    ...(!!postingAfter ? [startAfter(postingAfter.createdAt)] : []),
+    ...(postingAfter ? [startAfter(postingAfter.createdAt)] : []),
     limit(size),
   ];
   const querySnapshot = await getDocs(
-    query(collection(db, FIRESTORE_DOC.POSTING), ...queries)
+    query(collection(db, FIRESTORE_DOC.POSTING), ...queries),
   );
   return querySnapshot.docs.map(
-    (doc) => ({ uid: doc.id, ...doc.data() } as Posting)
+    (doc) => ({ uid: doc.id, ...doc.data() } as Posting),
   );
 };
 
@@ -206,7 +205,7 @@ export const getTags: GetTags = async (userId) => {
     userId,
     undefined,
     undefined,
-    2000
+    2000,
   );
   const tagCountMap = userPostings
     .flatMap((posting) => posting.tags)

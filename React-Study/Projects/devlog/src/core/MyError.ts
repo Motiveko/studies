@@ -4,3 +4,4 @@ export class MyError extends Error {
     this.name = "MyError";
   }
 }
+export default {};

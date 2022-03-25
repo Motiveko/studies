@@ -1,20 +1,20 @@
-import React from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Login from "./routes/Auth/Login";
-import Register from "./routes/Auth/Register";
-import PublicRoute from "./routes/PublicRoute";
-import Auth from "./routes/Auth/Auth";
-import HomeLayout from "./layout/HomeLayout";
-import PrivateRoute from "./routes/PrivateRoute";
-import NotFound from "./routes/NotFound";
-import EditPost from "./routes/EditPost";
-import Dashboard from "./routes/Dashboard";
-import UserSettings from "./routes/UserSettings";
-import GlobalLoading from "./components/GlobalLoading";
-import Post from "./routes/Post";
-import UserPage from "./routes/User/UserPage";
+import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Login from './routes/Auth/Login';
+import Register from './routes/Auth/Register';
+import PublicRoute from './routes/PublicRoute';
+import Auth from './routes/Auth/Auth';
+import HomeLayout from './layout/HomeLayout';
+import PrivateRoute from './routes/PrivateRoute';
+import NotFound from './routes/NotFound';
+import EditPost from './routes/EditPost';
+import Dashboard from './routes/Dashboard';
+import UserSettings from './routes/UserSettings';
+import GlobalLoading from './components/GlobalLoading';
+import Post from './routes/Post';
+import UserPage from './routes/User/UserPage';
 
 function App() {
   return (

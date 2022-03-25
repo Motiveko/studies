@@ -18,17 +18,18 @@ export default function Dashboard() {
       return;
     }
     setLocalLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
+    await new Promise((resolve) => { setTimeout(resolve, 500); }); // 스켈레톤 잛보이게 하려고 지연시간 추가
     const newPostings = await getPostings(
-      postings.length > 0 ? postings[postings.length - 1] : null
+      postings.length > 0 ? postings[postings.length - 1] : null,
     );
     if (newPostings.length < 25) setHasMore(false);
     await setPostings((prev) => [...prev, ...newPostings]);
 
     setLocalLoading(false);
-  }, [hasMore, localLoading, postings, setLocalLoading]); // deps에 localLoading, posting.length 없으면 계속 같은값 참조해서 무한 요청 보내게된다.
+    // deps에 localLoading, posting.length 없으면 계속 같은값 참조해서 무한 요청 보내게된다.
+  }, [hasMore, localLoading, postings, setLocalLoading]);
 
-  /* 
+  /*
     IntersectionObserver API를 이용한 무한스크롤 구현 참고
     https://developer.mozilla.org/ko/docs/Web/API/Intersection_Observer_API => 공식문서 한글부분 먼저 읽자
     https://rrecoder.tistory.com/171
@@ -42,7 +43,8 @@ export default function Dashboard() {
         retrievePostings();
       }
     });
-    node && observerRef.current.observe(node);
+    // eslint-disable-next-line no-unused-expressions
+    node && (observerRef.current.observe(node));
   };
 
   return (
@@ -52,11 +54,11 @@ export default function Dashboard() {
           {postings.map(({ user, ...posting }) => (
             <PostingCard key={posting.uid} posting={posting} user={user} />
           ))}
-          {localLoading &&
-            Array(25)
+          {localLoading
+            && Array(25)
               .fill(0)
               .map((e, i) => <PostingCardSkeleton key={i} />)}
-          <div ref={observer} id="scroll-target"></div>
+          <div ref={observer} id="scroll-target" />
         </div>
       </div>
     </div>

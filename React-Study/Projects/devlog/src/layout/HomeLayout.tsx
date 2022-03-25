@@ -6,13 +6,11 @@ import PostProvider from "../context/PostContext";
 
 export default function HomeLayout() {
   return (
-    <>
-      <PostProvider>
-        <HomeContentLayout>
-          <Header />
-          <Outlet />
-        </HomeContentLayout>
-      </PostProvider>
-    </>
+    <PostProvider>
+      <HomeContentLayout>
+        <Header />
+        <Outlet />
+      </HomeContentLayout>
+    </PostProvider>
   );
 }

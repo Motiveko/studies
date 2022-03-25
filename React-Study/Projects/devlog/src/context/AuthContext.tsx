@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect, useState, useContext, useMemo, useCallback,
+} from "react";
 import {
   createUserWithEmailAndPassword,
   getAuth,
@@ -8,7 +10,6 @@ import {
   signOut,
 } from "firebase/auth";
 import { app } from "../firebase";
-import { useContext } from "react";
 import { getItem, removeItem, setItem } from "../service/LocalStorageService";
 import { getUser, registerUser, User } from "../service/firebase/UserService";
 import { LOCAL_STORAGE_CONST } from "../constants";
@@ -50,10 +51,10 @@ const auth = getAuth(app);
 
 export default function AuthProvider({ children }: props) {
   const [currentUser, setCurrentUser] = useState<User | null>(
-    getItem(LOCAL_STORAGE_CONST.keyAuth)
+    getItem(LOCAL_STORAGE_CONST.keyAuth),
   );
 
-  const login: Login = async (email, password) => {
+  const login: Login = useMemo(() => async (email, password) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       await _setUser(user.uid);
@@ -61,21 +62,21 @@ export default function AuthProvider({ children }: props) {
     } catch (e: any) {
       const message = e.message as string;
       if (
-        !!message &&
-        (message.includes("wrong-password") ||
-          message.includes("user-not-found"))
+        !!message
+        && (message.includes("wrong-password")
+          || message.includes("user-not-found"))
       ) {
         throw new MyError("이메일/비밀번호가 일치하지 않습니다.");
       }
       throw new MyError("로그인 중 문제가 발생하였습니다.");
     }
-  };
+  }, []);
 
   const signUp: SignUp = async (email, password) => {
     const userCredentials = await createUserWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
     const { uid, emailVerified } = userCredentials.user;
     let { displayName, photoURL } = userCredentials.user;
@@ -87,42 +88,43 @@ export default function AuthProvider({ children }: props) {
       photoURL = getRandomProfile();
     }
 
-    await registerUser({ uid, email, emailVerified, photoURL, displayName });
+    await registerUser({
+      uid, email, emailVerified, photoURL, displayName,
+    });
   };
 
   const logout: Logout = async () => {
     await signOut(auth);
   };
 
-  const isAuthenticated: IsAuthenticated = () => currentUser !== null;
+  const isAuthenticated: IsAuthenticated = useCallback(() => currentUser !== null, [currentUser]);
 
-  useEffect(() => {
-    return auth.onAuthStateChanged(async (fireUser) => {
-      if (!fireUser) {
-        removeItem(LOCAL_STORAGE_CONST.keyAuth);
-        setCurrentUser(null);
-        return;
-      }
-      if (!getItem(LOCAL_STORAGE_CONST.keyAuth)) {
-        _setUser(fireUser.uid);
-      }
-    });
-  }, []);
+  useEffect(() => auth.onAuthStateChanged(async (fireUser) => {
+    if (!fireUser) {
+      removeItem(LOCAL_STORAGE_CONST.keyAuth);
+      setCurrentUser(null);
+      return;
+    }
+    if (!getItem(LOCAL_STORAGE_CONST.keyAuth)) {
+      _setUser(fireUser.uid);
+    }
+  }), []);
 
   const _setUser: _SetUser = async (uid) => {
     const user = await getUser(uid);
+    // eslint-disable-next-line no-unused-expressions
     user && setItem(LOCAL_STORAGE_CONST.keyAuth, user);
     setCurrentUser(user);
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useMemo(() => async () => {
     if (!currentUser) return;
     await _setUser(currentUser.uid);
-  };
+  }, [currentUser]);
 
-  const provider = new GoogleAuthProvider();
+  const provider = useMemo(() => new GoogleAuthProvider(), []);
   provider.addScope("https://www.googleapis.com/auth/contacts.readonly");
-  const authWithGoogle = async () => {
+  const authWithGoogle = useMemo(() => async () => {
     const { user } = await signInWithPopup(auth, provider);
 
     const existingUser = await getUser(user.uid);
@@ -142,19 +144,22 @@ export default function AuthProvider({ children }: props) {
       photoURL = getRandomProfile();
     }
 
-    await registerUser({ uid, email, emailVerified, photoURL, displayName });
-  };
+    await registerUser({
+      uid, email, emailVerified, photoURL, displayName,
+    });
+  }, [provider]);
+  const value = useMemo(() => ({
+    currentUser,
+    login,
+    signUp,
+    logout,
+    refreshUser,
+    isAuthenticated,
+    authWithGoogle,
+  }), [authWithGoogle, currentUser, isAuthenticated, login, refreshUser]);
   return (
     <AuthContext.Provider
-      value={{
-        currentUser,
-        login,
-        signUp,
-        logout,
-        refreshUser,
-        isAuthenticated,
-        authWithGoogle,
-      }}
+      value={value}
     >
       {children}
     </AuthContext.Provider>

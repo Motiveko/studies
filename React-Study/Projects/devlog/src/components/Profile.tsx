@@ -29,7 +29,7 @@ function Profile({ user, style }: props) {
             className="text-muted text-truncate"
             style={userDescriptionStyle}
             dangerouslySetInnerHTML={{ __html: user.description || "" }}
-          ></div>
+          />
         </div>
       </div>
       <CustomHR />
@@ -43,17 +43,15 @@ function Profile({ user, style }: props) {
               height: "2.5rem",
               cursor: "pointer",
             }}
-            onClick={() =>
-              window.open(
-                `${COMMON_CONSTANT.GIT_PREFIX}/${user.gitURL}`,
-                "_blank"
-              )
-            }
+            onClick={() => window.open(
+              `${COMMON_CONSTANT.GIT_PREFIX}/${user.gitURL}`,
+              "_blank",
+            )}
           />
         )}
         <OverlayTrigger
           placement="top"
-          overlay={<Tooltip id={"tooltip-top"}>{user.email}</Tooltip>}
+          overlay={<Tooltip id="tooltip-top">{user.email}</Tooltip>}
         >
           <div className="ms-4">
             <FontAwesomeIcon
@@ -71,7 +69,9 @@ function Profile({ user, style }: props) {
     </div>
   );
 }
-
+Profile.defaultProps = {
+  style: {},
+};
 const userDescriptionStyle: CSSProperties = {
   whiteSpace: "pre-line",
   // 3줄까지 표시 후 truncate

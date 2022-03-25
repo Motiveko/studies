@@ -1,4 +1,6 @@
-import React, { ChangeEventHandler, useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEventHandler, useEffect, useRef, useState,
+} from "react";
 import { Button, Card, Form } from "react-bootstrap";
 import BackButton from "../components/Buttons/BackButton";
 import InlineFormControl from "../components/InlineFormControl";
@@ -15,21 +17,24 @@ export default function UserSettings() {
   const { currentUser, refreshUser } = useAuth() as ReturnType<
     typeof useAuth
   > & { currentUser: User };
-  const { localLoading, setLocalLoading, setGlobalLoading, error, setError } =
-    useCommon();
+  const {
+    localLoading, setLocalLoading, setGlobalLoading, error, setError,
+  } = useCommon();
 
   const [{ thumbnail, setThumbnail }, upload] = useThumbnail(
-    currentUser?.photoURL || null
+    currentUser?.photoURL || null,
   );
 
   const nameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const gitRef = useRef<HTMLInputElement>(null);
 
-  const { uid, email, displayName, gitURL, description } = currentUser as User;
+  const {
+    uid, email, displayName, gitURL, description,
+  } = currentUser as User;
 
   const handleThumbnailChange: ChangeEventHandler<HTMLInputElement> = async (
-    e
+    e,
   ) => {
     e.preventDefault();
     setLocalLoading(true);
@@ -82,81 +87,77 @@ export default function UserSettings() {
   };
 
   return (
-    <>
-      <div className="d-flex flex-grow-1 justify-content-center align-items-center">
-        <Card style={{ width: "40vw", maxWidth: "550ㅔㅌ", minWidth: "400px" }}>
-          <Card.Body>
-            <Card.Title style={{ textAlign: "center" }}>
-              회원정보 수정
-            </Card.Title>
-            <InlineFormControl label="프로필">
-              <ImageEditor
-                thumbnail={thumbnail || ""}
-                variant="avatar"
-                isLoading={localLoading}
-                onRemove={removeThumbnail}
-                handleChange={handleThumbnailChange}
-              />
-            </InlineFormControl>
-            <InlineFormControl label="이메일">
-              <Form.Control
-                type="text"
-                className="htmlForm-control-plaintext"
-                id="staticEmail"
-                value={email}
-                readOnly
-              />
-            </InlineFormControl>
-            <InlineFormControl label="이름">
-              <Form.Control
-                type="text"
-                className="htmlForm-control"
-                id="inputName"
-                ref={nameRef}
-              />
-            </InlineFormControl>
-            <InlineFormControl label="소개">
-              <Form.Control
-                as="textarea"
-                placeholder={"나를 소개해보세요."}
-                ref={descriptionRef}
-                style={{ resize: "none", height: "7rem" }}
-              />
-            </InlineFormControl>
-            <InlineFormControl
-              label="깃 주소"
-              prefix={COMMON_CONSTANT.GIT_PREFIX}
-            >
-              <Form.Control
-                type="text"
-                className="htmlForm-control"
-                id="inputGithub"
-                ref={gitRef}
-              />
-            </InlineFormControl>
-            <BackButton variant="secondary" className="w-100">
-              취소
-            </BackButton>
-            <Button onClick={onSubmit} className="w-100 mt-3" variant="success">
-              수정하기
-            </Button>
-          </Card.Body>
-        </Card>
-        {error && (
-          <AlertSnackbar
-            type="error"
-            message={error}
-            onClose={() => setError("")}
-          />
-        )}
-        {success && (
-          <AlertSnackbar
-            type="success"
-            message={success}
-            onClose={() => setSuccess("")}
-          />
-        )}
-      </div>
-    </>
+    <div className="d-flex flex-grow-1 justify-content-center align-items-center">
+      <Card style={{ width: "40vw", maxWidth: "550ㅔㅌ", minWidth: "400px" }}>
+        <Card.Body>
+          <Card.Title style={{ textAlign: "center" }}>회원정보 수정</Card.Title>
+          <InlineFormControl label="프로필">
+            <ImageEditor
+              thumbnail={thumbnail || ""}
+              variant="avatar"
+              isLoading={localLoading}
+              onRemove={removeThumbnail}
+              handleChange={handleThumbnailChange}
+            />
+          </InlineFormControl>
+          <InlineFormControl label="이메일">
+            <Form.Control
+              type="text"
+              className="htmlForm-control-plaintext"
+              id="staticEmail"
+              value={email}
+              readOnly
+            />
+          </InlineFormControl>
+          <InlineFormControl label="이름">
+            <Form.Control
+              type="text"
+              className="htmlForm-control"
+              id="inputName"
+              ref={nameRef}
+            />
+          </InlineFormControl>
+          <InlineFormControl label="소개">
+            <Form.Control
+              as="textarea"
+              placeholder="나를 소개해보세요."
+              ref={descriptionRef}
+              style={{ resize: "none", height: "7rem" }}
+            />
+          </InlineFormControl>
+          <InlineFormControl
+            label="깃 주소"
+            prefix={COMMON_CONSTANT.GIT_PREFIX}
+          >
+            <Form.Control
+              type="text"
+              className="htmlForm-control"
+              id="inputGithub"
+              ref={gitRef}
+            />
+          </InlineFormControl>
+          <BackButton variant="secondary" className="w-100">
+            취소
+          </BackButton>
+          <Button onClick={onSubmit} className="w-100 mt-3" variant="success">
+            수정하기
+          </Button>
+        </Card.Body>
+      </Card>
+      {error && (
+        <AlertSnackbar
+          type="error"
+          message={error}
+          onClose={() => setError("")}
+        />
+      )}
+      {success && (
+        <AlertSnackbar
+          type="success"
+          message={success}
+          onClose={() => setSuccess("")}
+        />
+      )}
+    </div>
   );
 }

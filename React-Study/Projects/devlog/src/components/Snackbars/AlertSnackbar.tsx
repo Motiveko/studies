@@ -6,9 +6,11 @@ type props = {
   message: string;
   type: "success" | "info" | "warning" | "error";
   open?: boolean;
-  onClose?: () => void;
+  onClose?: () => void | undefined;
 };
-function AlertSnackbar({ open = true, type, message, onClose }: props) {
+function AlertSnackbar({
+  open = true, type, message, onClose,
+}: props) {
   return (
     <Snackbar
       open={open}
@@ -22,11 +24,13 @@ function AlertSnackbar({ open = true, type, message, onClose }: props) {
   );
 }
 
+// eslint-disable-next-line prefer-arrow-callback
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
   props,
-  ref
-) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
-
+  ref,
+) { return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />; });
+AlertSnackbar.defaultProps = {
+  open: true,
+  onClose: undefined,
+};
 export default React.memo(AlertSnackbar);

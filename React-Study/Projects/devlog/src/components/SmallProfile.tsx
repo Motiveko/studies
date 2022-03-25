@@ -9,8 +9,10 @@ type props = {
   /** 단위: rem */
   imageSize?: number;
 };
-function SmallProfile({ user, imageSize = 1 }: props) {
-  const { photoURL, displayName, email, uid } = user;
+function SmallProfile({ user, imageSize }: props) {
+  const {
+    photoURL, displayName, email, uid,
+  } = user;
   const navigate = useNavigate();
   return (
     <div
@@ -32,5 +34,7 @@ function SmallProfile({ user, imageSize = 1 }: props) {
     </div>
   );
 }
-
+SmallProfile.defaultProps = {
+  imageSize: 1,
+};
 export default React.memo(SmallProfile);

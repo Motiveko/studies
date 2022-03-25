@@ -7,9 +7,7 @@ import "./MarkdownPreview.css";
 function MarkdownPreview() {
   // md -> html
   const { posting } = usePost();
-  const code = useMemo(() => {
-    return parseText(posting.content || "");
-  }, [posting.content]);
+  const code = useMemo(() => parseText(posting.content || ""), [posting.content]);
   return (
     <div className="container" style={{ width: UI_CONST.EDITOR_WIDTH }}>
       <div
@@ -23,7 +21,7 @@ function MarkdownPreview() {
           backgroundColor: "white",
         }}
       >
-        <div id="preview" dangerouslySetInnerHTML={{ __html: code }}></div>
+        <div id="preview" dangerouslySetInnerHTML={{ __html: code }} />
       </div>
     </div>
   );

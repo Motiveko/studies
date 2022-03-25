@@ -17,11 +17,9 @@ function LinkButton({ to, children, variant }: props) {
 
   const className = ["btn", `btn-sm`, `btn-${variant}`];
   return (
-    <>
-      <Link to={to} className={className.join(" ")} style={style}>
-        {children}
-      </Link>
-    </>
+    <Link to={to} className={className.join(" ")} style={style}>
+      {children}
+    </Link>
   );
 }
 

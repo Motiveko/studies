@@ -6,8 +6,8 @@ import {
   getFirestore,
   setDoc,
   updateDoc,
-} from "firebase/firestore";
-import { FIRESTORE_DOC } from "../../constants";
+} from 'firebase/firestore';
+import { FIRESTORE_DOC } from '../../constants';
 
 // 회원정보 관련
 export type User = {

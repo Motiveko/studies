@@ -27,13 +27,11 @@ export const FIRESTORE_DOC: ReadonlyDeep<FirebaseDoc> = {
   USER: "user",
   COMMENT: "comment",
 };
-export const LOCAL_STORAGE_CONST: ReadonlyDeep<typeof localStorageConstant> =
-  localStorageConstant;
+export const LOCAL_STORAGE_CONST: ReadonlyDeep<typeof localStorageConstant> = localStorageConstant;
 export const UI_CONST: ReadonlyDeep<UI_CONST> = {
   ANONYMOUSE_THUMBNAIL: ["dog", "frog", "monkey", "mouse"],
   EDITOR_HEIGHT: "76vh",
   PREVIEW_HEIGHT: "calc(80vh + 3.5rem)",
   EDITOR_WIDTH: "48vw",
 };
-export const COMMON_CONSTANT: ReadonlyDeep<typeof commonConstant> =
-  commonConstant;
+export const COMMON_CONSTANT: ReadonlyDeep<typeof commonConstant> = commonConstant;

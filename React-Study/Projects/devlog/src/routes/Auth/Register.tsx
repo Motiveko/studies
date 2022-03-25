@@ -1,6 +1,4 @@
-import React from "react";
-import { useRef } from "react";
-import { FormEvent } from "react";
+import React, { useRef, FormEvent } from "react";
 import { Button, Card, Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -50,9 +48,9 @@ export default function Register() {
     passwordConfirm: string;
   } = () => {
     if (
-      !emailRef.current ||
-      !passwordRef.current ||
-      !passwordConfirmRef.current
+      !emailRef.current
+      || !passwordRef.current
+      || !passwordConfirmRef.current
     ) {
       throw new Error("회원가입 폼 생성중 문제가 발생하였습니다.");
     }
@@ -122,7 +120,9 @@ export default function Register() {
         </Card.Body>
       </Card>
       <div className="text-center mt-2">
-        이미 계정이 있으신가요? <Link to="/auth/login">로그인</Link>
+        이미 계정이 있으신가요?
+        {' '}
+        <Link to="/auth/login">로그인</Link>
       </div>
       {error && (
         <AlertSnackbar

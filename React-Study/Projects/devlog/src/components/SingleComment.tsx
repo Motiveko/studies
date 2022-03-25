@@ -27,7 +27,7 @@ function SingleComment({ commentUser, onChange }: props) {
   const { currentUser } = useAuth();
   const date = useMemo(
     () => parseDate((commentUser.updatedAt as FirebaseTime).seconds * 1000),
-    [commentUser]
+    [commentUser],
   );
 
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +92,7 @@ function SingleComment({ commentUser, onChange }: props) {
           ref={commentRef}
           buttonName="댓글 수정"
           onSumbit={editComment}
-          useCancel={true}
+          useCancel
           onCancel={() => setOpenEdit(false)}
         />
       )}

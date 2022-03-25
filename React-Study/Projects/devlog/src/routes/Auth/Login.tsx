@@ -9,7 +9,9 @@ import AlertSnackbar from "../../components/Snackbars/AlertSnackbar";
 
 function Login() {
   const { login, authWithGoogle } = useAuth();
-  const { localLoading, setLocalLoading, error, setError } = useCommon();
+  const {
+    localLoading, setLocalLoading, error, setError,
+  } = useCommon();
   const navigate = useNavigate();
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -88,7 +90,9 @@ function Login() {
         </Card.Body>
       </Card>
       <div className="text-center mt-2">
-        계정이 없으신가요? <Link to="/auth/register">회원가입</Link>
+        계정이 없으신가요?
+        {' '}
+        <Link to="/auth/register">회원가입</Link>
       </div>
       {error && (
         <AlertSnackbar

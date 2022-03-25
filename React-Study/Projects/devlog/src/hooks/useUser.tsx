@@ -16,3 +16,4 @@ export const useUser = (id: string | undefined) => {
 
   return [user];
 };
+export default {};

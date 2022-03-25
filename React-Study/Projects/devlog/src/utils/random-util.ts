@@ -9,10 +9,8 @@ export const getRandomNumber: GetRandomNumber = (max, min) => {
   return Math.floor(Math.random() * max);
 };
 
-export const getRandomProfile: getRandomProfile = () => {
-  return `/assets/animals/${
-    UI_CONST.ANONYMOUSE_THUMBNAIL[
-      getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)
-    ]
-  }.png`;
-};
+export const getRandomProfile: getRandomProfile = () => `/assets/animals/${
+  UI_CONST.ANONYMOUSE_THUMBNAIL[
+    getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)
+  ]
+}.png`;

@@ -1,4 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useContext, useEffect, useMemo, useState,
+} from "react";
 
 type props = {
   children: React.ReactNode;
@@ -34,17 +36,17 @@ export default function CommonProvider({ children }: props) {
       setTimeout(() => setError(null), 5000);
     }
   }, [error]);
-
+  const value = useMemo(() => ({
+    error,
+    setError,
+    localLoading,
+    setLocalLoading,
+    globalLoading,
+    setGlobalLoading,
+  }), [error, globalLoading, localLoading]);
   return (
     <CommonContext.Provider
-      value={{
-        error,
-        setError,
-        localLoading,
-        setLocalLoading,
-        globalLoading,
-        setGlobalLoading,
-      }}
+      value={value}
     >
       {children}
     </CommonContext.Provider>

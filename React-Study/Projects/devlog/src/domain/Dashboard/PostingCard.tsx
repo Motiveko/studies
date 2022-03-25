@@ -7,12 +7,15 @@ import { FirebaseTime, Posting } from "../../service/firebase/PostingService";
 import { User } from "../../service/firebase/UserService";
 import { parseDate } from "../../utils/date-utils";
 import "./PostingCard.css";
+
 type props = {
   posting: Posting;
   user: User;
 };
 function PostingCard({ posting, user }: props) {
-  const { uid, thumbnail, title, description, updatedAt } = posting;
+  const {
+    uid, thumbnail, title, description, updatedAt,
+  } = posting;
 
   const date = parseDate((updatedAt as FirebaseTime).seconds * 1000);
   const navigate = useNavigate();
@@ -42,7 +45,7 @@ function PostingCard({ posting, user }: props) {
               fontSize: "0.9rem",
             }}
             dangerouslySetInnerHTML={{ __html: description }}
-          ></Card.Text>
+          />
         </Card.Body>
         <Card.Footer
           className="d-flex align-items-center lh-1 text-muted"

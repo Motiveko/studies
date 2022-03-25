@@ -6,7 +6,6 @@ type props = Pick<CommonContext, "error" | "setError">;
 
 /**
  * 디자인 구려서 mui snackbar로 갈아탐
- * @deprecated
  * @param param0
  * @returns
  */
@@ -16,9 +15,9 @@ function ErrorAlert({ error, setError }: props) {
   return (
     <>
       {error && (
-        <Alert variant="danger" onClose={onClose} dismissible>
-          {error}
-        </Alert>
+      <Alert variant="danger" onClose={onClose} dismissible>
+        {error}
+      </Alert>
       )}
     </>
   );

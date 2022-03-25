@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Image } from "react-bootstrap";
 import { useCommon } from "../context/CommonContext";
 import { getPosting, Posting } from "../service/firebase/PostingService";
 import { parseText } from "../utils/markdown-parser-util";
@@ -8,7 +9,6 @@ import { User } from "../service/firebase/UserService";
 import PostSkeleton from "../domain/Post/PostSkeleton";
 import PostHeader from "../domain/Post/PostHeader";
 import Profile from "../components/Profile";
-import { Image } from "react-bootstrap";
 import { COMMON_CONSTANT } from "../constants";
 import Comments from "../domain/Post/Comments";
 
@@ -62,7 +62,7 @@ export default function Post() {
               className="d-block w-100"
             />
 
-            <div id="preview" dangerouslySetInnerHTML={{ __html: code }}></div>
+            <div id="preview" dangerouslySetInnerHTML={{ __html: code }} />
 
             <Profile user={user} />
             <Comments postId={posting.uid} />

@@ -13,7 +13,7 @@ type props = {
   thumbnail: string;
   handleChange: ChangeEventHandler<HTMLInputElement>;
   isLoading?: boolean;
-  onRemove?: MouseEventHandler<HTMLLabelElement>;
+  onRemove?: MouseEventHandler<HTMLLabelElement> | undefined;
 };
 
 function ImageEditor({
@@ -53,7 +53,7 @@ function ImageEditor({
     <>
       {thumbnail && (
         <div className="d-flex align-items-center">
-          <Image fluid={true} src={thumbnail} style={imageStyle} />
+          <Image fluid src={thumbnail} style={imageStyle} />
           {variant === "avatar" && (
             <IconButton
               icon={faTimes}
@@ -87,4 +87,8 @@ function ImageEditor({
   );
 }
 
+ImageEditor.defaultProps = {
+  isLoading: false,
+  onRemove: undefined,
+};
 export default React.memo(ImageEditor);

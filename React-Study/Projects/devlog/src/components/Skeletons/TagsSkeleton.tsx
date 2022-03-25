@@ -1,6 +1,7 @@
 import React from "react";
 import { Skeleton } from "@mui/material";
 
+// eslint-disable-next-line prefer-arrow-callback
 export default React.memo(function TagsSkeleton() {
   return (
     <div className="d-flex my-2">

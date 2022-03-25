@@ -7,10 +7,12 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Badge, Button, Form, Modal } from "react-bootstrap";
+import {
+  Badge, Button, Form, Modal,
+} from "react-bootstrap";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import ImageEditor from "../../components/ImageEditor";
 import TransparentTextarea from "../../components/TransparentTextarea";
-import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import IconButton from "../../components/Buttons/IconButton";
 import { useCommon } from "../../context/CommonContext";
 import { usePost } from "../../context/PostContext";
@@ -23,7 +25,9 @@ type props = {
 };
 
 function PostingConfirmModal({ show, setShow }: props) {
-  const { posting, mergePosting, uploadThumbnail, uploadPost } = usePost();
+  const {
+    posting, mergePosting, uploadThumbnail, uploadPost,
+  } = usePost();
   const { localLoading, setLocalLoading } = useCommon();
   const descRef = useRef<HTMLTextAreaElement>(null);
 
@@ -38,22 +42,21 @@ function PostingConfirmModal({ show, setShow }: props) {
       await uploadThumbnail(e.target.files[0]);
       setLocalLoading(false);
     },
-    [setLocalLoading, uploadThumbnail]
+    [setLocalLoading, uploadThumbnail],
   );
 
   /** 썸네일 제거 */
   const removeThumbnail = useCallback(
     () => mergePosting({ thumbnail: "" }),
-    [mergePosting]
+    [mergePosting],
   );
 
   const tagInputRef = useRef<HTMLTextAreaElement>(null);
 
   /** 태그 제거 */
   const removeTag = useCallback(
-    (index) =>
-      mergePosting({ tags: posting.tags.filter((e, i) => i !== index) }),
-    [mergePosting, posting.tags]
+    (index) => mergePosting({ tags: posting.tags.filter((e, i) => i !== index) }),
+    [mergePosting, posting.tags],
   );
   /**
    * 태그 추가. 엔터 입력시 현재까지 내용을 태그로 추가한다.
@@ -70,7 +73,7 @@ function PostingConfirmModal({ show, setShow }: props) {
         tagInputRef.current.value = "";
       }
     },
-    [mergePosting, posting.tags]
+    [mergePosting, posting.tags],
   );
 
   /** 출간하기 */
@@ -91,7 +94,7 @@ function PostingConfirmModal({ show, setShow }: props) {
     (e: ChangeEvent<HTMLInputElement>) => {
       mergePosting({ description: e.target.value });
     },
-    [mergePosting]
+    [mergePosting],
   );
 
   return (
@@ -132,7 +135,9 @@ function PostingConfirmModal({ show, setShow }: props) {
               bg="secondary"
               key={i}
             >
-              {tag} &nbsp; X
+              {tag}
+              {' '}
+&nbsp; X
             </Badge>
           ))}
           <TransparentTextarea

@@ -70,16 +70,16 @@ export const getComments: GetComments = async (postId) => {
     query(
       collection(db, FIRESTORE_DOC.COMMENT),
       where("postId", "==", postId),
-      orderBy("createdAt", "desc")
-    )
+      orderBy("createdAt", "desc"),
+    ),
   );
 
   const comments = querySnapshot.docs.map(
-    (doc) => ({ uid: doc.id, ...doc.data() } as Comment)
+    (doc) => ({ uid: doc.id, ...doc.data() } as Comment),
   );
 
   const users = await Promise.all(
-    comments.map((comment) => getUser(comment.userId) as unknown as User)
+    comments.map((comment) => getUser(comment.userId) as unknown as User),
   );
   return comments.map((comment, i) => ({ ...comment, user: users[i] }));
 };
@@ -89,9 +89,9 @@ export const getComments: GetComments = async (postId) => {
  * @param postId
  * @returns Promise<number>
  */
-export const getCommentsCount: GetCommentsCount = async (postId) => {
-  return (await getComments(postId)).length;
-};
+export const getCommentsCount: GetCommentsCount = async (postId) => (
+  (await getComments(postId)).length
+);
 
 /**
  * 댓글 삭제

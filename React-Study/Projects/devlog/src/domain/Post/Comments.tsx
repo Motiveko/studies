@@ -23,10 +23,10 @@ function Commments({ postId }: props) {
   const commentRef = useRef<HTMLTextAreaElement>(null);
   const { currentUser } = useAuth();
   const initComments = useCallback(
-    async function () {
+    async () => {
       setComments(await getComments(postId));
     },
-    [postId]
+    [postId],
   );
   useEffect(() => {
     initComments();
@@ -46,39 +46,39 @@ function Commments({ postId }: props) {
       commentRef.current.value = "";
       initComments();
     },
-    [currentUser, initComments, postId]
+    [currentUser, initComments, postId],
   );
   return (
     <div className="mt-5">
-      <h5>{comments.length} 개의 댓글</h5>
+      <h5>
+        {comments.length}
+        {' '}
+        개의 댓글
+      </h5>
       {currentUser && (
-        <>
-          <Form onSubmit={uploadComment}>
-            <Form.Control
-              as="textarea"
-              placeholder="댓글을 입력하세요."
-              ref={commentRef}
-              className="my-2"
-              style={{ resize: "none" }}
-              required
-            />
-            <div className="text-end">
-              <Button type="submit" variant="success">
-                댓글 작성
-              </Button>
-            </div>
-          </Form>
-        </>
-      )}
-      {comments.map((cmt) => {
-        return (
-          <SingleComment
-            key={cmt.uid}
-            commentUser={cmt}
-            onChange={initComments}
+        <Form onSubmit={uploadComment}>
+          <Form.Control
+            as="textarea"
+            placeholder="댓글을 입력하세요."
+            ref={commentRef}
+            className="my-2"
+            style={{ resize: "none" }}
+            required
           />
-        );
-      })}
+          <div className="text-end">
+            <Button type="submit" variant="success">
+              댓글 작성
+            </Button>
+          </div>
+        </Form>
+      )}
+      {comments.map((cmt) => (
+        <SingleComment
+          key={cmt.uid}
+          commentUser={cmt}
+          onChange={initComments}
+        />
+      ))}
     </div>
   );
 }

@@ -1,4 +1,6 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, {
+  useCallback, useContext, useMemo, useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { uploadImage } from "../service/firebase/FileService";
 import { Posting, uploadPosting } from "../service/firebase/PostingService";
@@ -35,7 +37,7 @@ export default function PostProvider({ children }: props) {
     (partialPosting: Partial<PartialPosting>) => {
       setPosting((prev) => ({ ...prev, ...partialPosting }));
     },
-    []
+    [],
   );
 
   const initPosting = useCallback(() => {
@@ -43,7 +45,7 @@ export default function PostProvider({ children }: props) {
   }, []);
 
   const { currentUser } = useAuth();
-  const uploadPost = async () => {
+  const uploadPost = useMemo(() => async () => {
     setGlobalLoading(true);
     if (!currentUser) {
       throw new Error("로그인 한 상태가 아닙니다.");
@@ -52,21 +54,21 @@ export default function PostProvider({ children }: props) {
     alert("포스트를 출간하였습니다.");
     setGlobalLoading(false);
     navigate(`/post/${result.uid}`);
-  };
+  }, [currentUser, navigate, posting, setGlobalLoading]);
   const uploadThumbnail = async (file: Blob) => {
     const downloadURL = await uploadImage(file);
     setPosting((prev) => ({ ...prev, thumbnail: downloadURL }));
   };
-
+  const value = useMemo(() => ({
+    posting,
+    initPosting,
+    mergePosting,
+    uploadThumbnail,
+    uploadPost,
+  }), [initPosting, mergePosting, posting, uploadPost]);
   return (
     <PostContext.Provider
-      value={{
-        posting,
-        initPosting,
-        mergePosting,
-        uploadThumbnail,
-        uploadPost,
-      }}
+      value={value}
     >
       {children}
     </PostContext.Provider>

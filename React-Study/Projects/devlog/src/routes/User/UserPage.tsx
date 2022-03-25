@@ -21,9 +21,8 @@ import TagList from "../../domain/User/TagList";
 
 function UserPage() {
   // const { currentUser } = useAuth();
-  const [postings, setPostings] = useState<
-    (Posting & { commentsCount: number })[]
-  >([]);
+  const [postings, setPostings] = useState<(Posting & { commentsCount: number })[]
+    >([]);
   const { localLoading, setLocalLoading } = useCommon();
 
   const { id } = useParams();
@@ -36,15 +35,15 @@ function UserPage() {
     async (tagSelected?: string, lastPosting?: Posting) => {
       if (id) {
         setLocalLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
+        await new Promise((resolve) => { setTimeout(resolve, 500); }); // 스켈레톤 잛보이게 하려고 지연시간 추가
         const newPostings = await getUserPostings(
           id,
           tagSelected,
           lastPosting,
-          pageCount
+          pageCount,
         );
         const commentsCounts = await Promise.all(
-          newPostings.map((posting) => getCommentsCount(posting.uid))
+          newPostings.map((posting) => getCommentsCount(posting.uid)),
         );
         if (newPostings.length !== 10) setHasMore(false);
         setLocalLoading(false);
@@ -55,8 +54,9 @@ function UserPage() {
           })),
         ];
       }
+      return [];
     },
-    [id, setLocalLoading]
+    [id, setLocalLoading],
   );
 
   useEffect(() => {
@@ -83,12 +83,13 @@ function UserPage() {
       if (entry.isIntersecting && hasMore) {
         const nextPostings = await retrievePostings(
           selectedTag,
-          postings.slice(-1)[0]
+          postings.slice(-1)[0],
         );
         setPostings((prev) => [...prev, ...(nextPostings || [])]);
       }
     });
 
+    // eslint-disable-next-line no-unused-expressions
     node && observerRef.current.observe(node);
   };
 
@@ -117,7 +118,7 @@ function UserPage() {
       };
       asyncFunc();
     },
-    [retrievePostings]
+    [retrievePostings],
   );
 
   // TagList에서 태그 클릭시
@@ -126,7 +127,7 @@ function UserPage() {
       const tag = (e.target as HTMLDivElement)?.dataset?.tag || "";
       handleSelectTag(tag);
     },
-    [handleSelectTag]
+    [handleSelectTag],
   );
 
   return (
@@ -136,26 +137,24 @@ function UserPage() {
     >
       {user && <Profile user={user} style={{ marginBottom: "3rem" }} />}
       <TagList tags={tags} selectedTag={selectedTag} onSelect={onSelectTag} />
-      {postings &&
-        user &&
-        postings.map((posting) => {
-          return (
-            <UserPostSummary
-              key={posting.uid}
-              posting={posting}
-              onClickTag={handleSelectTag}
-            />
-          );
-        })}
-      {localLoading &&
-        Array(5)
+      {postings
+        && user
+        && postings.map((posting) => (
+          <UserPostSummary
+            key={posting.uid}
+            posting={posting}
+            onClickTag={handleSelectTag}
+          />
+        ))}
+      {localLoading
+        && Array(5)
           .fill(0)
           .map((e, i) => <UserPostSummarySkeleton key={i} />)}
       <div
         ref={observer}
         style={{ width: "1px", height: "1px" }}
         id="scroll-target"
-      ></div>
+      />
     </div>
   );
 }

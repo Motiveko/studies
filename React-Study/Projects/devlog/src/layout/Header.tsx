@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
-import { Container, Image, Navbar, NavDropdown } from "react-bootstrap";
+import {
+  Container, Image, Navbar, NavDropdown,
+} from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import LinkButton from "../components/Buttons/LinkButton";
 import CustomHR from "../components/CustomHR";
@@ -14,11 +16,13 @@ function Header() {
         await logout();
         navigate("/");
         break;
+      default:
+        break;
     }
   };
 
   const userAvatar = useMemo(() => {
-    if (!currentUser) return;
+    if (!currentUser) return null;
     const thumbnail = currentUser?.photoURL;
 
     return (

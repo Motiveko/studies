@@ -7,8 +7,8 @@ import React, {
   useState,
 } from "react";
 import { Button, Form } from "react-bootstrap";
-import { UI_CONST } from "../../constants";
 import { faCode } from "@fortawesome/free-solid-svg-icons";
+import { UI_CONST } from "../../constants";
 import { uploadImage } from "../../service/firebase/FileService";
 import FileIconButton from "../../components/Buttons/FileIconButton";
 import IconButton from "../../components/Buttons/IconButton";
@@ -74,16 +74,14 @@ function MarkdownEditor() {
   };
   /** 제목 변경 */
   const onChangeTitle = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) =>
-      mergePosting({ title: e.target.value }),
-    [mergePosting]
+    (e: ChangeEvent<HTMLTextAreaElement>) => mergePosting({ title: e.target.value }),
+    [mergePosting],
   );
 
   /** 컨텐츠 변경 */
   const onChangeConent = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) =>
-      mergePosting({ content: e.target.value }),
-    [mergePosting]
+    (e: ChangeEvent<HTMLInputElement>) => mergePosting({ content: e.target.value }),
+    [mergePosting],
   );
 
   const nextStep = useCallback(() => {

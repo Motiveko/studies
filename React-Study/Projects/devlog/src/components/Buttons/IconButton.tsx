@@ -1,6 +1,7 @@
 import React, { CSSProperties } from "react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 type props = {
   icon: IconProp;
   onClick?: React.MouseEventHandler<HTMLLabelElement>;
@@ -8,7 +9,12 @@ type props = {
   style?: CSSProperties;
 };
 
-function IconButton({ icon, onClick, children, style }: props) {
+function IconButton({
+  icon,
+  onClick,
+  children,
+  style,
+}: props) {
   return (
     <label
       onClick={onClick}
@@ -20,5 +26,9 @@ function IconButton({ icon, onClick, children, style }: props) {
     </label>
   );
 }
-
+IconButton.defaultProps = {
+  onClick: undefined,
+  children: null,
+  style: {},
+};
 export default React.memo(IconButton);

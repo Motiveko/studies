@@ -20,3 +20,5 @@ export const useThumbnail: UseThumbnail = (initialThumbnail) => {
   // return { {thumbnail, setThumbnail}, upload };
   return [{ thumbnail, setThumbnail }, upload];
 };
+
+export default {};

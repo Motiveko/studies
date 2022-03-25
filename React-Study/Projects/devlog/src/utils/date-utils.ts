@@ -25,15 +25,15 @@ export const parseDate: ParseDate = (millis) => {
   }
 
   if (timeGap <= oneHourMillis) {
-    return Math.floor(timeGap / oneMinuteMillis) + "분 전";
+    return `${Math.floor(timeGap / oneMinuteMillis)}분 전`;
   }
 
   if (timeGap <= oneDayMillis) {
-    return Math.floor(timeGap / oneHourMillis) + "시간 전";
+    return `${Math.floor(timeGap / oneHourMillis)}시간 전`;
   }
 
   if (timeGap <= oneWeekMillis) {
-    return Math.floor(timeGap / oneDayMillis) + "일 전";
+    return `${Math.floor(timeGap / oneDayMillis)}일 전`;
   }
 
   const date = new Date(millis);
@@ -47,3 +47,4 @@ export const parseDate: ParseDate = (millis) => {
 
   return `${year}/${month}/${day}`;
 };
+export default {};

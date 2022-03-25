@@ -14,7 +14,7 @@ type props = {
 function TagList({ tags, selectedTag, onSelect }: props) {
   const countSum = useMemo(
     () => tags.reduce((sum, tag) => sum + tag.count, 0),
-    [tags]
+    [tags],
   );
   return (
     <div className="d-flex flex-column" style={styles}>
@@ -25,7 +25,9 @@ function TagList({ tags, selectedTag, onSelect }: props) {
         data-tag=""
         onClick={onSelect}
       >
-        전체보기 ({countSum})
+        전체보기 (
+        {countSum}
+        )
       </div>
       {tags
         .filter((tag) => tag.count)
@@ -36,7 +38,10 @@ function TagList({ tags, selectedTag, onSelect }: props) {
             data-tag={tag.name}
             onClick={onSelect}
           >
-            {tag.name}({tag.count})
+            {tag.name}
+            (
+            {tag.count}
+            )
           </div>
         ))}
     </div>

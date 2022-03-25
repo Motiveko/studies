@@ -42,3 +42,5 @@ const createStorageRef: CreateStorageRef = (path) => {
   const storage = getStorage();
   return ref(storage, path);
 };
+
+export default {};

@@ -21,5 +21,7 @@ function InlineFormControl({ children, label, prefix }: props) {
     </div>
   );
 }
-
+InlineFormControl.defaultProps = {
+  prefix: '',
+};
 export default React.memo(InlineFormControl);

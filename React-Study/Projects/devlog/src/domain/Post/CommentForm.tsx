@@ -1,5 +1,6 @@
 import React, { ForwardedRef } from "react";
 import { Button, Form } from "react-bootstrap";
+
 type props = {
   onSumbit: () => void;
   buttonName?: string;
@@ -7,9 +8,10 @@ type props = {
   useCancel?: boolean;
   onCancel?: () => void;
 };
-export default React.forwardRef(function CommentForm(
+// eslint-disable-next-line prefer-arrow-callback
+const CommentForm = React.forwardRef(function CommentForm(
   props: props,
-  ref: ForwardedRef<HTMLTextAreaElement>
+  ref: ForwardedRef<HTMLTextAreaElement>,
 ) {
   return (
     <>
@@ -33,3 +35,10 @@ export default React.forwardRef(function CommentForm(
     </>
   );
 });
+CommentForm.defaultProps = {
+  buttonName: "댓글 작성",
+  placeHolder: "댓글을 입력하세요.",
+  useCancel: false,
+  onCancel: undefined,
+};
+export default CommentForm;
