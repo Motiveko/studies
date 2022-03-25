@@ -1,14 +1,41 @@
 {
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [
+        ".ts",
+        ".tsx"
+      ]
+    },
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
   "parser": "@typescript-eslint/parser",
   "extends": [
+    "airbnb",
+    "airbnb/hooks",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
     "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
+    "plugin:react-hooks/recommended",
+    // "plugin:prettier/recommended"
   ],
   "plugins": [
     "@typescript-eslint",
-    "prettier"
+    "disable"
+    // "prettier"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "src/**/*.tsx"
+      ],
+      "processor": "disable/disable",
+      "settings": {
+        "disable/plugins": [
+          "jsx-a11y"
+        ]
+      }
+    }
   ],
   "ignorePatterns": [
     "node_modules/"
@@ -19,6 +46,36 @@
   },
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-use-before-define": 0,
+    "no-shadow": 0,
+    "no-alert": 0,
+    "import/no-unresolved": 0, // 상대경로 import 에러
+    "import/extensions": 0, // 일반 ts, js 파일 import시 확장자 붙여줘야 하는 규칙
+    "quotes": 0, // double quote만 허용하는 규칙,
+    "implicit-arrow-linebreak": [ // arrow function 우변에 ()를 쓰면 줄바꿈 가능하게
+      "error",
+      "beside"
+    ],
+    "react/jsx-no-useless-fragment": 0, // return이 바로 {}로 시작할 수 없어서 fragment로 감싸줘야하기 때문
+    "react/jsx-props-no-spreading": 0,
+    "no-underscore-dangle": 0,
+    "react/no-array-index-key": 0,
+    "react/jsx-filename-extension": [ // jsx문법에 jsx 외 다른 확장자 허용 규칙
+      1,
+      {
+        "extensions": [
+          ".js",
+          ".jsx",
+          "ts",
+          "tsx"
+        ]
+      }
+    ],
+    "no-restricted-globals": [
+      "off",
+      "alert",
+      "confirm"
+    ]
     // "prettier/prettier": ["error",{},{ "usePrettierrc": true }]
   }
 }
