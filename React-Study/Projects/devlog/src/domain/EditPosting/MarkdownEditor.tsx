@@ -1,6 +1,6 @@
 import React, { ChangeEvent, ChangeEventHandler, MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import UI_CONST from '../../constants/UIConstant';
+import { UI_CONST } from '../../constants';
 import { faCode } from '@fortawesome/free-solid-svg-icons';
 import { uploadImage } from '../../service/firebase/FileService';
 import FileIconButton from '../../components/Buttons/FileIconButton';

@@ -1,6 +1,6 @@
 import React, { CSSProperties, useMemo } from 'react';
 import { Image } from 'react-bootstrap';
-import { COMMON_CONSTANT } from '../../constants/CommonConstant';
+import { COMMON_CONSTANT } from '../../constants';
 import Tags from '../Post/Tags';
 import UserPostSummaryLayout from './UserPostSummaryLayout';
 import { FirebaseTime, Posting } from '../../service/firebase/PostingService';

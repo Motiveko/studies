@@ -1,6 +1,6 @@
 import { Avatar } from '@mui/material';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { COMMON_CONSTANT } from '../constants/CommonConstant';
+import { COMMON_CONSTANT } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import CommentForm from '../domain/Post/CommentForm';
 import { Comment, deleteComment, updateComment } from '../service/firebase/CommentService';

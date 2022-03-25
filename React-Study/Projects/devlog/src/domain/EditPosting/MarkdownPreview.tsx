@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import UI_CONST from '../../constants/UIConstant';
+import { UI_CONST } from '../../constants';
 import { usePost } from '../../context/PostContext';
 import { parseText } from '../../utils/markdown-parser-util';
 import './MarkdownPreview.css';

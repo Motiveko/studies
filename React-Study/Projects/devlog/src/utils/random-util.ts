@@ -1,4 +1,4 @@
-import UI_CONST from '../constants/UIConstant';
+import { UI_CONST } from '../constants';
 
 type GetRandomNumber = (max: number, min?: number) => number;
 type getRandomProfile = () => string;

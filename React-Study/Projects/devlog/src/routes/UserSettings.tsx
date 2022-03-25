@@ -9,7 +9,7 @@ import { useThumbnail } from '../hooks/useThumbnail';
 import { MyError } from '../core/MyError';
 import { useCommon } from '../context/CommonContext';
 import AlertSnackbar from '../components/Snackbars/AlertSnackbar';
-import { COMMON_CONSTANT } from '../constants/CommonConstant';
+import { COMMON_CONSTANT } from '../constants';
 
 export default function UserSettings() {
   const { currentUser, refreshUser } = useAuth() as ReturnType<typeof useAuth> & { currentUser: User };

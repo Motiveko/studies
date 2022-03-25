@@ -10,7 +10,7 @@ import PostHeader from '../domain/Post/PostHeader';
 import Tags from '../domain/Post/Tags';
 import Profile from '../components/Profile';
 import { Image } from 'react-bootstrap';
-import { COMMON_CONSTANT } from '../constants/CommonConstant';
+import { COMMON_CONSTANT } from '../constants';
 import Comments from '../domain/Post/Comments';
 
 export default function Post() {

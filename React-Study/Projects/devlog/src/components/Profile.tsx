@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Avatar } from '@mui/material';
 import React, { CSSProperties } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { COMMON_CONSTANT } from '../constants/CommonConstant';
+import { COMMON_CONSTANT } from '../constants';
 import { User } from '../service/firebase/UserService';
 import CustomHR from './CustomHR';
 

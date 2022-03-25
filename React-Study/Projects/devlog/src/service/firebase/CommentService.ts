@@ -1,5 +1,5 @@
 import { addDoc, collection, deleteDoc, doc, FieldValue, getDocs, getFirestore, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
-import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
+import { FIRESTORE_DOC } from '../../constants';
 import { FirebaseTime } from './PostingService';
 import { getUser, User } from './UserService';
 

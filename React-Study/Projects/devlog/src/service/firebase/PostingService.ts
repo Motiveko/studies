@@ -1,5 +1,5 @@
 import { addDoc, collection, deleteDoc, doc, FieldValue, getDoc, getDocs, getFirestore, limit, orderBy, query, serverTimestamp, startAfter, updateDoc, where } from 'firebase/firestore';
-import { FIRESTORE_DOC } from '../../constants/FirebaseConstant';
+import { FIRESTORE_DOC } from '../../constants';
 import { getUser, User } from './UserService';
 
 export type Posting = {

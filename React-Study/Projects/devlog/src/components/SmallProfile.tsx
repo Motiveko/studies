@@ -1,7 +1,7 @@
 import { Avatar } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import UI_CONST from '../constants/UIConstant';
+import { UI_CONST } from '../constants';
 import { User } from '../service/firebase/UserService';
 import './SmallProfile.css';
 type props = {

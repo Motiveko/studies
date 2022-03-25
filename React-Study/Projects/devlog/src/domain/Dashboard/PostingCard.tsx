@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SmallProfile from '../../components/SmallProfile';
-import { COMMON_CONSTANT } from '../../constants/CommonConstant';
+import { COMMON_CONSTANT } from '../../constants';
 import { FirebaseTime, Posting } from '../../service/firebase/PostingService';
 import { User } from '../../service/firebase/UserService';
 import { parseDate } from '../../utils/date-utils';

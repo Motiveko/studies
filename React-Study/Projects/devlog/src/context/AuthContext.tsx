@@ -4,7 +4,7 @@ import { app } from '../firebase';
 import { useContext } from 'react';
 import { getItem, removeItem, setItem } from '../service/LocalStorageService';
 import { getUser, registerUser, User } from '../service/firebase/UserService';
-import { LOCAL_STORAGE_CONST } from '../constants/LocalStorageConstant';
+import { LOCAL_STORAGE_CONST } from '../constants';
 import { MyError } from '../core/MyError';
 import { getRandomProfile } from '../utils/random-util';
 
