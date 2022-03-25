@@ -7,8 +7,8 @@ import React, {
 } from "react";
 import { useParams } from "react-router-dom";
 import Profile from "../../components/Profile";
-import UserPostSummary from "../../domain/User/UserPostSummary";
-import UserPostSummarySkeleton from "../../domain/User/UserPostSummarySkeleton";
+import UserPostSummary from "./UserPostSummary";
+import UserPostSummarySkeleton from "./UserPostSummarySkeleton";
 import { useUser } from "../../hooks/useUser";
 import { getCommentsCount } from "../../service/firebase/CommentService";
 import {
@@ -17,7 +17,7 @@ import {
   Posting,
 } from "../../service/firebase/PostingService";
 import { useCommon } from "../../context/CommonContext";
-import TagList from "../../domain/User/TagList";
+import TagList from "./TagList";
 
 function UserPage() {
   // const { currentUser } = useAuth();

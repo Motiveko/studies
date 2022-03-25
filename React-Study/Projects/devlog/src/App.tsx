@@ -9,11 +9,11 @@ import Auth from './routes/Auth/Auth';
 import HomeLayout from './layout/HomeLayout';
 import PrivateRoute from './routes/PrivateRoute';
 import NotFound from './routes/NotFound';
-import EditPost from './routes/EditPost';
-import Dashboard from './routes/Dashboard';
+import EditPost from './routes/EditPost/EditPost';
+import Dashboard from './routes/Dashboard/Dashboard';
 import UserSettings from './routes/UserSettings';
 import GlobalLoading from './components/GlobalLoading';
-import Post from './routes/Post';
+import Post from './routes/Post/Post';
 import UserPage from './routes/User/UserPage';
 
 function App() {

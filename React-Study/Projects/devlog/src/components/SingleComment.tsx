@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { COMMON_CONSTANT } from "../constants";
 import { useAuth } from "../context/AuthContext";
-import CommentForm from "../domain/Post/CommentForm";
+import CommentForm from "../routes/Post/CommentForm";
 import {
   Comment,
   deleteComment,

@@ -1,9 +1,9 @@
 import React, { useCallback, useRef, useState } from "react";
-import { getPostings, Posting } from "../service/firebase/PostingService";
-import PostingCard from "../domain/Dashboard/PostingCard";
-import { User } from "../service/firebase/UserService";
-import PostingCardSkeleton from "../domain/Dashboard/PostingCardSkeleton";
-import { useCommon } from "../context/CommonContext";
+import { getPostings, Posting } from "../../service/firebase/PostingService";
+import PostingCard from "./PostingCard";
+import { User } from "../../service/firebase/UserService";
+import PostingCardSkeleton from "./PostingCardSkeleton";
+import { useCommon } from "../../context/CommonContext";
 
 export default function Dashboard() {
   const [postings, setPostings] = useState<(Posting & { user: User })[]>([]);
