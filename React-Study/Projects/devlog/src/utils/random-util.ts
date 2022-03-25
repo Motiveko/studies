@@ -1,4 +1,4 @@
-import { UI_CONST } from '../constants';
+import { UI_CONST } from "../constants";
 
 type GetRandomNumber = (max: number, min?: number) => number;
 type getRandomProfile = () => string;
@@ -10,5 +10,9 @@ export const getRandomNumber: GetRandomNumber = (max, min) => {
 };
 
 export const getRandomProfile: getRandomProfile = () => {
-  return `/assets/animals/${UI_CONST.ANONYMOUSE_THUMBNAIL[getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)]}.png`;
+  return `/assets/animals/${
+    UI_CONST.ANONYMOUSE_THUMBNAIL[
+      getRandomNumber(UI_CONST.ANONYMOUSE_THUMBNAIL.length)
+    ]
+  }.png`;
 };

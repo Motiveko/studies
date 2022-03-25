@@ -1,15 +1,14 @@
-import React, { useEffect } from 'react';
-import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useCommon } from '../context/CommonContext';
-import { usePost } from '../context/PostContext';
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useCommon } from "../context/CommonContext";
+import { usePost } from "../context/PostContext";
 
-import MarkdownEditor from '../domain/EditPosting/MarkdownEditor';
-import MarkdownPreview from '../domain/EditPosting/MarkdownPreview';
-import { getPosting } from '../service/firebase/PostingService';
+import MarkdownEditor from "../domain/EditPosting/MarkdownEditor";
+import MarkdownPreview from "../domain/EditPosting/MarkdownPreview";
+import { getPosting } from "../service/firebase/PostingService";
 
 export default function EditPost() {
-  const { posting, initPosting, mergePosting } = usePost();
+  const { initPosting, mergePosting } = usePost();
   const { id } = useParams();
   const { setGlobalLoading } = useCommon();
   useEffect(() => {

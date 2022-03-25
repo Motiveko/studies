@@ -1,9 +1,9 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { getPostings, Posting } from '../service/firebase/PostingService';
-import PostingCard from '../domain/Dashboard/PostingCard';
-import { User } from '../service/firebase/UserService';
-import PostingCardSkeleton from '../domain/Dashboard/PostingCardSkeleton';
-import { useCommon } from '../context/CommonContext';
+import React, { useCallback, useRef, useState } from "react";
+import { getPostings, Posting } from "../service/firebase/PostingService";
+import PostingCard from "../domain/Dashboard/PostingCard";
+import { User } from "../service/firebase/UserService";
+import PostingCardSkeleton from "../domain/Dashboard/PostingCardSkeleton";
+import { useCommon } from "../context/CommonContext";
 
 export default function Dashboard() {
   const [postings, setPostings] = useState<(Posting & { user: User })[]>([]);
@@ -18,10 +18,12 @@ export default function Dashboard() {
       return;
     }
     setLocalLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
-    const newPostings = await getPostings(postings.length > 0 ? postings[postings.length - 1] : null);
+    await new Promise((resolve) => setTimeout(resolve, 500)); // 스켈레톤 잛보이게 하려고 지연시간 추가
+    const newPostings = await getPostings(
+      postings.length > 0 ? postings[postings.length - 1] : null
+    );
     if (newPostings.length < 25) setHasMore(false);
-    await setPostings(prev => [...prev, ...newPostings]);
+    await setPostings((prev) => [...prev, ...newPostings]);
 
     setLocalLoading(false);
   }, [hasMore, localLoading, postings, setLocalLoading]); // deps에 localLoading, posting.length 없으면 계속 같은값 참조해서 무한 요청 보내게된다.

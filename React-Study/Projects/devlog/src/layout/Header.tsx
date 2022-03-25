@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
-import { Container, Image, Navbar, NavDropdown } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import LinkButton from '../components/Buttons/LinkButton';
-import CustomHR from '../components/CustomHR';
-import { useAuth } from '../context/AuthContext';
+import React, { useMemo } from "react";
+import { Container, Image, Navbar, NavDropdown } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import LinkButton from "../components/Buttons/LinkButton";
+import CustomHR from "../components/CustomHR";
+import { useAuth } from "../context/AuthContext";
 
 function Header() {
   const { currentUser, logout } = useAuth();
@@ -12,7 +12,7 @@ function Header() {
     switch (eventKey) {
       case NAVBAR_EVENT_KEYS.LOGOUT:
         await logout();
-        navigate('/');
+        navigate("/");
         break;
     }
   };
@@ -21,14 +21,25 @@ function Header() {
     if (!currentUser) return;
     const thumbnail = currentUser?.photoURL;
 
-    return <Image src={thumbnail} className="me-2" style={{ width: '2rem', height: '2rem', borderRadius: '50%', position: 'relative' }} />;
+    return (
+      <Image
+        src={thumbnail}
+        className="me-2"
+        style={{
+          width: "2rem",
+          height: "2rem",
+          borderRadius: "50%",
+          position: "relative",
+        }}
+      />
+    );
   }, [currentUser]);
 
   return (
     <>
-      <Navbar style={{ height: '60px' }}>
+      <Navbar style={{ height: "60px" }}>
         <Container>
-          <Navbar.Brand as={Link} to={{ pathname: '/' }}>
+          <Navbar.Brand as={Link} to={{ pathname: "/" }}>
             🤖 Devlog
           </Navbar.Brand>
           <Navbar.Collapse className="justify-content-end">
@@ -38,18 +49,30 @@ function Header() {
                   새 글 작성
                 </LinkButton>
                 <Navbar.Text>
-                  <NavDropdown title={userAvatar} id="navbarScrollingDropdown" onSelect={handleSelect}>
-                    <NavDropdown.Item as={Link} to={{ pathname: `/user/${currentUser.uid}` }}>
+                  <NavDropdown
+                    title={userAvatar}
+                    id="navbarScrollingDropdown"
+                    onSelect={handleSelect}
+                  >
+                    <NavDropdown.Item
+                      as={Link}
+                      to={{ pathname: `/user/${currentUser.uid}` }}
+                    >
                       내 블로그
                     </NavDropdown.Item>
-                    <NavDropdown.Item as={Link} to={{ pathname: '/user/settings' }}>
+                    <NavDropdown.Item
+                      as={Link}
+                      to={{ pathname: "/user/settings" }}
+                    >
                       설정
                     </NavDropdown.Item>
                     {/* <NavDropdown.Item as={Link} to={{ pathname: '/user/tempPost' }}>
                       임시 글
                     </NavDropdown.Item> */}
                     <NavDropdown.Divider />
-                    <NavDropdown.Item eventKey={NAVBAR_EVENT_KEYS.LOGOUT}>로그아웃</NavDropdown.Item>
+                    <NavDropdown.Item eventKey={NAVBAR_EVENT_KEYS.LOGOUT}>
+                      로그아웃
+                    </NavDropdown.Item>
                   </NavDropdown>
                 </Navbar.Text>
               </>
@@ -70,7 +93,7 @@ function Header() {
 }
 
 const NAVBAR_EVENT_KEYS = {
-  LOGOUT: 'logout',
+  LOGOUT: "logout",
 };
 
 export default React.memo(Header);

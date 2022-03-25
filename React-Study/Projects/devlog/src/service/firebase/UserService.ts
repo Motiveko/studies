@@ -1,5 +1,13 @@
-import { doc, DocumentData, DocumentReference, getDoc, getFirestore, setDoc, updateDoc } from 'firebase/firestore';
-import { FIRESTORE_DOC } from '../../constants';
+import {
+  doc,
+  DocumentData,
+  DocumentReference,
+  getDoc,
+  getFirestore,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { FIRESTORE_DOC } from "../../constants";
 
 // 회원정보 관련
 export type User = {
@@ -25,7 +33,7 @@ type GetUserRef = (uid: string) => DocumentReference<DocumentData>;
  * @param user User
  * @returns Promise
  */
-export const registerUser: RegisterUser = user => {
+export const registerUser: RegisterUser = (user) => {
   const newUserRef = getUserRef(user.uid);
   return setDoc(newUserRef, user);
 };
@@ -48,9 +56,9 @@ export const getUser: GetUser = async (uid: string) => {
  * 유저정보 업데이트
  * @param user {uid} & Partail<User>
  */
-export const updateUser: UpdateUser = async user => {
+export const updateUser: UpdateUser = async (user) => {
   const userRef = getUserRef(user.uid);
   await updateDoc(userRef, user);
 };
 
-const getUserRef: GetUserRef = uid => doc(db, FIRESTORE_DOC.USER, uid);
+const getUserRef: GetUserRef = (uid) => doc(db, FIRESTORE_DOC.USER, uid);

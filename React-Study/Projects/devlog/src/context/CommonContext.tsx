@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from "react";
 
 type props = {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ const CommonContext = React.createContext<CommonContext | undefined>(undefined);
 export const useCommon = () => {
   const context = useContext(CommonContext);
   if (!context) {
-    throw new Error('useCommon은 CommonProvider 내에서 호출되어야 합니다.');
+    throw new Error("useCommon은 CommonProvider 내에서 호출되어야 합니다.");
   }
 
   return context;
@@ -35,5 +35,18 @@ export default function CommonProvider({ children }: props) {
     }
   }, [error]);
 
-  return <CommonContext.Provider value={{ error, setError, localLoading, setLocalLoading, globalLoading, setGlobalLoading }}>{children}</CommonContext.Provider>;
+  return (
+    <CommonContext.Provider
+      value={{
+        error,
+        setError,
+        localLoading,
+        setLocalLoading,
+        globalLoading,
+        setGlobalLoading,
+      }}
+    >
+      {children}
+    </CommonContext.Provider>
+  );
 }

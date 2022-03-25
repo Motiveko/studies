@@ -1,12 +1,15 @@
-import React from 'react';
-import CustomHR from '../../components/CustomHR';
+import React from "react";
+import CustomHR from "../../components/CustomHR";
 
 type props = {
   children: React.ReactNode;
 };
 function UserPostSummaryLayout({ children }: props) {
   return (
-    <div className="d-flex flex-column w-100" style={{ maxHeight: '650px', marginBottom: '5rem' }}>
+    <div
+      className="d-flex flex-column w-100"
+      style={{ maxHeight: "650px", marginBottom: "5rem" }}
+    >
       {children}
       <CustomHR />
     </div>

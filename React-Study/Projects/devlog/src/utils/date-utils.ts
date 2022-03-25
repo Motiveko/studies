@@ -15,25 +15,25 @@ const oneWeekMillis = oneDayMillis * 7;
  */
 type ParseDate = (millis: number) => string;
 
-export const parseDate: ParseDate = millis => {
+export const parseDate: ParseDate = (millis) => {
   const nowDate = new Date();
   const nowMillis = nowDate.getTime();
 
   const timeGap = nowMillis - millis;
   if (timeGap <= oneMinuteMillis) {
-    return '방금 전';
+    return "방금 전";
   }
 
   if (timeGap <= oneHourMillis) {
-    return Math.floor(timeGap / oneMinuteMillis) + '분 전';
+    return Math.floor(timeGap / oneMinuteMillis) + "분 전";
   }
 
   if (timeGap <= oneDayMillis) {
-    return Math.floor(timeGap / oneHourMillis) + '시간 전';
+    return Math.floor(timeGap / oneHourMillis) + "시간 전";
   }
 
   if (timeGap <= oneWeekMillis) {
-    return Math.floor(timeGap / oneDayMillis) + '일 전';
+    return Math.floor(timeGap / oneDayMillis) + "일 전";
   }
 
   const date = new Date(millis);

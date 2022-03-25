@@ -1,4 +1,4 @@
-export const setItem = (key: string, value: any) => {
+export const setItem = (key: string, value: { [key: string]: unknown }) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
 type props = {
   to: string;
@@ -7,18 +7,18 @@ type props = {
   variant: Variant;
 };
 
-type Variant = 'dark' | 'outline-dark';
+type Variant = "dark" | "outline-dark";
 
 function LinkButton({ to, children, variant }: props) {
   const style = {
-    borderRadius: '30px',
-    color: variant === 'dark' ? 'white' : 'dark',
+    borderRadius: "30px",
+    color: variant === "dark" ? "white" : "dark",
   };
 
-  const className = ['btn', `btn-sm`, `btn-${variant}`];
+  const className = ["btn", `btn-sm`, `btn-${variant}`];
   return (
     <>
-      <Link to={to} className={className.join(' ')} style={style}>
+      <Link to={to} className={className.join(" ")} style={style}>
         {children}
       </Link>
     </>

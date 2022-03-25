@@ -1,6 +1,6 @@
-import React, { CSSProperties } from 'react';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { CSSProperties } from "react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 type props = {
   icon: IconProp;
   onClick?: React.MouseEventHandler<HTMLLabelElement>;
@@ -10,7 +10,11 @@ type props = {
 
 function IconButton({ icon, onClick, children, style }: props) {
   return (
-    <label onClick={onClick} style={{ border: '1px solid lightgrey', marginLeft: '0.5rem', ...style }} className="btn d-flex justify-content-center align-items-center">
+    <label
+      onClick={onClick}
+      style={{ border: "1px solid lightgrey", marginLeft: "0.5rem", ...style }}
+      className="btn d-flex justify-content-center align-items-center"
+    >
       <FontAwesomeIcon icon={icon} />
       {children}
     </label>

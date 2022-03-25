@@ -1,5 +1,11 @@
-import { getDownloadURL, getStorage, ref, StorageReference, uploadBytes, UploadResult } from 'firebase/storage';
-import { v4 as uuidV4 } from 'uuid';
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  StorageReference,
+  uploadBytes,
+} from "firebase/storage";
+import { v4 as uuidV4 } from "uuid";
 
 type UploadFile = (path: string, file: Blob) => Promise<string>;
 type UploadPostingImage = (file: Blob) => Promise<string>;
@@ -32,7 +38,7 @@ const uploadFile: UploadFile = async (path, file) => {
  * @param path 파일 경로(+파일명)
  * @returns CreateStorageRef
  */
-const createStorageRef: CreateStorageRef = path => {
+const createStorageRef: CreateStorageRef = (path) => {
   const storage = getStorage();
   return ref(storage, path);
 };

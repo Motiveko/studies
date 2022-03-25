@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, UserCredential } from 'firebase/auth';
-import { app } from '../firebase';
-import { useContext } from 'react';
-import { getItem, removeItem, setItem } from '../service/LocalStorageService';
-import { getUser, registerUser, User } from '../service/firebase/UserService';
-import { LOCAL_STORAGE_CONST } from '../constants';
-import { MyError } from '../core/MyError';
-import { getRandomProfile } from '../utils/random-util';
+import React, { useEffect, useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
+import { app } from "../firebase";
+import { useContext } from "react";
+import { getItem, removeItem, setItem } from "../service/LocalStorageService";
+import { getUser, registerUser, User } from "../service/firebase/UserService";
+import { LOCAL_STORAGE_CONST } from "../constants";
+import { MyError } from "../core/MyError";
+import { getRandomProfile } from "../utils/random-util";
 
 type props = {
   children: React.ReactNode;
@@ -34,7 +41,7 @@ const AuthContext = React.createContext<AuthContext | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth는 AuthProvider 내에서 호출되어야 합니다.');
+    throw new Error("useAuth는 AuthProvider 내에서 호출되어야 합니다.");
   }
   return context;
 };
@@ -42,7 +49,9 @@ export const useAuth = () => {
 const auth = getAuth(app);
 
 export default function AuthProvider({ children }: props) {
-  const [currentUser, setCurrentUser] = useState<User | null>(getItem(LOCAL_STORAGE_CONST.keyAuth));
+  const [currentUser, setCurrentUser] = useState<User | null>(
+    getItem(LOCAL_STORAGE_CONST.keyAuth)
+  );
 
   const login: Login = async (email, password) => {
     try {
@@ -51,20 +60,28 @@ export default function AuthProvider({ children }: props) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const message = e.message as string;
-      if (!!message && (message.includes('wrong-password') || message.includes('user-not-found'))) {
-        throw new MyError('이메일/비밀번호가 일치하지 않습니다.');
+      if (
+        !!message &&
+        (message.includes("wrong-password") ||
+          message.includes("user-not-found"))
+      ) {
+        throw new MyError("이메일/비밀번호가 일치하지 않습니다.");
       }
-      throw new MyError('로그인 중 문제가 발생하였습니다.');
+      throw new MyError("로그인 중 문제가 발생하였습니다.");
     }
   };
 
   const signUp: SignUp = async (email, password) => {
-    const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredentials = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     const { uid, emailVerified } = userCredentials.user;
     let { displayName, photoURL } = userCredentials.user;
 
     if (!displayName) {
-      displayName = email.substring(0, email.indexOf('@'));
+      displayName = email.substring(0, email.indexOf("@"));
     }
     if (!photoURL) {
       photoURL = getRandomProfile();
@@ -80,7 +97,7 @@ export default function AuthProvider({ children }: props) {
   const isAuthenticated: IsAuthenticated = () => currentUser !== null;
 
   useEffect(() => {
-    return auth.onAuthStateChanged(async fireUser => {
+    return auth.onAuthStateChanged(async (fireUser) => {
       if (!fireUser) {
         removeItem(LOCAL_STORAGE_CONST.keyAuth);
         setCurrentUser(null);
@@ -92,9 +109,9 @@ export default function AuthProvider({ children }: props) {
     });
   }, []);
 
-  const _setUser: _SetUser = async uid => {
+  const _setUser: _SetUser = async (uid) => {
     const user = await getUser(uid);
-    setItem(LOCAL_STORAGE_CONST.keyAuth, user);
+    user && setItem(LOCAL_STORAGE_CONST.keyAuth, user);
     setCurrentUser(user);
   };
 
@@ -104,7 +121,7 @@ export default function AuthProvider({ children }: props) {
   };
 
   const provider = new GoogleAuthProvider();
-  provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+  provider.addScope("https://www.googleapis.com/auth/contacts.readonly");
   const authWithGoogle = async () => {
     const { user } = await signInWithPopup(auth, provider);
 
@@ -119,7 +136,7 @@ export default function AuthProvider({ children }: props) {
     let { displayName } = user;
 
     if (!displayName) {
-      displayName = email?.substring(0, email?.indexOf('@'));
+      displayName = email?.substring(0, email?.indexOf("@"));
     }
     if (!photoURL) {
       photoURL = getRandomProfile();

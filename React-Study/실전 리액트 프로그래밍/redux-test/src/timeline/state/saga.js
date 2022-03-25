@@ -1,16 +1,16 @@
-import { all, call, put, take, fork, debounce } from 'redux-saga/effects';
-import { actions, types } from './index'
-import { callApiLike } from '../../common/api'
+import { all, call, put, take, fork, debounce } from "redux-saga/effects";
+import { actions, types } from "./index";
+import { callApiLike } from "../../common/api";
 
 export function* fetchData() {
-  while(true) {
+  while (true) {
     const { timeline } = yield take(types.REQUEST_LIKE);
     yield put(actions.setLoading(true));
     yield put(actions.addLike(timeline.id, 1));
-    
+
     try {
       yield call(callApiLike);
-    } catch(error) {
+    } catch (error) {
       yield put(actions.setError(error));
       yield put(actions.setLoading(false));
     }
