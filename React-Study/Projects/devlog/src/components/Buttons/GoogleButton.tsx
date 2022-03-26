@@ -15,6 +15,7 @@ function GoogleButton({ children, size, onClick }: props) {
       <Image
         src="/assets/google.png"
         style={{ ...size }}
+        alt='google icon'
         className="me-2 p-0"
       />
       {" "}

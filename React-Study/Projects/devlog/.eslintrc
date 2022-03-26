@@ -17,11 +17,14 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
+    "plugin:testing-library/react",
+    "plugin:jest-dom/recommended"
     // "plugin:prettier/recommended"
   ],
   "plugins": [
     "@typescript-eslint",
-    "disable"
+    "disable",
+    "jest"
     // "prettier"
   ],
   "overrides": [
@@ -42,7 +45,8 @@
   ],
   "env": {
     "browser": true,
-    "node": true
+    "node": true,
+    "jest/globals": true
   },
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",

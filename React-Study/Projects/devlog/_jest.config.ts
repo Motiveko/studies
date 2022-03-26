@@ -7,6 +7,6 @@ export default {
   },
   testMatch: ['<rootDir>/**/*.spec.(ts|tsx)'],
   transformIgnorePatterns: ['<rootDir>/node_modules/'],
-  testEnvironment: 'jsdom',
-  // preset: 'ts-jest',
+  // testEnvironment: 'jsdom',
+  preset: 'ts-jest',
 };
