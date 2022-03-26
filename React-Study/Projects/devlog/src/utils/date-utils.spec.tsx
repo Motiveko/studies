@@ -1,6 +1,6 @@
 import { parseDate } from "./date-utils";
 
-const oneMinuteMillis = 1_000 * 60;
+const oneMinuteMillis = 1_000 * 60 + 10;
 const oneHourMillis = oneMinuteMillis * 60;
 const oneDayMillis = oneHourMillis * 24;
 // const oneWeekMillis = oneDayMillis * 7;
