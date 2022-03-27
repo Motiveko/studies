@@ -9,7 +9,7 @@
 - 리액트 컴포넌트 디자인 패턴 강의 학습
 
 ### [Testing React with Jest and Testing Library](https://github.com/Motiveko/studies/tree/master/React-Study/advanced-react-patterns-ultrasimplified)
-- `testing-library`, 'jest`기반의 리액트 앱 테스트하기
+- `testing-library`, `jest`기반의 리액트 앱 테스트하기
 
 
 ### [실전 리액트 프로그래밍](https://github.com/Motiveko/studies/tree/master/React-Study/%EC%8B%A4%EC%A0%84%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%98%EB%B0%8D)
