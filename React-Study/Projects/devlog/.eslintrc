@@ -38,6 +38,15 @@
           "jsx-a11y"
         ]
       }
+    },
+    {
+      // reducer의 param reassign 허용
+      "files": [
+        "src/store/**/*.ts"
+      ],
+      "rules": {
+        "no-param-reassign": 0
+      }
     }
   ],
   "ignorePatterns": [
