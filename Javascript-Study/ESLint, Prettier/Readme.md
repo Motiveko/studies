@@ -42,6 +42,7 @@
     - ### [eslint-plugin-airbnb + prettier](#eslint-plugin-airbnb--prettier-1)
     - ### [object-curly-newline](#object-curly-newline-1)
     - ### [ESLint extends vs plugin](#ESLint-extends-vs-plugin-1)
+    - ### [React + eslint-config-airbnb에 Typescript 적용할 시 할 것](#React--eslint-config-airbnb에-Typescript-적용할-시-할-것-1)
 
 <br>
 
@@ -639,7 +640,7 @@ method reference 사용시, `bind(this)`와 같이 this바인딩을 할당해주
 // ...
 ```
 
-<br>
+<br><br>
 
 ### `eslint-config-airbnb` 사용시 `import/no-unresolved` 에러 
 eslint에서 `airbnb-confg`를 사용하면, 갑자기 모듈 import 부분에서 `import/no-unresolved`가 뜰 때가 있다.
@@ -658,7 +659,7 @@ eslint에서 `airbnb-confg`를 사용하면, 갑자기 모듈 import 부분에�
 ~프로젝트의 폴더명은 꼭 영어로 하자.~
 - 프로젝트의 절대경로상에 한글이 포함된 경우에도 `import/no-unresolved`가 발생한다. 이건 해결 방법이 없는 것 같다. 그냥 ***규칙에 `"import/no-unresolved": 0`를 추가하는게 제일 깔끔***하다. 솔직히 별로 중요한 규칙은 아니다.
 
-<br>
+<br><br>
 
 ### ❗️ `import/no-unresolved` 에러 관련 추가
 - 케이스: 앵귤러(타입스크립트)에서 `../../`상대경로가 너무 길어져 `src/...`로 참조할 때 `import/no-unresolved` 에러 발생
@@ -695,7 +696,7 @@ npm i --save-dev eslint-import-resolver-typescript
 - 추가적으로 [`eslint-plugin-import`](https://www.npmjs.com/package/eslint-plugin-import)는 ES6+ 의 import/export 문법을 lint가 읽을 수 있게 해주는 플러그인이고, [`eslint-import-resolver-typescript`](https://www.npmjs.com/package/eslint-import-resolver-typescript)은 그런 eslint-plugin-import를 타입스크립트에도 적용한다는 것이다.(.ts/.tsx 지원, tsconfig파일 지정 가능)
 
 
-<br>
+<br><br>
 
 ### eslint plugin 전체 disable
 - 케이스 : 리액트에 `eslint-config-airbnb`적용시 `jsx-a11y`라고 하는 웹 접근성 관련한 린트 플러그인이 포함된다. 내부 툴 프로젝트나 개인 프로젝트, 회사 제출 과제에 이걸 일일이 지켜가면서 코딩하면 힘들다. rule을 하나씩 끌 수도 있겠으나 몇개나 되는지도 모르기때문에 한번에 다끄고 싶다.
@@ -732,18 +733,18 @@ npm install eslint-plugin-disable --save-dev
 > [참고] https://stackoverflow.com/questions/55449133/how-to-remove-eslint-plugin-eslint-plugin-jsx-a11y
 > https://www.npmjs.com/package/eslint-plugin-disable
 
-<br>
+<br><br>
 
 ### eslint-plugin-airbnb + prettier
 - 어쩐지 뭔가 부딪힌다 싶었는데, 둘은 같이쓰면 안되는것이었다. 각자 자신의 규칙을 강제한다. prettier를 사용하지 않는게 좋다.
 
-<br>
+<br><br>
 
 ### [object-curly-newline](https://eslint.org/docs/rules/object-curly-newline)
 - 객체 관련하여, 줄바꿈 설정을 할 수 있는 rule
 - `객체 리터럴`, `디스트럭처링`, `import`, `export`에 따라 각각 규칙을 지정할 수 있다. 나름 꿀규칙인듯 하니 참고하자.
 
-<br>
+<br><br>
 
 ### ESLint extends(config) vs plugin
 > [참고] https://prateeksurana.me/blog/difference-between-eslint-extends-and-plugins/#:~:text=ESLint%20plugins%20allow%20you%20to,configuration%20via%20the%20plugins%20key.
@@ -764,3 +765,23 @@ npm install eslint-plugin-disable --save-dev
 ### 3. Plugins with configs
 - 플러그인 중 `eslint-config-xxx`와 같이 sharable configuration을 제공하는 애들이 있다. 이런 친구들은 `extends`에서 `plugin:`프리픽스를 붙여 추가할 수 있다. 대부분 `plugin:@typescript-eslint/recommended`와 같이 recommended config를 제공한다. `eslint-plugin-react`는 `recommended`, `all`, `jsx-runtime`로 세가지 config를 제공한다. 
 - plugin의 설정을 `extends`에 추가하면, `plugins`에는 plugin을 추가하지 않아도 된다.
+
+
+<br><br>
+
+### React + eslint-config-airbnb에 Typescript 적용할 시 할 것
+> https://github.com/typescript-eslint/typescript-eslint/issues/792#issuecomment-566568791
+- [`eslint-airbnb-config`](https://www.npmjs.com/package/eslint-config-airbnb) 적용하고 [`typescript-eslint`](https://typescript-eslint.io/) 적용할 시 원인모를 에러 발생한다.( 예) const 입력시 undefined loc.. 어쩌구)
+- indent 룰 관련한 문제인데, 해당 룰만 고칠 수 있지만 근본적으로 airbnb config가 typescript-eslint를 지원하지 않기 때문이라고 한다. 해결책으로 [`eslint-config-airbnb-typescript`](https://www.npmjs.com/package/eslint-config-airbnb-typescript)를 같이 설치해주면 된다고 한다.(기존 airbnb 설정 유지해야한다.)
+```json
+{
+  "extends": [
+    "airbnb",
+    "airbnb-typescript"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  }
+}
+```
+- 이 패키지의 메인테이너가 [`Jest`, `Promise`, `Prettier`가 적용된 린트 설정 추천 파일](https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js)을 제공하니 참고한다.
