@@ -4,21 +4,21 @@ import { Image } from "react-bootstrap";
 import { useCommon } from "../../context/CommonContext";
 import { getPosting, Posting } from "../../service/firebase/PostingService";
 import { parseText } from "../../utils/markdown-parser-util";
-import { useAuth } from "../../context/AuthContext";
 import { User } from "../../service/firebase/UserService";
 import PostSkeleton from './PostSkeleton';
 import PostHeader from "./PostHeader";
 import Profile from "../../components/Profile";
 import { COMMON_CONSTANT } from "../../constants";
 import Comments from "./Comments";
+import useAuth from "../../store/auth/useAuth";
 
 export default function Post() {
   const { id } = useParams();
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
 
   const { localLoading, setLocalLoading } = useCommon();
   const [posting, setPosting] = useState<Posting | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [postUser, setPostUser] = useState<User | null>(null);
   useEffect(() => {
     if (!id) {
       throw new Error("posting id값이 없습니다");
@@ -27,7 +27,7 @@ export default function Post() {
       setLocalLoading(true);
       const { user, ...posting } = await getPosting(id);
       setPosting(posting);
-      setUser(user);
+      setPostUser(user);
       setTimeout(() => setLocalLoading(false), 300);
     }
 
@@ -47,12 +47,12 @@ export default function Post() {
     >
       <div className="container" style={{ maxWidth: "1080px" }}>
         {localLoading && <PostSkeleton />}
-        {!localLoading && posting && user && (
+        {!localLoading && posting && postUser && (
           <>
             <PostHeader
-              user={user}
+              user={postUser}
               posting={posting}
-              isCurrentUser={user.uid === currentUser?.uid}
+              isCurrentUser={postUser.uid === user?.uid}
             />
 
             <hr />
@@ -64,7 +64,7 @@ export default function Post() {
 
             <div id="preview" dangerouslySetInnerHTML={{ __html: code }} />
 
-            <Profile user={user} />
+            <Profile user={postUser} />
             <Comments postId={posting.uid} />
           </>
         )}

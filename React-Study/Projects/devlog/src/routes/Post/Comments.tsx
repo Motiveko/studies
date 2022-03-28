@@ -7,13 +7,14 @@ import React, {
 } from "react";
 import { Button, Form } from "react-bootstrap";
 import SingleComment from "../../components/SingleComment";
-import { useAuth } from "../../context/AuthContext";
+
 import {
   addComment,
   Comment,
   getComments,
 } from "../../service/firebase/CommentService";
 import { User } from "../../service/firebase/UserService";
+import useAuth from "../../store/auth/useAuth";
 
 type props = {
   postId: string;
@@ -21,7 +22,7 @@ type props = {
 function Commments({ postId }: props) {
   const [comments, setComments] = useState<(Comment & { user: User })[]>([]);
   const commentRef = useRef<HTMLTextAreaElement>(null);
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const initComments = useCallback(
     async () => {
       setComments(await getComments(postId));
@@ -35,18 +36,18 @@ function Commments({ postId }: props) {
   const uploadComment = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (!currentUser || !commentRef.current) {
+      if (!user || !commentRef.current) {
         throw new Error("댓글을 달 수 없습니다.");
       }
       await addComment({
-        userId: currentUser.uid,
+        userId: user.uid,
         postId,
         comment: commentRef.current.value,
       });
       commentRef.current.value = "";
       initComments();
     },
-    [currentUser, initComments, postId],
+    [user, initComments, postId],
   );
   return (
     <div className="mt-5">
@@ -55,7 +56,7 @@ function Commments({ postId }: props) {
         {' '}
         개의 댓글
       </h5>
-      {currentUser && (
+      {user && (
         <Form onSubmit={uploadComment}>
           <Form.Control
             as="textarea"

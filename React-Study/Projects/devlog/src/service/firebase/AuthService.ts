@@ -1,5 +1,9 @@
 import {
-  createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
 } from "firebase/auth";
 import { auth } from "../../firebase";
 import { getRandomProfile } from "../../utils/random-util";

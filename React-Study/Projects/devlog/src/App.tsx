@@ -1,13 +1,13 @@
 import React from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Login from './routes/Auth/Login';
 import Register from './routes/Auth/Register';
-import PublicRoute from './routes/PublicRoute';
+import PublicRoute from './routes/routes/PublicRoute';
 import Auth from './routes/Auth/Auth';
 import HomeLayout from './layout/HomeLayout';
-import PrivateRoute from './routes/PrivateRoute';
+import PrivateRoute from './routes/routes/PrivateRoute';
 import NotFound from './routes/NotFound';
 import EditPost from './routes/EditPost/EditPost';
 import Dashboard from './routes/Dashboard/Dashboard';

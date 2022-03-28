@@ -1,28 +1,33 @@
 import React, {
-  ChangeEventHandler, useEffect, useRef, useState,
+  ChangeEventHandler, useCallback, useEffect, useRef, useState,
 } from "react";
 import { Button, Card, Form } from "react-bootstrap";
 import BackButton from "../components/Buttons/BackButton";
 import InlineFormControl from "../components/InlineFormControl";
 import ImageEditor from "../components/ImageEditor";
-import { useAuth } from "../context/AuthContext";
-import { updateUser, User } from "../service/firebase/UserService";
+import { callUpdateUserApi, User } from "../service/firebase/UserService";
 import { useThumbnail } from "../hooks/useThumbnail";
 import { MyError } from "../core/MyError";
 import { useCommon } from "../context/CommonContext";
 import AlertSnackbar from "../components/Snackbars/AlertSnackbar";
 import { COMMON_CONSTANT } from "../constants";
+import useAuth from "../store/auth/useAuth";
+import { actions } from "../store/auth";
 
 export default function UserSettings() {
-  const { currentUser, refreshUser } = useAuth() as ReturnType<
-    typeof useAuth
-  > & { currentUser: User };
+  const { user, dispatch } = useAuth();
+  const refreshUser = useCallback(() => {
+    if (user?.uid) {
+      dispatch(actions.tryGetUser(user.uid));
+    }
+  }, [dispatch, user]);
+
   const {
     localLoading, setLocalLoading, setGlobalLoading, error, setError,
   } = useCommon();
 
   const [{ thumbnail, setThumbnail }, upload] = useThumbnail(
-    currentUser?.photoURL || null,
+    user?.photoURL || null,
   );
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -31,7 +36,7 @@ export default function UserSettings() {
 
   const {
     uid, email, displayName, gitURL, description,
-  } = currentUser as User;
+  } = user as User;
 
   const handleThumbnailChange: ChangeEventHandler<HTMLInputElement> = async (
     e,
@@ -63,7 +68,7 @@ export default function UserSettings() {
     setGlobalLoading(true);
     try {
       const partialUser = _parseForm();
-      await updateUser(partialUser);
+      await callUpdateUserApi(partialUser);
       await refreshUser();
       setSuccess("프로필을 수정하였습니다.");
     } catch (e) {

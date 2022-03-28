@@ -4,7 +4,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { uploadImage } from "../service/firebase/FileService";
 import { Posting, uploadPosting } from "../service/firebase/PostingService";
-import { useAuth } from "./AuthContext";
+import useAuth from "../store/auth/useAuth";
 import { useCommon } from "./CommonContext";
 
 type props = {
@@ -44,17 +44,17 @@ export default function PostProvider({ children }: props) {
     setPosting(emptyPosting);
   }, []);
 
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const uploadPost = useMemo(() => async () => {
     setGlobalLoading(true);
-    if (!currentUser) {
+    if (!user) {
       throw new Error("로그인 한 상태가 아닙니다.");
     }
-    const result = await uploadPosting({ ...posting, userId: currentUser.uid });
+    const result = await uploadPosting({ ...posting, userId: user.uid });
     alert("포스트를 출간하였습니다.");
     setGlobalLoading(false);
     navigate(`/post/${result.uid}`);
-  }, [currentUser, navigate, posting, setGlobalLoading]);
+  }, [user, navigate, posting, setGlobalLoading]);
   const uploadThumbnail = async (file: Blob) => {
     const downloadURL = await uploadImage(file);
     setPosting((prev) => ({ ...prev, thumbnail: downloadURL }));

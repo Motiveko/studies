@@ -1,14 +1,19 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Container, Image, Navbar, NavDropdown,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import LinkButton from "../components/Buttons/LinkButton";
 import CustomHR from "../components/CustomHR";
-import { useAuth } from "../context/AuthContext";
+import { actions } from "../store/auth";
+import useAuth from "../store/auth/useAuth";
 
 function Header() {
-  const { currentUser, logout } = useAuth();
+  const { user, dispatch } = useAuth();
+
+  const logout = useCallback(() => {
+    dispatch(actions.tryLogout());
+  }, [dispatch]);
   const navigate = useNavigate();
   const handleSelect = async (eventKey: string | null) => {
     switch (eventKey) {
@@ -22,8 +27,8 @@ function Header() {
   };
 
   const userAvatar = useMemo(() => {
-    if (!currentUser) return null;
-    const thumbnail = currentUser?.photoURL;
+    if (!user) return null;
+    const thumbnail = user?.photoURL;
 
     return (
       <Image
@@ -37,7 +42,7 @@ function Header() {
         }}
       />
     );
-  }, [currentUser]);
+  }, [user]);
 
   return (
     <>
@@ -47,7 +52,7 @@ function Header() {
             🤖 Devlog
           </Navbar.Brand>
           <Navbar.Collapse className="justify-content-end">
-            {currentUser && (
+            {user && (
               <>
                 <LinkButton to="/user/post" variant="outline-dark">
                   새 글 작성
@@ -60,7 +65,7 @@ function Header() {
                   >
                     <NavDropdown.Item
                       as={Link}
-                      to={{ pathname: `/user/${currentUser.uid}` }}
+                      to={{ pathname: `/user/${user.uid}` }}
                     >
                       내 블로그
                     </NavDropdown.Item>
@@ -81,7 +86,7 @@ function Header() {
                 </Navbar.Text>
               </>
             )}
-            {!currentUser && (
+            {!user && (
               <Navbar.Text>
                 <LinkButton to="/auth/login" variant="dark">
                   로그인

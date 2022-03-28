@@ -7,7 +7,6 @@ import React, {
   useState,
 } from "react";
 import { COMMON_CONSTANT } from "../constants";
-import { useAuth } from "../context/AuthContext";
 import CommentForm from "../routes/Post/CommentForm";
 import {
   Comment,
@@ -16,6 +15,7 @@ import {
 } from "../service/firebase/CommentService";
 import { FirebaseTime } from "../service/firebase/PostingService";
 import { User } from "../service/firebase/UserService";
+import useAuth from "../store/auth/useAuth";
 import { parseDate } from "../utils/date-utils";
 import DeleteEdit from "./DeleteEdit";
 
@@ -24,7 +24,7 @@ type props = {
   onChange: () => void;
 };
 function SingleComment({ commentUser, onChange }: props) {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const date = useMemo(
     () => parseDate((commentUser.updatedAt as FirebaseTime).seconds * 1000),
     [commentUser],
@@ -74,7 +74,7 @@ function SingleComment({ commentUser, onChange }: props) {
           <div className="fw-bold">{commentUser.user.displayName}</div>
           <div className="text-muted">{date}</div>
         </div>
-        {!openEdit && currentUser?.uid === commentUser.userId && (
+        {!openEdit && user?.uid === commentUser.userId && (
           <DeleteEdit
             className="ms-auto"
             onDelete={removeComment}

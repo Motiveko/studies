@@ -13,7 +13,7 @@
   "parser": "@typescript-eslint/parser",
   "extends": [
     "airbnb",
-    "airbnb-typescript",
+    // "airbnb-typescript",
     "airbnb/hooks",
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
@@ -93,11 +93,17 @@
       "alert",
       "confirm"
     ],
-    // "indent": 0,
-    // "@typescript-eslint/indent": [
-    //   "error",
-    //   2
-    // ]
+    "indent": 0,
+    "@typescript-eslint/indent": [
+      "error",
+      2
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
+    ]
     // "prettier/prettier": ["error",{},{ "usePrettierrc": true }]
   }
 }

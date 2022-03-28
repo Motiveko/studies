@@ -21,8 +21,7 @@ import TagList from "./TagList";
 
 function UserPage() {
   // const { currentUser } = useAuth();
-  const [postings, setPostings] = useState<(Posting & { commentsCount: number })[]
-    >([]);
+  const [postings, setPostings] = useState<(Posting & { commentsCount: number })[]>([]);
   const { localLoading, setLocalLoading } = useCommon();
 
   const { id } = useParams();
