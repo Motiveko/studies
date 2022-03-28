@@ -8,6 +8,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { FIRESTORE_DOC } from '../../constants';
+import { db } from '../../firebase';
 
 // 회원정보 관련
 export type User = {
@@ -19,8 +20,6 @@ export type User = {
   description?: string;
   gitURL?: string;
 };
-
-const db = getFirestore();
 
 type GetUser = (uid: string) => Promise<User | null>;
 type RegisterUser = (user: User) => Promise<void>;
