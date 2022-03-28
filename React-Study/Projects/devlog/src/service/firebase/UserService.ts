@@ -56,7 +56,7 @@ export const getUser: GetUser = async (uid: string) => {
  * 유저정보 업데이트
  * @param user {uid} & Partail<User>
  */
-export const updateUser: UpdateUser = async (user) => {
+export const callUpdateUserApi: UpdateUser = async (user) => {
   const userRef = getUserRef(user.uid);
   await updateDoc(userRef, user);
 };
