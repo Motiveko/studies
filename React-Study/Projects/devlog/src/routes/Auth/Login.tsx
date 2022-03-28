@@ -1,18 +1,25 @@
 import React, { FormEvent, useRef } from "react";
 import { Button, Card, Form } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { useCommon } from "../../context/CommonContext";
+import { Link } from "react-router-dom";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import CenteredSpinner from "../../components/CenteredSpinner";
 import GoogleButton from "../../components/Buttons/GoogleButton";
 import AlertSnackbar from "../../components/Snackbars/AlertSnackbar";
+import { RootState } from "../../store/store";
+import { actions } from "../../store/auth";
 
 function Login() {
-  const { login, authWithGoogle } = useAuth();
-  const {
-    localLoading, setLocalLoading, error, setError,
-  } = useCommon();
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user, loading, error } = useSelector(
+    ({
+      auth: {
+        user,
+        loading,
+        error,
+      },
+    }: RootState) => ({ user, loading, error }),
+    shallowEqual,
+  );
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -21,19 +28,10 @@ function Login() {
     event.preventDefault();
     const { email, password } = getLoginInfo();
     if (!email || !password) {
-      setError("이메일/비밀번호는 필수값입니다!");
-      return;
-    }
-    setLocalLoading(true);
-    try {
-      await login(email, password);
-      navigate("/");
-    } catch (e) {
-      console.log(e);
-      setError("이메일, 비밀번호를 확인해주세요.");
+      dispatch(actions.setError("이메일/비밀번호는 필수값입니다!"));
     }
 
-    setLocalLoading(false);
+    dispatch(actions.tryLogin({ email, password }));
   };
 
   const getLoginInfo = () => {
@@ -44,6 +42,10 @@ function Login() {
       email: emailRef.current.value,
       password: passwordRef.current.value,
     };
+  };
+
+  const onCloseError = () => {
+    dispatch(actions.setError(""));
   };
   return (
     <>
@@ -70,8 +72,8 @@ function Login() {
               />
             </Form.Group>
             <>
-              {localLoading && <CenteredSpinner />}
-              {!localLoading && (
+              {loading && <CenteredSpinner />}
+              {!loading && (
                 <>
                   <Button
                     type="submit"
@@ -80,7 +82,7 @@ function Login() {
                   >
                     로그인
                   </Button>
-                  <GoogleButton onClick={authWithGoogle}>
+                  <GoogleButton onClick={() => dispatch(actions.tryGoogleAuth())}>
                     구글계정으로 시작하기
                   </GoogleButton>
                 </>
@@ -98,7 +100,7 @@ function Login() {
         <AlertSnackbar
           type="error"
           message={error}
-          onClose={() => setError("")}
+          onClose={onCloseError}
         />
       )}
     </>

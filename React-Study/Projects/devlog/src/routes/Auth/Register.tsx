@@ -1,22 +1,21 @@
-import React, { useRef, FormEvent } from "react";
+import React, { useRef, FormEvent, useCallback } from "react";
 import { Button, Card, Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { useCommon } from "../../context/CommonContext";
+
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+
 import CenteredSpinner from "../../components/CenteredSpinner";
 import GoogleButton from "../../components/Buttons/GoogleButton";
 import AlertSnackbar from "../../components/Snackbars/AlertSnackbar";
+import { actions } from "../../store/auth";
+import { RootState } from "../../store/store";
 
 export default function Register() {
-  // const { signUp } = useOutletContext();
-  const { authWithGoogle } = useAuth();
-  const {
-    localLoading: isLoading,
-    setLocalLoading: setIsLoading,
-    error,
-    setError,
-  } = useCommon();
-  const navigate = useNavigate();
+  const { loading, error } = useSelector(
+    ({ auth: { loading, error } }: RootState) => ({ loading, error }),
+    shallowEqual,
+  );
+  const dispatch = useDispatch();
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -24,22 +23,14 @@ export default function Register() {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const { password, passwordConfirm } = getRegisterInfo();
+    const { email, password, passwordConfirm } = getRegisterInfo();
 
     if (!checkPassword(password, passwordConfirm)) {
-      setError("비밀번호값이 일치하지 않습니다. 입력값을 확인해주세요");
+      dispatch(actions.setError("비밀번호값이 일치하지 않습니다. 입력값을 확인해주세요"));
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // const userCredentials = await signUp(email, password);
-      navigate("/");
-    } catch (e) {
-      console.log(e);
-      setError("회원가입 정보를 확인해주세요.");
-    }
-    setIsLoading(false);
+    dispatch(actions.trySignUp({ email, password }));
   };
 
   const getRegisterInfo: () => {
@@ -72,6 +63,9 @@ export default function Register() {
     return true;
   };
 
+  const setError = useCallback((error: string) => {
+    dispatch(actions.setError(error));
+  }, [dispatch]);
   return (
     <>
       <Card style={{ width: "40vw", maxWidth: "350px", minWidth: "250px" }}>
@@ -105,13 +99,13 @@ export default function Register() {
                 required
               />
             </Form.Group>
-            {isLoading && <CenteredSpinner />}
-            {!isLoading && (
+            {loading && <CenteredSpinner />}
+            {!loading && (
               <>
                 <Button type="submit" className="w-100 mt-3" variant="primary">
                   회원가입
                 </Button>
-                <GoogleButton onClick={authWithGoogle}>
+                <GoogleButton onClick={() => dispatch(actions.tryGoogleAuth())}>
                   구글계정으로 시작하기
                 </GoogleButton>
               </>
@@ -128,7 +122,7 @@ export default function Register() {
         <AlertSnackbar
           type="error"
           message={error}
-          onClose={() => setError("")}
+          onClose={() => setError('')}
         />
       )}
     </>
