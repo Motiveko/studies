@@ -14,16 +14,13 @@ export const types = {
   TRY_SIGN_UP: 'auth/TRY_SIGN_UP',
   TRY_GET_USER: 'auth/TRY_GET_USER',
   TRY_LOGOUT: 'auth/TRY_LOGOUT',
+  TRY_UPDATE_USER: 'auth/TRY_UPDATE',
   SET_USER: 'auth/SET_USER',
   SET_ERROR: 'auth/SET_ERROR',
   SET_LOADING: 'auth/SET_LOADING',
 };
 
-// 이걸 정의하지 않으면 actions에 대한 자동완성을 할 수 없다. actions에 타입을 지정하지 않으면 PayloadAction을 적용할 수 없다.
-type actionKeys = 'tryLogin' | 'tryGoogleAuth' | 'trySignUp' | 'tryGetUser' | 'setUser' | 'setError' | 'setLoading' | 'tryLogout'
-export const actions: {
-  [key in actionKeys]: (payload?: any) => PayloadAction
-} = {
+export const actions = {
   tryLogin: (payload: { email: string; password: string; }) => ({
     type: types.TRY_LOGIN,
     payload,
@@ -38,6 +35,10 @@ export const actions: {
   }),
   tryLogout: () => ({ type: types.TRY_LOGOUT }),
   tryGetUser: (uid: string) => ({ type: types.TRY_GET_USER, payload: uid }),
+  tryUpdateUser: (user: {uid: string} & Partial<User>) => ({
+    type: types.TRY_UPDATE_USER,
+    payload: user,
+  }),
   setUser: (user: User | null) => ({
     type: types.SET_USER,
     payload: user,

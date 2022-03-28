@@ -4,9 +4,9 @@ import { actions, types } from ".";
 import {
   callGoogleAuthApi, callLoginApi, callLogoutApi, callSignUpApi,
 } from '../../service/firebase/AuthService';
-import { getUser, User } from '../../service/firebase/UserService';
+import { callUpdateUserApi, getUser, User } from '../../service/firebase/UserService';
 import {
-  authWithGoogleSaga, getUserSaga, loginSaga, logoutSaga, signUpSaga,
+  authWithGoogleSaga, getUserSaga, loginSaga, logoutSaga, signUpSaga, updateUserSaga,
 } from "./saga";
 
 const email = 'rhehdrla@naver.com';
@@ -117,7 +117,7 @@ describe('signUpSaga test', () => {
   });
 });
 
-describe.only('logoutSaga test', () => {
+describe('logoutSaga test', () => {
   const gen = cloneableGenerator(logoutSaga as any)();
   expect(gen.next().value).toEqual(take(types.TRY_LOGOUT));
   expect(gen.next().value).toEqual(put(actions.setLoading(true)));
@@ -134,5 +134,29 @@ describe.only('logoutSaga test', () => {
     expect(genClone.throw().value).toEqual(put(actions.setError('로그아웃 처리 도중 문제가 발생하였습니다.')));
     expect(genClone.next().value).toEqual(put(actions.setLoading(false)));
     expect(genClone.next().value).toEqual(take(types.TRY_LOGOUT));
+  });
+});
+
+describe.only('updateUserSaga test', () => {
+  const gen = cloneableGenerator(updateUserSaga as any)();
+  const action = actions.tryUpdateUser(user);
+
+  expect(gen.next().value).toEqual(take(types.TRY_UPDATE_USER));
+  expect(gen.next(action).value).toEqual(put(actions.setLoading(true)));
+  expect(gen.next().value).toEqual(call(callUpdateUserApi, user));
+  test('on call updateUser success', () => {
+    const genClone = gen.clone();
+    expect(genClone.next().value).toEqual(put(actions.tryGetUser(uid)));
+    expect(genClone.next().value).toEqual(take(types.TRY_UPDATE_USER));
+  });
+
+  test('on call updateUser fail', () => {
+    const genClone = gen.clone();
+    if (!genClone.throw) {
+      throw new Error('테스트중 문제가 발생했습니다.');
+    }
+    expect(genClone.throw({}).value).toEqual(put(actions.setError('사용자 정보 수정 처리중 문제가 발생하였습니다.')));
+    expect(genClone.next().value).toEqual(put(actions.setLoading(false)));
+    expect(genClone.next().value).toEqual(take(types.TRY_UPDATE_USER));
   });
 });

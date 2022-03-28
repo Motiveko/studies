@@ -5,7 +5,7 @@ import { actions, types } from '.';
 import {
   callGoogleAuthApi, callLoginApi, callLogoutApi, callSignUpApi,
 } from '../../service/firebase/AuthService';
-import { getUser, User } from '../../service/firebase/UserService';
+import { callUpdateUserApi, getUser, User } from '../../service/firebase/UserService';
 
 export function* loginSaga() {
   while (true) {
@@ -79,6 +79,20 @@ export function* logoutSaga() {
     }
   }
 }
+export function* updateUserSaga() {
+  while (true) {
+    const { payload: user } = yield take(types.TRY_UPDATE_USER);
+    yield put(actions.setLoading(true));
+    try {
+      yield call(callUpdateUserApi, user);
+      yield put(actions.tryGetUser(user.uid));
+    } catch (error: any) {
+      console.error(error);
+      yield put(actions.setError('사용자 정보 수정 처리중 문제가 발생하였습니다.'));
+      yield put(actions.setLoading(false));
+    }
+  }
+}
 
 const getLoginErrorMessage = (error: any) => {
   let message = (error.message as string) || '로그인 중 문제가 발생하였습니다.';
@@ -94,6 +108,8 @@ export default function* watcher() {
     fork(loginSaga),
     fork(authWithGoogleSaga),
     fork(signUpSaga),
+    fork(logoutSaga),
+    fork(updateUserSaga),
     fork(getUserSaga),
   ]);
 }
