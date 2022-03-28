@@ -2,7 +2,9 @@ import {
   all, call, fork, put, take,
 } from 'redux-saga/effects';
 import { actions, types } from '.';
-import { callGoogleAuthApi, callLoginApi, callSignUp } from '../../service/firebase/AuthService';
+import {
+  callGoogleAuthApi, callLoginApi, callLogoutApi, callSignUpApi,
+} from '../../service/firebase/AuthService';
 import { getUser, User } from '../../service/firebase/UserService';
 
 export function* loginSaga() {
@@ -57,10 +59,23 @@ export function* signUpSaga() {
     const { payload: { email, password } } = yield take(types.TRY_SIGN_UP);
     yield put(actions.setLoading(true));
     try {
-      yield call(callSignUp, email, password);
+      yield call(callSignUpApi, email, password);
     } catch (error: any) {
       console.error(error);
       yield put(actions.setError('회원가입 처리 도중 문제가 발생하였습니다.'));
+    }
+  }
+}
+export function* logoutSaga() {
+  while (true) {
+    yield take(types.TRY_LOGOUT);
+    yield put(actions.setLoading(true));
+    try {
+      yield call(callLogoutApi);
+    } catch (error: any) {
+      console.error(error);
+      yield put(actions.setError('로그아웃 처리 도중 문제가 발생하였습니다.'));
+      yield put(actions.setLoading(false));
     }
   }
 }
@@ -75,5 +90,10 @@ const getLoginErrorMessage = (error: any) => {
 };
 
 export default function* watcher() {
-  yield all([fork(loginSaga), fork(authWithGoogleSaga), fork(getUserSaga)]);
+  yield all([
+    fork(loginSaga),
+    fork(authWithGoogleSaga),
+    fork(signUpSaga),
+    fork(getUserSaga),
+  ]);
 }

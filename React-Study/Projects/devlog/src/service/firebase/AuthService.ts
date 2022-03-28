@@ -1,5 +1,5 @@
 import {
-  createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup,
+  createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut,
 } from "firebase/auth";
 import { auth } from "../../firebase";
 import { getRandomProfile } from "../../utils/random-util";
@@ -14,7 +14,7 @@ export const callLoginApi: callLoginApi = async (email, password) => {
   const { user: { uid } } = await signInWithEmailAndPassword(auth, email, password);
   return uid;
 };
-export const callSignUp: callSignUpApi = async (email, password) => {
+export const callSignUpApi: callSignUpApi = async (email, password) => {
   const userCredentials = await createUserWithEmailAndPassword(
     auth,
     email,
@@ -35,7 +35,11 @@ export const callSignUp: callSignUpApi = async (email, password) => {
   });
 };
 
-export const callGoogleAuthApi = async () => {
+export const callLogoutApi: callLogoutApi = async () => {
+  await signOut(auth);
+};
+
+export const callGoogleAuthApi: callGoogleAuthApi = async () => {
   const { user: { uid } } = await signInWithPopup(auth, provider);
   return uid;
 };

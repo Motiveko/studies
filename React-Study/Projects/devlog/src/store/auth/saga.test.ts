@@ -1,10 +1,12 @@
 import { cloneableGenerator } from '@redux-saga/testing-utils';
 import { call, put, take } from 'redux-saga/effects';
 import { actions, types } from ".";
-import { callGoogleAuthApi, callLoginApi, callSignUp } from '../../service/firebase/AuthService';
+import {
+  callGoogleAuthApi, callLoginApi, callLogoutApi, callSignUpApi,
+} from '../../service/firebase/AuthService';
 import { getUser, User } from '../../service/firebase/UserService';
 import {
-  authWithGoogleSaga, getUserSaga, loginSaga, signUpSaga,
+  authWithGoogleSaga, getUserSaga, loginSaga, logoutSaga, signUpSaga,
 } from "./saga";
 
 const email = 'rhehdrla@naver.com';
@@ -93,13 +95,13 @@ describe('getUserSaga test', () => {
   });
 });
 
-describe.only('signUpSaga test', () => {
+describe('signUpSaga test', () => {
   const action = actions.trySignUp({ email, password });
 
   const gen = cloneableGenerator(signUpSaga as any)();
   expect(gen.next().value).toEqual(take(types.TRY_SIGN_UP));
   expect(gen.next(action).value).toEqual(put(actions.setLoading(true)));
-  expect(gen.next().value).toEqual(call(callSignUp, email, password));
+  expect(gen.next().value).toEqual(call(callSignUpApi, email, password));
   test('on call signUp success', () => {
     const genClone = gen.clone();
     expect(genClone.next().value).toEqual(take(types.TRY_SIGN_UP));
@@ -112,5 +114,25 @@ describe.only('signUpSaga test', () => {
     }
     expect(genClone.throw({}).value).toEqual(put(actions.setError('회원가입 처리 도중 문제가 발생하였습니다.')));
     expect(genClone.next().value).toEqual(take(types.TRY_SIGN_UP));
+  });
+});
+
+describe.only('logoutSaga test', () => {
+  const gen = cloneableGenerator(logoutSaga as any)();
+  expect(gen.next().value).toEqual(take(types.TRY_LOGOUT));
+  expect(gen.next().value).toEqual(put(actions.setLoading(true)));
+  expect(gen.next().value).toEqual(call(callLogoutApi));
+  test('on call logout success', () => {
+    const genClone = gen.clone();
+    expect(genClone.next().value).toEqual(take(types.TRY_LOGOUT));
+  });
+  test('on call logout fail', () => {
+    const genClone = gen.clone();
+    if (!genClone.throw) {
+      throw new Error('테스트 도중 문제가 발생하였습니다.');
+    }
+    expect(genClone.throw().value).toEqual(put(actions.setError('로그아웃 처리 도중 문제가 발생하였습니다.')));
+    expect(genClone.next().value).toEqual(put(actions.setLoading(false)));
+    expect(genClone.next().value).toEqual(take(types.TRY_LOGOUT));
   });
 });
