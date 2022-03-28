@@ -1,26 +1,16 @@
 import React, { FormEvent, useRef } from "react";
 import { Button, Card, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import CenteredSpinner from "../../components/CenteredSpinner";
 import GoogleButton from "../../components/Buttons/GoogleButton";
 import AlertSnackbar from "../../components/Snackbars/AlertSnackbar";
-import { RootState } from "../../store/store";
 import { actions } from "../../store/auth";
+import useAuth from "../../store/auth/useAuth";
 
 function Login() {
-  const dispatch = useDispatch();
-  const { user, loading, error } = useSelector(
-    ({
-      auth: {
-        user,
-        loading,
-        error,
-      },
-    }: RootState) => ({ user, loading, error }),
-    shallowEqual,
-  );
-
+  const {
+    loading, error, dispatch,
+  } = useAuth();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 

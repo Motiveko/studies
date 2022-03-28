@@ -1,21 +1,14 @@
 import React, { useRef, FormEvent, useCallback } from "react";
 import { Button, Card, Form } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
-
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-
+import { Link } from "react-router-dom";
 import CenteredSpinner from "../../components/CenteredSpinner";
 import GoogleButton from "../../components/Buttons/GoogleButton";
 import AlertSnackbar from "../../components/Snackbars/AlertSnackbar";
 import { actions } from "../../store/auth";
-import { RootState } from "../../store/store";
+import useAuth from "../../store/auth/useAuth";
 
 export default function Register() {
-  const { loading, error } = useSelector(
-    ({ auth: { loading, error } }: RootState) => ({ loading, error }),
-    shallowEqual,
-  );
-  const dispatch = useDispatch();
+  const { loading, error, dispatch } = useAuth();
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
