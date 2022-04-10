@@ -1513,8 +1513,8 @@ const applyMiddleware = (...middlewares) => createStore => (...args) => {
 }
 ```
 - `functionWithStore`는 미들웨어 함수의 첫 번째 함수를 호출한 결과들이다.
-- `chainedFunc`는 `functionWithStore`를 체이닝 한 결과다. 미들웨어가 a~d 네개라면 결과는 `next => a(b(c(d(next))))`가 될 것이다.
-- 마지막 반환되는 객채의 `dispatch`함수는 `chainedFunc`의 next에 store의 `dispatch`함수를 전달한 것으로 `a(b(c(d(store.dispatch))))`가 된다. 즉 ***store에서 action을 dispatch하면 a->b->c->d->store.dispatch->d->c->b->a 순으로 처리하게 되는것***이다. 앞서 설명했듯 `action => next(action)`은 `dispatch`와 같다고 했는데, 결국 `d(next)`는 `d(store.dispatch)`가 되는것이다.
+- `chainedFunc`는 `functionWithStore`를 체이닝 한 결과다. 미들웨어가 a~d 네개라면 결과는 `next => d(c(b(a(next))))`가 될 것이다.
+- 마지막 반환되는 객채의 `dispatch`함수는 `chainedFunc`의 next에 store의 `dispatch`함수를 전달한 것으로 `d(c(b(a(store.dispatch))))`가 된다. 즉 ***store에서 action을 dispatch하면 a->b->c->d->store.dispatch->d->c->b->a 순으로 처리하게 되는것***이다. 앞서 설명했듯 `action => next(action)`은 `dispatch`와 같다고 했는데, 결국 `d(next)`는 `d(store.dispatch)`가 되는것이다.
 
 <br>
 
