@@ -504,7 +504,7 @@ function* mainSaga(getState) {
   yield put(showResults(results))
 }
 ```
-- 위 코드는 task1,2,3.. 등을 모두 병렬 처리하고 완료된 결과를 가지고 `put(showResults(results))`을 수행한다.
+- 위 코드는 task1,2,3.. 등을 모두 병렬 처리하고 전부 완료되면 결과를 가지고 `put(showResults(results))`을 수행한다.
 
 <br>
 
@@ -521,7 +521,7 @@ const takeEvery = (pattern, saga, ...args) => fork(function*() {
   }
 })
 ```
-- 필수로 `pattern`과 `saga`를 인자로 받는다. `fork()`를 이용해 논블로킹으로 처리하는데, 내부적으로 watch-and-fork패턴을 사용해서 pattern에 대한 처리를 saga가 non-blocking으로 수행하도록 Effect를 만든다.
+- 필수로 `pattern`과 `saga`를 인자로 받는다. `fork()`를 이용해 새로운 태스크를 만들어 수행하는데, 이 태스크는 내부적으로 watch-and-fork패턴을 사용해서 pattern에 대한 처리를 saga가 non-blocking으로 수행한다. 따라서 동시에 많은 액션이 발생해도 병렬로 모두 처리하게된다.
 
 
 <br>
@@ -542,3 +542,88 @@ const takeLatest = (pattern, saga, ...args) => fork(function*() {
 })
 ```
 - takeEvery와 비슷한데 차이점은 제너레이터 함수 내부적으로 `lastTask`를 가진다는 것이다. non-blocking Effect를 lastTask에 할당하고, ***액션 발생시 lastTask를 무조건 cancel하고 새로운 태스크(Effect)를 생성***한다. 즉  동시에 태스크가 처리되는걸 허용하지 않는다.
+
+<br><br>
+
+### 4.4[redux-saga's fork model](https://redux-saga.js.org/docs/advanced/ForkModel)
+- Redux-Saga에는 ***동적으로 태스크를 fork할 수 있는 두가지 Effect***를 제공한다.
+  1. Attatched forks - `fork`
+  2. Detached forks - `spawn`
+
+- Attatched/Detached의 차이는 무엇일까? 
+- 어떤 사가(제너레이터 함수)가 `완료` 되기 위해서는 두가지 기준을 충족해야한다.
+  1. 사가 내부의 모든 명령어를 실행해야한다.
+  2. 사가의 모든 `Attatched fork`가 끝나야한다.
+- 이런관점에서 Attatched fork는 **부모의 실행 컨텍스트에 존재**한다. Detached fork는 **자신의 고유한 실행 컨텍스트**에 살아있다.
+
+<br>
+
+### 4.4.1 Attached Forks
+
+1. Saga의 완료 시점
+아래 코드에서 call(fetchAll)의 블로킹이 끝나는 시점을 생각해보자.
+```js
+import { fork, call, put, delay } from 'redux-saga/effects'
+import api from './somewhere/api' // app specific
+import { receiveData } from './somewhere/actions' // app specific
+
+function* fetchAll() {
+  const task1 = yield fork(fetchResource, 'users')
+  const task2 = yield fork(fetchResource, 'comments')
+  yield delay(1000)
+}
+
+function* fetchResource(resource) {
+  const {data} = yield call(api.fetch, resource)
+  yield put(receiveData(data))
+}
+
+function* main() {
+  yield call(fetchAll)
+}
+```
+- [call](https://redux-saga.js.org/docs/api#callfn-args)은 fetchAll 태스크가 끝날때 까지 블로킹된다. 
+- fetchAll은 두번의 fork를 실행해 Effect를 반환하고 `delay`를 만나 1초동안 블로킹된다. fork 자체는 논 블로킹으로 바로 지나간다.
+- 시간은 1초가 지났고, fork된 태스크인 `fetchResource`가 종료될 때 까지 아직도 main은 블로킹되어있다. 두개의 태스크가 완료되면 비로소 main 태스크도 끝나게 된다. 
+- 위 코드는 아래와 같이 다시 쓸 수 있겠다.
+```js
+function* fetchAll() {
+  yield all([
+    call(fetchResource, 'users'),     // task1
+    call(fetchResource, 'comments'),  // task2,
+    delay(1000)
+  ])
+}
+```
+- all 은 병렬로 세개의 effect를 동시에 수행하고, 모두 처리될 때 까지 기다린다. fetchAll의 완료 시점은 위/아래 코드가 모두 같다고 할 수 있다.(fetchAll 컨택스트에 task1, task2가 존재한다.)
+
+<br>
+
+2. 예외 전파
+- fetchAll 내부에서 예외 발생시 어떻게될까? fetchAll은 중단되고 예외를 던지게 될 것이다. `main`에서 이걸 이렇게 처리할 수 있다.
+```js
+function* main() {
+  try {
+    yield call(fetchAll)
+  } catch (e) {
+    // handle fetchAll errors
+  }
+}
+```
+- 만약 `Detached fork`의 경우라면 부모 컨텍스트에 자식의 fork 수행이 남아있지 않으므로 이런식의 `try/catch` 작성이 불가능할 것이다.(콜백 패턴에서 부모에서 try/catch 불가능한 것과 같다!!)
+
+<br>
+
+3. Cancellation of Saga
+사가의 취소는 아래 두가지를 취소하는것을 의미한다.
+- 현재 블로킹된 Effect의 메인 태스크를 지우고
+- 해당 태스크의 모든 Attached Fork를 취소한다.
+
+<br>
+
+### 4.4.1 Detached Forks
+`spawn`을 이용한 Detached Forks는 자신의 고유한 실행 컨텍스트에 존재한다. 따라서,
+  1. 부모는 fork 태스크의 완료를 기다리지 않는다.
+  2. fork 태스크에서 발생하는 예외는 부모로 전파되지 않는다.
+  3. 부모를 취소해도 fork 태스크는 계속된다.
+의 특징을 가지게 된다.
