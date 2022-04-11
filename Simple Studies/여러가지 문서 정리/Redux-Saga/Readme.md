@@ -493,7 +493,19 @@ function* handleRequest(chan) {
 
 - 이렇게 해서 ***`watcher saga`<-> `worker saga`간에 채널을 통해 메시지 유실 없이 통신하게 된다.***
 
+<br><br>
+
+### 4.2 [Composing Sagas](https://redux-saga.js.org/docs/advanced/Channels)
+- 여러개의 사가를 묶는 방법은 여러가지가 있다. `yield* genFunc()`같은걸 쓸 수 있는데, genFunc내부가 순차처리되고 완료까지 블로킹 된다는 단점이 있다.
+- [`all`](https://redux-saga.js.org/docs/api/#alleffects---parallel-effects)이펙트를 사용하면 병렬로 Effects를 묶어서 처리할 수 있다. `Promise.all`과 같이 동작한다.
+```js
+function* mainSaga(getState) {
+  const results = yield all([call(task1), call(task2), ...])
+  yield put(showResults(results))
+}
+```
+- 위 코드는 task1,2,3.. 등을 모두 병렬 처리하고 완료된 결과를 가지고 `put(showResults(results))`을 수행한다.
+
 <br>
 
 
-  
