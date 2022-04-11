@@ -627,3 +627,57 @@ function* main() {
   2. fork 태스크에서 발생하는 예외는 부모로 전파되지 않는다.
   3. 부모를 취소해도 fork 태스크는 계속된다.
 의 특징을 가지게 된다.
+
+
+<br><br>
+
+### 4.5 [Pulling future actions](https://redux-saga.js.org/docs/advanced/FutureActions)
+
+Redux의 액션을 받아서 처리하는 방식은 두가지가 있다.
+  1. takeEvery, takeLatest Effect 이용
+  2. take 이용(low-level)
+
+1.의 경우를 push, 2.의 방식을 pull 방식이라고 한다. 아래 코드를 보자.
+
+```js
+// 1. push방식
+import { select, takeEvery } from 'redux-saga/effects'
+function* watchAndLog() {
+  yield takeEvery('*', function* logger(action) {
+    const state = yield select()
+
+    console.log('action', action)
+    console.log('state after', state)
+  })
+}
+
+// 2. pull 방식
+import { select, take } from 'redux-saga/effects'
+
+function* watchAndLog() {
+  while (true) {
+    const action = yield take('*')
+    const state = yield select()
+
+    console.log('action', action)
+    console.log('state after', state)
+  }
+}
+```
+- 1.의 `takeEvery`를 사용한 경우 logger 제너레이터 함수를 action을 인자로 호출하게 한다. ***태스크는 부모요소에서 제어***하고있다.
+- 2.의 경우 watchAndLog는 ***내부적으로 스스로 action을 pull해오고 이를 처리***한다. 필요한걸 스스로 요청한다. 제어의 역전(Inversion of Control)이 발생했다. 
+
+- ***PULL 방식이 좀 더 다양하게 액션 처리 flow를 만들 수 있어서 좋다.*** 예를들어 login-logout을 처리하는 플로우를 만들어보자.
+```js
+function* loginFlow() {
+  while (true) {
+    yield take('LOGIN')
+    // ... perform the login logic
+    yield take('LOGOUT')
+    // ... perform the logout logic
+  }
+}
+```
+- 반드시 LOGIN - LOGOUT의 순서로 인증 로직이 처리되어야 한다는걸 안다. 필요한 액션 두종류를 스스로 pull 해올 수 있으므로 하나의 사가 함수 내부에 LOGIN/LOGOUNT의 순차 처리 flow를 작성할 수 있다. push 방식이었다면 둘을 각각 분리했어야 할 것이다.
+
+<br><br>
