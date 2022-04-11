@@ -508,4 +508,37 @@ function* mainSaga(getState) {
 
 <br>
 
+### 4.3[Concurrency](https://redux-saga.js.org/docs/advanced/Concurrency)
+- 'Using Saga Helpers'에서 다룬 것 처럼 `takeEvery`, `takeLatest`는 Effect의 동시성을 관리하게 된다. 간단히 각각의 구현을 살펴본다.
+1. `takeEvery`
+```js
+import {fork, take} from "redux-saga/effects"
 
+const takeEvery = (pattern, saga, ...args) => fork(function*() {
+  while (true) {
+    const action = yield take(pattern)
+    yield fork(saga, ...args.concat(action))
+  }
+})
+```
+- 필수로 `pattern`과 `saga`를 인자로 받는다. `fork()`를 이용해 논블로킹으로 처리하는데, 내부적으로 watch-and-fork패턴을 사용해서 pattern에 대한 처리를 saga가 non-blocking으로 수행하도록 Effect를 만든다.
+
+
+<br>
+
+2. `takeLatest​`
+```js
+import {cancel, fork, take} from "redux-saga/effects"
+
+const takeLatest = (pattern, saga, ...args) => fork(function*() {
+  let lastTask
+  while (true) {
+    const action = yield take(pattern)
+    if (lastTask) {
+      yield cancel(lastTask) // cancel is no-op if the task has already terminated
+    }
+    lastTask = yield fork(saga, ...args.concat(action))
+  }
+})
+```
+- takeEvery와 비슷한데 차이점은 제너레이터 함수 내부적으로 `lastTask`를 가진다는 것이다. non-blocking Effect를 lastTask에 할당하고, ***액션 발생시 lastTask를 무조건 cancel하고 새로운 태스크(Effect)를 생성***한다. 즉  동시에 태스크가 처리되는걸 허용하지 않는다.
