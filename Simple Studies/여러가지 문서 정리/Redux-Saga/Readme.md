@@ -681,3 +681,100 @@ function* loginFlow() {
 - 반드시 LOGIN - LOGOUT의 순서로 인증 로직이 처리되어야 한다는걸 안다. 필요한 액션 두종류를 스스로 pull 해올 수 있으므로 하나의 사가 함수 내부에 LOGIN/LOGOUNT의 순차 처리 flow를 작성할 수 있다. push 방식이었다면 둘을 각각 분리했어야 할 것이다.
 
 <br><br>
+
+### 4.6 [Non-blocking calls](https://redux-saga.js.org/docs/advanced/NonBlockingCalls)
+NonBlocking으로 동작하는 사가를 어떤식으로 처리하는게 좋을지 간단한 사례를 들어 설명한다.
+- 위에서 `take` Effect로 로그인-로그아웃 플로우를 만들었다. 그걸 간단히 빌드업해보자.
+
+```js
+import { take, call, put } from 'redux-saga/effects'
+import Api from '...'
+
+function* authorize(user, password) {
+  try {
+    const token = yield call(Api.authorize, user, password)
+    yield put({type: 'LOGIN_SUCCESS', token})
+    return token
+  } catch(error) {
+    yield put({type: 'LOGIN_ERROR', error})
+  }
+}
+
+function* loginFlow() {
+  while (true) {
+    const {user, password} = yield take('LOGIN_REQUEST')
+    const token = yield call(authorize, user, password)
+    if (token) {
+      yield call(Api.storeItem, {token})
+      yield take('LOGOUT')
+      yield call(Api.clearItem, 'token')
+    }
+  }
+}
+```
+- `LOGIN_REQUEST` 액션이 발생하면 authorize 사가 함수를 호출한다. `call`은 Blocking Effect이므로 만약 ***처리가 완료되기 전에 `LOGOUT` 액션이 발생하면 이건 유실된다.***
+- Non-Blokcing Effect인 `fork`를 사용해 리팩토링한다. 메뉴얼에는 중간과정이 좀 있는데 생략하고 결과만 보도록 한다.
+
+```js
+function* loginFlow() {
+  while (true) {
+    const {user, password} = yield take('LOGIN_REQUEST')
+    // call -> fork 사용
+    const task = yield fork(authorize, user, password)
+
+    // take에 패턴을 배열로 전달. 둘 다 감시한다.
+    const action = yield take(['LOGOUT', 'LOGIN_ERROR'])
+    
+    // LOGOUT시 task를 캔슬
+    if (action.type === 'LOGOUT')
+      yield cancel(task)
+    
+    yield call(Api.clearItem, 'token')
+  }
+}
+```
+- 아래와 같이 리팩토링 되었다.
+  1. `fork`를 이용해 사가를 호출한다. Non-Blocking이므로 바로 take로 넘어간다.
+  2. 로그아웃이 완료되면 `cancel`로 fork한 태스크를 중지한다. 완료된 상태라면 아무것도 발생하지 않는다. 
+  3. `authorize` 사가에서 에러가 발생했으면 `LOGIN_ERROR`액션이 발생할 것이고, `take`에서 이걸 받아 Api.clearItem을 호출할것이다.
+  4. 중간에 로그아웃을 하건 로그인이 실패하건 `take('LOGIN_REQUEST')`에 다시 돌아가 액션을 기다리게된다.
+
+- fork로 인해 발생하는 동시성을 제어하는 핵심은 [`cancel`](https://redux-saga.js.org/docs/api/index.html#cancel)Effect이다. 태스크를 인자로 받아 태스크를 중지시킨다. ***이걸 하지 않으면 LOGOUT을 중간에 호출하더라고 로그인처리는 끝까지 가고, 토큰은 저장되어 버릴 것이다.***
+
+- 여기서 한단계가 더있다. 만약 로그인 시작시 `isLoginPending`같은 플래그를 설정했다면, 로그인완료/로그인중 로그아웃/로그인에러 세가지 케이스에 모두 대응해서 `isLoginPending`을 되돌릴 수 있는 방법은 뭐가 있을까?
+
+```js
+import { take, call, put, cancelled } from 'redux-saga/effects'
+import Api from '...'
+
+function* authorize(user, password) {
+  try {
+    // isLoginPending 플래그를 설정하고 시작한다.
+    yield put({type: 'SET_LOGIN_PENDING', payload: true })
+
+    const token = yield call(Api.authorize, user, password)
+    yield put({type: 'LOGIN_SUCCESS', token})
+    yield call(Api.storeItem, {token})
+    return token
+  } catch(error) {
+    yield put({type: 'LOGIN_ERROR', error})
+  } finally {
+    // isLoginPending 플래그 리셋
+    yield put({type: 'RESET_LOGIN_PENDING'})
+  }
+}
+```
+- try/catch의 `finally`블록은 api성공, api 예외발생, task cancel 세가지 모든 경우에 실행된다. 따라서 finally에 작성하면 모든 케이스에 대응하여 `isLoginPending`을 되돌릴 수 있다.
+
+<br>
+
+> ❗️ 참고로 finally 블록에서 task cancel시에만 뭔가 로직을 수행하고 싶다면 finally문에 [`cancelled`](https://redux-saga.js.org/docs/api/index.html#cancelled) Effect를 사용해 아래와 같이 작성하면 된다. 
+> ```js
+> // ...
+> finally {
+>   if (yield cancelled()) {
+>     // ... cancel시에만 실행도리 로직
+>   }
+>   // cancel, 성공/실패 모두에 실행되는 로직
+> }
+> ```
