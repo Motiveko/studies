@@ -574,3 +574,21 @@ name = 'b';
 obj.print();
 ```
 
+- 자바스크립트 [`Map` vs `Object`](https://developer.mozilla.org/ko/docs/Web/JavaScript/Guide/Keyed_collections#object%EC%99%80_map_%EB%B9%84%EA%B5%90)
+    - Object 키는 string이지만, Map은 모든값 가능
+    - Object는 크기를 직접계산, Map은 size 프로퍼티 제공
+    - Map은 삽입된 순서대로 반복
+    - `set`, `get`, ***`delete`*** 메서드 제공
+    - Map은 Iterable이지만 Object는 아니다.(for of순회가능)
+    ```js
+    // Map의 순회
+    for( let [key, value] of map) {...}
+
+    // Object순회
+    Object.entries(obj).forEach(([key, value]) => ...);
+    ```
+- 자바스크립트 [`Set` vs `Array`]
+    - 값의 조회에 대해 O(1) vs O(N)의 조회속도 차이가 있다.
+    - 배열에서는 값의 삭제가 불가능하고 배열을 잘라내서 붙여야하지만, Set은 삭제가 가능하다.
+    - `NaN`은 배열에서 indexOf로 찾을 수 없다.
+    - Set은 값의 중복이 없다.
