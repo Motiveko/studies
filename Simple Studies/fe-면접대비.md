@@ -621,4 +621,8 @@ obj.print();
 
 <br>
 
-
+- `apply`, `call`, `bind`의 차이점
+    - https://wooooooak.github.io/javascript/2018/12/08/call,apply,bind/
+    - 셋 모두 보통 this바인딩 문제를 해결하기 위해 사용한다.
+    - `apply`, `call`은 바인딩 하는 동시에 호출한다. 차이는 apply은 argument를 ...args로 받고( ,로 구분해서 전달) call은 배열로 한번에 받는다는 점
+    - `bind`는 바로 호출되는게 아닌 원본함수를 래핑한 새로운 함수를 반환한다.
