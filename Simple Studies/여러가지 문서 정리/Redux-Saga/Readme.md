@@ -778,3 +778,45 @@ function* authorize(user, password) {
 >   // cancel, 성공/실패 모두에 실행되는 로직
 > }
 > ```
+
+<br><br>
+
+### 4.7 [Racing Effects](https://redux-saga.js.org/docs/advanced/RacingEffects)
+- `Promise.race`처럼 여러개의 태스크를 병렬로 실행하고 가장 먼저 완료되는것만 처리하고 싶을 때가 있다. 이를 위해 `race` Effect를 제공한다.
+- 아래는 timeout을 1초로 fetchApi를 호출하는 태스크이다.
+```js
+function* fetchPostsWithTimeout() {
+
+  // fetchApi가 1초내로 완료되지 않으면 timeout이 완료될것이다.
+  const {posts, timeout} = yield race({
+    posts: call(fetchApi, '/posts'),
+    timeout: delay(1000)
+  });
+
+  if(posts) {
+    yield put({ type: 'POSTS_RECEIVED', posts });
+  } else {
+    yield put({ type: 'TIMEOUT_ERROR' });
+  }
+}
+```
+- 다른 예로 태스크에서 무한루프 내에 `take`로 액션을 받아 어떤 태스크를 역시 무한루프로 실행하는데, 태스크가 실행된 후 ***취소 액션이 발생하면 이 태스크를 취소하도록*** 만들 수 있다.
+```js
+function* backgroundTask() { 
+  // 따로 중지하는기능이 없다.
+  while(true) {
+    // background task..
+  }
+}
+
+function* () {
+  while(true) {
+    yield take('START_BACKGROUND_TASK');
+    // backgroundTask 실행 후 'CANCEL_TASK' 액션이 발생하면 나머진 취소한다.
+    yield race({
+      task: call(backgroundTask),
+      cancel: take('CANCEL_TASK')
+    })
+  }
+}
+```
