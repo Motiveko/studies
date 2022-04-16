@@ -820,3 +820,66 @@ function* () {
   }
 }
 ```
+
+<br><br>
+
+### 4.8 [Root Saga](https://redux-saga.js.org/docs/advanced/RootSaga)
+- 루트 사가는 여러개의 사가들이 `Saga Middleware`에서 동시에 실행되기 위한 진입점이다.
+- 루트 사가를 작성하는 몇가지 패턴에 대해 알아본다.
+
+1. Non-blocking fork effects
+- `fork`는 Non-blocking이기 때문에 루트 사가에 다 집어넣으면 된다. 동시에 실행될 것이다.
+```js
+export default function* rootSaga() {
+  yield fork(saga1)
+  yield fork(saga2)
+  yield fork(saga3)
+  // code after fork-effect
+}
+```
+
+<br>
+
+2. all Effect 중첩 fork
+- `all` 은 인자로 받은 전체 태스크를 수행하고 모두 완료되면 결과를 반환한다.
+```js
+const [task1, task2, task3] = yield all([ fork(saga1), fork(saga2), fork(saga3) ])
+```
+- 이렇게 하면 내부의 모든 `fork`는 forkQueue에 묶이게 되는데, 만약 ***전부 완료되기 전에 어디선가 catch되지 않은 예외 발생시 전부다 멈춘다는 무서운점이 있다.***
+
+3. spawn을 이용한 태스크의 컨텍스트 분리(Keeping the root alive)
+- fork와 다르게 `spawn`은 부모 컨텍스트에 존재하지 않는다. 즉 ***예외가 부모에게 전파되지 않기때문에 부모 태스크에 영향을 끼치지 않는다.***
+```js
+export default function* rootSaga() {
+  yield spawn(saga1)
+  yield spawn(saga2)
+  yield spawn(saga3)
+}
+```
+
+4. `spawn + call + all`을 이용해 모든 사가를 계속 살아있게 만들기(Keeping everything alive​)
+- 3.에서 spawn을 이용해서 작성한 태스크에서 예외 발생시 다른 태스크에 영향은 없지만 자신은 중지된다. 어떤 태스크든 예외 발생등으로 중지될때마다 태스크를 살리고 싶으면 어떻게 할까?
+```js
+function* rootSaga () {
+  const sagas = [
+    saga1,
+    saga2,
+    saga3,
+  ];
+
+  yield all(sagas.map(saga =>
+    spawn(function* () {
+      while (true) {
+        try {
+          yield call(saga)
+          break
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    }))
+  );
+}
+```
+- call은 완료될때까지 블로킹된다. 해당 태스크가 정상적으로 끝내는 경우 break문을 타고 종료되지만, 예외 발생으로 끝나면 `try/catch => while(true)`를 거쳐 재실행되게 된다.
+- 이 태스크는 spawn 로 실행되었으므로 논 블로킹이다.
