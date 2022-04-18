@@ -883,3 +883,122 @@ function* rootSaga () {
 ```
 - call은 완료될때까지 블로킹된다. 해당 태스크가 정상적으로 끝내는 경우 break문을 타고 종료되지만, 예외 발생으로 끝나면 `try/catch => while(true)`를 거쳐 재실행되게 된다.
 - 이 태스크는 spawn 로 실행되었으므로 논 블로킹이다.
+
+<br>
+
+### 4.9 [Running Tasks In Parallel](https://redux-saga.js.org/docs/advanced/RunningTasksInParallel)
+- 여러개의 비동기 동작을 병렬 실행하려면 `all`을 사용하자.
+```js
+import { all, call } from 'redux-saga/effects'
+
+// 순차실행, users 완료 후 repos 실행한다. 느리다.
+const users = yield call(fetch, '/users')
+const repos = yield call(fetch, '/repos')
+
+// 병렬실행, 빠르다
+const [users, repos] = yield all([
+  call(fetch, '/users'),
+  call(fetch, '/repos')
+])
+```
+- all의 단점은 한개라도 실패하면 다 실패한것으로 간주한다는 것이다.(Promise.all과 같다!)
+
+<br><br>
+
+### 4.10 [Task Cancellation](https://redux-saga.js.org/docs/advanced/TaskCancellation)
+### 4.10.1 Cancellation
+- 유저 액션에 의해 백그라운드에서 일정시간마다 정보를 가져와서 갱신하는 task가 있다. 그리고 유저 액션에 의해 task를 취소할 수 있도록 사가를 구성해본다.
+```js
+
+function* bgSync() {
+  try {
+    while(true) {
+      yield put(actions.requestStart())
+      const result = yield call(someApi);
+      yield put(actions.requestSuccess(result));
+      yield delay(5000);
+    }
+  } finally {
+    if(cancelled()) {
+      yield put(actions.requestFailure('Sync cancelled!'));
+    }
+  }
+}
+
+function* main() {
+  while(yield take('START_BACKGROUND_SYNC')) {
+    const task = yield fork(bgSync);
+
+    yield take('STOP_BACKGROUND_SYNC');
+
+    yield cancel(task);
+  }
+}
+```
+- task는 결국 `제너레이터 객체`이다. ***`cancel(task)`는 `Generator.prototype.return`을 호출해서 제너레이터 객체를 즉시 finally 블럭으로 이동시킨다.***
+- task의 취소는 caller(호출자) - callee(task) 중 caller에서 보통 호출하게 된다. 이 때 callee는 또 caller로서 어떤 task를 실행하느라 blocking 상태일 수도 있는데, 이 때 ***모든 블로킹된 하위 태스크를 모두 취소하게 된다.*** 결과 반환이나 예외의 전파와 반대인 `downward propagation`이 일어난다고 할 수 있다.
+
+```js
+function* main() {
+  const task = yield fork(subtask)
+  ...
+  // 취소
+  yield cancel(task)
+}
+
+function* subtask() {
+  ...
+  yield call(subtask2) // currently blocked on this call
+  ...
+}
+
+function* subtask2() {
+  ...
+  yield call(someApi) // currently blocked on this call
+  ...
+}
+```
+- 위 코드에서 main -> subtask -> subtask2 순으로 caller->callee 관계가 구성되어 있는데, ***main에서 subtask를 취소하면 subtask를 블로킹하고 있던 subtask2까지 취소 된다는 의미이다.***
+
+<br>
+
+### 4.10.2 Testing generators with fork effects
+- `fork`이펙트는 논블로킹으로 백그라운드에서 실행되므로 그냥 지나간다. 이런걸 어떻게 테스트할 수 있을까?
+- 권장안은 fork 이펙트의 반환 task를 mock으로 만들어서 테스트하는것이다. [`@redux-saga/testing-utils`](https://www.npmjs.com/package/@redux-saga/testing-utils)의 `createMockTask` 메서드를 이용하면 된다. 위에 `main - bgSync`를 테스트한다.
+```js
+import { createMockTask } from '@redux-saga/testing-utils';
+
+describe('main', () => {
+  const generator = main();
+  
+  it('waits for start action', () => {
+    const expectedYield = take('START_BACKGROUND_SYNC');
+    expect(generator.next().value).to.deep.equal(expectedYield);
+  });
+
+  it('forks the service', () => {
+    const expectedYield = fork(bgSync);
+    const mockedAction = { type: 'START_BACKGROUND_SYNC' };
+    expect(generator.next(mockedAction).value).to.deep.equal(expectedYield);
+  });
+
+  it('waits for stop action and then cancels the service', () => {
+
+    const mockTask = createMockTask();
+    const expectedTakeYield = take('STOP_BACKGROUND_SYNC');
+    expect(generator.next(mockTask).value).to.deep.equal(expectedYield);
+
+    const expectedCancelYield = cancel(mockTask);
+    expect(generator.next().value).to.deep.equal(expectedCancelYield);
+  });
+})
+```
+- 이런 방식으로 fork된 task를 mock으로 만들어서 취소호출 동작 등을 테스트 할 수 있다. task도 결국 순수 자바스크립트 객체이기 때문에 이런 방식의 테스트가 유효하다.
+- ***굳이 task를 `createMockTask`로 mocking해서 테스트하는 이유는 뭘까? 고민해봐야 할 문제인 것 같은데, mockTask는 `setRunning`, `setResult`, `setError`등으로 task의 상태를 지정할 수 있기 때문으로 생각된다. 여러 상태에 따른 동작 테스트도 필요한 시점이 있을 것 같다.***
+
+<br>
+
+### 4.10.3 Automatic cancellation​
+- 다음 두가지 경우에 task가 자동으로 취소된다.
+  1. `race`이펙트를 사용한 경우, 최초 완료되는 task 외에 모든 task는 cancel된다.
+  2. `all`이펙트를 사용하는 겨웅, 하나라도 실패하면 나머지 모두 cancel된다.
