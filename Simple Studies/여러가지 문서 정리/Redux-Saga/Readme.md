@@ -1002,3 +1002,121 @@ describe('main', () => {
 - 다음 두가지 경우에 task가 자동으로 취소된다.
   1. `race`이펙트를 사용한 경우, 최초 완료되는 task 외에 모든 task는 cancel된다.
   2. `all`이펙트를 사용하는 겨웅, 하나라도 실패하면 나머지 모두 cancel된다.
+
+<br><br>
+
+### 4.11 [Testing Sagas](https://redux-saga.js.org/docs/advanced/Testing)
+- 사가를 테스트하는데는 두가지 방법이 있다.
+  1. 제너레이터 함수를 step-by-step으로 실행하기
+  2. 전체 사가를 동작시키고 side-effect에 대해 asserting 하기
+
+<br>
+
+### 4.11.1 Testing the Saga Generator Function​
+- 내가 기존에 하던 방식과 다른게 없다. `@redux-saga/testing-utils`의 `cloneableGenerator`함수를 이용하는 방식.
+
+<br>
+
+### 4.11.2 Testing the full Saga​
+- [`runSaga`](https://redux-saga.js.org/docs/api#runsagaoptions-saga-args) 메서드를 이용하면 **Redux 미들웨어 밖에서 사가를 실행**할 수 있다. 이 때 필요한 환경들을 외부에서 주입할 수 있는데, 이 ***환경들에 적절한 mock 객채들을 넣어줘서 호출에 대한 assert를 수행하는 방식으로 테스트*** 할 수도 있다.
+- store에서 상태를 select하고 이를 이용해 api를 호출하는 간단한 사가함수를 테스트한다.
+```js
+function* callApi(url) {
+  const someValue = yield select(selector);
+  try {
+    const result = yield call(SOMEAPI, url, someValue);
+    yield put(success(result.json()));
+  } catch(e) {
+    yield put(error(e));
+    return -1;
+  }
+}
+```
+
+```js
+import sinon from 'sinon';
+import * as api from './api';
+
+test('callApi', async (assert) => {
+  const dispatched = [];
+  sinon.stub(api, 'myApi').callsFake(() => ({
+    json: () => ({
+      some: 'value'
+    })
+  }));
+  const url = 'http://url';
+  const result = await runSaga({
+    dispatch: (action) => dispatched.push(action),
+    getState: () => ({ state: 'test' }),
+  }, callApi, url).toPromise();
+
+  assert.true(myApi.calledWith(url, somethingFromState({ state: 'test' })));
+  assert.deepEqual(dispatched, [success({ some: 'value' })]);
+});
+```
+- 예제에서는 `sinon`을 이용해 api 모듈을 mocking했다.
+- runSaga는 callApi를 fork와 같이 task 객체를 반환하는데, `.toPromise() + await`을 사용하면 task 실행이 완료될 때 까지 블록할 수 있다.
+- runSaga의 옵션중 `dispatch`는 `put` 이펙트를 통해 액션을 dispatch하는걸 재정의 할 수 있고, ₩는 `select` 이펙트가 가져오는 store의 상태를 재정의 할 수 있다. 이건 결국 ***redux store를 mocking하는것과 같다.***
+- assert로 api에 대한 호출 테스트와 `put`의 호출에 대해서 `dispatched`배열을 확인하는 방식으로 테스트할 수 있다.
+
+<br>
+
+### 4.11.3 [Testing libraries​](Testing libraries​)
+- 여러가지 테스트 관련 라이브러리를 알려주는데, 대부분 관리가 안되고 있다. 그리고 결론은 [`redux-saga-test-plan`](https://github.com/jfairbank/redux-saga-test-plan)이 다른 라이브러리들을 모두 커버할 수 있다고 한다.
+- Reducer와 연결해서 테스트하는걸 `integration test`, 그냥 사가만 테스트하는걸 recording side-effects 라고 하는가보다.
+- `redux-saga-test-plan`는 호출 순서를 테스트 할 수도 있고, 결과만 테스트 할 수도 있다. integration test도 가능하다. 4.11.2의 `callApi`사가를 테스트 해보자.
+```js
+import { expectSaga, testSaga } from 'redux-saga-test-plan';
+
+test('exact order with redux-saga-test-plan', () => {
+  return testSaga(callApi, 'url')
+    .next()
+    .select(selectFromState)
+    .next()
+    .call(myApi, 'url', valueFromSelect);
+});
+```
+- `testSaga`에 테스트할 사가를 넣고 메서드를 체이닝하는 형태로 작성된다. `next`로 사가를 한스탭씩 실행하고 `select`, `call`등 실행되어야 할 Effect를 assert한다. 특이하게 return문에 작성해줘야 하는가보다.
+- 다음은 순서를 따지지 않고 원하는 내용만 테스트하는 방식이다.
+```js
+test('recorded effects with redux-saga-test-plan', () => {
+  return expectSaga(callApi, 'url')
+    .put(success(value))
+    .call(myApi, 'url', value)
+    .run();
+});
+
+test('test only final effect with .provide()', () => {
+  return expectSaga(callApi, 'url')
+    .provide([
+      [select(selectFromState), selectedValue],
+      [call(myApi, 'url', selectedValue), response]
+    ])
+    .put(success(response))
+    .run();
+});
+```
+- 둘 다 expectSaga에 테스트할 사가를 넣고, 메서드 체이닝 하게 된다. 마지막에 `run()`으로 사가를 실행시켜야만 테스트가 동작한다.
+- 첫번째는 `put`의 동작을 테스트한다. `call`메서드로 call 이펙트의 반환값을 mocking한다.
+- 두번째는 `provide` 메서드로 여러개의 effect의 호출결과 예상되는 값을 mocking할 수 있다.(selector결과, api 호출결과) 그리고 사가의 ***마지막 effect***를 테스트 할 수 있다.
+
+- 다음은 Reducer와 연결하는 Integration Test이다.
+```js
+test('integration test with withReducer', () => {
+  return expectSaga(callApi, 'url')
+    .withReducer(myReducer)
+    .provide([
+      [call(myApi, 'url', value), response]
+    ])
+    .hasFinalState({
+      data: response
+    })
+    .run();
+})
+```
+- `withReducer`메서드로 실제 리듀서를 연결한다.
+- `provide` 메서드로 api를 호출하는 `call` 이펙트의 반환값을 mocking한다.
+- `hasFinalState` 메서드로 최종 store의 상태값을 알 수 있다.
+
+### effectMiddlewares​
+- 라이브러리 없이 native 방식으로 사가와 리덕스를 연결해서 테스트하는 방식이다. 제대로 된 설명은 없어서 정리하지 않는다.
