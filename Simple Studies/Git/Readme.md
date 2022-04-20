@@ -40,7 +40,24 @@ git status
 ```
 - 파일 추가하기(staging area) : [`add`](https://git-scm.com/docs/git-add)
 ```bash
+# 파일 추가
 git add <file>...
+
+# 현재 디렉토리 전체 추가(tracking + untracking)
+git add .
+git add -A
+
+# tracking중인 파일 중 변경있는 파일만 추가
+git add -u
+```
+
+- 파일 제거하기(unstaging) 
+  - [`reset`](https://git-scm.com/docs/git-reset)
+  - [`restore`](https://git-scm.com/docs/git-restore)
+```bash
+git reset HEAD <file>...
+
+git restore --staged <file>...
 ```
 
 - 커밋하기 : [`commit`](https://git-scm.com/docs/git-commit)
@@ -60,6 +77,7 @@ git show
 ```
 - log는 커밋 히스토리를 보여주고, show는 커밋히스토리를 포함하는 여러 객체를 보여준다.
 
+
 - git이 tracking하고 있는 파일 보기 [`ls-files`](https://git-scm.com/docs/git-ls-files)
 ```bash
 git ls-files
@@ -69,3 +87,54 @@ git ls-files
 ```bash
 git commit -am "message"
 ```
+
+- 수정한 파일을 repository의 최근 커밋으로 되돌리기 : [`checkout`](https://git-scm.com/docs/git-checkout)
+```bash
+git checkout -- <filename>
+```
+
+- `log`의 다양한 옵션
+```bash
+# log에 적용 가능한 다양한 옵션 보기
+git help log
+
+# 각 커밋을 한줄씩, graph로, 어떤커밋이 어떤브랜치것인지, 현재 repo에서 볼 수 있는 모든 브랜치에 대해, 출력한다.
+git log --oneline --graph --decorate --all
+```
+
+- 깃 커맨드의 `alias` 만들기 - `config`
+```bash
+# 형식
+git config --global alias.NAME "COMMAND"
+
+# 예
+git config --global alias.hist "log --oneline --graph --decorate --all"
+
+# 확인
+git config --global --list | grep alias
+
+# 실행
+git hist
+```
+
+- tracking중인 파일의 파일명 변경 : [`mv`](https://git-scm.com/docs/git-mv)
+- `mv`는 staging까지 해준다. 커밋은 따로 해줘야함
+- 단순히 os에서 파일명 변경하는건 git에서 `파일 삭제 + 생성`으로 인식한다.(스테이징하면 rename으로 인식하긴 함)
+```bash
+git mv sample.txt demo.txt
+git commit -m "sample.txt 파일명 demo.txt로 변경"
+```
+
+- tracking중인 파일 제거 : [`rm`](https://git-scm.com/docs/git-rm)
+- `rm`역시 staging까지만 해준다. 커밋은 따로.
+```bash
+git rm demo.txt
+git commit -m "demo.txt 제거"
+```
+
+- tracking하지 않을 파일을 추가 : [`.gitignore`](https://git-scm.com/docs/gitignore)
+
+<br>
+
+
+
