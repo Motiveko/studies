@@ -20,13 +20,17 @@ git config --global core.editor "'/Applications/Sublime Text.app/Contents/Shared
 git config --global -e
 ```
 
-## Basic
+<br><br>
+
+## Basic Concepts
 - 깃 레포지토리 생성. folder_name을 적으면 해당 폴터를 루트 디렉토리로 해서 `.git` 파일이 생성된다.
 ```bash
 git init [folder_name]
 ```
 
-- Git Status
+<br>
+
+### Git Status
   - Local Git States
     - Working Directory : 전체 디렉토리
     - Staging Area : 커밋 할 파일을 올리는 단계
@@ -34,11 +38,15 @@ git init [folder_name]
   - Remote
     - 원격 저장소
 
-- 상태 보기(루트 디렉토리에서)
-```bash
-git status
-```
-- 파일 추가하기(staging area) : [`add`](https://git-scm.com/docs/git-add)
+  - 상태 보기(루트 디렉토리에서)
+  ```bash
+  git status
+  ```
+
+<br>
+
+### 파일 추가하기(staging area)
+- [`add`](https://git-scm.com/docs/git-add)
 ```bash
 # 파일 추가
 git add <file>...
@@ -51,16 +59,21 @@ git add -A
 git add -u
 ```
 
-- 파일 제거하기(unstaging) 
-  - [`reset`](https://git-scm.com/docs/git-reset)
-  - [`restore`](https://git-scm.com/docs/git-restore)
+<br>
+
+### 파일 제거하기(unstaging) 
+- [`reset`](https://git-scm.com/docs/git-reset)
+- [`restore`](https://git-scm.com/docs/git-restore)
 ```bash
 git reset HEAD <file>...
 
 git restore --staged <file>...
 ```
 
-- 커밋하기 : [`commit`](https://git-scm.com/docs/git-commit)
+<br>
+
+### 커밋하기 
+- [`commit`](https://git-scm.com/docs/git-commit)
 ```bash
 # core editor
 git commit
@@ -69,30 +82,20 @@ git commit
 git commit -m "메시지"
 ```
 - 커밋 아이디는 SHA-1 아이디라고 한다.
-
-- 커밋 히스토리 보기 : [`log`](https://git-scm.com/docs/git-show), [`show`](https://git-scm.com/docs/git-show)
-```bash
-git log
-git show
-```
-- log는 커밋 히스토리를 보여주고, show는 커밋히스토리를 포함하는 여러 객체를 보여준다.
-
-
-- git이 tracking하고 있는 파일 보기 [`ls-files`](https://git-scm.com/docs/git-ls-files)
-```bash
-git ls-files
-```
-
 - tracking중인 파일의 변경을 staging + commit 한번에 하기: `commit -a`
 ```bash
 git commit -am "message"
 ```
 
-- 수정한 파일을 repository의 최근 커밋으로 되돌리기 : [`checkout`](https://git-scm.com/docs/git-checkout)
-```bash
-git checkout -- <filename>
-```
+<br>
 
+### 커밋 히스토리 보기 
+- [`log`](https://git-scm.com/docs/git-show), [`show`](https://git-scm.com/docs/git-show)
+```bash
+git log
+git show
+```
+- **log는 커밋 히스토리를 보여주고, show는 커밋히스토리를 포함하는 여러 객체를 보여준다.**
 - `log`의 다양한 옵션
 ```bash
 # log에 적용 가능한 다양한 옵션 보기
@@ -102,7 +105,26 @@ git help log
 git log --oneline --graph --decorate --all
 ```
 
-- 깃 커맨드의 `alias` 만들기 - `config`
+<br>
+
+### git이 tracking하고 있는 파일 보기 
+- [`ls-files`](https://git-scm.com/docs/git-ls-files)
+```bash
+git ls-files
+```
+
+<br>
+
+### 수정한 파일을 repository의 최근 커밋으로 되돌리기
+-  [`checkout`](https://git-scm.com/docs/git-checkout)
+```bash
+git checkout -- <filename>
+```
+
+
+
+### 깃 커맨드의 `alias` 만들기 
+- [`config`](https://git-scm.com/docs/git-config)
 ```bash
 # 형식
 git config --global alias.NAME "COMMAND"
@@ -117,7 +139,10 @@ git config --global --list | grep alias
 git hist
 ```
 
-- tracking중인 파일의 파일명 변경 : [`mv`](https://git-scm.com/docs/git-mv)
+<br>
+
+### tracking중인 파일의 파일명 변경 
+- [`mv`](https://git-scm.com/docs/git-mv)
 - `mv`는 staging까지 해준다. 커밋은 따로 해줘야함
 - 단순히 os에서 파일명 변경하는건 git에서 `파일 삭제 + 생성`으로 인식한다.(스테이징하면 rename으로 인식하긴 함)
 ```bash
@@ -125,7 +150,10 @@ git mv sample.txt demo.txt
 git commit -m "sample.txt 파일명 demo.txt로 변경"
 ```
 
-- tracking중인 파일 제거 : [`rm`](https://git-scm.com/docs/git-rm)
+<br>
+
+### tracking중인 파일 제거 
+- [`rm`](https://git-scm.com/docs/git-rm)
 - `rm`역시 staging까지만 해준다. 커밋은 따로.
 ```bash
 git rm demo.txt
@@ -135,6 +163,3 @@ git commit -m "demo.txt 제거"
 - tracking하지 않을 파일을 추가 : [`.gitignore`](https://git-scm.com/docs/gitignore)
 
 <br>
-
-
-
