@@ -618,7 +618,6 @@ obj.print();
     - 함수가 일급 객체로 취급된다. -> 함수형 프로그래밍에 좋다.
     - 클로저
 
-
 <br>
 
 - `apply`, `call`, `bind`의 차이점
@@ -626,3 +625,33 @@ obj.print();
     - 셋 모두 보통 this바인딩 문제를 해결하기 위해 사용한다.
     - `apply`, `call`은 바인딩 하는 동시에 호출한다. 차이는 apply은 argument를 ...args로 받고( ,로 구분해서 전달) call은 배열로 한번에 받는다는 점
     - `bind`는 바로 호출되는게 아닌 원본함수를 래핑한 새로운 함수를 반환한다.
+
+<br>
+
+- Web component 
+    - [라이프사이클](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements#using_the_lifecycle_callbacks)
+        - `constructor`: 최초 호출
+        - `connectedCallback`: custom element가 document-connected element에 append 될 때 호출된다.
+        - `disconnectedCallback`: custom element가 DOM에서 빠져나갈때 호출된다.
+        - `adoptedCallback`: custom-element가 새로운 document로 이동할 때 호출?
+        - `attributeChangedCallback` : custom element의 Attribute가 변할 때 호출, `static get observedAttributes`랑 같이 쓴다.
+            - `observedAttributes`: `변화감지`를 적용할 어트리뷰트 명을 배열 형태로 반환하는 함수를 구현한다. 이를 통해 최적화를 한다.
+            - `attributeChangedCallback(name, oldVal, newVal)`은 observedAttributes에 정의된 변화를 감지할 어트리뷰트에 대해 값이 변하면 정해진 콜백을 수행한다.
+    - 
+            
+
+    - Web Component가 React를 대체하지 못한는 이유
+        - https://ko.reactjs.org/docs/web-components.html#:~:text=React%20and%20Web%20Components%20are,The%20two%20goals%20are%20complementary.
+        - React와 WebCompopnent는 존재의 이유가 다르다
+            - Web Component: 재사용할 수 있는 컴포넌트에 강한 캡슐화를 재공(shadow DOM)
+            - React: 데이터와 DOM을 동기화하는 선언적 라이브러리
+        - 따라서 둘을 함께 상호 보완적으로 사용할 수 있다.
+        - 근데 문서상에도 나와있듯 그렇게 호환성이 좋지는 않다.
+        
+- 무한 스크롤이 느려지면 어떻게 할 것인가?
+    - https://www.bucketplace.co.kr/post/2020-09-10-%EC%98%A4%EB%8A%98%EC%9D%98%EC%A7%91-%EB%82%B4-%EB%AC%B4%ED%95%9C%EC%8A%A4%ED%81%AC%EB%A1%A4-%EA%B0%9C%EB%B0%9C%EA%B8%B0/
+    - 화면에 표시되는 객체만 그리도록 한다. 가장 간단하게는 [react-virtualized](https://github.com/bvaughn/react-virtualized)와 같은 라이브러리를 사용하는 것
+    - 실제 사용사례
+        - https://aerocode.net/336
+        - https://yoon-dumbo.tistory.com/21
+
