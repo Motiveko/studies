@@ -124,3 +124,41 @@ Waterfall 차트 각각의 상세에서 `Initial connection`, `Waiting(TTFB)`, `
     - `preload`를 쓰면 CSS와 함께 내부의 이미지와 폰트를 로딩한다.(안쓰면 css전체 로딩 후 내부의 폰트와 이미지 로딩)
 
   - 서버측에서 **HTTP2 Server Push** 기능을 이용하면 Client에서 HTML을 파싱해서 CSS, JS, 이미지를 요청하는게 아닌, HTML을 내려줄 때 서버에서 필요한 자원을 한꺼번에 다 푸시 해줄수도 있다.
+
+<br>
+
+## 5. 체감속도 높이기
+- First Paint(FP) : HEAD 태그 종료 후,
+- First Meaningful Paint(FMP): Hero 엘리먼트(앱의 가장 중요한 요소)가 보이는 시기, 구글은 이 지점을 로드 속도의 기준으로 본다.
+- Time to Interactive(TTI): 사용자가 앱을 사용할 수 있기 시작하는 시점
+- Hero Element란? => 앱의 가장 중요한 요소, Lazy하게 처리하면 안된다. 서비스 개발자 또는 오너가 정해야 하는 요소다.
+- Hero Element를 정하고 빠르게 보여주도록 해야한다.
+- 너무 큰 css, js 등의 요소가 있다면 다른 요소들과 균일한 크기로 맞추도록 튜닝한다.
+
+<br>
+
+## 6. 인터렉션 속도
+- 인터렉션 속도의 개선은 모두 ***브라우저 Main Thread를 괴롭히지 않는것으로 귀결***된다.
+- Main Thread에 의해 `Rendering Pipeline`이 동작한다! Rendering Pipeline은 아래와 같다.
+  0. start : JS에 의해 DOM이 변경된다
+  1. Style recalculate : DOM의 최종 스타일을 계산
+      - 개발자 도구에서 요소 선택시 computed에서 중첩 사각형으로 margin, border, ... 계산해놓은거
+  2. Layout : DOM의 배치와 크기 계산
+  3. Paint : 화면에 그리기
+  4. Composite : 레이어 조합하기(GPU), 비용이 별로 크진 않다.(웹페이지는 수많은 레이어가 이 단계에 합쳐져서 보여지는것이다)
+
+1. Layout 발생하는 속성 건드리지 않기 
+  - https://csstriggers.com
+  - `transform`같은 속성은 `Composite`만 건든다. 이렇게 layout/paint 없이 composite만 변경되도록 인터렉션을 만들어야한다.
+
+2. GPU 도움을 받기 위해 레이어 만들기
+  - 브라우저가 규칙에 따라 레이어 구성
+    - `position: fixed`
+  - 명시적으로 레이어 구성하기
+    - `translated3d`, `scale3d`, `matrix3d`, `will-change`
+  - GPU의 SideEffect
+    - 레이어를 초기 구성하는 작업은 CPU(Main Thread)가 진행한다.
+    - 레이어에 원래 비트맵 정보를 복사하기 때문에 메모리가 2배 필요하다.
+    - 따라서 꼭 필요한 부분만 레이어로 만든다.
+3. `requestAnimationFrame`
+  - 16ms(60fps 기준)의 비동기 주기를 보장해준다.
