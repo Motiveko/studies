@@ -1008,3 +1008,96 @@ app.post('/upload', upload.none(), (req, res) => {
 });
 ```
 
+<br><br>
+
+### 6.3 Router 객체로 라우팅 분리하기
+- `app.get(...)`과 같은 메서드가 라우터인데, 이걸 많이 연결하면 코드가 복잡해진다. 익스프레스에서는 라우터를 분리할 수 있다.
+```js
+// routes/index.js
+const express = require("express");
+
+const router = express.Router();
+
+router.get("/", (req, res) => {
+  res.send("Hello Express");
+});
+
+module.exports = router;
+
+// routes/user.js
+const express = require("express");
+
+const router = express.Router();
+
+router.get("/", (req, res) => {
+  res.send("Hello User");
+});
+
+module.exports = router;
+
+// app.js
+const indexRouter = require("./routes");
+const userRouter = require("./routes/user");
+app.use("/", indexRouter);
+app.use("/user", userRouter);
+app.use((req, res, next) => {
+  res.status(404).send("not found");
+});
+```
+- `index.js`와 `user.js`에 라우터를 만들고 app.js에서 `app.use()` 메서드로 라우터를 연결했다. 각각 `GET '/'`, `GET '/user'`에 연결된다. 
+- 마지막엔 not found를 처리할 수 있도록 http 404를 응답하는 미들웨어도 추가했다.
+- 라우터에 연결된 미들웨어에서 `next`를 호출하면 라우터에 연결된 나머지 미들웨어를 건너뛴다.
+```js
+router.get('/', 
+  (,,next) => next('route'),
+  () => console.log('실행되지 않음'),
+  () => console.log('실행되지 않음'),
+)
+router.get('/', function(req, res){
+  console.log('이건 실행됨');
+  res.send('Hello Express');
+})
+```
+
+- 라우터 주소에는 `정규 표현식`, `라우트 매개변수` 등의 특수 패턴을 사용할 수 있다. 
+```js
+router.get('/user/:id', function(req, res){
+  console.log(req.params, req.query);
+});
+
+/*
+  GET /user/123?limit=5&skip=10
+    => { id: '123' } { limit: '5', skip: '10' }
+*/
+```
+- `req.params.`에는 `:id`에 매칭되는 값이 들어있다. id만 참조하려면 `req.params.id`로 참조.
+- 주의할 점은 일반 라우터보다 뒤에 위치해야 한다.는 점이다. 다양한 ***라우터를 아우르는 와일드 카드 역할의 라우터는 일반 라우터보다 뒤에 위치해야 한다.***
+```js
+router.get('/user/:id', function(req, res){
+  console.log('얘만 실행된다.');
+})
+router.get('/user/like', function(req, res){
+  console.log('실행되지 않는다.');
+})
+```
+
+- `router.route()`를 이용하면 코드를 좀 더 간소화 시킬수있다.
+```js
+router.get('/abc', (req, res) => {
+  res.send('...')
+})
+router.POST('/abc', (req, res) => {
+  res.send('...')
+})
+
+// router.route를 이용해 좀 더 나은 패턴으로 작성
+router.route('/abc')
+  .get((req, res) => {
+    res.send('...');
+  })
+  .post((req, res) => {
+    res.send('...');
+  })
+```
+
+<br>

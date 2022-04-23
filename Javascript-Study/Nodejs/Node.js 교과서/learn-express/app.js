@@ -1,44 +1,20 @@
-const express = require('express');
-const path = require('path');
-const multer = require('multer');
+const express = require("express");
 const app = express();
-const fs = require('fs');
-try{
-  fs.readdirSync('uploads');
-} catch(error) {
-  console.error('uploads 폴더가 없어 uploads 폴더 생성함');
-  fs.mkdirSync('uploads');
-}
+const path = require("path");
+// const multer = require("multer");
+// const fs = require("fs");
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination(req, file, done) {
-      done(null, 'uploads/');
-    },
-    filename(req, file, done) {
-      const ext = path.extname(file.originalname);
-      done(null, path.basename(file.originalname, ext) + Date.now() + ext);
-    }
-  }),
-  limits: { fileSize: 5*1024*1024}
+// dotenv.config();
+
+const indexRouter = require("./routes");
+const userRouter = require("./routes/user");
+app.use("/", indexRouter);
+app.use("/user", userRouter);
+app.use((req, res, next) => {
+  res.status(404).send("not found");
 });
 
-app.post('/upload', upload.single('image'), (req, res) => {
-  console.log(req.file, req.body);
-  res.send('ok')
-})
-
-app.post('/upload', upload.array('many'), (req, res) => {
-  console.log(req.files, req.body);
-  res.send("ok");
-})
-
-app.post('/upload', upload.fields([{name: 'image1'}, {name: 'image2'}]), (req, res) => {
-  console.log(req.files, req.body);
-  res.send("ok");
-});
-
-app.post('/upload', upload.none(), (req, res) => {
-  console.log(req.body);
-  res.send('ok')
+app.set("port", process.env.PORT || 3000);
+app.listen(app.get("port"), () => {
+  console.log(app.get("port"), "번 포트에서 대기중");
 });
