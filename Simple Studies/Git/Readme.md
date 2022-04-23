@@ -312,7 +312,7 @@ git stash pop
 <br>
 
 ### Time Travel With `Reset` and `Reflog`
-- [`reset`](https://git-scm.com/docs/git-reset)은 `soft`, `mixed(default)`, `hard` 세가지 옵션이 있다.
+- [`reset`](https://git-scm.com/docs/git-reset)은 현재의 HEAD를 특정 상태로 reset하는 동작이다. `soft`, `mixed(default)`, `hard` 세가지 옵션이 있다.
   - `soft` : HEAD를 특정 commit으로 옮기고, 현재 working dir 내용은 staging한다.
   - `mixed` : HEAD를 특정 commit으로 옮기고, 현재 working dir 내용은 staging 하지 않는다.
   - `hard` : HEAD를 특정 commit으로 옮기고, 현재 working dir 내용은 다 유실된다.(destructive).
@@ -321,7 +321,79 @@ git stash pop
 # 특정 커밋으로 돌아가기
 git reset <commit> --<soft|mixed|hard>
 ```
-- [`reflog`](https://git-scm.com/docs/git-reflog)는 repository에서 했던 모든 액션들을 보여준다.
+- [`reflog`](https://git-scm.com/docs/git-reflog)는 HEAD의 참조 변경 내역을 보여준다. 이걸 Reference logs(reflog)라고 한다. 예를 들어 `HEAD@{2}`는 헤드가 2번 전에 움직인곳을 의미한다. 그냥 최신 기준으로 1씩 증가한다고 보면 된다.
 ```bash
 git reflog
+```
+
+<br>
+
+### Linking to remote repository
+- [`remote`](https://git-scm.com/docs/git-remote)는 추적중인 레포지토리를 관리한다.
+```bash
+# 관리 중인 repository 확인하기
+gir remote -v
+
+# repository 추가하기
+git remote add [-t <branch>] [-m <master>] <name> <URL>
+git remote add origin git@github.com:Motiveko/demo.git
+
+# repoistory 지우기
+git remote remove <name>
+
+# 원격지 주소 변경(레포지토리 명 변경 등으로 인해 URL 변경시)
+git remote set-url <name> <URL>
+git remote set-url origin https://github.com/Motiveko/website
+```
+- 관례상 첫벗째/가장 중요한 레포지토리는 이름을 `origin`이라고 짓는다. 
+
+<br>
+
+### Pushing Changes
+- [`push`](https://git-scm.com/docs/git-push)를 이용해서 원격 repository에 변경을 push할 수 있다.
+```bash
+git push -u <name> <branch> --tags
+
+git push -u origin main
+```
+- `-u`는 local과 remote의 싱크를 맞춰준다. push하기 전 `git-pull`을 수행하는 방식이라고 한다.
+- `--tags` local에 있는 모든 tag를 remote에 보낸다.
+
+### ssh 설정하기
+- ssh는 private + public 키 쌍으로 통신한다. 내가 소유한 pc에서 이걸 만들고 사용하므로서 내가 소유한 기기인지 판단할 수 있게 된다.
+```bash
+# public/private key 생성
+ssh-keygen -t rsa -C "rhehdrla@naver.com"
+```
+- passphrase(비번같은거)를 등록할 수 있다. 
+- `-t`는 타입, `-C`는 common name 
+- `id_ras`, `id_ras.pub` 파일이 생성되고, 각각 private/public 키다.  `id_ras.pub`를 github의 ssh에 등록하면 된다.
+- 아래 명령어로 ssh 통신 가능한지 확인할 수 있다
+```bash
+ssh -T git@github.com
+```
+
+<br>
+
+### clone
+- [`clone`](https://git-scm.com/docs/git-clone)을 이용해 원격 repo 프로젝트를 가져올 수 잇다
+```bash
+# clone하기, folder-name으로 폴더를 만들 수 있다.
+git clone <URL> <folder-name>
+```
+
+<br>
+
+### fetch vs pull
+- [`pull`](https://git-scm.com/docs/git-pull) 은 remote repo와 local repo를 integrate한다. 쉽게말해 [`fetch`](https://git-scm.com/docs/git-fetch) + `merge`를 동시수행한다고 할 수 있는것이다
+- auto merge가 안되면 conflict가 발생하고 이걸 수정해줘야한다. 
+- fetch하면 대략 이렇게 나온다. origin은 브랜치가 갈라진 상태인걸 확인할 수 있다
+![fetch](https://velog.velcdn.com/images/motiveko/post/ead88db6-c06e-4202-a3fa-dbf0f64e9aaa/image.png)
+
+<br>
+
+### show를 이용해 특정 커밋 기록 보기
+- [`show`](https://git-scm.com/docs/git-show)는 여러가지 타입의 object를 볼 수 있다. 그 중 하나가 커밋이다.
+```bash
+git show <commit-id>
 ```
