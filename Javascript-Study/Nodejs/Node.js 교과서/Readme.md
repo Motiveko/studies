@@ -1101,3 +1101,32 @@ router.route('/abc')
 ```
 
 <br>
+
+### 6.4 req, res 객체 살보
+- 익스프레스의 `req`, `res`는 http 모듈의 req, res 객체를 확장하였다. 자주 쓰이는 것 위주로 알아보자
+
+1. req
+- req.app: req 객체를 통해 app 객체에 접근할 수 있다. 
+- req.body: body-parser 미들웨어가 만드는 요청의 쿠키를 해석한 객체
+- req.ip : 요청의 ip주소
+- req.params: 라우트 매개변수 정보
+- req.query : 쿼리스트링 정보
+- req.signedCookies : 서명된 쿠키들은 req.cookies 대신 여기에 담긴다
+- req.get('헤더명') : 헤더 정보를 가져올 수 있다.
+
+2. res
+- res.app : 앱 객체에 접근
+- res.cookie(key, value, option): 쿠키를 설정하는 메서드
+- res.clearCookie(key, value, option): 쿠키를 제거하는 메서드
+- res.end: 데이터 없이 응답 전송
+- res.json(JSON): JSON 형식 응답 전송
+- res.redirect(주소): Redirect 응답 전송
+- res.render(view, data) : 템플릿 엔진을 랜더링해서 응답할 때 사용
+- res.send(data): 데이터와 함께 응답한다.
+- res.sendFile(경로) : 경로에 위치한 파일을 응답한다.
+- res.set(Header, value): 응답 헤더 설정
+- res.status(code): 응답의 HTTP status code 설정
+
+보통 req, res의 메서드는 체이닝하여 사용한다.
+
+<br>
