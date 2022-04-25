@@ -1130,3 +1130,33 @@ router.route('/abc')
 보통 req, res의 메서드는 체이닝하여 사용한다.
 
 <br>
+
+## 7. Mysql
+### 7.1 ~ 7.5 - Mysql 설치 및 테이블 생성, CRUD는 생략
+### 7.6 시퀄라이즈 사용하기
+- 시퀄라이즈는 ORM이다. 자바스크립트 객체와 DB의 관계를 맵핑해준다. `sequelize`, `sequelize-cli`, `mysql2`를 설치해준다. `sequelize-cli`는 시퀄라이즈 명령어 실행을 위한 패키지, `mysql2`는 MYSQL과 시퀄리아저를 이어주는 드라이버이다. 설치 후 초기화 해준다.
+```bash
+# 설치
+npm i sequelize sequelize-cli mysql2
+
+# 초기화
+npx sequelize init
+```
+- 여러 폴더와 config파일, index.js 등이 생성된다. `models/index.js`를 아래와 같이 바꿔준다.
+```js
+const Sequelize = require('sequelize');
+const env = process.env.NODE_ENV || 'development';
+const config = require(__dirname + '/../config/config.json')[env];
+const db = {};
+
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
+
+db.sequelize = sequelize;
+
+module.exports = db;
+```
+
+<br>
+
+### 7.6.1 MySQL 연결하기
+
