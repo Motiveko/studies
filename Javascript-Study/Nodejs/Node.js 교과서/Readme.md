@@ -1133,7 +1133,15 @@ router.route('/abc')
 
 ## 7. Mysql
 ### 7.1 ~ 7.5 - Mysql 설치 및 테이블 생성, CRUD는 생략
+```bash
+# docker mysql 실행
+docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=1234 -d mysql:latest
+```
+
+<br>
+
 ### 7.6 시퀄라이즈 사용하기
+
 - 시퀄라이즈는 ORM이다. 자바스크립트 객체와 DB의 관계를 맵핑해준다. `sequelize`, `sequelize-cli`, `mysql2`를 설치해준다. `sequelize-cli`는 시퀄라이즈 명령어 실행을 위한 패키지, `mysql2`는 MYSQL과 시퀄리아저를 이어주는 드라이버이다. 설치 후 초기화 해준다.
 ```bash
 # 설치
@@ -1159,4 +1167,94 @@ module.exports = db;
 <br>
 
 ### 7.6.1 MySQL 연결하기
+- 아래 코드를 이용해 express앱에서 mysql과 sequelize를 연동할 수 있다.
+```js
+// app.js
+// ...
+const { sequelize } = require("./models");
 
+sequelize
+  .sync({ force: false })
+  .then(() => console.log("데이터 베이스 연결 성공"))
+  .catch((err) => console.error(err));
+
+```
+- `config/config.json` 에 실행 프로필별 db 정보를 올바르게 설정해준다.
+
+<br>
+
+### 7.6.2 모델 정의하기
+- 상세 내용은 [공식 메뉴얼의 Model Definition 탭](https://sequelize.org/docs/v6/core-concepts/model-basics/#model-definition)을 참고한다.
+- 모델 정의는 `sequelize.define()`메서드를 사용하거나 `Sequelize.Model`를 상속하는 클래스를 선언하는 방법 두가지가 있다. 책에서는 클래스 상속 방법을 다룬다.
+- 정의한 클래스 내부에는 `static init`과 `static associate`를 작성한다.
+  - `static init` 
+    - 테이블에 대한 관계 작성, 첫 번째 인수로 컬럼 정의를 작성, 두 번째 인수는 테이블 옵션을 작성한다. 
+    - 책에서 `id`컬럼은 알아서 만들어 준다고 하는데 공식문서에는 ID도 다 작성했따. 공식문서가 맞는거같은데..
+  - `static associate` : 다른 모델과의 관계 작성
+- `seqeulize`에서는 보통 모델은 단수형, 테이블 이름은 복수형으로 사용한다.
+- model을 정의한 후 `models/index.js`의 db객체에 아래와 같이 등록해준다. 다른 파일에서 db를 import해서 사용하게 될 것이다.
+```js
+// models/index.js
+db.sequelize = sequelize;
+db.User = User;
+db.Comment = Comment;
+
+User.init(sequelize);
+Comment.init(sequelize);
+
+User.associate(db);
+Comment.associate(db);
+
+module.exports = db;
+```
+
+<br>
+
+### 7.6.3 관계 정의하기
+- 상세 내용은 [공식 문서의 Associtaions 탭](https://sequelize.org/docs/v6/core-concepts/assocs/)을 참고하자.
+1. 1:N(`HasMany`, `BelongsTo`)
+- users와 comments의 관계다. 관계정의는 양방향으로 해줘야한다.(하나보다)
+```js
+// models/user.js
+  // ...
+  static associate(db) {
+    db.User.hasMany(db.Comment, { foreignKey: 'commenter', sourceKey: 'id' });
+  }
+};
+...
+```
+```js
+// models/comment.js
+  // ...
+  static associate(db) {
+    db.Comment.belongsTo(db.User, { foreignKey: 'commenter', targetKey: 'id' })
+  }
+};
+```
+- 1인 user는 `hasMany`, N인 comment는 `belongsTo` 메서드를 사용했다.
+- `foreignKey`를 따로 지정하지 않으면 `모델명+기본키 컬럼`이 생성된다.(여기서는 UserId)
+- 앱을 실행하면 `sequelize.sync`에서 비동기로 쿼리를 날려 모델에 대한 테이블을 생성한다.
+
+<br>
+
+2. 1:1(`hasOne`, `belongsTo`)
+- hasMany 대신 hasOne을 사용하고 belongsTo는 똑같다.
+```js
+db.User.hasOne(db.Info, { foreignKey: 'userId', sourceKey: 'id' });
+db.Info.belongsTo(db.User, { foreignKey: 'UserId', targetKey: 'id' })
+```
+- hasOne과 belongsTo의 차이는 ***`belongsTo`를 사용하는 모델에서 외래키를 관리한다는 점***이다. JPA의 JoinColumn과 같은 개념.
+
+<br>
+
+3. N:M(`belongsToMany`)
+- 상세 내용은 [공식 메뉴얼 다대다 관계](https://sequelize.org/docs/v6/core-concepts/assocs/#many-to-many-relationships)를 참고하자.
+- 둘 중 메인 테이블이 없으므로 `belongsToMany`을 사용해서 매핑한다. 
+- 예를들어 게시물과 해시태그 테이블의 관계는 아래와 같은 형태로 표현한다.
+```js
+db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag' });
+db.Hashtag.belongsToMany(db.Post, { through: 'PostHashtag' });
+```
+- 다대다는 중계 테이블(여기서는 `PostHashtag`)이 생성되고 `postId`, `hashtagId` 컬럼이 생기면서 매핑하게 된다.
+
+<br>
