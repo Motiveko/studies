@@ -1258,3 +1258,108 @@ db.Hashtag.belongsToMany(db.Post, { through: 'PostHashtag' });
 - 다대다는 중계 테이블(여기서는 `PostHashtag`)이 생성되고 `postId`, `hashtagId` 컬럼이 생기면서 매핑하게 된다.
 
 <br>
+
+### 7.6.4 쿼리 알아보기
+- 상세 내용은 [공식 메뉴얼 Basic Query](https://sequelize.org/docs/v6/core-concepts/model-querying-basics/)를 참고하자.
+- 시퀄라이즈 쿼리는 `Promise`를 반환한다. 보통 async/await을 붙여서 사용한다.
+- 간단한 CRUD를 수행해본다.
+1. Create
+```js
+const { User } = require('../models');
+User.create({
+  name: 'motiveko',
+  age: 32,
+  married: false,
+  comment: '안녕하세요'
+});
+```
+- `married`는 sequelize에서는 `boolean`으로 생성했고, mysql에서는 `tinyint`로 생성된다. sequelize에서 boolean으로 처리해주면 mysql에서는 0/1로 알아서 들어간다.
+
+<br>
+
+2. Read(`findAll`, `findOne`)
+```js
+// 전체 조회, SELECT * FROM nodjes.users;
+User.findAll({});
+
+// 한개만 조회, SELECT * FROM nodejs.users LIMIT 1;
+User.findOne({})
+
+// 원하는 컬럼만 조회, SELECT name, married FROM nodejs.users;
+User.findAll({
+  attributes: ['name', 'married']
+})
+
+// 조건검색,
+// SELECT name, age FROM nodejs.users WHERE married = 1 AND age > 30;
+const { Op } = require('sequelize');
+User.findAll({
+  attributes: ['name', 'age'],
+  where: {
+    married: true,
+    age: { [Op.gt]: 30 }
+  }
+})
+
+// SELECT id, name FROM users WHERE married = 0 OR age > 30;
+User.findAll({
+  attributes: ['id', 'name'],
+  where: {
+    [Op.or]: [{ married: false }, { age: { [Op.gt]: 30 }}]
+  }
+})
+```
+- Op는 각각 `gt`(초과), `gte`(이상), `lt`(미만), `lte`(이하), `ne`(같지 않음), `or`(또는), `in`(in), `notIn`(notIn) 등의 연산자를 제공한다.
+- 자세한건 공식메뉴얼을 참고하자.
+
+<br>
+
+3. Update
+```js
+// UPDATE nodejs.users SET comment = '바꿀 내용' WHERE id = 2;
+User.update({
+  comment: '바꿀내용'
+}, {
+  where: { id: 2 }
+})
+```
+
+<br>
+
+4. Delete
+```js
+// DELETE FROM nodejs.users WHERE id = 2;
+User.destroy({
+  where: { id: 2 }
+})
+```
+
+<br>
+
+5. 관계쿼리
+- 관계쿼리는 `include` 옵션을 사용하면 된다. User 조회시 Comment까지 조회해보자.
+```js
+const user = await User.findOne({
+  include:[{
+    model: Comment,
+    where: {
+      id: 1
+    },
+    attributes: ['id']
+  }]
+});
+console.log(user.Comments)
+```
+- [**include를 안쓰면 LazyLoading, include를 쓰면 Eager Loading**](https://sequelize.org/docs/v6/core-concepts/assocs/#fetching-associations---eager-loading-vs-lazy-loading)이다. 모델 정의 레벨에서 따로 설정하지 않고 조회 쿼리에서 결정한다.
+- 관계 설정하면 객체에 편리한 메서드를 제공한다. 책의 문법은 옛날이고 [최신 문법](https://sequelize.org/docs/v6/core-concepts/assocs/#special-methodsmixins-added-to-instances)을 참고하자. 
+- 예를들면 User는 `User.hasMany(Comment)`로 Comment와 관계를 맺으므로 [여기](https://sequelize.org/docs/v6/core-concepts/assocs/#foohasmanybar)에 정의된 메서드를 사용할 수 있다.
+
+6. [SQL 쿼리(Raw Query)](https://sequelize.org/docs/v6/core-concepts/raw-queries/)
+- `sequelize.query`메서드를 사용한다.
+```js
+const [result, metadata] = await sequelize.query('SELECT * from comments');
+```
+
+> 템플릿 엔진을 사용하는 예제는 생략한다.
+
+<br>
