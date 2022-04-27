@@ -1363,3 +1363,31 @@ const [result, metadata] = await sequelize.query('SELECT * from comments');
 > 템플릿 엔진을 사용하는 예제는 생략한다.
 
 <br>
+
+## 10. 웹 API 서버 만들기
+### 10.1 데이터베이스 모델 설정
+- `User`, `Post`, `Hashtag` 모델을 만든다. 특이점은 User는 follow 기능에 따라 스스로 N:M 관계를 가진다는 점이다. 아래와 같이 표현한다.
+```js
+// models/user.js
+
+// ...
+  static associate(db) {
+    db.User.hasMany(db.Post);
+
+    // 동일 모델에 대한 N:M
+    db.User.belongsToMany(db.User, {
+      foreignKey: "followingId", // fkey와 as는 반대여야한다!!
+      as: "Followers", // User.Followers로 접근 가능
+      through: "Follow",
+    });
+    db.User.belongsToMany(db.User, {
+      foreignKey: "followerId",
+      as: "Followings", // User.Followings로 접근 가능
+      through: "Follow",
+    });
+  }
+  }
+```
+- 이렇게하면 `Follow`라는 중계 테이블이 생성되고 `followerId` - `followingId` 두개의 컬럼이 생성된다.
+- as와 Fkey는 반대로 설정해줘야한다. as가 Followings면 foreignKey는 followerId 이다.
+
