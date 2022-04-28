@@ -1390,4 +1390,234 @@ const [result, metadata] = await sequelize.query('SELECT * from comments');
 ```
 - 이렇게하면 `Follow`라는 중계 테이블이 생성되고 `followerId` - `followingId` 두개의 컬럼이 생성된다.
 - as와 Fkey는 반대로 설정해줘야한다. as가 Followings면 foreignKey는 followerId 이다.
+- `sequelize-cli`를 이용하면 SQL 없이 database 생성이 가능하다. `config/config.json`에 db명을 설정하고 아래 명령어를 실행한다.
 
+```bash
+npx sequelize db:create
+
+# Sequelize CLI [Node: 16.13.1, CLI: 6.4.1, ORM: 6.19.0]
+
+# Loaded configuration file "config/config.json".
+# Using environment "development".
+# Database nodebird created.
+```
+
+<br>
+<!-- config, models, passport 폴더, routes는 auth.js, middlewares.js -->
+
+### 10.2 [passport](https://www.passportjs.org/) 설정
+### 10.2.1 인증 flow
+- 로그인 전체 과정은 아래와 같다.
+  1. 라우터로 로그인 요청 발생
+  2. 라우터에서 `passport.authenticate` 메서드 호출
+  3. 로그인 수행
+  4. 로그인 성공시 사용저 정보 객체와 함께 req.login 호출
+  5. req.login 메서드가 passport.serializeUser 호출
+  6. req.session에 사용자 아이디 저장
+  7. 로그인 완료
+
+- 로그인 이후 인증 과정은 아래와 같다.
+  1. 요청 발생
+  2. 라우터에 요청이 도달하기 전에 passport.session 미들웨어가 `passport.deserializeUser` 메서드 호출
+  3. req.session에 저장된 아이디로 데이터베이스에서 사용자 조회
+  4. 조회된 사용자 정보를 req.user에 저장
+  5. 라우터에서 req.user 객체 사용 가능
+
+<br>
+
+### 10.2.2 Passport 모듈로 로컬/카카오 로그인 구현
+
+- 관련 패키지(전체) 설치
+```bash
+npm i passport passport-local passport-kakao bcrypt
+```
+- ***Passport 모듈을 express에 아래와 같이 연결한다.***
+```js
+// app.js
+//...
+const passportConfig = require("./passport");
+passportConfig(); // 패스포트 설정
+
+// express-session 미들웨어
+app.use(session({
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.COOKIE_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+  }
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
+```
+- `passport.initialize()` 미들웨어는 요청에 passport설정을 심고, `passport.session()` 미들웨어는 req.session 객체에 passport 정보를 저장한다. req.session 객체는 `express-session` 모듈이 생성하므로, `express-session` 뒤에 passport를 연결해야한다.
+- ***패스포트 설정을 아래와 같이 작성한다.***
+```js
+// passport/index.js
+const passport = require("passport");
+const local = require("./localStrategy");
+const kakao = require("./kakaoStrategy");
+const User = require("../models/user");
+
+module.exports = () => {
+  // 로그인시 실행, req.session 객체에 어떤 데이터를 저장할지 정한다.
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  // passport.session가 매 요청시 실행, req.session에 저장한 id를 인수로 받는다. id를 이용해 db에서 사용자 정보를 조회
+  passport.deserializeUser((id, done) => {
+    User.findOne({ where: { id } })
+      .then((user) => done(null, user))
+      .catch((err) => done(err));
+  });
+
+  local();
+  kakao();
+};
+```
+- `passport.serializeUser`는 로그인 시 실행하며, req.session 객체에 어떤 데이터를 저장할지 작성한다. 세션에는 유저의 id만 저장한다.
+- `passport.deserializeUser`는 매 요청시 실행되며, req.session에 저장한 id를 인수로 받아 db에서 사용자 정보를 조회한다. 데이터 정합성 등이 중요하기때문에 매번 이렇게 조회한다.
+- done의 시그니쳐는 `done(error, data)`로, 첫번째는 에러, 두번째는 성공시 넘겨줄 데이터다.
+- ***인증 여부를 확인할 isAuthenticated, isNotAuthenticated 미들웨어 메서드를 아래와 같이 작성한다.***
+```js
+// routes/middlewares.js
+
+exports.isLoggedIn = (req, res, next) => {
+  if(req.isAuthenticated()) {
+    next();
+  } else {
+    res.status(403).send('로그인 되지 않은 사용자');
+  }
+}
+
+exports.isNotLoggedIn = (req, res, next) => {
+  if(!req.isAuthenticated()) {
+    next();
+  } else {
+    const message = encodeURIComponent("로그인한 상태입니다");
+    res.redirect(`/?error=${message}`);
+  }
+}
+```
+- Passport는 req객체에 `isAuthenticated`메서드를 추가해주는데, 인증된 사용자는 true 아니면 false를 반환한다.
+- ***회원가입, 로그인, 로그아웃 라우터를 작성한다.***
+```js
+// routes/auth.js
+const express = require("express");
+const passport = require("passport");
+const bcrypt = require("bcrypt");
+const { isLoggedIn, isNotLoggedIn } = require("./middlewares");
+const User = require("../models/user");
+const router = express.Router();
+
+router.post("/join", isNotLoggedIn, async (req, res, next) => {
+  const { email, nick, password } = req.body;
+  try {
+    const exUser = await User.findOne({ where: { email } });
+    if (exUser) {
+      return res.redirect("/join?error=exist");
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+
+    await User.create({
+      email,
+      nick,
+      password: hash,
+    });
+
+    return res.redirect("/");
+  } catch (error) {
+    console.error(error);
+    return next(error);
+  }
+});
+
+router.post("/login", isNotLoggedIn, (req, res, next) => {
+  passport.authenticate("local", (authError, user, info) => {
+    if (authError) {
+      console.error(authError);
+      return next(authError);
+    }
+
+    if (!user) {
+      return res.redirect(`/?loginError=${info.message}`);
+    }
+
+    return req.login(user, (loginError) => {
+      if (loginError) {
+        console.error(loginError);
+        return next(loginError);
+      }
+      return res.redirect("/");
+    });
+  })(req, res, next);
+});
+
+router.get("/logout", isLoggedIn, (req, res) => {
+  req.logout();
+  req.session.destroy();
+  req.redirect("/");
+});
+
+module.exports = router;
+```
+- 회원가입은  
+  1. `isNotLoggedIn` 미들웨어를 사용해 인증되지 않은 사용자를 통과시키고
+  2. 요청 email로 사용자 조회 후 사용자가 있으면 다시 가입 페이지로 돌려보내고
+  3. 사용자가 없으면 비밀번호를 암호화해 사용자를 등록한다.
+- 로그인은
+  1. `isNotLoggedIn` 미들웨어를 사용해 인증되지 않은 사용자를 통과시키고
+  2. `passport.authenticate('local')` 미들웨어가 로컬 로그인 전략을 수행한다. 처리 결과 콜백은 결국 사용자 요청을 최종 처리하는 미들웨어 역할을 한다. 로컬 전략은 `passport/localStrategy.js`에 등록한다.
+- 로그아웃은
+  1. req.user 객체를 제거하고
+  2. req.session.destroy로 req.session 객체의 내용을 제거하고
+  3. 메인 페이지로 사용자를 redirect 시킨다.
+
+- ***로컬 전략을 아래와 같이 작성한다.***
+```js
+// passport/localStrategy.js
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require("bcrypt");
+
+const User = require("../models/user");
+module.exports = () => {
+  passport.use(
+    new LocalStrategy(
+      {
+        usernameField: "email",
+        passwordField: "password",
+      },
+      async (email, password, done) => {
+        try {
+          const exUser = await User.findOne({ email, password });
+          if (exUser) {
+            const result = await bcrypt.compare(password, exUser.password);
+            if (result) {
+              done(null, exUser);
+            } else {
+              done(null, false, { message: "비밀번호가 일치하지 않습니다." });
+            }
+          } else {
+            done(null, false, { message: "가입되지 않은 회원입니다." });
+          }
+        } catch (error) {
+          console.error(error);
+          done(error);
+        }
+      }
+    )
+  );
+};
+```
+- 책에서 사용하는 방법과 공식문서상 방법이 좀 차이가 있다. 둘 다 가능한데, 제대로된 api 명세서가 없어 좀 힘들다.
+- https://github.com/jaredhanson/passport-local 를 참고하자.
+- `LocalStrategy` 인스턴스는 미들웨어처럼, `passport.use()` 메서드를 이용해 패스포트에 등록한다. 첫 번째 인자는 옵션 요소다.
+- 두번째 인자는 전략을 수행하는 함수로, email과 password로 인증을 처리하고 콜백(done)을 호출한다.
+- done의 시그니처는 `done: (error: any, user?: any, options?: IVerifyOptions) => void`로, 인증 성공시 두번째 인자에 user 객체를 넣고, 실패시 첫번재 인자 error를 넘기거나, 여기서는 세번째 인자에 `{message}`를 넣었다.
+- `routes/auth.js`의 '/login' 라우터에서 done에 대한 처리를 수행한다.
+<!-- TODO : 카카오 로그인 -->
