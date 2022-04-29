@@ -46,7 +46,7 @@ app.use(passport.initialize());
 app.use(passport.session()); // req.session 객체에 passport 정보 저장
 
 const authRouter = require("./routes/auth");
-app.use("/", authRouter);
+app.use("/auth", authRouter);
 
 const { isLoggedIn } = require("./routes/middlewares");
 app.get("/", isLoggedIn, (req, res) => {

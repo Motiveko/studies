@@ -1621,4 +1621,71 @@ module.exports = () => {
 - 두번째 인자는 전략을 수행하는 함수로, email과 password로 인증을 처리하고 콜백(done)을 호출한다.
 - done의 시그니처는 `done: (error: any, user?: any, options?: IVerifyOptions) => void`로, 인증 성공시 두번째 인자에 user 객체를 넣고, 실패시 첫번재 인자 error를 넘기거나, 여기서는 세번째 인자에 `{message}`를 넣었다.
 - `routes/auth.js`의 '/login' 라우터에서 done에 대한 처리를 수행한다.
-<!-- TODO : 카카오 로그인 -->
+
+<br>
+
+- 카카오 로그인도 구현해본다. https://www.passportjs.org/packages/passport-kakao/를 참고하면 된다.
+- 기존 작성했던 내용에서 라우터를 추가하고 passport에 kakao strategy 모듈을 추가한다.
+```js
+// routes/auth.js
+router.get("/kakao", passport.authenticate("kakao"));
+
+router.get(
+  "/kakao/callback",
+  passport.authenticate("kakao", {
+    failureRedirect: "/",
+  }),
+  (req, res) => {
+    res.redirect("/");
+  }
+);
+```
+```js
+// passport/kakaoStrategy.js
+const passport = require("passport");
+const KakaoStrategy = require("passport-kakao").Strategy;
+const User = require("../models/user");
+
+module.exports = () =>
+  passport.use(
+    new KakaoStrategy(
+      {
+        clientID: process.env.KAKAO_ID,
+        callbackURL: process.env.CALLBACK_URL,
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        console.log("사용자 : ", profile.id);
+        try {
+          const { id, displayName } = profile;
+          const { email } = profile._json.kakao_account;
+
+          const exUser = await User.findOne({
+            where: {
+              snsId: id,
+              provider: "kakao",
+            },
+          });
+          if (!exUser) {
+            const newUser = await User.create({
+              email,
+              nick: displayName,
+              snsId: id,
+              provider: "kakao",
+            });
+            return done(null, newUser);
+          }
+
+          return done(null, exUser);
+        } catch (error) {
+          console.error(error);
+          done(error);
+        }
+      }
+    )
+  );
+```
+- `GET /auth/kakao` -> `302 https://kauth.kakao.com/oauth/authorize?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A8001%2Fauth%2Fkakao%2Fcallback&client_id=6b9895c139fbe7f92c1ae544686a2c1d` -> `GET /auth/kakao/callback` -> `302 GET /` 순으로 호출된다. 
+- 정확하진 않으나 `passport.authenticate('kakao')` 메서드는 내부적으로 요청에 토큰 등의 카카오 인증 관련 정보가 없으면 kauth.kakao.com으로 사용자를 redirect 시키고(callback을 query에 넘겨준다), 토큰이 있으면 이걸 이용해 사용자 정보를 가져오고 우리가 작성한 kakaoStrategy에 구현한 인증 로직을 수행하는걸로 판단된다. `GET /auth/kakao`와 `GET /auth/kakao/callback` 모두 `passport.authenticate('kakao')`를 미들웨어로 등록했는데, 사실 `GET /auth/kakao` 핸들러는 없어도 된다.(실제로 동작한다. 하지만 공식문서에서도 이걸 권장하진 않는다.)
+- 기타 카카오 앱 설정은 생략한다.
+
+<br>
