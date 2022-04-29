@@ -8,8 +8,7 @@ const dotenv = require("dotenv");
 const passport = require("passport");
 
 dotenv.config();
-// TODO
-// const pageRouter = require("./routes/page");
+
 const passportConfig = require("./passport");
 passportConfig();
 
@@ -46,7 +45,14 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session()); // req.session 객체에 passport 정보 저장
 
-app.use("/", 라우터);
+const authRouter = require("./routes/auth");
+app.use("/", authRouter);
+
+const { isLoggedIn } = require("./routes/middlewares");
+app.get("/", isLoggedIn, (req, res) => {
+  const { nick } = req.user;
+  res.send(`안녕하세요 ${nick}님`);
+});
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
@@ -55,7 +61,7 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  res.locals.message = error.message;
+  res.locals.message = err.message;
   // prod일때는 응답에 애러를 넣지 않는다
   res.locals.error = process.env.NODE_ENV !== "production" ? err : {};
   res.status(err.status || 500);

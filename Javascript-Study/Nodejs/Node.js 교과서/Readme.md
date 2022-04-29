@@ -1616,7 +1616,8 @@ module.exports = () => {
 ```
 - 책에서 사용하는 방법과 공식문서상 방법이 좀 차이가 있다. 둘 다 가능한데, 제대로된 api 명세서가 없어 좀 힘들다.
 - https://github.com/jaredhanson/passport-local 를 참고하자.
-- `LocalStrategy` 인스턴스는 미들웨어처럼, `passport.use()` 메서드를 이용해 패스포트에 등록한다. 첫 번째 인자는 옵션 요소다.
+- `LocalStrategy` 인스턴스는 미들웨어처럼, `passport.use()` 메서드를 이용해 패스포트에 등록한다. 
+- 첫 번째 인자는 옵션 요소다. 기본 `{ username, password }`로 인증 요청이 들어 온다고 가정하는데, 이 프로퍼티 명을 원하는데로 바꿀 수 있다. `{ email, password }`로 바꿨다.
 - 두번째 인자는 전략을 수행하는 함수로, email과 password로 인증을 처리하고 콜백(done)을 호출한다.
 - done의 시그니처는 `done: (error: any, user?: any, options?: IVerifyOptions) => void`로, 인증 성공시 두번째 인자에 user 객체를 넣고, 실패시 첫번재 인자 error를 넘기거나, 여기서는 세번째 인자에 `{message}`를 넣었다.
 - `routes/auth.js`의 '/login' 라우터에서 done에 대한 처리를 수행한다.
