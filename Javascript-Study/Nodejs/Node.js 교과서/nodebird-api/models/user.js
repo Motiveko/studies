@@ -54,5 +54,6 @@ module.exports = class User extends Sequelize.Model {
       as: "Followings", // User.Followings로 접근 가능
       through: "Follow",
     });
+    db.User.hasMany(db.Domain);
   }
 };

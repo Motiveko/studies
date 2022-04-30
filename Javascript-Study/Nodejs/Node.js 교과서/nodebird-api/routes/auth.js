@@ -10,7 +10,7 @@ router.post("/join", isNotLoggedIn, async (req, res, next) => {
   try {
     const exUser = await User.findOne({ where: { email } });
     if (exUser) {
-      return res.redirect("/join?error=exist");
+      return res.redirect("/auth/join?error=exist");
     }
 
     const hash = await bcrypt.hash(password, 12);
@@ -36,7 +36,7 @@ router.post("/login", isNotLoggedIn, (req, res, next) => {
     }
 
     if (!user) {
-      return res.redirect(`/?loginError=${info.message}`);
+      return res.redirect(`/error/?loginError=${info.message}`);
     }
 
     return req.login(user, (loginError) => {

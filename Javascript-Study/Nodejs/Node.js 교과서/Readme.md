@@ -1689,3 +1689,56 @@ module.exports = () =>
 - 기타 카카오 앱 설정은 생략한다.
 
 <br>
+
+### 10.3 도메인 등록 구현
+- Api의 사용을 관리할 수 있게 Domain 등록을 구현한다.
+- User - Domain은 1:N 관계다. 모델 구현 등은 생략한다. 라우터만 살펴본다
+```js
+// routes/index.js
+//..
+const Domain = require("../models/domain");
+const { v4: uuidv4 } = require("uuid");
+const { body, oneOf, validationResult } = require("express-validator");
+const { validatorErrorChecker } = require("../middlewares/validationChecker");
+
+// ..
+
+router.post(
+  "/domain",
+  isLoggedIn,
+  oneOf([body("host").isIP(), body("host").isURL()]),
+  body("type").isIn(["free", "premium"]),
+  validatorErrorChecker,
+  async (req, res, next) => {
+    const { id: UserId } = req.user;
+    const { host, type } = req.body;
+    try {
+      await Domain.create({
+        UserId,
+        host,
+        type,
+        clientSecret: uuidv4(),
+      });
+
+      res.redirect("/");
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
+  }
+);
+
+// middlewares/validationChecker.js
+const { validationResult } = require("express-validator");
+
+exports.validatorErrorChecker = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
+```
+- [`express-validator`](https://express-validator.github.io/docs/index.html)를 이용해 Spring의 Bean Validation과 같은 기능을 구현했다.
+- valiator는 모두 express middleware다. validation 결과 처리하는 로직 역시 `validatorErrorChecker` 미들웨어 함수로 분리했다.
