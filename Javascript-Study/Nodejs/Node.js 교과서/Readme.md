@@ -1742,3 +1742,91 @@ exports.validatorErrorChecker = (req, res, next) => {
 ```
 - [`express-validator`](https://express-validator.github.io/docs/index.html)를 이용해 Spring의 Bean Validation과 같은 기능을 구현했다.
 - valiator는 모두 express middleware다. validation 결과 처리하는 로직 역시 `validatorErrorChecker` 미들웨어 함수로 분리했다.
+
+<br>
+
+### 10.4 JWT 토큰 인증
+- jwt 기반 인증에는 [`jsonwebtoken`](https://www.npmjs.com/package/jsonwebtoken) 패키지를 사용한다.
+- jwt 모듈의 `sign`메서드로 토큰을 발행하고, `verify` 메서드로 토큰을 검증한다.
+- jwt 검증 및 파싱은 middleware를 분리한다.
+```js
+// routes/middlewares.js
+
+// ...
+const jwt = require("jsonwebtoken");
+
+exports.verifyToken = (req, res, next) => {
+  console.log(req.headers.authorization);
+  try {
+    req.decoded = jwt.verify(req.headers.authorization, process.env.JWT_SECRET);
+    return next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(419).json({
+        code: 419,
+        message: "토큰이 만료되었습니다.",
+      });
+    }
+  }
+  return res.status(401).json({
+    code: 401,
+    message: "유효하지 않은 토큰입니다.",
+  });
+};
+
+```
+
+- 토큰 발급 api 라우터는 아래와 같다. 환경변수에 비밀키를 저장하고 비밀키를 기반으로 발행한다.
+```js
+const router = require("express").Router();
+const jwt = require("jsonwebtoken");
+const { body } = require("express-validator");
+const { validatorErrorChecker } = require("../middlewares/validationChecker");
+const Domain = require("../models/domain");
+const User = require("../models/user");
+const { verifyToken } = require("./middlewares");
+
+router.post(
+  "/token",
+  body("clientSecret")
+    .isUUID()
+    .withMessage("올바르지 않은 clientSecret 값입니다."),
+  validatorErrorChecker,
+  async (req, res, next) => {
+    const { clientSecret } = req.body;
+    try {
+      const domain = await Domain.findOne({
+        where: { clientSecret },
+        include: {
+          model: User,
+          attributes: ["nick", "id"],
+        },
+      });
+      if (!domain) {
+        return res.status(401).json({
+          code: 401,
+          message: "등록되지 않은 도메인입니다. 먼저 도메인을 등록해주세요",
+        });
+      }
+      const { id, nick } = domain.User;
+      const token = jwt.sign({ id, nick }, process.env.JWT_SECRET, {
+        expiresIn: "1m",
+        issuer: "motiveko",
+      });
+      return res.json({
+        code: 200,
+        message: "토큰이 발급되었습니다",
+        token,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        code: 500,
+        message: "서버 에러",
+      });
+    }
+  }
+);
+```
+- 만약 jwt 토큰 기반 로그인을 구현한다면, 토큰을 쿠키로 전달하고, `isLoggedIn`, `isNotLoggedIn`대신 verifyToken 미들웨어를 사용하면 된다. 세션을 사용하지 않으므로 serializeUser deSerializeUser 메서드는 필요 없다.
+- jsonwebtoken의 sign의 기본 알고리즘은 `HS256`으로 단방향 해시 암호화 방식이다. ***만약 클라이언트에서 `sign`, `verify`메서드를 사용하고 싶다면 `RSA`같은 양방향 비대칭 암호화 알고리즘을 사용해야 한다. 서버에서는 비밀키를, 클라이언트에서는 공개키를 사용하므로써 비밀키 유출을 막을 수 있다.*** 자세한 방식은 모르겠으나 공식문서상 PEM 키를 사용하는 부분을 참고하면 된다고 한다.

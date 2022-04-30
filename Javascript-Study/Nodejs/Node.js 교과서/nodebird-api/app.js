@@ -47,8 +47,10 @@ app.use(passport.session()); // req.session 객체에 passport 정보 저장
 
 const indexRouter = require("./routes");
 const authRouter = require("./routes/auth");
+const v1Router = require("./routes/v1");
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
+app.use("/v1", v1Router);
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
