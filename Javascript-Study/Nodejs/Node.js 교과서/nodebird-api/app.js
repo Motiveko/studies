@@ -1,7 +1,7 @@
 const express = require("express");
+const path = require("path");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
-const path = require("path");
 const session = require("express-session");
 const nunjucks = require("nunjucks");
 const dotenv = require("dotenv");
@@ -45,14 +45,10 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session()); // req.session 객체에 passport 정보 저장
 
+const indexRouter = require("./routes");
 const authRouter = require("./routes/auth");
+app.use("/", indexRouter);
 app.use("/auth", authRouter);
-
-const { isLoggedIn } = require("./routes/middlewares");
-app.get("/", isLoggedIn, (req, res) => {
-  const { nick } = req.user;
-  res.send(`안녕하세요 ${nick}님`);
-});
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
