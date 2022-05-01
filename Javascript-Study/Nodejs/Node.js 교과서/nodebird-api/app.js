@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const cookieParser = require("cookie-parser");
+
 const morgan = require("morgan");
 const session = require("express-session");
 const nunjucks = require("nunjucks");
@@ -14,7 +14,7 @@ passportConfig();
 
 const { sequelize } = require("./models");
 const app = express();
-app.set("port", process.env.PORT || 8001);
+app.set("port", process.env.PORT || 8002);
 app.set("view engine", "html");
 nunjucks.configure("views", {
   express: app,
@@ -30,9 +30,15 @@ app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser(process.env.COOKIE_SECRET));
+
+let RedisStore = require("connect-redis")(session);
+const { createClient } = require("redis");
+let redisClient = createClient({ legacyMode: true });
+redisClient.connect().catch(console.error);
+
 app.use(
   session({
+    store: new RedisStore({ client: redisClient }),
     resave: false,
     saveUninitialized: false,
     secret: process.env.COOKIE_SECRET,
@@ -42,12 +48,14 @@ app.use(
     },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session()); // req.session 객체에 passport 정보 저장
 
 const indexRouter = require("./routes");
 const authRouter = require("./routes/auth");
 const v1Router = require("./routes/v1");
+
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/v1", v1Router);

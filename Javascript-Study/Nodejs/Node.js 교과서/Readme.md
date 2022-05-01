@@ -1830,3 +1830,39 @@ router.post(
 ```
 - 만약 jwt 토큰 기반 로그인을 구현한다면, 토큰을 쿠키로 전달하고, `isLoggedIn`, `isNotLoggedIn`대신 verifyToken 미들웨어를 사용하면 된다. 세션을 사용하지 않으므로 serializeUser deSerializeUser 메서드는 필요 없다.
 - jsonwebtoken의 sign의 기본 알고리즘은 `HS256`으로 단방향 해시 암호화 방식이다. ***만약 클라이언트에서 `sign`, `verify`메서드를 사용하고 싶다면 `RSA`같은 양방향 비대칭 암호화 알고리즘을 사용해야 한다. 서버에서는 비밀키를, 클라이언트에서는 공개키를 사용하므로써 비밀키 유출을 막을 수 있다.*** 자세한 방식은 모르겠으나 공식문서상 PEM 키를 사용하는 부분을 참고하면 된다고 한다.
+
+<br>
+
+### 10.5 [추가] express-session + redis 설정
+- 개인적으로 [`express-session`](https://www.npmjs.com/package/express-session) 스터디하다가 redis 설정해보려고 적용.
+- `express-session`은 기본적으로 세션 저장소로 `MemoryStore`를 사용하는데, 이건 개발용으로 만들어진 라이브러리이기 때문에 프로덕션에서는 사용하기엔 부적합하다.
+- 공식적으로 [여러 저장소를 지원](https://www.npmjs.com/package/express-session#compatible-session-stores)하는데, 제일 보편적인건 역시 Redis에 저장하는것이다. [`connect-redis`](https://www.npmjs.com/package/connect-redis)패키지를 이용한다.
+- docker로 Redis 실행 및 필요한 패키지 설치
+```bash
+docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
+
+npm install redis connect-redis express-session
+```
+- 참고로 docker redis는 `docker-network`를 통해서 통신하기를 권장한다. 포트를 외부에 공개할 경우 비밀번호를 반드시 설정해야하나, 테스트용이므로 그냥 한다.
+- [redis-stack 이미지는](https://redis.io/docs/stack/get-started/install/docker/) RedisInsight까지 같이 들어있어 웹에서 데이터를 시각화해서 볼 수 있다.
+- express-session 설정을 아래와 같이 한다.
+```js
+// app.js
+
+// ...
+let RedisStore = require("connect-redis")(session);
+const { createClient } = require("redis");
+let redisClient = createClient({ legacyMode: true });
+redisClient.connect().catch(console.error);
+
+app.use(
+  session({
+    store: new RedisStore({ client: redisClient }),
+    // ...
+  })
+);
+```
+- 로그인을 수행하면 아래와 같이 Redis에 세션 정보가 저장된다.
+![결과](https://velog.velcdn.com/images/motiveko/post/de6f8769-ba29-4c4f-adfa-32cba69d6d53/image.png)
+
+> 참고로 express-session v1.5 이상부터는 cookie-parser를 설정할 필요가 없다.
