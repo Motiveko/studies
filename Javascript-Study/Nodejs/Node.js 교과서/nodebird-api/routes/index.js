@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { isLoggedIn } = require("./middlewares");
+const { isLoggedIn } = require("./middlewares.js");
 const Domain = require("../models/domain");
 const { v4: uuidv4 } = require("uuid");
 const { body, oneOf, validationResult } = require("express-validator");

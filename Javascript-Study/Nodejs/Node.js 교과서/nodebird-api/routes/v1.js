@@ -7,7 +7,9 @@ const User = require("../models/user");
 const Post = require("../models/post");
 const Hashtag = require("../models/hashtag");
 
-const { verifyToken } = require("./middlewares");
+const { verifyToken, deprecated } = require("./middlewares.js");
+
+router.use(deprecated);
 
 router.post(
   "/token",
@@ -58,7 +60,6 @@ router.get("/test", verifyToken, (req, res) => {
 router.get("/posts/my", verifyToken, (req, res) => {
   Post.findAll({ where: { userId: req.decoded.id } })
     .then((posts) => {
-      console.log(hashtags);
       res.json({
         code: 200,
         payload: posts,

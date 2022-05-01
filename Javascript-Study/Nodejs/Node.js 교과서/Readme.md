@@ -1866,3 +1866,77 @@ app.use(
 ![결과](https://velog.velcdn.com/images/motiveko/post/de6f8769-ba29-4c4f-adfa-32cba69d6d53/image.png)
 
 > 참고로 express-session v1.5 이상부터는 cookie-parser를 설정할 필요가 없다.
+
+<br>
+
+### 10.6 사용량 제한 구현하기
+- api 호출 사용량 제한을 구현한다. 이를 편리하게 구현할 수 있도록 기능을 제공하는 [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit)를 사용한다.
+- 책은 옛날 버전인것 같다. 참고하지 않고 공식문서를 참고해서 구현한다.
+```js
+// routes/middlewares.js
+// ...
+const rateLimit = require("express-rate-limit");
+const Domain = require("../models/domain");
+
+// ...
+
+const isPremiumReq = async (req) => {
+  const { type } = req.user;
+  const { clientSecret } = req.body;
+
+  if (type) {
+    return type === "premium";
+  }
+  if (clientSecret) {
+    const domain = await Domain.findOne({
+      where: {
+        clientSecret,
+      },
+    });
+
+    return domain.type === "premium";
+  }
+  return false;
+};
+
+const premiumCount = 2;
+const freeCount = 1;
+
+exports.apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: async (req) => {
+    const isPremium = await isPremiumReq(req);
+    return isPremium ? premiumCount : freeCount;
+  },
+  async handler(req, res) {
+    if (!this.customMessage) {
+      const isPremium = await isPremiumReq(req);
+      const message = `${isPremium ? "프리미엄" : "무료"} 요금제는 1분에 ${
+        isPremium ? premiumCount : freeCount
+      } 번만 요청할 수 있습니다.`;
+      this.customMessage = message;
+    }
+    res.status(this.statusCode).json({
+      code: this.statusCode, // 기본값: 429
+      message: this.customMessage,
+    });
+  },
+});
+```
+- `isPremiumReq`메서드를 이용해 요청의 type이 premium인지 여부를 가린다. premium이 아니면 free로 친다.
+- `apiLimiter`는 미들웨어다. `rateLimit(options)`메서드를 이용해서 만든다. `windowMs`는 단위시간, `max`는 사용량, `handler`는 초과 요청시 처리할 핸들러다. ***미들웨어는 요청의 ip 단위로 인스턴스로 생성된다.*** 그렇기 때문에 max에 함수를 작성해 사용량을 동적으로 만들 수 있는 것이다.
+
+> 사용량 역시 `express-session`과 비슷하게 Redis 등의 스토어를 설정할 수 있다. [`rate-limit-redis`](https://www.npmjs.com/package/rate-limit-redis)를 이용하면 가능한데, 나는 일단 실패했다. `client.sendCommand(args)` 부분이 Promise를 반환해야하는데 undefined를 반환하고 있어서 문제가 되는 것 같은데 원인을 끝내 찾지 못했다. Redis 공부를 하고 나면 찾을 수 있을거라 생각된다..
+- 적용은 원하는 라우터에서 `router.use(apiLimiter)`로 라우터 단위로 적용할 수 있다.
+- 추가적으로 `deprecated` 미들웨어도 구현한다. API를 v1 -> v2 로 버전 업그레이드 할 때 하위 버전 라우터에 적용하면 된다.
+```js
+// routes/middlewares.js
+exports.deprecated = (req, res) => {
+  res.status(410).json({
+    code: 410,
+    message: "새로운 버전이 나왔습니다. 새로운 버전을 사용하세요",
+  });
+};
+```
+
+<br>
