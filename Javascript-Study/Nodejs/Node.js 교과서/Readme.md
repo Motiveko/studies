@@ -1940,3 +1940,159 @@ exports.deprecated = (req, res) => {
 ```
 
 <br>
+
+### 10.7 CORS 
+<!-- 뒤로 미룬다. -->
+
+<br>
+
+## 11. 노드 서비스 테스트하기
+<!-- 미룬다. -->
+
+## 14. CLI 프로그램 만들기
+### 14.1 간단한 콘솔 명령어 만들기
+- 콘솔 명령어로 html / js 템플릿을 생성하는 cli를 만든다. 
+- package.json 파일을 생성하고, 아래 내용을 추가한다.
+```json
+{
+  ...
+  "bin": {
+    "cli": "./index.js"
+  }
+}
+```
+- `bin` 속성이 콘솔 명령어와 해당 명령어를 호출할 때 실행 파일을 설정하는 객체다. 즉 ***콘솔창에 cli를 치면 index.js가 실행***된다.
+- `npm i -g`로 현재 패키지를 전역 설치한다. 현재 패키지 설치시 패키지명을 적지 않아도 된다.
+- index.js를 아래와 같이 작성한다.
+```js
+// index.js
+#!/usr/bin/env node
+console.log(process.argv)
+
+// cli 실행시 결과 [ '/usr/local/bin/node', '/usr/local/bin/cli' ]
+```
+- 첫 줄의 `#!/usr/bin/env node`은 유닉스 기반 운영체제(맥/리눅스)에서 /usr/bin/env 에 등록된 node 명령어로 이 파일을 실행한게 하는 [`Shebang`](https://sondho.tistory.com/79)이라는 녀석이라고 한다. ***이게 없으면 node가 아닌 기본 쉘 스크립트로 명령을 수행***한다. 윈도 운영체제에서는 단순 주석이다. cli 실행 결과를 보면 어떻게 실행됐는지 알 수 있다. 자세한 내용은 [여기](https://stackoverflow.com/questions/33509816/what-exactly-does-usr-bin-env-node-do-at-the-beginning-of-node-files)를 참고하자.
+- index.js를 아래와 같이 수정한다.
+```js
+#!/usr/bin/env node
+import * as template from "./vanilla-template/template.js";
+```
+- template 모듈을 import하면 프로세스가 수행되도록 할거다. template.js는 대략 아래와 같다.
+```js
+import * as path from "node:path";
+
+import { ask, close, readlineInstance } from "./ask.js";
+import { createFile, fsExists, mkdir } from "./files.js";
+import { typeTemplateMap } from "./model.js";
+
+const [, , type, name, dir] = process.argv;
+
+
+const getTemplate = async (rl) => {
+  let template;
+
+  while (!typeTemplateMap[template]) {
+    template = await ask(rl, "템플릿 종류를 선택하세요. ");
+  }
+  return template;
+};
+
+const getFileName = async (rl) => { /* ... */ };
+
+const getDirectory = async (rl) => { /* ... */ };
+
+const isValidTemplate = (type) => !typeTemplateMap[type];
+
+const getCorrectInput = async (type, name, dir, rl) => {
+  let template = type;
+  let fileName = name;
+  let directory = dir;
+  if (isValidTemplate(type)) {
+    template = await getTemplate(rl);
+  }
+  if (!fileName) {
+    fileName = await getFileName(rl);
+  }
+  if (!directory) {
+    directory = await getDirectory(rl);
+  }
+  return { template, fileName, directory, rl };
+};
+
+/* 프로그램 실행부 */
+const run = async (type, name, dir) => {
+  // 필요한 정보를 가져오고 디렉토리 생성 및 파일생성 로직
+};
+
+run(type, name, dir);
+
+export default {};
+```
+- `run(type, name, dir)`로 사용자의 실행 argument를 받아 프로그램을 실행한다. 부족하면 사용자에게 되묻는다.
+
+<br>
+
+- 작성한 모듈 중 개발하면서 문제가 있던 부분만 찾아서 정리한다.
+```js
+// vanilla-template/ask.js
+
+import * as readline from "node:readline";
+import { stdin as input, stdout as output } from "node:process";
+
+//..
+
+export const ask = (rl, question) =>
+  new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer);
+    });
+  });
+//..
+```
+- node v17 부터는 readline의 Promise 버전이 추가됐으나, 현재 LST 버전은 16이다. 따라서 Promise로 직접 래핑했다.
+
+<br>
+
+```js
+// vanilla-template/model.js
+import { readFile } from "./files.js";
+import * as path from "node:path";
+import { URL } from "url";
+
+const __dirname = decodeURI(new URL(".", import.meta.url).pathname);
+
+const htmlContent = await readFile(
+  path.resolve(__dirname, "../template/htmlTemplate.html")
+);
+const routerContent = await readFile(
+  path.resolve(__dirname, "../template/routerTemplate.js")
+);
+export const typeTemplateMap = {
+// ...
+}
+```
+- 미리 작성해둔 template 파일을 읽어서 해당 데이터로 템플릿을 생성하게된다. 이 때 `readFile(path.resolve('../template/routerTemplate.js'))` 같은 형태로 작성하면 cli를 수행하는 지점의 상대경로로 찾는다. 따라서 `__dirname`을 사용해야 하는데, ***ESM 환경에서는 `__dirname`이 제공되지 않는다.*** 따라서 [위와 같은 방법으로 __dirname을 직접 정의해줬다.](https://stackoverflow.com/questions/46745014/alternative-for-dirname-in-node-js-when-using-es6-modules)
+- 그리고 `new URL().pathname`은 한글 등을 URIencode 하므로 decode해줘야한다.
+
+<br>
+
+```js
+// vanilla-template/files.js
+
+// ...
+export const mkdir = async (dir) => {
+  await dir.split(path.sep).reduce(async (accPath, cur) => {
+    const acc = await accPath;
+    accPath = path.join(acc, cur);
+
+    const exists = await fsExists(accPath);
+    if (!exists) {
+      await fs.mkdir(accPath);
+    }
+    return Promise.resolve(accPath);
+  }, Promise.resolve("/"));
+};
+```
+- 중첩 디렉토리 생성은 한번에 할 수가 없다. 한개씩 해줘야 하므로 path를 `path.sep`로 분리해서 하나씩 다 생성해줘야한다.
+
+<br>
