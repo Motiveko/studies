@@ -2096,3 +2096,144 @@ export const mkdir = async (dir) => {
 - 중첩 디렉토리 생성은 한번에 할 수가 없다. 한개씩 해줘야 하므로 path를 `path.sep`로 분리해서 하나씩 다 생성해줘야한다.
 
 <br>
+
+### 14.2 CLI 프로그램을 위한 라이브러리
+- 기본적으로 유명한건 [`commander`](https://www.npmjs.com/package/commander), [`yargs`](https://www.npmjs.com/package/yargs), [`meow`](https://www.npmjs.com/package/meow)가 있다. `commander`가 제일 많이 쓰인다.
+- CLI와 사용자간 상호작용을 돕는 [`inquirer`](https://www.npmjs.com/package/inquirer)와 console 출력에 스타일을 추가하는 [`chalk`](https://www.npmjs.com/package/chalk)도 사용한다.
+
+> `chalk` 같은 라이브러리들은 구현이 그렇게 어렵지 않으면서 굉장히 많이 쓰이는 라이브러리다. 이런 오픈소스를 좀 분석해보는것도 재미있겠다.
+
+### 14.2.1 Commandr
+- commander는 `program` 객체를 생성하고 메서드를 체인해서 사용한다. 기본 사용 원리는 [quick start](https://www.npmjs.com/package/commander#quick-start)를 참고하고 나머지 옵션에 대해서만 알아본다.
+
+  <br>
+
+1. [`command`](https://www.npmjs.com/package/commander#commands)
+  ```js
+  // 문법
+  program.command('SUB_COMMAND <required_argument> [optional_argument] ...')
+
+  // usage
+  program.command('template <type>')
+
+  program.command('*');
+  ```
+  - cli의 sub-command를 지정할 수 있다. 예를들어 위의 usage는 `cli template ...` 명령어 입력시 실행된다.
+  - argument도 지정할 수 있는데 `< >`로 정의하면 필수값으로 없으면 에러가 나고, `[ ]`로 정의하면 선택값으로 정의된다.
+  - `*`는 wildcard로 모든 명령어에 대응된다.
+
+  <br>
+
+2. `alias`
+  ```js
+  // 문법
+  program.command('SUB_COMMAND').alias('ALIAS')
+
+  // usage
+  program.command('template').alias('tmpl');
+  ```
+  - sub-command의 축약을 정의할 수 있다.
+
+3. [`options`](https://www.npmjs.com/package/commander#options)
+  - cli에서 흔히 `-p 8080`과 같은 형태로 전달하는 내용을 정의할 수 있다.
+  ```js
+  // 문법
+  // 1. 옵션값을 boolean으로 사용한다.
+  program
+    .option('-o, --option', 'DESCRIPTION', 'DEFAULT_VALUE')
+
+  program
+    .opption('--no-option', 'DESCRIPTION')
+
+  // 2. 옵션에 값을 사용한다.
+  program
+    .option('-o, --option <value>', 'DESCRIPTION', 'DEFAULT_VALUE')
+    .action((options) => options.option)
+
+  // 3. 옵션에 값 or boolean 둘 다 사용한다.
+  program
+    .option('-o, --option [value]', 'DESCRIPTION', 'DEFAULT_VALUE')
+    .action((options) => options.option)
+
+  // 4. variadic-option : 옵션에 복수의 값을 받는다
+  program
+    .option('-n, --number <numbers...>', 'specify numbers')
+    .option('-l, --letter [letters...]', 'specify letters');
+
+  // usage
+  program
+    .command("template <type>")
+    .option("-f, --filename [name]", "파일명을 입력하세요.", "index")
+  ```
+  - option은 --{OPTION_NAME}으로 정의하면 `options.OPTION_NAME`으로 참조할 수 있다. options는 action 핸들러의 인자나 `program.opts()`로 참조한다.
+  - `--kebab-case`로 정의한 옵션이름은 camel case로 바꿔서 `options.kebabCase`로 참조할 수 있다.
+  - 옵션에 argument를 지정하지 않으면 그냥 boolean으로 쓴다. 이 때 option이 안넘어오면 그냥 값이 상태가 되는데, `--no-option`형태를 쓰면 option이 없으면 `{option: true}`, `--no-option`을 쓰면 `{option: false}`가 된다. 명시적으로 뭔가를 안쓰고 싶을때 쓰면 된다.
+  - `[argument]`는 옵션에 값을 넘기지 않으면 `true`를 넘길수 있다. `<argument>`는 옵션에 값을 무조건 넘겨야 한다.
+  - [`requiredOption()`](https://www.npmjs.com/package/commander#required-option)은 필수 옵션을 정의할 때 쓸 수 있다.
+  - [variadic-option](https://www.npmjs.com/package/commander#variadic-option)은 옵션으로 복수의 값을 받는 경우에 쓸 수 있다. `<args...>` `[args...]`현태로 argument를 정의하면 된다. 
+
+<br>
+
+4. [`version`](https://www.npmjs.com/package/commander#version-option)
+  - `-v --version`을 정의할 수 있는 함수다. 많이 본 그것.
+  ```js
+  program.version('0.0.1');
+  ```
+
+<br>
+
+5. [`usage`](https://www.npmjs.com/package/commander#usage)
+  - `-h --help`로 볼 수 있는 문법을 정의한다.
+  ```js
+  program
+    .name("my-command")
+    .usage("[global options] command")
+  ```
+
+<br>
+
+5. [`Action handler`](https://www.npmjs.com/package/commander#action-handler)
+  - 명령어를 수행할 핸들러를 정의한다.
+  ```js
+  program
+      .command('sub_command')
+      .argument('<arg1>', 'arg1')
+      .argument('<arg2>', 'arg2')
+      .action((arg1, arg2, options, obj) => { /* ... */})
+  ```
+  - 정의한 argument를 차례대로 인자로 받고, 그다음 `options 객체`, 그리고 `Command Object`를 인자로 받는다. Command Object에는 사실상 앞의 모든 내용이 담겨있다.
+  
+
+6. [`parse`](https://www.npmjs.com/package/commander#parse-and-parseasync)
+  - command-line argument를 받아 프로그램을 실행한다. run 하는거라고 보면 되겠다.
+  ```js
+  program.parse(process.argv);
+  ```
+
+<br>
+
+### 14.2.2 inquirer
+- `npm init` 실행시 나한테 여러가지 필요한 정보를 요청하는 질문, 그걸 대신 만들어주는 패키지다.
+- `inquirer.prompt([...])`로 수행하고, 질문 객체는 [Question](https://www.npmjs.com/package/inquirer#questions)을 참고해서 직접 만들면 된다. 여러가지 형태의 질문을 객체로 정의할 수 있어 매우 간단하다.
+
+```js
+import inquirer from "inquirer";
+
+inquirer.prompt([
+  // 질문 객체
+]).then((answer) => { /* 동작 수행 */})
+```
+
+<br>
+
+### 14.2.3 chalk
+- console에 스타일을 입혀준다. 문법이 매우 간단하므로 [공식메뉴얼](https://www.npmjs.com/package/chalk)을 봐가면서 그냥 쓰자.
+```js
+// signature
+chalk.<style>[.<style>...](string, [string...])
+
+// usage
+console.log(chalk.bold.bgBlueBright('굵은 글씨에 바탕색은 밝은 파랑색'))
+```
+ 
+ <br>

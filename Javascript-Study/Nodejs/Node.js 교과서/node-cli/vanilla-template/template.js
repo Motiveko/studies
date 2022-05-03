@@ -1,10 +1,8 @@
+import chalk from "chalk";
 import * as path from "node:path";
-
 import { ask, close, readlineInstance } from "./ask.js";
 import { createFile, fsExists, mkdir } from "./files.js";
 import { typeTemplateMap } from "./model.js";
-
-const [, , type, name, dir] = process.argv;
 
 const getTemplate = async (rl) => {
   let template;
@@ -48,7 +46,7 @@ const getCorrectInput = async (type, name, dir, rl) => {
   return { template, fileName, directory, rl };
 };
 
-const run = async (type, name, dir) => {
+const makeTemplate = async (type, name, dir) => {
   const rl = readlineInstance();
 
   const { template, fileName, directory } = await getCorrectInput(
@@ -67,7 +65,7 @@ const run = async (type, name, dir) => {
   const fileExists = await fsExists(fullPath);
 
   if (fileExists) {
-    console.log("이미 파일이 존재합니다.");
+    console.log(chalk.bold.red("이미 파일이 존재합니다."));
     return close(rl);
   }
 
@@ -88,6 +86,4 @@ const run = async (type, name, dir) => {
   close(rl);
 };
 
-run(type, name, dir);
-
-export default {};
+export default makeTemplate;
