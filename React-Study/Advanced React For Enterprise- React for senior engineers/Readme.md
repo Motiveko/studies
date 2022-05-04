@@ -30,4 +30,20 @@
 ## 1.4 Our role as an engineer in a design system
 - 디자인 시스템을 구축하는데서 개발자의 역할은 디자인 철학과 가이드라인을 이해하고 이를 재사용 가능한 코드로 바꾸는 것이다. 디자인 시스템을 보고 재사용 가능한 데이터를 뽑아내서 코드화 시켜야 한다.(예를들어 color pallete를 scss로 변수화 시킨다)
 
+<br><br>
+
+# 2. CSS Architecture
+- Design System은 확장성(Scalability), 지속성(Mainainability)가 중요하다. 여기에 맞춰 CSS가 작성되어야 한다.
+- [Design System on Figma](https://www.figma.com/file/EX8VxcTtAatzI2PBLb361g/designsystems.engineering?node-id=99%3A0)
+
+## 2.1 CSS Architecture Checklist
+- `Organised` : fixed code structure(일관된 코드 구조)
+- `No specificity issues` : 한 컴포넌트의 CSS는 다른 컴포넌트의 CSS와 충돌하지 않아야 한다.
+- `Atomic design principles` 
+- `Easy to understand`(comments, variables)
+  - css 주석 관련하여 `VS Code CSS Comments` 플러그인의 규칙을 따른다.
+- `Fully customizable / themeable`
+
 <br>
+
+
