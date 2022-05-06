@@ -24,11 +24,10 @@
  */
 
 /*=============================================
-=                 Colors                      =
+=                  Colors                     =
 =============================================*/
 
 /* Brand Colors */
-
 $green: #5ece7b;
 $green-light: #9ee2b0;
 
@@ -43,15 +42,15 @@ $gray-light: #bebfc4;
 $white: #fff;
 $white-dark: #f1f2f3;
 
-/* Utility Colors */
+/* Utility colors */
 
-$red: #f2a58d;
-$red-light: #fcede8;
+$red: #d12727;
+$red-light: #f8dedf;
 
-$blue: #67c6fa;
-$blue-light: #e1f4fe;
-$fs-black: 900;
-/*=====  End of of Colors  ======*/
+$blue: #0468db;
+$blue-light: #b4d2f4;
+
+/*=====  End of Colors  ======*/
 
 /*=============================================
 =                Typography                   =
@@ -68,19 +67,25 @@ $fs-black: 900;
 
 /* Font families */
 
-$playfair: "Playfair", serif; /* 1 */
-$raleway: "Raleway", "HelveticaNeue", "Helvetica", "Arial", sans-serif; /* 2 */
+$playfair: "Playfair Display", serif; /* 1 */
+$raleway: "Raleway", "HelveticaNeue", "Helvetica", sans-serif; /* 2 */
 
-/* Font Sizes */
-
+/* Font sizes */
 $fs-xs: 0.75rem; // 12px
 $fs-sm: 0.875rem; // 14px
 $fs-base: 1rem; // 16px
 $fs-lg: 1.125rem; // 18px
 $fs-xl: 1.5rem; // 24px
 
-/* Heading font sizes */
+$fs: (
+  xs: 0.75rem,
+  sm: 0.875rem,
+  base: 1rem,
+  lg: 1.125rem,
+  xl: 1.5rem,
+);
 
+/* Heading font sizes */
 $h-1: 1.375rem; // 22px
 $h-2: 1.375rem; // 22px
 $h-3: 1rem; // 16px
@@ -90,17 +95,18 @@ $h-6: 0.75rem; // 12px
 
 /* Font weights */
 
-$fs-light: 300;
-$fs-normal: 400;
-$fs-medium: 500;
-$fs-semibold: 600;
-$fs-bold: 700;
-$fs-extrabold: 800;
-$fs-black: 900;
-/*=====  End of of Typography  ======*/
+$fw-light: 300;
+$fw-normal: 400;
+$fw-medium: 500;
+$fw-semibold: 600;
+$fw-bold: 700;
+$fw-extrabold: 800;
+$fw-black: 900;
+
+/*=====  End of Typography  ======*/
 
 /*=============================================
-=                Breakpoints                  =
+=            Breakpoints                      =
 =============================================*/
 
 $breakpoints: (
@@ -111,7 +117,8 @@ $breakpoints: (
   xl: 80rem,
   // 1280px
 );
-/*=====  End of of Breakpoints  ======*/
+
+/*=====  End of Breakpoints  ======*/
 
 /*=============================================
 =            Spacing                          =
@@ -140,7 +147,7 @@ $spacing: (
 ) !default;
 
 $shadows: (
-  base: 0 4px 11px rgba(157, 157, 157, 0.21),
+  base: 0px 4px 11px rgba(157, 157, 157, 0.21),
 );
 
 /*=====  End of Spacing  ======*/

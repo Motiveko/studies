@@ -8,13 +8,15 @@
   },
   "scripts": {
     "lint": "stylelint './**/*.scss'",
-    "lint:fix": "yarn lint --fix"
+    "lint:fix": "yarn lint --fix",
+    "build": "node src/scripts/build.js"
   },
   "devDependencies": {
     "husky": "^7.0.4",
     "lint-staged": "^12.4.1",
+    "node-sass": "^7.0.1",
     "prettier": "^2.0.5",
-    "stylelint": "^13.6.1",
+    "stylelint": "^14.8.2",
     "stylelint-config-prettier": "^8.0.2",
     "stylelint-config-sass-guidelines": "^7.0.0",
     "stylelint-prettier": "^1.1.2"
@@ -25,6 +27,6 @@
     }
   },
   "lint-staged": {
-    "*.scss": "yarn lint"
+    "*.scss": "yarn lint:fix"
   }
 }
