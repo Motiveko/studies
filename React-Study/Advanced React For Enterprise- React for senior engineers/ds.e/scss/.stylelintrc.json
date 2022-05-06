@@ -4,5 +4,6 @@
     "stylelint-config-sass-guidelines",
     "stylelint-config-prettier",
     "stylelint-prettier/recommended"
-  ]
+  ],
+  "ignoreFiles": ["./src/lib/*.css"]
 }
