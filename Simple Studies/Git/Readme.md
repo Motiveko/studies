@@ -296,9 +296,12 @@ git show v1.0
 ### Stashing
 - 작업하던걸 당장 커밋에 반영하지 않고 잠시 빼놓는데 사용한다. [`stash`](https://git-scm.com/docs/git-stash)로 저장하면 해당 내용은 커밋되진 않고 잠시 stash에 저장된 상태로, 파일에서는 해당 내용이 다 제거된다.(현재 상태 : WIP, Work In Progress)
 - stash한 후 `git hist`로 로그 확인해보면 statsh한 index와 현재의 WIP가 생성된걸 알 수 잇따.
+
 ```bash
 # 현재 작업(HEAD)을 저장
 git stash
+# -m 옵션으로 stash 메시지 작성
+git stash -m
 
 # stash 목록 확인
 git stash list
@@ -308,6 +311,8 @@ git stash pop
 ```
 - `apply`는 stash에서 내용을 가져와 현재 working dir에 반영하는것
 - `drop`은 stash에서 내용을 지우는 것, `pop`은 apply하고 drop한다.
+- `pop`이라는 단어에서 알 수 있듯이, stash는 일종의 스택으로 관리된다고 한다. 
+- `stash`는 staged + unstaged 모두 stash에 저장하는데, pop을 해도 staged/unstaged 상태는 복구되지 않는다고 한다.
 
 <br>
 
