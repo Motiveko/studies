@@ -298,21 +298,32 @@ git show v1.0
 - stash한 후 `git hist`로 로그 확인해보면 statsh한 index와 현재의 WIP가 생성된걸 알 수 잇따.
 
 ```bash
-# 현재 작업(HEAD)을 저장
-git stash
-# -m 옵션으로 stash 메시지 작성
-git stash -m
+# 현재 작업(HEAD)을 저장 (name 생략가능)
+git stash <name>
+# save -m 옵션으로 stash 메시지 작성
+git stash save -m <message>
+# save -u 옵션으로 untracked file도 stash할 수 있다.
+git stash save -u
 
 # stash 목록 확인
 git stash list
 
 # statsh 다시 가져오기(pop = apply + drop)
 git stash pop
+
+# 현재 stash list 목록 확인 -> {이름}: {브랜치}: {메시지}
+git stash list
+# stash@{0}: On design-system: 디자인 시스템 임시 정리
+# stash@{1}: WIP on design-system: 591d89b Section3 - Monorepositories
+
+# stack의 꼭대기가 아니라 원하는 이름의 stash를 가져올 수 있다.(유용)
+git stash pop <name>
 ```
 - `apply`는 stash에서 내용을 가져와 현재 working dir에 반영하는것
 - `drop`은 stash에서 내용을 지우는 것, `pop`은 apply하고 drop한다.
 - `pop`이라는 단어에서 알 수 있듯이, stash는 일종의 스택으로 관리된다고 한다. 
 - `stash`는 staged + unstaged 모두 stash에 저장하는데, pop을 해도 staged/unstaged 상태는 복구되지 않는다고 한다.
+- stash는 브랜치와 별개로 존재하기 때문에 모든 브랜치에서 공유하고 있다고 보면 된다. 
 
 <br>
 
