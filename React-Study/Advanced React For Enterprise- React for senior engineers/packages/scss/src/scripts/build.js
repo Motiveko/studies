@@ -5,14 +5,14 @@ const sass = require("node-sass");
 const getComponents = () => {
   let allComponents = [];
 
-  const types = ["atoms", "molecules", "organisms"];
+  const types = ["atoms", "molecules"];
 
   types.forEach((type) => {
     const allFiles = fs
       .readdirSync(`src/${type}`)
       .map((file) => ({
         input: `src/${type}/${file}`,
-        output: `src/lib/${file.slice(0, -4)}css`,
+        output: `lib/${file.slice(0, -4)}css`,
       }));
 
     allComponents = allComponents.concat(allFiles);
@@ -40,4 +40,4 @@ getComponents().forEach(({ input, output }) => {
   compile(input, output);
 });
 
-compile("src/global.scss", "src/lib/global.css");
+compile("src/global.scss", "lib/global.css");
