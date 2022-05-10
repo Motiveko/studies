@@ -589,4 +589,52 @@ parcel src/index.html -p 3000
 
 <br>
 
+# 10. Issues
+## 10.1 mono repository에서 패키지간 typescript module resolution 오류
+- `@playground/react` 에서 `@ds.e/react`를 import 할 경우 모듈을 찾지 못한다는 에러를 볼 수 있다. 타입스크립트의 module resolution 시스템이 현재 모듈 구조를 인식하지 못하기 때문에 발생한다.
+- 해결하기 위해서는 `@playground/react`의 tsconfig 에서 `@ds.e/react`프로젝트를 참조하도록 설정해줘야한다. 공통 설정 분리를 위해 `<root>/tsconfig.packages.json`를 만들고 하위 패키지에서 이를 상속한다.
+```json
+// tsconfig.packages.json
+{
+  "compilerOptions": {
+    // ...
+    "declaration": true,
+    "composite": true,
+  }
+}
+```
+- 핵심은 `declaration`, `composite` 설정을 true로 해준다는 것이다. 패키지 사용자인 `@playground/react`에서 사용할 `@ds.e/react` 프로젝트를 reference 해준다.
+```json
+{
+  "extends": "../../tsconfig.packages.json",
+  "references": [
+    {
+      "path": "../../packages/react"
+    }
+  ],
+  //...
+}
+```
+- `@ds.e/react` 패키지는 아래와 같이 설정한다. 상속을 통해 `{ composite: true }`를 받아오는데, 이 설정은 rootDir를 설정하지 않으면 tscofing 파일이 있는 디렉토리를 인식한다. 우리의 index는 src에 들어 있기 때문에 rootDir을 설정해준다.(참고로 reference 되는 패키지는 무조건 `{ composite: true }`를 설정하도록 강제한다.)
+```json
+{
+  "extends": "../../tsconfig.packages.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    // ...
+  },
+  "include": [
+    "src"
+  ],
+  // ...
+}
+```
+- typescript의 project reference는 이런 mono-repository 케이스 외에도 한 프로젝트에서 ***테스트와 구현을 분리***한다던가 하는 형태로 자주 쓰이는 기능인가보다. 잘 숙지해두자.
 
+<br>
+
+> [참고 1] [How to use yarn workspaces with typescript and out folders?](https://stackoverflow.com/questions/57679322/how-to-use-yarn-workspaces-with-typescript-and-out-folders)
+
+> [참고 2] [참고 1의 샘플 프로젝트](https://github.com/a1300/devshorts_yarn_workspace_typescript_example)
+
+> [참고 3] [타입스크립트 project-reference 공식문서](https://www.typescriptlang.org/ko/docs/handbook/project-references.html#composite)
