@@ -219,7 +219,7 @@ const getComponents = () => {
       .readdirSync(`src/${type}`)
       .map((file) => ({
         input: `src/${type}/${file}`,
-        output: `src/lib/${file.slice(0, -4)}css`,
+        output: `lib/${file.slice(0, -4)}css`,
       }));
 
     allComponents = allComponents.concat(allFiles);
@@ -250,7 +250,7 @@ getComponents().forEach(({ input, output }) => {
 });
 
 // global 컴파일
-compile("src/global.scss", "src/lib/global.css");
+compile("src/global.scss", "lib/global.css");
 ```
 
 ```json
@@ -268,7 +268,7 @@ compile("src/global.scss", "src/lib/global.css");
 
 ```json
 {
-  "ignoreFiles": ["./src/lib/*.css"]
+  "ignoreFiles": ["./lib/*.css"]
 }
 ```
 
@@ -398,3 +398,195 @@ packages/scss/node_modules/ # ./bin/ : symlink들, 이외 의존성 설치되지
 - 해당 스크립트는 모든 하위 패키지에서 `yarn build`를 실행한다.
 
 <br>
+
+> [`yarn workspace`](https://classic.yarnpkg.com/lang/en/docs/workspaces/),[hoist의 개념과 nohoist가 필요한 이유](https://classic.yarnpkg.com/blog/2018/02/15/nohoist/) 등에 대해 완전히 이해하지 못했다. 링크를 찬찬히 다시 읽어보자.
+
+<br>
+
+# 4. Implementation of React
+- mono repository는 react, angular, vue 등 여러 프레임워크에 대해 각각의 패키지를 만들어서 관리할 수 있다. 이 중 react를 만든다.
+- 설치
+```bash
+yarn add --dev react@^17.0.0 @types/react@^17.0.0 typscript 
+```
+
+<br>
+
+## 4.1 Foloder Structur
+- 기본적으로 아래 folder 구조로 작업한다. 일부만 표현해본다.
+```
+react/
+  src/
+    atoms/
+      Button/
+        Button.tsx
+        index.ts
+    foundation/
+    molecules/
+    index.ts    
+```
+```ts
+// Button.tsx
+const Button: React.FunctionComponent<ButtonProps> = ({ label }) => {
+  return <button>{label}</button>
+}
+
+export default Button;
+
+// Button/index.ts
+export { default } from './Button';
+
+// index.ts
+import Button from './atoms/Button';
+
+export { 
+  Button
+}
+```
+- 이런식으로 모듈 내부 구현 파일과 사용자가 모듈을 사용할 수 있도록 export하는 파일을 분리하는걸 [**모듈 다시 내보내기**](https://ko.javascript.info/import-export#ref-543)라고 한다. 이렇게 하면 ***패키지의 세부 구현을 숨겨 사용자가 건드리지 못하게 하고, 사용하는 부분만 사용자에게 공개할 수 있다.***
+
+<br>
+
+### 4.2 Add rollup to compile react
+- 설치
+```bash
+yarn add --dev rollup rollup-plugin-typescript2
+```
+> 타입스크립트 컴파일에 `rollup-plugin-typescript2`이 많이 쓰이긴 하는데  `@rollup/plugin-typescript`로 가지 않을까 싶다. 후자는 rollup의 공식 플러그인이기 때문이다.
+
+- `rollup.config.js`
+```js
+import Ts from 'rollup-plugin-typescript2';
+ 
+export default {
+  input: [
+    'src/index.ts',
+    'src/atoms/Button/index.ts'
+  ],
+  output: {
+    dir: 'lib',
+    format: 'esm',
+    sourcemap: true
+  },
+  plugins: [Ts()],
+  preserveModules: true,  // preserve the structure of source folder
+  external: ['react'] // 외부 모듈
+}
+```
+- `input`: 옵션에 명시된 파일은 `index.js`를 빌드해 외부에서 사용할 수 있게된다. 예로 `..Button/index.ts`가 없으면 버튼의 index.js는 번들링 결과로 생성되지 않고, 루트 index에를 import해서 써야만 하게 된다.
+- `preserveModules`: 우리가 작성한 폴더(모듈)구조를 번들링 결과물에 그대로 반영한다. 하지 않으면 js파일이 output.dir인 lib/에 죄다 생성된다.
+- `external`
+  - 외부 모듈(`yarn add` 로 설치한)은 rollup에서 기본적으로 번들링 결과에 포함시키지 않기 때문에 찾지 못한다. 어차피 사용하는 쪽에서 `npm i`로 설치하면 package.json을 읽어서 필요한 외부모듈을 설치하기 때문에 문제는 없으나, rollup으로 번들링시 wanrinig이 발생하는데, `external`에 사용하는 외부 모듈을 명시해주면 된다.
+  - 번들링 결과물에 외부 모듈을 포함시키려면 [@rollup/plugin-node-resolve](https://github.com/rollup/plugins/tree/master/packages/node-resolve)를 쓰면 된다고 한다.
+  - [rollup warning link](https://rollupjs.org/guide/en/#warning-treating-module-as-external-dependency), [rollup.js 플러그인 가이드](https://www.peterkimzz.com/rollupjs-using-plugin/) 자료를 참고하자.
+
+<br>
+
+- `package.json`에 빌드 스크립트를 추가하고 main을 번들링 결과로 변경한다.
+```json
+{
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rollup -c"
+  }
+}
+```
+
+<br>
+
+## 4.3 Setup a React playground
+- `playground`는 디자인 시스템을 사용하여 샘플 앱을 만듦으로서 개발한 디자인 시스템을 테스트한다. 배포되는 용도는 아니다.
+- playground는 번들러로 [parcel](https://parceljs.org/getting-started/webapp/)을 사용한다. 이유는 zero-config로 간단하게 사용이 가능하기 때문으로 추측된다.
+- 필요 패키지 설치
+```bash
+yarn add --dev react@^17.0.0 @types/react@^17.0.0 react-dom@^17.0.0 @types/react-dom@^17.0.0 typescript parcel
+```
+자
+
+> ❗️ 책에서는 `parce-bundler`를 설치하는데 이건 v1으로 deprecated 되었다. [v2 인 parcel로 migration](https://parceljs.org/getting-started/migration/) 해야한다. 기본적으로 `<script>` 태그에 `type="module"`옵션을 추가해줘야 하도록 변경되었다.
+
+> ❗️❗️ 번들러를 많이 쓴다. [[포스팅] `webpack` vs `rollup` vs `parcel`](https://velog.io/@subin1224/Parcel-vs-Rollup-vs-Webpack-%EB%B9%84%EA%B5%90)에 따르면 복잡한 설정을 피하고 간단한 애플리케이션을 빠르게 만들고 싶다면 `Parcel`, 최소한의 서드파티로 라이브러리를 만들고 싶다면 `Rollup`, 많은 서드파티를 필요로 하는 복잡한 애플리케이션 에는 `Webpack`을 사용하라고 한다. 여기에 맞게 번들러를 사용하고 있는걸로 보인다.
+
+<br>
+
+- parcel은 entrypoint js 파일 없이, html을 바로 serve한다. 이에 맞춰 index.html과 index.tsx를 작성한다.
+```html
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playground React</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script src="index.tsx" type="module"></script>
+</body>
+
+</html>
+```
+```tsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import { Button } from '@ds.e/react'
+
+import '@ds.e/scss/lib/Button.css'
+
+ReactDOM.render(
+  <Button label='Playground Button'/>,
+  document.querySelector('#root')
+)
+```
+- `tsconfig.json`파일을 작성한다.(생략)
+- `package.json`에 serve 스크립트를 추가하고 실행해본다.
+```json
+{
+  "scripts": {
+    "dev": "parcel src/index.html -p 3000"
+  }
+}
+```
+```
+yarn dev
+```
+- 결과물이 잘 번들링되어 실행됨을 알 수 있다. 신기하게도 `loader`나 `plugin` 없이도  `typescript`도 알아서 컴파일해주고, `css 모듈`같은것들도 알아서 다 번들링해준다.
+
+<br>
+
+## 4.4 Setup dev scripts for all packages
+- 개발 편의를 위해 playground 실행과 design-system 패키지들의 build + watch 를 동시에 실행할 수 있는 `dev` 스크립트를 작성한다.
+- `@ds.e/react`의 rollup이나 `@playgroud/react`의 parcel은 모두 watch모드를 지원한다. 직접 빌드스크립트를 만든 `@ds.e/scss`는 [`nodemon`](https://www.npmjs.com/package/nodemon)을 사용한다. 아래와 같은 옵션을 쓴다.
+  - `--watch` : watch할 디렉토리를 정할 수 있다. `--watch src` 하면 src 이하 모든 파일을 watch한다.
+  - `--exec`: watch할 파일에 변화가 감지되면 실행할 명령어를 지정한다.
+  - `-e --ext`: watch할 파일의 extension을 정할 수 있다. `-e scss` 하면 scss파일만 watch한다.
+
+- 각 패키지의 ***`dev script`는 아래와 같다.***
+```bash
+# @ds.e/scss  
+nodemon --watch src --exec yarn build -e scss
+  
+# @ds.e/react
+yarn build --watch
+
+# @playgroud/react
+parcel src/index.html -p 3000
+```
+- ***Root 패키지에서 `lerna`를 이용해 이걸 전부 실행시킨다.***
+```json
+// package.json
+{
+  "scripts": {
+    "dev": "yarn lerna run dev"
+  }
+}
+```
+- ***design-system의 각 파일이 수정되면, 다시 빌드되고, 해당 내용을 playground에서 import해서 사용중이라면, playgroud도 다시 빌드된다.***
+
+<br>
+
+
