@@ -1,21 +1,8 @@
 {
+  "extends": "../../tsconfig.packages.json",
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "lib",
-    "module": "esnext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "jsx": "react",
-    "allowSyntheticDefaultImports": true,
-    "target": "esnext",
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "declaration": true,
-    "moduleResolution": "node"
   },
   "include": [
     "src"
