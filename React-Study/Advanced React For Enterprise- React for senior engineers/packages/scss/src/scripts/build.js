@@ -21,18 +21,22 @@ const getComponents = () => {
   return allComponents;
 };
 
-const compile = (filePath, filename) => {
-  const result = sass
-    .renderSync({
-      data: fs
-        .readFileSync(path.resolve(filePath))
-        .toString(),
-      outputStyle: "expanded",
-      includePaths: [path.resolve("src")],
-    })
-    .css.toString();
-
-  fs.writeFileSync(path.resolve(filename), result);
+const compile = async (filePath, filename) => {
+  try {
+    const result = sass
+      .renderSync({
+        data: fs
+          .readFileSync(path.resolve(filePath))
+          .toString(),
+        outputStyle: "expanded",
+        includePaths: [path.resolve("src")],
+      })
+      .css.toString();
+    fs.writeFileSync(path.resolve(filename), result);
+  } catch (err) {
+    console.error(`${filePath} 컴파일중 에러 발생 =====>`);
+    throw err;
+  }
 };
 
 getComponents().forEach(({ input, output }) => {

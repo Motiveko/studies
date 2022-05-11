@@ -194,6 +194,9 @@ yarn add --dev husky lint-staged
 ### 2.2.8 Compile SCSS to css
 
 - [`node-sass`](https://www.npmjs.com/package/node-sass)를 이용해서 `global.scss`를 css로 컴파일한다. 사용자가 원하면 scss를 가져다 쓸수도 있긴 하나, css도 제공해야한다.
+
+> 참고로 강좌에서와 같이 `node-sass`를 v4로 설치하면 gyp ERR!... 메시지가 뜬다. 정확한 원인은 모르고, v7로 업데이트 하면 해결가능
+
 - 패키지 설치
 
 ```bash
@@ -588,6 +591,150 @@ parcel src/index.html -p 3000
 - ***design-system의 각 파일이 수정되면, 다시 빌드되고, 해당 내용을 playground에서 import해서 사용중이라면, playgroud도 다시 빌드된다.***
 
 <br>
+
+## 4.5 Indentify atoms, molecules and organisms
+
+- `Selectbox`컴포넌트를 개발한다. `Selectbox`의 디자인을 보고 어떤 `atoms`, `molecules`, `oranisms`로 구성되는지 분석하고, 이걸 카테고리화 시켜야한다.
+  - selectbox(organisms)
+    - select item(w state selected, `molecule`)
+      - sqaure box(`atom`)
+      - color component(`atom`)
+      - text component(white/color)(`atom`)
+      - icon(dropdown, check `atom`)
+
+<br>
+
+## 4.6 Color Atom
+
+- color 컴포넌트는 디자인 시스템상에 네모난 컬러 컴포넌트다. 색상값인 `hex`를 인자로 받고, 사이즈인 `width`, `height`도 인자로 받는다. 이 때, ***컴포넌트의 사이즈는 디자인 시스템 variable의 `$spacing`에 정의된 값만 사용하도록 만들어야한다.*** 
+- 이를 위해 `$spacing`을 이용해 `dse-{width|height}-{size}` 형태의 클래스를 정의해야한다.
+```scss
+// @ds.e/scss, atoms/Utilities.scss
+@import "foundation/all";
+
+@each $size, $value in $spacing {
+  .dse-width-#{$size} {
+    width: $value;
+  }
+
+  .dse-height-#{$size} {
+    height: $value;
+  }
+}
+```
+- 이 파일을 컴파일하면 아래와 같은 형태의 css파일이 만들어진다. 
+
+```css
+/* Utilities.css */
+.dse-width-xxxs {
+  width: 0.25rem;
+}
+
+.dse-height-xxxs {
+  height: 0.25rem;
+}
+
+/* ... */
+```
+> ❗️ scss 빌드시 node-sass의 `includePaths`에 src를 추가해서 위의 `@import "foundation/all"`는 `src/foundation/_all.scss`를 임포트하게 된다. 근데 vscode상에서는 이를 인식하지 못하는데, 이걸 해결할 방법을 찾지 못했다. live sass compiler 플러그인에도 따로 설정할 수 없고, scss로 인식도 못해 `@import "../foundation/_all.scss"`를 해야 링크이동이 가능하다. 원인 미상.
+
+<br>
+
+- 위 클래스를 사용할 수 있게 spacing 변수를 상수화 시킨다.
+```ts
+// @ds.e/react foundation/Spacing.ts
+
+const spaces = {
+  xxxs: "xxxs",
+  xxs: "xxs",
+  xs: "xs",
+ // ...
+}
+
+export default Object.freeze(spaces);
+```
+- 이 모듈을 디자인 시스템에서 아래와 같이 적용할 수 있다.
+```tsx
+// atom/Color.tsx
+import React from "react";
+import Spacing from "../../foundation/Spacing";
+
+interface ColorProps {
+  hexCode: string;
+  width?: keyof typeof Spacing;
+  height?: keyof typeof Spacing;
+}
+
+const Color: React.FunctionComponent<ColorProps> = ({
+  hexCode,
+  width = Spacing.sm,
+  height = Spacing.sm,
+}) => {
+  const className = `dse-width-${width} dse-height-${height}`;
+  // ...
+}
+```
+- `playground`에서는 `import "@ds.e/scss/lib/Utilities.css";`로 css를 임포트하고 컴포넌트를 사용하면 된다.
+
+- Text atom도 이와 같은 방식으로 만든다.(생략)
+<br>
+
+### 4.7 Foundation 분리
+- 스프링에서 multi-module 프로젝트를 만들어 도메인들을 모두 분리했던 것 처럼 디자인 시스템의 `foundation js파일`들도 패키지로 분리해, 여러 다른 패키지(react, vue, angular..)에서 재사용 할 수 있다.
+- `@ds.e/foundation` 패키지를 만들고 타입스크립트를 설치한다. 번들러 같은건 없으며, `tsc`로 컴파일한다.
+- `tsconfig.json`파일을 아래와 같이 작성한다. 설정은 많진 않고, 이 패키지는 다른 패키지에서 reference 되어 사용되므로, `"composite": true`와 `"rootDir": "src"`설정은 필수다.
+```json
+{
+  "compilerOptions": {
+    "outDir": "lib",
+    "module": "ESNext",
+    "target": "ESNext",
+    "rootDir": "src",
+    "declaration": true,
+    "composite": true,
+    "moduleResolution": "node",
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
+}
+```
+- `build`와 개발시 사용할 `dev` 스크립트를 작성하고 앱 진입점을 설정한다. 
+```json
+// package.json
+{
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "yarn build --watch"
+  }
+}
+```
+- `@ds.e/foundation`를 사용하는 쪽에서는 tsconfig에 아래와 같은 내용을 추가해주면 된다.
+```json
+// tsconfig.json
+{
+  "references": [
+    {
+      "path": "../foundation"
+    }
+  ]
+}
+```
+
+<br>
+
+
+
+
+
+
+
+
 
 # 10. Issues
 ## 10.1 mono repository에서 패키지간 typescript module resolution 오류
