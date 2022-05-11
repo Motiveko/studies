@@ -1,11 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
-import { Button } from '@ds.e/react'
+import { Color } from "@ds.e/react";
 
-import '@ds.e/scss/lib/Button.css'
+import "@ds.e/scss/lib/Utilities.css";
 
 ReactDOM.render(
-  <Button label='Playground Button'/>,
-  document.querySelector('#root')
-)
+  <Color hexCode="#000" />,
+  document.querySelector("#root")
+);
