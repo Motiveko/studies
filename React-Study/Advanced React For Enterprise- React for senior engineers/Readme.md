@@ -737,6 +737,113 @@ export default {
 <br>
 
 
+### 4.8 Spacing Component
+- 마진 등의 spacing을 따로 컴포넌트로 분리하여 작성한다. `<Margin>{children}</Margin>`형태로 작성할 것이다.
+- 이 때 className은 `dse-margin-[,direction]-{size}`형태로 사전에 정의되어야 한다. scss를 이용하면 쉽게 만들수 있다.
+```scss
+// @ds.e/scss atom/Margin.scss
+@import "foundation/all";
+
+$sides: left, right, top, bottom;
+
+@each $space, $value in $spacing {
+  // 기본 마진
+  .dse-margin-#{$space} {
+    margin: $value;
+  }
+
+  // 방향별 마진
+  @each $side in $sides {
+    .dse-margin-#{$side}-#{$space} {
+      margin-#{$side}: $value;
+    }
+  }
+}
+```
+
+- Margin 컴포넌트를 작성한다. 컴포넌트는 `마진의 사이즈`와 `마진의 방향`을 인자로 받을것이다.
+```tsx
+// @ds.e/react atoms/Margin.tsx
+
+// ...
+interface MarginProps {
+  space?: keyof typeof Spacing;
+  left?: boolean;
+  right?: boolean;
+  top?: boolean;
+  bottom?: boolean;
+}
+
+const Margin: React.FunctionComponent<MarginProps> = ({
+  space = Spacing.xxxs,
+  left,
+  right,
+  top,
+  bottom,
+  children,
+}) => {
+  let className = "";
+
+  if (!left && !right && !top && !bottom) {
+    className = `dse-margin-${space}`;
+  }
+  if (left) {
+    className += ` dse-margin-left-${space}`;
+  }
+
+  if (right) {
+    className += ` dse-margin-right-${space}`;
+  }
+
+  if (top) {
+    className += ` dse-margin-top-${space}`;
+  }
+
+  if (bottom) {
+    className += ` dse-margin-bottom-${space}`;
+  }
+
+  return <div className={className}>{children}</div>;
+};
+```
+- 약간의 노가다가 필요하다. 방향을 설정하지 않으면 className은 `dse-margin-${space}`이고 방향을 정의하면 `dse-margin-${side}-${space}`를 개별적으로 추가해준다.
+- 사용법은 아래와 같다.
+```tsx
+// @playground/react
+ReactDOM.render(
+  <>
+    <Margin left space="none">
+      <Text size="xs">텍스트 컴포넌트 테스트</Text>
+    </Margin>
+  </>,
+  document.querySelector("#root")
+);
+```
+- Margin 컴포넌트의 children으로 Text 컴포넌트를 넣은것이다. 여기서 중요한건 ***마진은 마진 컴포넌트로만 추가할 수 있기 때문에 다른 모든 atoms 요소들은 전부 마진이 0이어야 한다는 것***이다.
+- 이를 위해 Text 컴포넌트는 `.dse-text`를 기본적으로 추가한다.
+```tsx
+// @ds.e/react atoms/Text.tsx
+const Text: React.FunctionComponent<TextProps> = ({
+  size = FontSize.base,
+  children,
+}) => {
+  const className = `dse-text dse-text-${size}`;
+  return <p className={className}>{children}</p>;
+};
+```
+```scss
+// @ds.e/scss atoms/Text.scss
+.dse-text {
+  margin: 0;
+}
+```
+
+- padding과 같은 다른 요소에 대해서도 동일하게 적용할 수 있을것으로 보인다.
+
+<br>
+
+
+
 
 
 
