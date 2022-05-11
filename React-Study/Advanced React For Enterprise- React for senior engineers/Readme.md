@@ -725,6 +725,14 @@ const Color: React.FunctionComponent<ColorProps> = ({
   ]
 }
 ```
+- `rollup`을 사용하는 패키지에서는 rollup config의 외부 모듈에 `@ds.e/foundation`을 추가해야 경고메시지가 안뜬다.
+```js
+// rollup.config.js
+export default {
+  // ...
+  external: ["react", "@ds.e/foundation"]
+};
+```
 
 <br>
 
