@@ -74,6 +74,12 @@ git add -A
 # tracking중인 파일 중 변경있는 파일만 추가
 git add -u
 ```
+- 하나의 파일에 군대군대 수정이 있을 때 일부(chunk)만 stage 할 수 있다. : [patch](https://git-scm.com/docs/git-add#Documentation/git-add.txt---patch)
+```
+git add -p
+```
+- chunk별로 stage 할건지 물어본다. y/n으로 대답하면 된다.
+
 
 <br>
 
@@ -91,13 +97,17 @@ git restore --staged <file>...
 ### 커밋하기 
 - [`commit`](https://git-scm.com/docs/git-commit)
 ```bash
-# core editor
+# core editor 실행
 git commit
+```
+- 커밋 아이디는 SHA-1 아이디라고 한다.
+- commit은 Subject와 Body로 구성된다. 에디터상에서 첫줄은 subject로 인식하고 subject에서 한 줄 띄어서 쓰는 내용은 자동으로 body로 인식한다.
+- `# 내용`은 주석으로 무시한다.
 
+```bash
 # inline
 git commit -m "메시지"
 ```
-- 커밋 아이디는 SHA-1 아이디라고 한다.
 - tracking중인 파일의 변경을 staging + commit 한번에 하기: `commit -a`
 ```bash
 git commit -am "message"
@@ -413,3 +423,96 @@ git clone <URL> <folder-name>
 ```bash
 git show <commit-id>
 ```
+
+<br>
+
+## 추가 Git for Professionals Tutorial
+> [Git for Professionals Tutorial](https://www.youtube.com/watch?v=Uszj_k0DGsg&list=LL&index=6&t=490s)를 보고 여기 정리한다.
+
+### Branching Stragtegies
+
+브랜치는 자유롭게 사용할 수 있다. 단지 협업시, 팀에서 Convention을 정하고 이걸 문서화 해야 한다. 
+
+브랜치를 분류할 수 있는 방법은 몇가지가 있다.
+- 구조?에 따라
+  1. Mainline Development
+    - Always be Interating
+    - 소수의 브랜치(작은규모에서는 1개의 main 브랜치)
+    - commit이 상대적으로 작다.
+    - High Quality Testing & QA Standards
+
+  2. State, Release, and Feature Branches
+    - 메인라인이 아닌 다른 브랜치들
+  
+- 수명에 따라
+  1. Long-Running Branch
+    - Integration 브랜치들(main, development, staging, production)
+    - 이 브랜치에는 커밋이 직접적으로 이뤄지지 않고 integration을 통해서만 이뤄진다.(Code Quality, Realese Schedule)
+  2. Short-lived Branch
+    - topic, feature, bug-fix 등의 브랜디
+    - Long-Running Branch에 integration 된 후 제거된다.
+
+<br>
+
+대표적인 두가지 Branching Strategies가 있다.
+1. Github FLow
+![Github Flow](https://blog.kakaocdn.net/dn/70a1a/btrAAZMILka/BwnRKBTeZX1UWI8sddApdK/img.png)
+- 아주 간단한 브랜치 전략. 1개의 long-running(main)과 feature 브랜치만 가지고 개발한다. 
+- 모든 feature 브랜치는 main에서 나와 main으로 merge된다. merge는 pull request를 통해 코드리뷰/테스트 등을 통해 진행한다.
+- 따로 hotfix/feature/topic.. 같은 구분이 없기때문에 브랜치 생성시 브랜치 명에 해당 브랜치의 목적을 명확하게 적어줘야한다.  
+
+2. Gitflow
+![Gitflow](https://blog.kakaocdn.net/dn/UwrHH/btrAAcyJxeV/xkIF2PeoqBSQESWcivaxb0/img.png)
+- Github Flow보다 훨씬 구조화된 브랜치 전략
+- 브랜치 구성은 대략 아래와 같다.
+  ![Gitflow 브랜치](https://blog.kakaocdn.net/dn/bQA8c1/btrACMzkbRN/0fFHCPKTR1LhKZUKSPSti1/img.jpg)
+  - master : 라이브 서버에 제품으로 출시되는 브랜치.
+  - develop : 다음 출시 버전을 대비하여 개발하는 브랜치.
+  - feature : 추가 기능 개발 브랜치. develop 브랜치에 들어간다.
+  - release : 다음 버전 출시를 준비하는 브랜치. develop 브랜치를 release 브랜치로 옮긴 후 QA, 테스트를 진행하고 master 브랜치로 합친다.
+  - hotfix : master 브랜치에서 발생한 버그를 수정하는 브랜치.
+
+
+<br>
+
+### Pull Request 
+- pull request: review code from others
+  - 엑세스 권한이 없는 open source repository 등에 기여할 때 많이 쓴다.
+  - pull request는 branch 단위로 한다.
+- fork: personal copy of a git repository
+- Pull Request는 git hosting 제공사마다 조금씩 구조가 다르다. 
+- Github기준으로, fork repo에서 어떤 브랜치든 작업한 후 remote에 푸시하고 나서 해당 레포지토리에 가보면 pull request를 만들것을 제안해준다. pull request 생성시 ***어떤 repository의 어떤 branch에*** pull request 할 것인지 선택할 수 있고, 메시지를 작성해서 날리면 해당 repository의 관리자에게 pr이 왔다고 알림이 갈것이다.
+
+<br>
+
+### Merge Conflict
+- 단지 Merge할 때만 발생하는게 아니라 rebase, cherry-pick, stash apply 등 여러 경우에 발생할 수 있다.
+- merge 시도시 conflict 발생할 경우 `git status`를 하면 `unmerged paths`가 있다고 말해준다. 충돌난 파일들이다.
+- 이걸 resolve해도 되지만, 하기 실으면 `git {merge|rebase} --abort`로 취소할 수도 있다.
+- merge => conflict 발생 => resolve => merge commit 메시지 작성 및 commit 과정이다.
+- `git mergetool`을 하면 지정한 머지툴로(vscode) resolve를 할 수 있는데, 이거 하면 뭐 자꾸 conflict가 남아있는 .orig 파일이 생성된다. 이거 어째 해결하는지는 모르겠다. resolve를 중간에 잘못했을때를 대비한 `saftey copy`라고 하는데, 이거는 지우고 커밋해야한다. sublime merge는 깔끔하게 resolve해준다.
+
+<br>
+
+### Merge vs Rebase
+- 브랜치를 병합할 땐 git은 세개의 브랜치를 본다. 
+  - 1. 각 브랜치의 최신 커밋
+  - 2. 병합하는 두 브랜치의 가장 최근 공통 커밋(분기점)
+- `Fast foward`
+   - 공통 커밋이 한 브랜치의 최신 커밋이면, 해당 브랜치에 병합하는 브랜치의 커밋이 쭉 나열된다.(간단한 케이스)
+   - 두 브랜치는 동일한 commit history를 가진다.
+- `Merge Commit`
+  - git이 확인하는 세개의 브랜치가 전부 다른경우, 두 브랜치간의 차이를 commit하는데, 이를 `merge commit` 이라고 한다.
+  - ***일반 커밋은 사람이 작성하지만 merge commit은 git이 자동으로 작성해준다.***
+
+- `Rebase`
+  - 브랜치를 합치면서 생기는 merge commit이 싫을 경우 `Rebase`할 수 있다. merge commit이 없기 때문에 마치 하나의 브랜치에서 계속 작업한 것 처럼 보인다.(깔끔)
+  - `Rebase branch B into branch A`를 한다고 해보자. Rebase는 아래의 과정으로 이뤄진다.
+    1. git은 `branch A`에서 양 브랜치의 공통 커밋 이후의 모든 커밋을 제거한다.
+    2. `branch B`의 커밋을 `branch A`에 반영한다. 이 시점에서 두 브랜치는 똑같아 보인다.
+    3. 반영된 커밋 다음에 branch A의 기존 커밋을 반영한다.
+  - 이렇게 하면 `merge commit`없이 `branch B` 작업 후 `branch A` 작업한 것 처럼 커밋이 구성된다. 이 말은 ***branch A의 `commit history`를 재작성 한다는 것이다.*** `*`표시가 남는다.
+  - rebase 과정에서 뭔가 문제가 있어서 되돌리고 싶다면 어떻게 할까? [`reflog`와 `reset`을 이용해서 rebase를 되돌릴 수 있다.](https://www.delftstack.com/ko/howto/git/undo-rebase-in-git/)
+  - Rebase는 조심히 사용해야 한다. 이 케이스에서 ***Rebase 전에 원격지에 branch A의 커밋 내역을 푸시했다면 Rebase 하면 안된다. Rebase는 `'LOCAL'` commit history를 깔끔하게 만들때에만 사용해야한다.***
+
+  - Rebase의 적절한 사용 시점중 하나는 내가 `feature branch`에서 작업하고 있다가, 이걸 integration 하려고 할 때, 부모 브랜치를 pull 한 뒤 local에서 Rebase하면 `부모` -> `feature` 순으로 커밋이 재조정되므로 깔끔해진다.
