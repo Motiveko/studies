@@ -83,7 +83,7 @@ git add -p
 
 <br>
 
-### 파일 제거하기(unstaging) 
+### Staging 영역의 파일을 Unstaging 영역으로 이동
 - [`reset`](https://git-scm.com/docs/git-reset)
 - [`restore`](https://git-scm.com/docs/git-restore)
 ```bash
@@ -91,6 +91,7 @@ git reset HEAD <file>...
 
 git restore --staged <file>...
 ```
+- 둘 다 똑같은 역할을 한다.
 
 <br>
 
@@ -112,6 +113,23 @@ git commit -m "메시지"
 ```bash
 git commit -am "message"
 ```
+
+<br>
+
+- 최근에 커밋을 했는데, 메시지를 잘못 적었거나 빠트린 파일이 있다는걸 알아차렸다. `--amend` 옵션으로 해당 커밋을 수정할 수 있다.(최근 커밋만 수정 가능하다.)
+```bash
+# 빼먹은 파일 staging에 추가(메시지만 바꿀거라면 필요하지 않다)
+git add <forgotten_files>
+
+# 커밋 되돌리기
+git commit --amend
+
+# 만약에 최신 커밋이 원격지에 푸시된 상태였다면, push --force로 원격지 커밋도 바꿀 수 있다.
+git push --force
+```
+
+
+
 
 <br>
 
@@ -187,6 +205,25 @@ git commit -m "demo.txt 제거"
 ```
 
 - tracking하지 않을 파일을 추가 : [`.gitignore`](https://git-scm.com/docs/gitignore)
+- `node_modules/`나 `log파일`같은 파일을 실수로 커밋해버렸을 때 이걸 git에서만 추적하지 않도록 하려면 **.gitignore 에 추가**하면서 하드디스크에는 파일을 남겨두고 git snaphot에서만 삭제해야한다.
+```bash
+# --cached 옵션은 디스크상에서는 파일을 남겨둔 채 파일 삭제한것을 staging한다.
+git rm --cached <file>
+
+git rm --cached log/\*.log
+```
+
+<br>
+
+### 파일 이름 변경
+- [`mv`](https://git-scm.com/docs/git-mv)는 추적중인 파일 이름을 변경한다.
+```bash
+git mv <source> <destination>
+
+# README.md -> README
+git mv README.md README
+```
+- 사실 mv는 `rm` + `add`와 같다. 
 
 <br>
 
@@ -338,19 +375,37 @@ git stash pop <name>
 <br>
 
 ### Time Travel With `Reset` and `Reflog`
-- [`reset`](https://git-scm.com/docs/git-reset)은 현재의 HEAD를 특정 상태로 reset하는 동작이다. `soft`, `mixed(default)`, `hard` 세가지 옵션이 있다.
-  - `soft` : HEAD를 특정 commit으로 옮기고, 현재 working dir 내용은 staging한다.
-  - `mixed` : HEAD를 특정 commit으로 옮기고, 현재 working dir 내용은 staging 하지 않는다.
-  - `hard` : HEAD를 특정 commit으로 옮기고, 현재 working dir 내용은 다 유실된다.(destructive).
-- 이 때, 정확한 기준은 못찾겠으나, tag붙은것 이후의 commit들은 hist로는 안보이는데, `reflog`로 볼 수 있다.
+- [공식문서 - Reset 명확하게 알기](https://git-scm.com/book/ko/v2/Git-%EB%8F%84%EA%B5%AC-Reset-%EB%AA%85%ED%99%95%ED%9E%88-%EC%95%8C%EA%B3%A0-%EA%B0%80%EA%B8%B0#_git_reset)
+- [`reset`](https://git-scm.com/docs/git-reset)은 현재 HEAD가 가리키는 브랜치가 가리키는 커밋 객체를 변경하는 동작이다.
+- Index(Staging)과 Working Directory를 어떤 상태로 만드느냐에 따라 `soft`, `mixed(default)`, `hard` 세가지 옵션이 있다.
+  - `soft` : reset 전 commit의 내용을 working directory에 복사하고, staging한다.
+  - `mixed` : reset 전 commit의 내용을 working directory에 복사하지만, staging 하지 않는다.(기본값)
+  - `hard` : reset 전 commit의 내용은 모두 무시된다.
+- reset하면 해당 브랜치가 가리키는 커밋(최신커밋)이 바뀌므로 그 이후의 커밋은 `hist`로 볼 수 없다. `reflog`로 봐야 한다.
 ```bash
 # 특정 커밋으로 돌아가기
 git reset <commit> --<soft|mixed|hard>
 ```
 - [`reflog`](https://git-scm.com/docs/git-reflog)는 HEAD의 참조 변경 내역을 보여준다. 이걸 Reference logs(reflog)라고 한다. 예를 들어 `HEAD@{2}`는 헤드가 2번 전에 움직인곳을 의미한다. 그냥 최신 기준으로 1씩 증가한다고 보면 된다.
+- `<commit>`에 `HEAD~`를 넣으면 현재 커밋의 부모 커밋(이전 최신 커밋)으로 이동한다.
+- `<commit>`에 경로(파일)은 `mixed`로만 동작한다. index 영역(staging)의 해당 파일을 unstage하는 효과를 지닌다.(status시 unstage하려면 이렇게 하라고 나옴)
+
 ```bash
 git reflog
 ```
+
+- Reset의 옵션을 잘 이용하면 특정 두 커밋을 합칠수도 있따. [여기](https://git-scm.com/book/ko/v2/Git-%EB%8F%84%EA%B5%AC-Reset-%EB%AA%85%ED%99%95%ED%9E%88-%EC%95%8C%EA%B3%A0-%EA%B0%80%EA%B8%B0#_git_reset)
+- [`reset`](https://git-scm.com/docs/git-reset)의 합치기를 보도록 하자. 좀만 생각하면 응용할 수 있으므로 정리하지 않는다.
+
+<br>
+
+### Checkout vs Reset
+- `reset`은 HEAD가 기리키는 브랜치의 Refs를 업데이트한다.
+- `checkout`은 HEAD를 업데이트한다. : HEAD가 가리키는 브랜치의 변경
+- dev에 chekout 한 상태에서 `git reset master`를 하면 어떻게 될까?
+![reset_결과](https://git-scm.com/book/en/v2/images/reset-checkout.png)
+- 현재 브랜치는 그대로 dev인 상태로 dev 브랜치의 최신 커밋이 master와 동일하게 갱신된다.
+
 
 <br>
 
