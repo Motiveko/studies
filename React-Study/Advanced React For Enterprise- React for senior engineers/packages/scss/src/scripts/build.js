@@ -34,7 +34,7 @@ const compile = async (filePath, filename) => {
       .css.toString();
     fs.writeFileSync(path.resolve(filename), result);
   } catch (err) {
-    console.error(`${filePath} 컴파일중 에러 발생 =====>`);
+    console.error(`<===== ${filePath} 파일 컴파일중 에러 발생 =====>`);
     throw err;
   }
 };
