@@ -11,7 +11,6 @@ import "@ds.e/scss/lib/global.css";
 ReactDOM.render(
   <>
     <Color hexCode="#000" />
-
     <Margin left space="none">
       <Text size="xs">텍스트 컴포넌트 테스트</Text>
     </Margin>
