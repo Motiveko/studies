@@ -35,6 +35,15 @@ git config --global -e
     cmd = code --wait $MERGED
 ```
 
+<br>
+
+- git의 설정파일은 아래와 같이 3종류가 있다.(Mac 기준)
+  - `/etc/gitconfig` : 시스템의 모든 사용자와 모든 저장소가 공유하는 설정. `git config --system`으로 이 파일을 읽고 쓸 수 있다.
+  - `~/.gitconfig` : 현재 사용자에게만 적용되는 설정. `git config --global`로 이 파일을 읽고 쓸 수 있다.
+  - `.git/config` : 이 파일은 git 디렉토리에 있고 현재 저장소에만 적용된다. `--local`옵션으로 이 팡ㄹ을 읽고 쓸 수 있따.
+- 설정 파일의 적용 우선순위는 아래에서 위로다.
+
+
 
 <br><br>
 
