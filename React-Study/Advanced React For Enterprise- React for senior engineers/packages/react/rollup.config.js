@@ -1,11 +1,13 @@
 import Ts from "rollup-plugin-typescript2";
 
 export default {
+  // TODO : 컴포넌트 개발시 모든 index.ts를 자동으로 읽을 수 있도록 코드 개선
   input: [
     "src/index.ts",
     "src/atoms/Color/index.ts",
     "src/atoms/Text/index.ts",
     "src/atoms/Margin/index.ts",
+    "src/molecules/Select/index.ts",
   ],
   output: {
     dir: "lib",

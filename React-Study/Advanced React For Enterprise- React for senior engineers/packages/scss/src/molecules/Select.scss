@@ -1,0 +1,39 @@
+@import "foundation/all";
+
+.dse-select {
+  display: flex;
+  flex-direction: column;
+  position: relative; // menu item은 space를 차지하지 않고 래퍼로부퍼 상대적인 position에 배치될것이다.
+
+  // .dse-select__label
+  &__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    // padding: map-get($spacing, $key: "xs"); 을 mixin으로 분리
+    @include padding("xs");
+
+    border: 1px solid $form-border-color;
+    background: $form-bg-color;
+
+    font-family: $body-font-family;
+
+    cursor: pointer;
+  }
+
+  // .dse-select__overlay
+  &__overlay {
+    @include padding("none");
+    @include margin("none");
+
+    border: 1px solid $form-border-color;
+    background-color: $form-bg-color;
+
+    position: absolute;
+    z-index: 99;
+    width: 100%; // 부모요소 넓이 사용
+
+    box-shadow: map-get($shadows, "base");
+  }
+}
