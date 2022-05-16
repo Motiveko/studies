@@ -1,18 +1,34 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { Color, Text, Margin } from "@ds.e/react";
+import { Color, Text, Margin, Select } from "@ds.e/react";
 
 import "@ds.e/scss/lib/Utilities.css";
 import "@ds.e/scss/lib/Text.css";
 import "@ds.e/scss/lib/Margin.css";
 import "@ds.e/scss/lib/global.css";
+import "@ds.e/scss/lib/Select.css";
 
+const options = [
+  {
+    label: "Strict Black",
+    value: "strict-black",
+  },
+  {
+    label: "Heavenly Green",
+    value: "heavenly-green",
+  },
+  {
+    label: "Sweet Pink",
+    value: "pink",
+  },
+];
 ReactDOM.render(
   <>
     <Color hexCode="#000" />
-    <Margin left space="none">
-      <Text size="xs">텍스트 컴포넌트 테스트</Text>
+    <Select options={options} />
+    <Margin left space="lg">
+      <Text size="xs">Text Component</Text>
     </Margin>
   </>,
   document.querySelector("#root")

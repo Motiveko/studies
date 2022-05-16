@@ -116,6 +116,9 @@ $body-text-color: var(
 - mixin 작성시 [Scss Map](https://sass-lang.com/documentation/values/maps)을 사용했다. 매우유용하다. Getter 함수 문법이 강의와 공식문서가 다른데 강의는 [`map-get($map, $key)`](https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=phlox__&logNo=221181093967), 공식문서는 [`map.get($map, $key)`](https://sass-lang.com/documentation/modules/map#get)문법을 쓴다.
 - 강의에서는 spacing관련하여 `padding`, `margin` 두개만 정의했는데 이걸 `margin-top`, `padding-left`과 같이 세부적으로 만들수도 있다.
 
+> ❗️ SCSS의 `@mixin`은 overloading이 안된다.
+
+
 <br>
 
 ### 2.2.5 Global
@@ -842,9 +845,38 @@ const Text: React.FunctionComponent<TextProps> = ({
 
 <br>
 
+### 4.9 Select molecule
+- component basic
+- component style
+  - molecule의 css작성은 매우 중요하다. `reusable`, `maintainability`, `best practice`를 따라야 한다.
+  - 이 때 가급적이면 `@mixin`이나 `_variable.scss`의 변수를 사용해 만든 변수값을 사용해야 한다. 
+    ```scss
+    .dse-select {
+      // ...
+      
+      &__label {
+        // padding: map-get($spacing, $key: "xs"); 을 mixin으로 분리
+        @include padding("xs");
+        
+        // $form-border-color를 사용하면 사용자가 css변수를 선언해서 해당 색상을 customizing 할 수 있게 된다.
+        border: 1px solid $form-border-color;
+        background: $form-bg-color;
 
+        // ...
+      }
+    }
+    ```
+  - css 적용시 className 작성은 [BEM](https://zzemal.tistory.com/88#:~:text=Bem%20%EC%9D%80%20Block%20Element%20Modifier,%EB%84%A4%EC%9D%B4%EB%B0%8D%EC%9D%84%20%ED%95%9C%EB%8B%A4%EB%8A%94%20%EC%9D%98%EB%AF%B8%EC%9D%B4%EB%8B%A4.)을 따르면 좋은 것 같다.
+  - ***❗️❗️ select box의 option은 자바스크립트로 객체의 높이를 계산한 후 옵션 컨테이너(`<ul>`)에 top 스타일을 동적으로 할당해서 구현한다.***(이걸 몰라서 예전에 css calc로 노가다를 했었다..)
 
+  - Select 버튼에 svg 넣기
+    - [heroicons](https://heroicons.com/)에서 필요한 아이콘 찾는다.
+    - jsx copy
+    - 그대로 import
+  - Select box의 shadow는 scss map으로 정의된 변수를 사용했다. shadow도 보통 정해진 값들이 있고 이를 재사용 한다고 한다.
+  - 유저가 shadow를 커스터마이징 할 수 있게 하고 싶으면 foundation에 css 변수로 프록시 변수를 정의하면 된다.(여기선 하지 않았다.)
 
+<br>
 
 
 
@@ -900,3 +932,4 @@ const Text: React.FunctionComponent<TextProps> = ({
 > [참고 2] [참고 1의 샘플 프로젝트](https://github.com/a1300/devshorts_yarn_workspace_typescript_example)
 
 > [참고 3] [타입스크립트 project-reference 공식문서](https://www.typescriptlang.org/ko/docs/handbook/project-references.html#composite)
+

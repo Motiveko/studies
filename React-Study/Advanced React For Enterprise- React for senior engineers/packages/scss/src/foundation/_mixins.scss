@@ -34,18 +34,6 @@
   padding: map-get($spacing, $space);
 }
 
-/** padding: top right bottom left */
-@mixin padding($top, $right, $bottom, $left) {
-  padding: map-get($spacing, $top) map-get($spacing, $right)
-    map-get($spacing, $bottom) map-get($spacing, $left);
-}
-
 @mixin margin($space) {
   margin: map-get($spacing, $space);
-}
-
-/** margin: top right bottom left */
-@mixin margin($top, $right, $bottom, $left) {
-  margin: map-get($spacing, $top) map-get($spacing, $right)
-    map-get($spacing, $bottom) map-get($spacing, $left);
 }
