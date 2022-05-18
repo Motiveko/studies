@@ -374,6 +374,11 @@ git stash list
 
 # stack의 꼭대기가 아니라 원하는 이름의 stash를 가져올 수 있다.(유용)
 git stash pop <name>
+
+# 특정 파일만 stash하기, 역시 glob 지원
+git stash push -m "description" 경로  
+git stash push -m "세개 저장하기" /src/one.vue  /src/two.vue   /src/three.vue
+git stash push -m "한번에 저장하기" /src/*
 ```
 - `apply`는 stash에서 내용을 가져와 현재 working dir에 반영하는것
 - `drop`은 stash에서 내용을 지우는 것, `pop`은 apply하고 drop한다.
