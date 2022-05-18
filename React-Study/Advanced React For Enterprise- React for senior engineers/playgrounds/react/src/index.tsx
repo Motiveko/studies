@@ -26,10 +26,12 @@ const options = [
 ReactDOM.render(
   <>
     <Color hexCode="#000" />
-    <Select options={options} />
-    <Margin left space="lg">
-      <Text size="xs">Text Component</Text>
-    </Margin>
+    <div style={{ padding: "40px" }}>
+      <Select options={options} />
+      <Margin left space="lg">
+        <Text size="xs">Text Component</Text>
+      </Margin>
+    </div>
   </>,
   document.querySelector("#root")
 );
