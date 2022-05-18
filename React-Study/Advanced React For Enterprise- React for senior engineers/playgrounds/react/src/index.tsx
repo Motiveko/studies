@@ -27,7 +27,12 @@ ReactDOM.render(
   <>
     <Color hexCode="#000" />
     <div style={{ padding: "40px" }}>
-      <Select options={options} />
+      <Select
+        options={options}
+        renderOption={({ option, getOptionRecommendedProps }) => (
+          <p {...getOptionRecommendedProps()}>{option.label}</p>
+        )}
+      />
       <Margin left space="lg">
         <Text size="xs">Text Component</Text>
       </Margin>
