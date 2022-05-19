@@ -41,6 +41,7 @@ docker run -i -t ubuntu:14:04
 docker start 169a848678c3
 docker start 169
 ```
+- [docker run 관련 옵션](https://khj93.tistory.com/entry/Docker-Docker-option-%EB%AA%85%EB%A0%B9%EC%96%B4-%EB%AA%A9%EB%A1%9D)
 
 <br>
 
@@ -107,10 +108,28 @@ docker run -it -p 7777:80 ubuntu:14.04
 <br>
 
 ### 2.2.5 컨테이너 애플리케이션 구축
-여기부터.. 할게많아서 내일하는걸로
+- 서비스에는 여러개의 프로세스(웹서버, was, db...)가 필요하다. 이걸 하나의 컨테이너에 다 실행할 수도 있지만 Docker에서 권장하는건 ***하나의 컨테이너당 하나의 프로그램 실행이다.***
+- 이유는 컨테이너의 독립성과 각 프로그램의 버전관리 편의, 모듈 사용성 증대등
+- 컨테이너 애플리케이션은 **포그라운드로써 동작하는 프로그램**(터미널을 차지하는 프로그램, 컨테이너 목록에서 `COMMAND`로 실행하는 것)이 반드시 있어야 한다. 
+    - 예를들어 `ubuntu:14.04`로 컨테이너 실행시 `/bin/bash`를 실행한다. 이게 포그라운드로서 계속 돌고있기때문에 컨테이너가 동작하는 것
+    - `-it`로 상호작용이 가능한 쉘 환경을 사용한다.
+    - `-d`로 입출력이 없는 상태로, 컨테이너 내부에서 프로그램이 터미널을 차지하는 포그라운드로 실행된다. `-d`일 경우 반드시 컨테이너에서 프로그램이 실행되어야 한다.
+    - `mysql`은 하나의 터미널을 차지하는 `mysqld`를, wordpress는 `apache2-foreground`를 실행한다.
+- `attach` vs `exec`
+    - attach는 컨테이너에서 실행중인 프로그램의 출력 로그를 보게 된다.
+    - exec는 컨테이너 내부의 쉘을 실행할 수 있다.(mysql 컨테이너에서 /bin/bash ) 이 때 `-it` 옵션을 전달 해줘야 입출력을 할 수 있따.
+        - https://wooono.tistory.com/348
+        - `-i`, `--interactive`: 표준 입력(stdin)을 활성화하며, 컨테이너와 연결(attach)되어 있지 않더라도 표준 입력을 유지합니다. 보통 이 옵션을 사용하여 Bash 에 명령을 입력합니다.
+        - `-t`, `--tty`: TTY 모드(pseudo-TTY)를 사용합니다. Bash를 사용하려면 이 옵션을 설정해야 합니다. 이 옵션을 설정하지 않으면 명령을 입력할 수는 있지만, 셸이 표시되지 않습니다.
+    - mysql 컨테이너에 `exec`로 들어가서 놀다가 exit으로 나와도 컨테이너는 종료되지 않는데, `mysqld` 프로세스가 여전히 컨테이너 안에서 포그라운드로 동작하고 있기 때문
+- `--link`를 이용하면 컨테이너끼리 연결할 수 있다.(도커 엔진 내부에서 연결되는듯, NAT로 할당받은 내부IP나 포트같은거 내가 몰라도 됨)
 
+<br>
 
 ### 2.2.6 도커 볼륨
+<!-- TODO 이거 정리해야해 -->
+
+
 ### 2.2.7 도커 네트워크
 ### 2.2.8 컨테이너 로깅
 ### 2.2.9 컨테이너 자원 할당 제한
@@ -672,3 +691,65 @@ journalctl -u docker
 ### 4.3 도커 컴포즈 사용
 ### 4.3.1 도커 컴포즈 기본 사용법
 ### 4.3.2 도커 컴포즈 활용
+
+<br>
+
+## 5.쿠버네티스
+## 5.3 쿠버네티스 설치
+1. 로컬환경
+`Docker Desktop` 설치 후 Preference - Kubernetes - Enable Kubernetes
+
+<br>
+
+2. 여러 서버로 구성된 쿠버네티스 클러스터 설치
+- https://kubernetes.io/ko/docs/setup/production-environment/tools/kubeadm/install-kubeadm/ 참고
+- 쿠버네티스를 제대로 쓰려면 최소 4대 이상의 서버가 필요하다. 4대면 1개의 마스터와 3개의 워커노드를 구성할 수 있다.
+- 각 서버에서 아래의 사항이 준비되어 있어야한다.
+    - 모든 **서버의 시간이 ntp를 통해 동기화** 되어야한다.
+    - 모든 서버의 [맥(MAC) 주소](https://m.blog.naver.com/wood0513/222084400286)가 달라야한다. 가상머신을 복사해서 쓰면 같은 맥주소를 가질 수 있다.
+    - 서버가 최소 메모리 2gb, 2cpu 이상 되도록 하자.
+    - `swapoff -a` 명령어로 메모리 스왑을 비활성화한다. 메모리 스왑이 활성화돼 있으면 컨테이너 성능이 일관되지 않을 수 있어 **대부분의 쿠버네티스 설치 도구는 메모리 스왑을 허용하지 않는다.**
+
+- `kubeadm`: 쿠버네티스 커뮤니티에서 권장하는 쿠버네티스 설치 도구다. 클러스터를 부트스트랩 하는 명령어이다. 이외에 `Minikube`, `kubespray`도구도 있는데 모두 내부적으로 `kubeadm`을 쓴다.
+- `kubelet`: 클러스터의 모든 머신에서 실행되는 파드와 컨테이너 시작과 같은 작업을 수행하는 컴포넌트
+- `kubectl`: 클러스터와 통신하기 위한 cli utility
+
+> ❗️ 설치하다가 자꾸 문제가 생겨 우선 넘어감..
+
+<br>
+
+## 6. 쿠버네티스 시작하기
+### 6.1 쿠버네티스 특징
+- 쿠버네티스는 대부분의 리소스를 오브젝트 형태로 관리한다. 컨테이너 집합(`Pods`), 컨테이너 집합을 관리하는 컨트롤러(`Replica Set`), 사용자(`Service Account`), 노드(`Node`)까지 오브젝트로 사용한다.
+```bash
+# 오브젝트 보기
+$ kubectl api-resources
+
+# NAME                              SHORTNAMES   APIVERSION                             NAMESPACED   KIND
+# bindings                                       v1                                     true         Binding
+# componentstatuses                 cs           v1                                     false        ComponentStatus
+# configmaps                        cm           v1                                     true         ConfigMap
+# ...
+```
+
+<br>
+
+- `kubectl` 명령어 외에도 쿠버네티스는 `YAML`파일로 컨테이너 리소스의 생성/삭제를 할 수 있다. 컨테이너 자체와 컨테이너 설정값(`ConfigMap`), 비밀값(`Secrets`)도 모두 YAML에 정의한다. 배포 역시 여러개의 `YAML` 파일에 정의해서 쿠버네티스에 적용한다.
+
+- 쿠버네티스는 여러개의 컴포넌트로 구성된다. 노드는 `마스터 노드`와 `워커 노드`로 분리되고, 마스터 노드는 클러스터를 관리하는 역할을, 워커 노드에는 애플리케이션 컨테이너가 생성된다.
+- `마스터 노드`에는 API 서버(`apiserver`), 컨트롤러 매니저(`kube-controller-manager`), 스케줄러(`kube-shceduler`), DNS 서버(`coreDNS`) 등의 컴포넌트가 실행되고, `모든 노드`에는 오버레이 네트워크 구성을 위해 프록시(`kube-proxy`)와 네트워크 플러그인(`caclio`, `flannel` 등)이 실행된다. 이런 ***컴포넌트들은 기본적으로 도커 컨테이너로 실행***되고 있다.
+```bash
+# 실행중인 컨테이너 보기
+$ docker ps
+
+# CONTAINER ID   IMAGE                  COMMAND                  CREATED          STATUS          PORTS     NAMES
+# 2f63cbfc4eeb   2edf9c994f19           "/kube-vpnkit-forwar…"   25 seconds ago   Up 24 seconds             k8s_vpnkit-controller_vpnkit-controller_kube-system_834f6590-4f5c-4639-a624-4fba206ae70a_18
+# c33a7fedffda   k8s.gcr.io/pause:3.7   "/pause"                 4 hours ago      Up 4 hours                k8s_POD_vpnkit-controller_kube-system_834f6590-4f5c-4639-a624-4fba206ae70a_0
+# f3e55cc2fc65   c027a58fa0bb           "/storage-provisione…"   4 hours ago      Up 4 hours                k8s_storage-provisioner_storage-provisioner_kube-system_c24f3de5-d5df-4bf4-969c-07d012728347_0
+# ...
+```
+- **모든 노드에 추가적으로 쿠버네티스 클러스터 구성을 위해 `kublet` 에이전트가 실행**된다. 컨테이서 생성/삭제, 마스터-워커 노드간 통신 등을 담당한다. 매우중요하다.
+
+<br>
+
+### 6.2 Pod: 컨테이너 기본단위
