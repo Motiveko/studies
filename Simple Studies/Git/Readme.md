@@ -299,6 +299,19 @@ git merge updates
 # 브랜치 삭제
 git branch -d <branch>
 git branch -d updates
+# 원격지에 이미 업로드한 브랜치일경우
+git push --delete <branch>
+
+
+# 브랜치 이름 변경(삭제 + 생성)
+git checkout old_branch
+git branch new_branch
+
+# 원격지에서 old_branch를 삭제하고 new_branch를 push
+git push origin --delete old_branch
+git push origin new_branch
+# 위 두개의 명령어는 아래 하나로 합칠수있다.
+git push origin :old_branch new_branch
 ```
 
 <br>
