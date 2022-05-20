@@ -1,0 +1,16 @@
+apiVersion: v1                # 오브젝트의 API 버전
+kind: Pod                     # 리소스 종류, kubctl api-resources 로 확인
+metadata:                     # 리소스의 라벨, 주석 등의 부가정보
+  name: my-nginx-ubuntu-pod   # 포드의 이름
+spec:                         # 리소스를 생성하기 위한 상세정보
+  containers:                 # 포드에서 실행될 컨테이너 정보
+  - name: my-nginx-container  # 컨테이너 이름
+    image: nginx:latest       # 베이스 이미지
+    ports:                    # 컨테이너가 사용할 port
+    - containerPort: 80       
+      protocol: TCP
+  - name: ubuntu-sidecar-container   # 두번째 컨테이너
+    image: alicek106/rr-test:curl
+    command: ["tail"]
+    args: ["-f", "/dev/null"] # 컨테이너가 종료되지 않도록 유지
+    

@@ -753,3 +753,270 @@ $ docker ps
 <br>
 
 ### 6.2 Pod: 컨테이너 기본단위
+### 6.2.1 Pod 사용하기
+- 쿠버네티스에서 **컨테이너 애플리케이션 배포를 위한 기본단위**이다. 1개의 포드에는 1개이상의 컨테이너가 존재한다.
+- Ngnix 컨테이너로 구성된 포드를 생성하기 위해 아래와 같이 `nginx-pad.yaml`을 작성한다.
+```yaml
+apiVersion: v1                # 오브젝트의 API 버전
+kind: Pod                     # 리소스 종류, kubctl api-resources 로 확인
+metadata:                     # 리소스의 라벨, 주석 등의 부가정보
+  name: my-nginx-pod          # 포드의 이름
+spec:                         # 리소스를 생성하기 위한 상세정보
+  containers:                 # 포드에서 실행될 컨테이너 정보
+  - name: my-nginx-container  # 컨테이너 이름
+    image: nginx:latest       # 베이스 이미지
+    ports:                    # 컨테이너가 사용할 port
+    - containerPort: 80       
+      protocol: TCP
+```
+- yaml 파일은 `kubectl apply - f`로 쿠버네티스에 생성할 수 있다.
+```bash
+$ kubectl apply -f nginx-pod.yaml
+# pod/my-nginx-pod created
+
+$ kubectl get pods
+# NAME           READY   STATUS    RESTARTS   AGE
+# my-nginx-pod   1/1     Running   0          11m
+```
+- `kubectl describe`로 생성된 리소스의 자세한 정보를 얻어올 수 있다.
+```bash
+# kubectl describe pods <pod-name>
+$ kubectl describe pods my-nginx-pod
+
+Name:         my-nginx-pod
+...
+Status:       Running
+IP:           10.1.0.10
+IPs:
+  IP:  10.1.0.10
+...
+```
+- 위 정보에서 `IP: 10.1.0.10` 주소는 외부에서는 접근할 수 없고, 클러스터 내부에서만 접근할 수 있다. 노드중 하나에 접속한 뒤 `curl 10.1.0.10`로 동작을 확인하면 된다.
+(로컬 환경에 구성하면 pod을 두개 실행하고 한곳에 들어가서 하면 된다. 로컬 pc는 쿠버네티스 클러스터 밖이기때문에 안된다.)
+- `kubectl exec`로 포드 컨테이너에 명령을 전달할 수 있다. `docker exec`와 문법이 거의 비슷하다.
+```bash
+# 이 문법은 deprecated라고 뜸
+$ kubectl exec -it my-nginx-pod bash
+
+# ... {pod} -- {command} 형태가 새 문법
+$ kubectl exec -it my-nginx-pod -- bash
+```
+- `kubectl logs`로 컨테이너 포드의 로그도 확인 가능하다.
+```bash
+$ kubectl logs my-nginx-pod
+```
+- `kubectl delete`로 쿠버네티스 오브젝트도 삭제할 수 있다.
+```bash
+$ kubectl delete -f {YAML}
+$ kubectl delete pod {PODNAME}
+
+$ kubectl delete pod my-nginx-pod
+```
+
+<br>
+
+### 6.2.2 Pod vs Docker container
+- pod에는 여러개의 컨테이너가 있을 수 있다. 굳이 pod라는 단위로 묶어서 쓰는 이유는 여러가지가 있는데 컨테이너가 여러 리눅스 네임스페이스를 공유할수 있도록 하기 위함이다.
+- 예를들어 pod에 여러개의 컨테이너를 실행시키고 컨테이너에 접속하면 `localhost`로 컨테이너간의 통신이 가능하다. localhost라는 리눅스 네트워크를 공유하기 때문.
+
+<br>
+
+### 6.2.3 완전한 애플리케이션으로써의 Pod
+- pod는 기본적으로 하나의 컨테이너만 정의한다. 그런데 설정 리로더 프로세스나 로그수집 등의 기능을 함께 수행해야 할 때도 있다. 이런 포드에 정의된 부가 기능을 위한 컨테이너를 사이트카(sidecar)컨테이너 라고 부른다.
+- pod내 다른 컨테이너와 네트워크 환경 등을 공유하며 같은 워커노드에서 실행된다.
+
+<br>
+
+### 6.3 레플리카셋(Replica Set) 일정 개수의 Pod을 유지하는 컨트롤러
+### 6.3.1 레플리카셋 사용 이유
+- 6.2의 방법으로 여러개의 Pod를 생성하려면, yaml 파일에 --- 로 pod 정의를 나눠 여러개를 작성하고 `kubectl apply`로 생성하면 된다.
+- 이 때 pod가 생성된 노드에 장애가 발생해서 pod가 종료되면 다른 노드에서 다시 생성되지 않는다. 문제가 된다. 
+- ***`replicaset` 오브젝트는 정해진 수의 동일한 포드가 항상 실행되도록 관리한다. 노드 장애 등으로 포드사용이 불가능해지면 다른 노드에서 포드를 다시 생성한다.***
+
+<br>
+
+### 6.3.2 레플리카셋 사용하기
+- 여러개의 nginx pod을 관리하는 `replicaset`을 만들어본다. replicaset 오브젝트도 yaml로 정의한다.
+```yaml
+# replicaset-nginx.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replicaset-nginx
+spec: 
+  replicas: 3                   # 유지할 pod 개수
+  selector:
+    matchLabels:
+      app: my-nginx-pods-label  # 여기까지 레플리카셋 정의
+  template:                     # 여기부터 생성할 pod 템플릿 정의
+    metadata:
+      name: my-nginx-pod
+      labels:
+        app: my-nginx-pods-label
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+          - containerPort: 80
+```
+- reaplicaset을 생성하고 pod이 잘 생성되는지 확인한다.
+```bash
+# 1. replicaset 생성
+$ kubectl apply -f replicaset-nginx.yaml
+# replicaset.apps/replicaset-nginx 'created'
+
+# 2. replicaset 생성 확인
+$ kubectl get rs
+# NAME               DESIRED   CURRENT   READY   AGE
+# replicaset-nginx   3         3         3       79s
+
+# 3. pod 생성 확인
+$ kubectl get po
+# replicaset-nginx-46swj   1/1     Running   0          49s
+# replicaset-nginx-nlh5q   1/1     Running   0          49s
+# replicaset-nginx-qpjnz   1/1     Running   0          49s
+```
+- pod를 늘리려면 yaml 파일의 `spec.replicas`를 늘리고 yaml을 다시 읽으면 된다.
+```yaml
+# replicaset-nginx.yaml
+...
+spec: 
+  replicas: 4
+...
+```
+```bash
+$ kubectl apply -f replicaset-nginx.yaml
+# replicaset.apps/replicaset-nginx 'configured'
+
+$ kubectl get po
+# NAME                     READY   STATUS    RESTARTS   AGE
+# replicaset-nginx-46swj   1/1     Running   0          3m14s
+# replicaset-nginx-nlh5q   1/1     Running   0          3m14s
+# replicaset-nginx-qpjnz   1/1     Running   0          3m14s
+# replicaset-nginx-vtqns   1/1     Running   0          13s
+```
+- yaml을 고치는거 말고 `kubectl edit`, `kubectl patch`등의 방법도 있다고 한다.
+- replicaset을 제거하면 해당 replicaset이 만든 pod도 모두 제거된다.
+```bash
+
+$ kubectl delete rs replicaset-nginx
+# replicaset.apps "replicaset-nginx" deleted
+
+$ kubectl get po
+# No resources found in default namespace.
+```
+
+<br>
+
+### 6.3.3 레플리카셋 동작원리
+- 레플리카셋은 포드와 직접 연결되어 있지 않고 느슨한 연결(loosely coupled)을 유지한다. 연결 방법은 레플리카셋 정의중 라벨 셀렉터(Label Selector)를 통해 이뤄진다.
+```yaml
+# replicaset-nginx.yaml
+...
+spec: 
+  selector:
+    matchLabels:                # replicaset이 찾을 라벨
+      app: my-nginx-pods-label      
+  template:                     
+    metadata:
+      labels:                   # pod의 라벨
+        app: my-nginx-pods-label
+...
+```
+- replicaset은 위 yaml에서 `spec.selector.matchLabels`에 정의된 라벨과 같은 라벨을 가지는 pod이 일정 갯수를 가지도록 유지한다. 만약 실행중인 pod의 라벨을 다른것으로 바꾸면 변경을 잠지해 새로운 pod을 실행시켜 pod수를 유지할것이다.
+- [라벨 셀렉터는 `표현식 기반`으로도 작성 가능](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#resources-that-support-set-based-requirements)하다. 아래 라벨 셀렉터는 values에 정의된 label이 존재하는 pod의 replicas를 유지한다.
+```yaml
+....
+selector:
+  matchExpressions:
+    - key: app
+    values:
+      - my-nginx-pods-label
+      - your-nginx-pods-label
+    operator: In
+```
+- 현재 공식 문서의 yaml 작성 방법을 보니 yaml에 json문법을 섞어서 쓸수도 있는걸로 확인된다.
+- `kubectl get pods --show-labels`로 실행중인 pod의 라벨도 볼 수 있다.
+- 예전 버전에서는 레플리케이션 컨트롤러(Replication Controller)라는 오브젝트를 사용해서 pod수를 유지했다고 한다.
+
+<br>
+
+### 6.4 디플로이먼트(Deployment): 레플리카셋, 포드의 배포관리
+### 6.4.1 디플로이먼트 사용하기
+- 디플로이먼트도 오브젝트다.
+- 실전에서는 보통 pod나 replicaset의 yaml을 정의하는게 아닌 deployment의 yaml에 모든걸 정의한다고 한다. pod -> replicaset -> deployment 순으로 상위 오브젝트다.
+```yaml
+# deployment-nginx.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-nginx
+  template:
+    metadata:
+      name: my-nginx-pod
+      labels:
+        app: my-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.10
+        ports:
+        - containerPort: 80
+```
+```bash
+# 1. deployment 생성
+$ kubectl apply -f deployment-nginx.yaml
+
+# 2. 생성된 내용 확인
+$ kubectl get {deploy|rs|pod}
+
+# 3. deployment 삭제
+$ kubectl delete deploy my-nginx-deployment
+```
+
+### 6.4.2 디플로이먼트 사용이유
+- 애플리케이션 업데이트시 `replicaset` 변경 사항을 저장하는 리비전(revision)을 남겨 롤백 가능    
+- 무중단 서비스를 위한 포드의 롤링 업데이트의 전략 지정 가능
+- 예를들어 pod의 컨테이너가 업데이트 될 때, 이전 replicaset은 이전 리비전 정보로 저장하고, 새로운 replicaset을 만들고 pod을 모두 새로 생성한다.
+```bash
+# 1. nginx 이미지를 1.10 -> 1.11로 업데이트
+$ kubectl set image deployment my-nginx-deployment nginx=nginx:1.11 --record
+# deployment.apps/my-nginx-deployment image updated
+
+# 2. 레플리카셋 조회
+$ kubectl get rs
+# NAME                             DESIRED   CURRENT   READY   AGE
+# my-nginx-deployment-5f4b77fcb9   0         0         0       21m
+# my-nginx-deployment-84cff58bc8   3         3         3       110s
+
+# 3. 리비전 히스토리 조회
+$ kubectl rollout history deploy my-nginx-deploym
+ent
+# REVISION  CHANGE-CAUSE
+# 1         kubectl apply --filename=deployment-nginx.yaml --record=true
+# 2         kubectl set image deployment my-nginx-deployment nginx=nginx:1.11 --record=true
+
+# 4. 예전 버전의 rs로 롤백(--to-revision)
+$kubectl rollout undo deploy my-nginx-deployment
+ --to-revision=1
+# deployment.apps/my-nginx-deployment rolled back
+```
+- 롤백하면 이전 rs이 다시 3개의 pod를 생성하고 새로 생성되었던 rs의 pod는 제거된다. rs는 둘 다 남아있다.
+- 여러개의 rs가 존재할 수 있는 이유는 **deployment가 해시값을 생성해서 라벨 셀렉터에 `pod-template-hash={hash}`값에 추가하기 때문**이다. `kubectl get pod --show-labels`로 확인 가능하다.
+
+- `kubectl describe deploy my-nginx-deployment` 명령어로 deploy의 리소스를 출력해보면 `Event` 부분에서 ***rs를 교체할 때 replicas를 한개씩 내리고 올리고 하는걸 볼 수 있다.***(=> 롤링 업데이트?)
+
+<br>
+
+
+### 6.5 서비스(Service): 포드를 연결하고 외부에 노출
+- 클러스터 내에서 pod에 접근하려면 `service`라는 쿠버네티스 오브젝트를 생성해야한다. 핵심 기능은 아래와 같다.
+    - 여러개의 포드에 접근 가능하도록 고유한 `도메인 이름` 부여
+    - 여러개의 포드에 접근할 때 요청 분산하는 `로드밸런서 기능` 수행
+    - 클라우드 플랫폼의 lb, 클러스터 노드의 포트 등을 통해 포드를 외부로 노출
