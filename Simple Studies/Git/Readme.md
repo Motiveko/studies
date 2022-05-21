@@ -598,3 +598,24 @@ git show <commit-id>
   - Rebase는 조심히 사용해야 한다. 이 케이스에서 ***Rebase 전에 원격지에 branch A의 커밋 내역을 푸시했다면 Rebase 하면 안된다. Rebase는 `'LOCAL'` commit history를 깔끔하게 만들때에만 사용해야한다.***
 
   - Rebase의 적절한 사용 시점중 하나는 내가 `feature branch`에서 작업하고 있다가, 이걸 integration 하려고 할 때, 부모 브랜치를 pull 한 뒤 local에서 Rebase하면 `부모` -> `feature` 순으로 커밋이 재조정되므로 깔끔해진다.
+
+<br>
+
+### github ssh 관련 설정
+1. [ssh 키 발급 및 설정](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) 가이드를 순서대로 따라해 로컬 머신에 ssh키를 생성하고 github에 공개키를 등록한다.
+2. 이렇게 했는데 자꾸 username/password 인증 관련 에러가 뜨면 remote 설정을 바꿔줘야한다.
+  ```bash
+  $ git remote -v
+  # https://로 되어있다면 git@으로 바꿔주자.
+  origin git@github.com:Motiveko/studies.git
+
+  # remote 지우기
+  $ git remote remove origin
+  $ gir remote add origin git@github.com:Motiveko/studies.git
+  ```
+
+<br>
+
+### commit의 author 변경하기
+- https://otrodevym.tistory.com/entry/git-commit-%ED%95%9C-author-%EB%B3%80%EA%B2%BD%EC%9E%91%EC%84%B1%EC%9E%90-%EB%B3%80%EA%B2%BD-%EB%B0%A9%EB%B2%95
+- ❗️❗️ TODO : rebase를 좀 더 익힌 후 다시 정리하자
