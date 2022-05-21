@@ -712,7 +712,7 @@ journalctl -u docker
 
 - `kubeadm`: 쿠버네티스 커뮤니티에서 권장하는 쿠버네티스 설치 도구다. 클러스터를 부트스트랩 하는 명령어이다. 이외에 `Minikube`, `kubespray`도구도 있는데 모두 내부적으로 `kubeadm`을 쓴다.
 - `kubelet`: 클러스터의 모든 머신에서 실행되는 파드와 컨테이너 시작과 같은 작업을 수행하는 컴포넌트
-- `kubectl`: 클러스터와 통신하기 위한 cli utility
+- [`kubectl`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-strong-getting-started-strong-): 클러스터와 통신하기 위한 cli utility
 
 > ❗️ 설치하다가 자꾸 문제가 생겨 우선 넘어감..
 
@@ -816,13 +816,13 @@ $ kubectl delete pod my-nginx-pod
 <br>
 
 ### 6.2.2 Pod vs Docker container
-- pod에는 여러개의 컨테이너가 있을 수 있다. 굳이 pod라는 단위로 묶어서 쓰는 이유는 여러가지가 있는데 컨테이너가 여러 리눅스 네임스페이스를 공유할수 있도록 하기 위함이다.
+- pod에는 여러개의 컨테이너가 있을 수 있다. 굳이 pod라는 단위로 묶어서 쓰는 이유는 여러가지가 있는데 ***pod 내부의 컨테이너들이 서버의 여러 `리눅스 네임스페이스`를 공유할수 있도록 하기 위함***이다.
 - 예를들어 pod에 여러개의 컨테이너를 실행시키고 컨테이너에 접속하면 `localhost`로 컨테이너간의 통신이 가능하다. localhost라는 리눅스 네트워크를 공유하기 때문.
 
 <br>
 
 ### 6.2.3 완전한 애플리케이션으로써의 Pod
-- pod는 기본적으로 하나의 컨테이너만 정의한다. 그런데 설정 리로더 프로세스나 로그수집 등의 기능을 함께 수행해야 할 때도 있다. 이런 포드에 정의된 부가 기능을 위한 컨테이너를 사이트카(sidecar)컨테이너 라고 부른다.
+- pod는 기본적으로 하나의 컨테이너만 정의한다. 그런데 설정 리로더 프로세스나 로그수집 등의 기능을 함께 수행해야 할 때도 있다. 이런 포드에 정의된 부가 기능을 위한 컨테이너를 `사이트카(sidecar)컨테이너` 라고 부른다.
 - pod내 다른 컨테이너와 네트워크 환경 등을 공유하며 같은 워커노드에서 실행된다.
 
 <br>
@@ -982,7 +982,7 @@ $ kubectl delete deploy my-nginx-deployment
 
 ### 6.4.2 디플로이먼트 사용이유
 - 애플리케이션 업데이트시 `replicaset` 변경 사항을 저장하는 리비전(revision)을 남겨 롤백 가능    
-- 무중단 서비스를 위한 포드의 롤링 업데이트의 전략 지정 가능
+- `무중단 서비스`를 위한 포드의 롤링 업데이트의 전략 지정 가능
 - 예를들어 pod의 컨테이너가 업데이트 될 때, 이전 replicaset은 이전 리비전 정보로 저장하고, 새로운 replicaset을 만들고 pod을 모두 새로 생성한다.
 ```bash
 # 1. nginx 이미지를 1.10 -> 1.11로 업데이트
@@ -1016,7 +1016,277 @@ $kubectl rollout undo deploy my-nginx-deployment
 
 
 ### 6.5 서비스(Service): 포드를 연결하고 외부에 노출
-- 클러스터 내에서 pod에 접근하려면 `service`라는 쿠버네티스 오브젝트를 생성해야한다. 핵심 기능은 아래와 같다.
+- 클러스터 내에서 pod에 접근하려면 `service`라는 쿠버네티스 오브젝트를 생성해야한다. pod의 ip로도 접근은 가능하나 영속적이지 않아 변할 수 있기 때문에 pod끼리 서로를 발견할 수 있는 다른 방법이 필요하다.
+- 서비스는 **pod에 접근하기 위한 규칙을 정의**하는데, 핵심 기능 3가지는 아래와 같다.
     - 여러개의 포드에 접근 가능하도록 고유한 `도메인 이름` 부여
     - 여러개의 포드에 접근할 때 요청 분산하는 `로드밸런서 기능` 수행
     - 클라우드 플랫폼의 lb, 클러스터 노드의 포트 등을 통해 포드를 외부로 노출
+
+<br>
+
+### 6.5.1 서비스의 종류
+- 서비스의 종류는 크게 3가지가 있다.
+  - `ClusterIP` 타입 : 쿠버네티스 내부에서만 포드들에 접근할 때 사용, 외부에 포드를 노출하지 않는다.
+  - `NodePort` 타입: 포드에 접근할 수 있는 포트를 클러스터의 모든 노드에 동일하게 개방한다. 따라서 외부에서 포드에 접근할 수 있다. 기본적으로 포트는 랜덤이나 특정값도 설정 가능.
+  - `LoadBalancer` 타입: **CP에서 제공하는 로드 밸런서를 동적으로 프로비저닝해 포드에 연결**한다. 외부에서 포드에 접근할 수 있는데, 일반적으로 AWS, GCP같은 클라우드 플랫폼 환경에서만 사용할 수 있다.
+
+<br>
+
+### 6.5.2 ClusterIP 타입 서비스
+- `deployment`로 80포트에서 호스트명을 반환하는 애플리케이션 3개를 띄운다. 아래와 같이 yaml파일을 작성한다.
+```yaml
+# deployment-hostname.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hostname-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webserver
+  template:
+    metadata:
+      name: my-webserver
+      labels:
+        app: webserver
+    spec:
+      containers:
+      - name: my-webserver
+        image: alicek106/rr-test:echo-hostname
+        ports:
+        - containerPort: 80
+```
+- deployment를 생성하고 pod의 ip주소를 확인해본다. 서비스 없이도 할당된 IP주소로도 pod에 접근할 수 있다.
+```bash
+# 1. deployment 생성
+$ kubectl apply -f deployment-hostname.yaml
+
+# 2. 생성된 pod 정보 확인
+$ kubectl get pod -o wide
+# NAME                                  READY   STATUS    RESTARTS   AGE   IP          NODE
+# hostname-deployment-9664ffd7f-6vkdt   1/1     Running   0          48m   10.1.0.14   docker-desktop
+# ...
+
+# 3. 임시pod을 생성해 클러스터 내부에서 IP로 pod 호출
+$ kubectl run -i --tty --rm debug --image=alice106/ubuntu:curl --restart=Never curl 10.1.0.14 | grep Hello
+```
+
+- 이번엔 ClusterIP타입의 서비스를 만들고 서비스를 통해 접근해본다. 서비스를 정의하는 yaml을 아래와 같이 작성한다.
+```yaml
+# hostname-svc-clusterip.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hostname-svc-clusterip
+spec:
+  ports:
+    - name: web-port
+      port: 8080      # 서비스의 IP에 접근할 때 사용할 포트
+      targetPort: 80  # 접근 대상 pod가 사용하고 있는 포트(== containerPort)
+  selector:
+    app: webserver    # 접근할 pod의 라벨(app=webserver)
+  type: ClusterIP     # 서비스 타입
+```
+- 서비스를 생성하고 생성된걸 조회해본다.
+```bash
+# 1. 서비스 생성
+$ kubectl apply -f hostname-svc-clusterip.yaml 
+
+# 2. 서비스 조회
+$ kubectl get services
+# NAME                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+# hostname-svc-clusterip   ClusterIP   10.106.189.243   <none>        8080/TCP   18s
+# kubernetes               ClusterIP   10.96.0.1        <none>        443/TCP    32h
+```
+- `kubernetes` 서비스는 기본제공되는 서비스로 포드 내부에서 쿠버네티스 API에 접근하기 위한 서비스다.
+- 생성한 `hostname-svc-clusterip`에 `CLUSTER-IP`가 클러스터 내부에서 서비스를 호출할 수 있는 주소다. `10.106.189.243:8080`으로 호출하면 서비스를 호출하고 서비스는 연결된 POD의 설정한 80포트를 호출한다.
+
+```bash
+# 1. curl을 날릴 ubuntu 애플리케이션 임시 pod 생성
+$ kubectl run -i --tty --rm debug --image=alicek106/ubuntu:curl --restart=Never -- bash
+
+# 2. debug pod에서 서비스 호출
+$ curl 10.106.189.243:8080 --silent | grep Hello
+$ curl hostname-svc-clusterip:8080 --silent | grep Hello
+```
+- ***서비스의 IP와 Port를 통해 pod에 접근할 수 있으며, 3개의 pod에 자동으로 요청이 분산된다.(로드밸런싱)***
+- `hostname-svc-clusterip:8080`과 같이 이름으로도 접근 가능한데, **쿠버네티스가 자체적으로 내부 DNS를 구동하고 있고 pod들이 자동으로 DNS를 사용하도록 설정되어 있기 때문**이다.
+- 추가로, 서비스가 생성될 때 엔드포인트(`endpoint`)라고 불리는 오브젝트를 별도로 생성한다. 연결할 pod의 엔드포인트들을 가지는 오브젝트다.
+```bash
+$ kubectl get {endpoints | ep}
+
+# NAME                     ENDPOINTS                                AGE
+# hostname-svc-clusterip   10.1.0.14:80,10.1.0.15:80,10.1.0.16:80   28m
+# kubernetes               192.168.65.4:6443                        33h
+```
+- 서비스 삭제
+```bash
+$ kubectl delete svc hostname-svc-clusterip
+$ kubectl delete -f hostname-svc-clusterip.yaml
+```
+ 
+<br>
+
+### 6.5.3 NodePort 타입의 서비스
+- `NodePort` 타입 서비스는 클러스터 외부에서도 접근 가능하다. 모든 Node의 특정 Port를 개방해 서비스에 접근하는 방식이다.
+- 서비스 생성을 위해 yaml을 아래와 같이 작성한다.
+```yaml
+# hostname-svc-nodeport.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hostname-svc-nodeport
+spec:
+  ports:
+    - name: web-port
+      port: 8080
+      targetPort: 80
+      # nodePort: 31000   # 원하는 포트 설정 가능
+  selector:
+    app: webserver
+  type: NodePort
+```
+- Nodeport 서비스를 생성하고 목록을 확인해본다.
+```bash
+# 1. Nodeport 서비스 생성
+$ kubectl apply -f hostname-svc-nodeport.yaml
+
+# 2. 서비스 목록 확인
+$ kubectl get svc
+# NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+# hostname-svc-nodeport   NodePort    10.99.49.175   <none>        8080:30348/TCP   2m34s
+# kubernetes              ClusterIP   10.96.0.1      <none>        443/TCP          34h
+
+# 3. pod의 ip 목록들확인
+$ kubectl get pod -o wide
+# NAME                                  READY   STATUS    RESTARTS   AGE    IP          NODE             NOMINATED NODE   READINESS GATES
+# hostname-deployment-9664ffd7f-6vkdt   1/1     Running   0          135m   10.1.0.14   docker-desktop   <none>           <none>
+# hostname-deployment-9664ffd7f-bvlwx   1/1     Running   0          135m   10.1.0.16   docker-desktop   <none>           <none>
+# hostname-deployment-9664ffd7f-xzglm   1/1     Running   0          135m   10.1.0.15   docker-desktop   <none>           <none>
+
+# 4.  각 pod의 IP:{30348} 로 요청 이 가능하다.
+$ curl 10.1.0.14:30348 --silent | grep hello
+# ??
+```
+> 나는 4. 에서 막혔다. 아마 도커 데스크탑 환경이라 그런걸로 추정되는데, 추후 클라우드 인스턴스로 클러스터 구성하여 확인이 필요함
+- 4.의 경우 GPC나 AWS 환경에서는 각 노드에 `nodeport` 서비스 생성시 할당된 포트로 접근하기 위해 별도로 각각 방화벽 / security inbound 설정이 필요하다.(랜덤포트 말고 nodePort로 할당이 필요할 듯)
+- `Nodeport`서비스는 자체로 `ClusterIP` 서비스의 기능을 포함한다. 따라서 클러스터 내부에서 `ClusterIP:8080`으로도 접근이 가능하다.
+
+```bash
+# curl용 임시 pod 생성
+$ kubectl run -i --tty --rm debug --image=alicek106/ubuntu:curl --restart=Never -- bash
+# 요청
+$ curl 10.99.49.175:8080
+```
+
+- 실제 운영 환경에서 `NodePort`로 서비스를 외부에 제공하지 않는다. 보통 `인그레스(Ingress)`라는 쿠버네티스 오브젝트에서 간접적으로 사용된다. `LoadBalancer`와 `NodePort`를 합치면 `Ingress` 오브젝트를 사용할 수 있다.
+
+<br>
+
+### 6.5.4 Loadbalancer 타입의 서비스
+- `Nodeport` 서비스는 각 노드의 IP를 알아야 접근 가능한 방식이었으나, `Loadbalancer`타입의 서비스는 각 CP로부터 도메인과 IP를 할당받기 때문에 쉽게 포드에 접근 가능하다. 하지만, 로드 밸런서를 동적으로 생성하는 기능을 제공하는 AWS, GCP 같은 환경에서만 사용 가능하고, 가상 머신이나 온프레미스 환경에서는 사용하기 어렵다.
+- 책은 AWS에서 kops를 통해 설치한 쿠버네티스 환경에서 하지만 나는 로컬에서 흉내내본다. 서비스 yaml을 아래와 같이 작성한다.
+```yaml
+# hostname-svc-lb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hostname-svc-lb
+spec:
+  ports:
+    - name: web-port
+      port: 80
+      targetPort: 80
+  selector:
+    app: webserver
+  type: LoadBalancer
+```
+- 서비스를 실행하고 생성내용을 확인해본다.
+```bash
+# 1. 서비스 생성
+$ kubectl apply -f hostname-svc-lb.yaml
+
+# 2. 서비스 확인
+$ kubectl get svc 
+# NAME              TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+# hostname-svc-lb   LoadBalancer   10.104.74.125   localhost     80:30625/TCP   2s
+# kubernetes        ClusterIP      10.96.0.1       <none>        443/TCP        35h
+```
+- 확인할 점은 `EXTERNAL-IP` 부분이다. 나는 `localhost`, 이지만 ***클라우드 플랫폼을 사용하고 있다면 플랫폼에서 제공한 도메인이 나올것이다.***
+
+```bash
+# 로드밸런서에 요청 세번 날리기
+$ curl localhost --silent | grep Hello
+# <p>Hello,  hostname-deployment-9664ffd7f-xzglm</p>      </blockquote>
+# <p>Hello,  hostname-deployment-9664ffd7f-bvlwx</p>      </blockquote>
+# <p>Hello,  hostname-deployment-9664ffd7f-6vkdt</p>      </blockquote>
+```
+- 3개의 포드로 분산되어 요청이 날아가고 있음을 알 수 있다.(브라우저에서 확인하면 캐싱되어서 응답이 한개만 뜬다.)
+- `PORT`에 있는 `30625`값은 각 노드에서 동일하게 접속할 수 있는 포트번호다.(Nodeport의 그것과 같다.) 즉, `curl 10.1.0.14:30625 --silent | grep Hello`로 노드에 접근이 가능하다. 이게 생긴 이유는 `LoadBalancer`의 요청 처리 원리를 보면 알 수 있다.
+
+    **1. LoadBalancer 타입 서비스가 생성됨과 동시에 모든 워커 노드는 포드에 접근할 수 있는 랜덤 포트를 개방한다.(여기서 30625)**
+
+    **2. 로드 밸런서로 요청이 들어오면 요청은 워커 노드중 하나로 전달되며, 이 때 사용되는 포트가 1의 30625 포트다.**
+    
+    **3. 워커 노드로 전달된 요청은 포드중 하나로 전달되어 처리된다.**
+
+<br>
+
+- 3번을주의하자. `워커노드 !== 포드`이다.
+- `2. ~ 3.`의 과정은 `Nodeport 서비스`를 사용했을 때의 동작과 같다.
+- AWS를 쓰고있으면 콘솔에서 로드밸런서 정보를 확인해보면 뭐커노드가 로드밸런서에 연결돼 있는걸 확인할 수 있다.
+
+<br>
+
+### 6.5.5 트래픽의 분배를 결정하는 서비스 속성: `externalTrafficPolicy`
+- 바로 위 2~3의 동작에서, 요청이 노드에 들어오면 포드 중 하나로 전달된다. ***그런데 워커노드A에 들어온 요청이 워커노드B의 포드로도 전달될 수 있다.*** 딱 봐도 비효율적이다. 베트워크 홉(hop)이 한단계 더 발생하고 노드간 리다이렉트로 인해 트래픽의 출발지 주소가 바뀌는 `SNAT`가 발생하고 이로인해 클라이언트의 IP 주소 또한 보존되지 않는다.
+- 이러한 요청 전달 메커니즘은 서비스 속성 중 `{externalTrafficPolicy: Cluster}` 의해 정의된다. 이게 기본값인가보다.
+```bash
+# -o {yaml, json, wide...} : 출력 형식지정
+$ kubectl get svc hostname-svc-lb -o yaml
+
+# ...
+#   externalTrafficPolicy: Cluster
+# ...
+```
+- `externalTrafficPolicy: Loacl`로 설정하면 포드가 생성된 노드에서만 포드로 접근할 수 있어, 해당 노드의 로컬에 위치한 포드로만 요청이 전달된다. yaml파일에 명시적으로 설정해줘야한다.
+```yaml
+# hostname-svc-lb.yaml
+...
+spec:
+  externalTrafficPolicy: Local
+...
+```
+- 설정 변경 적용
+```bash
+$ kubectl apply -f hostname-svc-lb.yaml 
+```
+- `externalTrafficPolicy: Local`이 당연히 좋아보이지만, 각 ***노드에 포드가 고르지 않게 스케줄링 됐을 때 요청이 포드별로 고르게 분산되지 않을 수 있다.***(노드에만 고르게 분산된다.) 이런 문제는 쿠버네티스 스케줄링 기능 중 `PodAntiAffinity` 등을 사용해 포드를 최대한 클러스터 노드에 고르게 배포해서 해결할 수 있다.
+
+<br>
+
+### 6.5.6 요청을 외부로 리다이렉트하는 서비스: ExternalName
+- `ExternalName` 서비스는 서비스가 외부 도메인을 가리키도록 설정할 수 있다. 아래 설정은 포드들이 externalname-svc라는 이름으로 요청을 보낼 경우 쿠버네티스의 DNS는 my.database.com으로 접근할 수 있도록 CNAME 레코드를 반환한다. 즉 ***externalname-svc로 요청을 보내면 my.database.com에 접근***한다는 말이다.
+```yaml
+# external-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: externalname-svc
+spec:
+  type: ExternalName
+  externalName: my.database.com  
+```
+```bash
+$ kubectl apply -f external-svc.yaml 
+
+$ kubectl get svc  
+# NAME               TYPE           CLUSTER-IP   EXTERNAL-IP       PORT(S)   AGE
+# externalname-svc   ExternalName   <none>       my.database.com   <none>    3m57s
+# kubernetes         ClusterIP      10.96.0.1    <none>            443/TCP   35h
+```
+- 따로 CLUSTER-IP가 없기 때문에 ExternalName 서비스는 어차피 이름(externalname-svc) 으로밖에 접근 못한다. EXTERNAL-IP도 이미 my.database.com로 되어있다.
+- `ExternalName` 서비스는 쿠버네티스와 별개로 존재하는 레거시 시스템에 연동해야 하는 상황에서 유용하다.
+
+<br>
