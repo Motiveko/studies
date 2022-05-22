@@ -1289,4 +1289,116 @@ $ kubectl get svc
 - 따로 CLUSTER-IP가 없기 때문에 ExternalName 서비스는 어차피 이름(externalname-svc) 으로밖에 접근 못한다. EXTERNAL-IP도 이미 my.database.com로 되어있다.
 - `ExternalName` 서비스는 쿠버네티스와 별개로 존재하는 레거시 시스템에 연동해야 하는 상황에서 유용하다.
 
+<br><br>
+
+## 7. 쿠버네티스 리소스의 관리와 설정
+### 7.1 네임스페이스(Namespace): 리소스를 **논리**적으로 구분하는 장벽
+- 네임스페이스는 포드, 레플리카셋, 디플로이먼트, 서비스 등의 쿠버네티스 리로스들이 묶여 있는 하나의 가상 공간/그룹이다. 네임스페이스를 쓰면 하나의 클러스터에서 여러개의 가상 클러스터를 동시에 사용하는 것처럼 느껴진다
+```bash
+# 네임스페이스 조회
+$ kubectl get {namespaces | ns}
+
+# NAME              STATUS   AGE
+# default           Active   2d8h
+# kube-node-lease   Active   2d8h
+# kube-public       Active   2d8h
+# kube-system       Active   2d8h
+```
+- 기본적으로 4가지의 네임스페이스가 제공되고 있다. 
+  - `default`는 사용자가 만드는 오브젝트에 따로 네임스페이스를 할당하지 않을 경우 할당된다.
+  
+  - `kube-system`은 쿠버네티스 구성을 위해 필요한 오브젝트들에 할당되어 있다.
+  ```bash
+  $ kubectl get pods {--namespace | -n} kube-system
+
+  # NAME                                     READY   STATUS    RESTARTS         AGE
+  # coredns-6d4b75cb6d-58x2k                 1/1     Running   3 (28m ago)      2d8h
+  # coredns-6d4b75cb6d-tdrzs                 1/1     Running   3 (28m ago)      2d8h
+  # etcd-docker-desktop                      1/1     Running   3 (28m ago)      2d8h
+  # kube-apiserver-docker-desktop            1/1     Running   3 (28m ago)      2d8h
+  ...
+
+  $ kubectl get svc -n kube-system
+  # NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+  # kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   2d8h
+
+  $ kubectl get deploy -n kube-system
+  # NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+  # coredns   2/2     2            2           2d8h
+  ```
+  - 여러개의 `pod`들과 coredns pod을 관리하는 coredns `deploy`, 이름을 통해 오브젝트를 찾을 수 있는 기능을 제공하는 kube-dns 서비스 등이 미리 생성되어 있다. 가급적이면 이런 kube-system 오브젝트들은 건드리지 않는다.
+
+<br>
+
+- 네임스페이스도 오브젝트이므로 yaml로 정의할 수 있다. 그리고 오브젝트 정의 yaml에 `metadata.namespace`에 정의한 네임스페이스를 작성한다.
+```yaml
+# production-namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+
+
+# hostname-deploy-svc-ns.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hostname-deployment-ns
+  namespace: production # 네임스페이스 지정
+...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hostname-svc-clusterip-ns
+  namespace: production # 네임스페이스 지정
+...
+```
+- yaml로 `service`, `deployment`를 생성하면 namespace로 검색할 수 있다.
+```bash
+$ kubectl apply -f hostname-dploy-svc-ns.yaml
+
+# ,를 써서 여러 오브젝트도 한번에 검색 가능
+$ kubectl get pods,services,deploy -n production
+
+# --all-namespaces 옵션으로 모든 네임스페이스에 대해 검새 가능(없으면 기본 default만 검색)
+$ kubectl get pods --all-namespaces
+```
+
+<br>
+
+- 이전에 서비스에서 다뤘듯이, 클러스터 내부에서 `clusterIP`서비스에 서비스 이름을 통해 접근 가능하다. 하지만 네임스페이스를 도입하면 기본적으로 같은 네임스페이스의 서비스에만 접근 가능하다.(`CLUSTER-IP`로의 접근은 그냥 가능)
+- 하지만 `<서비스이름>.<네임스페이스이름>.svc`형태로 접근하면 다른 네임스페이스의 서비스에도 접근 가능하다.
+```bash
+# 1. 서비스 조회
+$ kubectl get svc -n production
+# NAME                        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+# hostname-svc-clusterip-ns   ClusterIP   10.110.3.163   <none>        8080/TCP   2m21s
+
+# 2. curl용 임시 pod 생성
+$ kubectl run -i --tty --rm debug --image=alicek106/ubuntu:curl --restart=Never -- bash
+
+# 3. [실패] 서비스 이름으로 접근 
+$ curl hostname-svc-clusterip-ns:8080
+# curl: (6) Could not resolve host: hostname-svc-clusterip-ns
+
+# 4. [성공] 네임스페이스 정보가 추가된 서비스 이름으로 접근
+$ curl hostname-svc-clusterip-ns.production.svc:8080 --silent | grep Hello
+# <p>Hello,  hostname-deployment-ns-9664ffd7f-dldvc</p>   </blockquote>
+
+# 5. [성공] Cluster-IP로 접근
+$ curl 10.110.3.163:8080 --silent | grep Hello
+# <p>Hello,  hostname-deployment-ns-9664ffd7f-nz2bn</p>   </blockquote>
+```
+
+<br>
+
+- 네임스페이스는 논리적으로 오브젝트를 분리하는 단위다. ***모든 오브젝트가 네임스페이스로 구분되는건 아니고 일부는 네임스페이스와 독립적으로 존재한다.*** 각각 아래 명령어로 확인 가능하다.
+```bash
+# true: 네임스페이스 종속, false: 네임스페이스 독립
+$ kubectl api-resources --namespaced={true | false}
+```
+- `pod`, `serivce`, `deployment`같은 오브젝트들이 대표적인 네임스페이스 종속적인 오브젝트다.
+- ***클러스터의 관리를 위한 저수준의 오브젝트들***은 네임스페이스에 종속되지 않는다. `nodes`는 대표적인 네임스페이스 독립적인 오브젝트이다. 
+
 <br>
