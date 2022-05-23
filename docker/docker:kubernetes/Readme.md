@@ -1402,3 +1402,304 @@ $ kubectl api-resources --namespaced={true | false}
 - ***클러스터의 관리를 위한 저수준의 오브젝트들***은 네임스페이스에 종속되지 않는다. `nodes`는 대표적인 네임스페이스 독립적인 오브젝트이다. 
 
 <br>
+
+### 7.2.1 [컨피그맵(Configmap)](https://kubernetes.io/ko/docs/concepts/configuration/configmap/)
+- 컨피그맵은 네임스페이스에 종속되어 네임스페이스별로 설정값을 담아 저장할 수 있는 쿠버네티스 오브젝트다. yaml로 생성할 수 있고 명령어로도 생성할 수 있다.
+```bash
+# <설정값>: --from-literal key=value
+$ kubectl create {configmap | cm} <컨피그맵 이름> <설정값들>
+
+# 로그레벨 debug로 생성
+$ kubectl create configmap log-level-configmap --from-literal LOG_LEVL=DEBUG
+$ kubectl create configmap start-k8s --from-literal k8s=kubernetes --from-literal container=docker
+
+# configmap 조회
+$ kubectl get cm
+$ kubectl describe cm log-level-configmap
+```
+- 컨피그맵을 pod 설정 yaml에 작성하면 해당 설정을 적용할 수 있다.
+```yaml
+spec:
+  containers:
+  - name: my-webserver
+  env:
+    valueFrom:
+      configMapKeyRef:
+        name: log-level-configmap # 적용할 configmap
+        key: LOG_LEVEL            # 적용할 값을 가져온다
+```
+
+- `env.valueFrom`은 configmap에서 설정값을 골라서 가져온다. `envFrom`으로 설정하면 configmap에 정의된 모든 설정값을 가져온다.
+
+<br>
+
+- configmap을 포드에서 사용하는 방법은 두가지가 있다. `컨테이너의 환경변수`로 사용하거나 `포드 내부의 파일로 마운트해 사용`하는 방법이 있다.
+<br>
+
+1. 환경변수로 사용하는법은 아래와 같다.
+```yaml
+# all-env-from-configmap.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: container-env-example
+spec:
+  containers:
+    - name: my-container
+      image: busybox
+      args: ['tail', '-f', '/dev/null']
+      envFrom:
+      - configMapRef:
+          name: log-level-configmap
+      - configMapRef:
+          name: start-k8s
+```
+
+<br>
+
+```bash
+# configmap 적용한 pod 생성
+$ kubectl apply -f all-env-from-configmap.yaml
+
+# 환경변수 출력
+$ kubectl exec container-env-example -- env
+
+# LOG_LEVEL=DEBUG
+# container=docker
+# ...
+```
+
+<br>
+
+2. configmap 내용을 파일로 포드 내부에 마운트하기
+- pod를 아래와 같이 정의한다.
+```yaml
+# volume-mount-configmap.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap-volume-pod
+spec:
+  containers:
+    - name: my-container
+      image: busybox
+      args: ["tail", "-f", "/dev/null"]
+      volumeMounts:
+      - name: configmap-volume  # spce.volumes에서 정의한 컨피그맵 볼륨
+        mountPath: /etc/config  # 컨피그맵 데이터가 위치할 경로
+  volumes:
+    - name: configmap-volume    # 컨피그맵 볼륨 이름
+      configMap:
+        name: start-k8s         # 키-값 쌍을 가져올 컨피그맵 볼륨
+```
+- pod를 생성하고 /etc/config에 잘 마운트되었는지 확인한다.
+```bash
+$ kubectl apply -f volume-mount-configmap.yaml
+
+$ kubectl exec configmap-volume-pod -- cat /ect/config/{ k8s | container }
+# kubernetes | docker
+```
+
+- pod 설정의 `configMap.items.key`를 설정하면 컨피그맵에서 원하는 key값의 설정만 가져올수도 있다.
+
+<br>
+
+
+3. 파일로부터 컨피그맵 설정하기
+- 컨피그맵 설정시 `--from-file` 옵션을 이용해 파일로도 컨피그맵을 만들 수 있다. `--from-env-file` 옵션을 이용하면 `key=value`형태의 `.env`파일을 읽어서 컨피그맵 설정도 가능하다.
+
+<br>
+
+- `yaml` 파일로도 컨피그맵 설정이 가능하다. `kubectl create`로 컨피그맵 생성시 `--dry-run -o yaml > {filename}`옵션으로 생성하는 컨피그맵을 yaml로 출력할수도 있다. 이걸 딴데서 갖다쓰면 된다.
+
+```bash
+# configmap 생성
+$ kubectl create configmap my-configmap --from-literal mykey=myvalue --dry-run=client -o yaml > my-configmap.yaml
+
+# apiVersion: v1
+# data:
+#   mykey: myvalue
+# kind: ConfigMap
+# metadata:
+#   creationTimestamp: null
+#   name: my-configmap
+
+$ kubectl apply -f my-configmap.yaml
+```
+
+<br>
+
+### 7.2.2 [시크릿(Secret)](https://kubernetes.io/ko/docs/concepts/configuration/secret/)
+- 시크릿 오브젝트는 SSH 키, 비밀번호 등의 중요정보를 저장하기 위한 용도로 사용되고, **네임스페이스에 종속**적이다. 차이점은 시크릿에 몇가지 특수옵션이나 [타입](https://kubernetes.io/ko/docs/concepts/configuration/secret/#secret-types)이 있고 인코딩 등에 차이가 있다.
+- `kubectl create`로 시크릿을 생성한다. `--from-literal`, `--from-file`, `--from-env-file` 등의 옵션은 모두 컨피그맵과 동일하다.
+
+```bash
+# 시크릿 생성
+$ kubectl create secret generic my-password --from-literal password=1234
+$ kubectl create secret generic our-password --from-literal pw1=mypassword --from-literal pw2=yourpaasword
+
+# 2. 생성된 시크릿 목록 조회
+$ kubectl get secret
+# NAME           TYPE     DATA   AGE
+# my-password    Opaque   1      16m
+# our-password   Opaque   2      7m52s
+
+# 3. yaml 포맷으로 시크릿 상세조회
+$ kubectl get secret my-password -o yaml
+# apiVersion: v1
+# data:
+#   password: MTIzNA==
+# kind: Secret
+```
+- 위의 3.에서 password의 값이 ***1234의 base64 인코딩된 값***이 나오는걸 확인할 수 있다. 기본적으로 시크릿 생성시 인코딩되는데, 따라서 ***yaml 파일로부터 시크릿을 생성할 때 값을 base64로 인코딩 한 값을 사용해야 한다.***
+
+<br>
+
+- pod에 시크릿을 적용하는것 역시 컨피그맵과 비슷하다.
+```yaml
+# env-from-secret.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-env-example
+spec:
+  containers:
+  - name: my-container
+    image: busybox
+    args: ['tail', '-f', '/dev/null']
+    # 1. secret 전체 pod의 환경변수에 적용
+    envFrom:
+    - secretRef:
+      name: my-password
+
+    # 2. secret에서 특정값만 pod의 환경변수에 적용
+    env:
+    - name: YOUR_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: our-password
+          key: pw2
+
+    # 3. secret 전체 포드의 볼륨에 마운트
+    volumeMounts:
+      - name: secret-volume 
+        mountPath: /etc/secret
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: our-password
+
+    # 4. secret에서 특정값만 포드의 볼륨에 마운트
+    volumeMounts:
+      - name: secret-volume 
+        mountPath: /etc/secret
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: our-password
+      items:
+        - key: pw1
+          path: password1 # /etc/config/password1 = pw1
+```
+- 4를 적용하고 적용된 시크릿 값을 확인해본다.
+```bash
+$ ubectl apply -f env-from-secret.yaml
+
+$ kubectl exec secret-env-example -- cat /etc/secret/password1
+# mypassword%
+```
+
+<br>
+
+- `generic`이나 타입지정을 안하면 기본 `Opague`타입의 시크릿이 생성된다. `docker-registry` 타입의 시크릿을 사용하면 `비공개 레지스트리`에 접근할 때 사용하는 인증설정을 할 수 있다.
+> 비공개 레지스트리는 docker hub이 아닌 사설 저장소를 의미. 여기서 이미지를 가져와야 하는경우에 쓴다.
+
+- 단일서버에서 docker 사용시 `docker login`로 사설 레지스트리에 접속할 수 있었다. ***쿠버네티스 환경에서는 레지스트리의 인증 정보를 저장하는 `별도의 시크릿`을 생성해서 사용***한다. 생성 방법에는 두가지가 있다. docker login 결과 생성되는 `~/.docker/config.json` 파일을 사용하거나 직접 로그인 정보를 전달하거나 두가지다.
+  ```bash
+  # ~/.docker/config.json 사용, type generic해도 된다.
+  $ kubectl create secret generic registry-auth \
+    --from-file=.dockerconfigjson={~path}/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson
+
+  # 인증정보 직접전달, 사설 레지스트리를 쓴다면 해당 서버 주소를 전달한다. type docker-registry
+  $ kubectl create secret docker-registry registry-auth-by \
+    --docker-username=username \
+    --docker-password=password \            
+    --docker-server=idock.daumkakao.io
+
+  # 생성 결과 조회
+  # NAME                   TYPE                             DATA   AGE
+  # registry-auth          kubernetes.io/dockerconfigjson   1      4m56s
+  # registry-auth-by   kubernetes.io/dockerconfigjson   1      2m25s
+  ```
+- 이 시크릿은 `deployment`나 `pod` 등의 yaml파일에 추가해 사설 레지스트리로 이미지를 받을 때 사용하도록 할 수 있다. 아래의 `imagePullSecrets`이 관련 설정이다.
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+...
+  spec:
+    containers:
+    - name: container-name
+      iamge: PRIVATE_IMAGE
+    imagePullSecrets:
+    - name: registry-auth-by
+```
+
+<br>
+
+- 시크릿은 TLS 연결에 사용되는 공개/비밀키 등을 쿠버네티스에 저장할 수 있는 `tls 타입`도 지원한다. pod 내부 앱이 보안연결 등을 위해 인증서/키가 필요할 경우 시크릿의 값을 pod에 제공하는 방식으로 사용할 수 있다.
+- `키 페어`가 준비됬으면 `kubectl create`로 생성할 수 있다.
+```bash
+# 1. 테스트용 키페어 생성
+$ openssl req -new -newkey rsa:4096 -days 365 -nodes \
+-x509 -subj "/CN=example.com" -keyout cert.key -out cert.crt 
+
+# 2. 인증서로 시크릿 생성
+$ kubectl create secret tls my-tls-secret \
+--cert cert.crt --key cert.key
+
+# 3. 인증서 조회
+$ kubectl get secrets my-tls-secret -o yaml
+# apiVersion: v1
+# data:
+#   tls.crt: LS0tLS1CRUdJTiBDRV...
+#   tls.key: LS0tLS1CRUdJTiBQUk...
+# kind: Secret
+```
+
+<br>
+
+### 7.2.3 좀 더 쉽게 컨피그맵과 시크릿 리소스 배포하기
+- 컨피그맵과 시크릿을 YAML로 배포하려면 `kubectl create`로 생성시 YAML로 저장하면 된다. 하지만 시크릿 데이터가 많아지면 가독성이 떨어지고 데이터를 관리하기가 힘들다. 
+- [`kusetomize`](https://kubernetes.io/ko/docs/tasks/manage-kubernetes-objects/kustomization/)를 이용하면 좀 더 시크릿과 컨피그맵을 쉽게 쓸 수 있다.
+- 🦐 자세한 내용은 우선 불필요 하다고 판단되므로 생략한다.
+
+<br>
+
+### 7.2.4 컨피그맵, 시크릿 업데이트해 애플리케이션 설정값 변경하기
+- 컨피그맵, 시크릿을 `kubectl edit`으로 수정하거나, YAML파일 변경 후 `kubectl apply`하거나, `kubectl patch`를 사용할 수 있다.
+- 중요한건 ***컨피그맵과 시크릿 앱의 환경변수로 사용했다면, 변경시 `deployment`/`pod`를 다시 생성해야 한다는 것이다. pod 내부에 볼륨 마운트를 했으면 컨피그맵,시크릿 변경시 해당 볼륨도 자동 갱신된다. 여기서 함정은 내부 애플리케이션 프로세스는 이걸 반영하지 못하므로 재실행 하는 로직이 필요하다는 것이다.***
+- 예를들어 변경된 파일을 다시 읽어 들이도록 컨테이너 프로세스에 별도의 시그널(SIGHUP)을 보내는 `사이드카 컨테이너`를 포드에 포함시킬 수 있다. 
+- 혹은 애플리케이션 코드 레벨에서 쿠버네티스 API를 통해 컨피그맵/시크릿의 데이터 변경에 대한 알림(Watch)을 받은 뒤 자동으로 리로드하게 할 수도 있다. 
+- 정답은 없으나 어쨋거나 수동으로 설정을 반영해야 한다는것을 잊어서는 안된다.
+
+
+<br>
+
+## 8. 인그레스(Ingress)
+- 인그레스는 외부->내부로 향하는것을 말한다. 쿠버네티스에서 `서비스 오브젝트`는 '외부 요청을 받아들이기 위한것'이라면 `인그레스`는 ***'외부 요청을 어떻게 처리할 것인지 네트워크 7계층 레벨에서 정의'***하는 오브젝트다. 간단히 아래와 같은 기능을 담당한다.
+  - `외부 요청의 라우팅`: 특정 URL path로 들어온 요청을 어떤 서비스로 전달할지 결정한다.
+  - 가상 호스트 기반의 요청 처리: 같은 IP에 대해 다른 도메인 이름으로 요청이 올 때 어떻게 처리할 것인가를 정의한다.
+  - SSL/TLS 보안 연결 처리: 여러개의 서비스로 요청 라우팅시 보안 연결을 위한 인증서를 쉽게 적용한다.
+
+<br>
+
+### 8.1 인그레스 사용 이유
+- 쿠버네티스 클러스터에 여러개의 deployment를 띄운다고 할 때 각각을 외부에 노출하기 위해서 service를 여러개 만든다. 그리고 요청 주소는 각 서비스에 대해 제각각 다르다. 또한 서비스마다 세부적 설정을 할 때 일일이 service와 deploy에 대해 설정을 해줘야한다.
+- 이런 번거로운 설정은 `Nodeport`나 `LoadBalancer` 서비스로도 구현 가능하나, 인그레스를 사용하면 URL 엔드포인트를 단 하나만 생성함으로써 이를 처리할 수 있다.
+
+<br>
+
+### 8.2 인그레스의 구조
+
