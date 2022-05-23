@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-example
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: rhehdrla.example.com            # 이 도메인으로의 요청에 대한 처리 규칙정의
+    http:
+      paths:
+      - pathType: Prefix
+        path: /echo-hostname              # 이 path을 어떤 서비스로 보낼지 처리
+        backend:
+          service:
+            name: hostname-service
+            port: 
+              number: 80

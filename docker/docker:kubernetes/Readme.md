@@ -983,7 +983,7 @@ $ kubectl delete deploy my-nginx-deployment
 ### 6.4.2 디플로이먼트 사용이유
 - 애플리케이션 업데이트시 `replicaset` 변경 사항을 저장하는 리비전(revision)을 남겨 롤백 가능    
 - `무중단 서비스`를 위한 포드의 롤링 업데이트의 전략 지정 가능
-- 예를들어 pod의 컨테이너가 업데이트 될 때, 이전 replicaset은 이전 리비전 정보로 저장하고, 새로운 replicaset을 만들고 pod을 모두 새로 생성한다.
+- 예를들어 pod의 컨테이너가 업데이트 될 때, 이전 replicaset은 이전 리비전 정보로 저장하고, 새로운 `replicaset`을 만들고 pod을 모두 새로 생성한다.
 ```bash
 # 1. nginx 이미지를 1.10 -> 1.11로 업데이트
 $ kubectl set image deployment my-nginx-deployment nginx=nginx:1.11 --record
@@ -1702,4 +1702,105 @@ $ kubectl get secrets my-tls-secret -o yaml
 <br>
 
 ### 8.2 인그레스의 구조
+> 책에서 Ingress의 버전을 `networking.k8s.io/v1beta1`을 쓰는데 지금 버전은 `networking.k8s.io/v1`이다. 이걸 마이그레이션을 해야 하는데 문법이 바뀐부분이 좀 있어서 쉽지가 않다. [Ingress 공식문서](https://kubernetes.io/ko/docs/concepts/services-networking/ingress/)를 참고하며 에러 하나씩 해결필요
 
+> 버디 가이드와 사내 쿠버네티스 인그레스 리소스 확인 결과 인그레스 API 버전이 `networking.k8s.io/v1beta1`이므로 이부분을 유념하면서 학습한다. 
+
+```yaml
+# ingress-example.yaml 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-example
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: localhost          # 이 도메인으로의 요청에 대한 처리 규칙정의
+    http:
+      paths:
+      - pathType: Prefix
+        path: /echo-hostname # 이 path을 어떤 서비스로 보낼지 처리
+        backend:
+          service:
+            name: hostname-service
+            port: 
+              number: 80
+```
+- [annotations](https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/annotations/)를 통해 인그레스의 **추가적인 기능**을 사용할 수 있다
+```bash
+$ kubectl apply -f ingress-example.yaml 
+$ kubectl get ingress
+# NAME              CLASS   HOSTS                  ADDRESS   PORTS   AGE
+# ingress-example   nginx   rhehdrla.example.com             80      3s
+```
+- 인그레스는 단지 `요청을 처리하는 규칙`을 정의하는 선언적 오브젝트라서, 이것만으론 아무것도 못한다. [인그레스 컨트롤러(Ingress Controller)](https://kubernetes.io/ko/docs/concepts/services-networking/ingress-controllers/)라는 특수한 서버에 적용해야 규칙을 사용할 수 있다.
+- 인그레스 컨트롤러 서버는 여러 종류가 있는데 대표적으로 [`Nginx 웹 서버 인그레스 컨트롤러`](https://kubernetes.github.io/ingress-nginx/deploy/)가 있고, 외에 `Kong`이라는 API 게이트웨이, GKE등 클라우드 플랫폼에서 제공하는 인그레스 컨트롤러가 있다.
+- Nginx 인그레스 컨트롤러를 [Docker Desktop](https://kubernetes.github.io/ingress-nginx/deploy/#docker-desktop)환경에서 사용해야한다. 플랫폼별로 설치법이 다르니 주의.
+```bash
+# 1. Ngnix Ingress Controller 관련 리소스 설치
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/cloud/deploy.yaml
+
+# 2. ingress-nginx 네임스페이스에 deploy, pod에 ngnix 웹서버 생성 확인
+$ kubectl get pods,deploy -n ingress-nginx
+
+# NAME                                            READY   STATUS      RESTARTS   AGE
+# pod/ingress-nginx-admission-create-2jk6t        0/1     Completed   0          2m15s
+# pod/ingress-nginx-admission-patch-hkwmg         0/1     Completed   0          2m15s
+# pod/ingress-nginx-controller-686556747b-jzvz2   1/1     Running     0          2m15s
+
+# NAME                                       READY   UP-TO-DATE   AVAILABLE   AGE
+# deployment.apps/ingress-nginx-controller   1/1     1            1           2m15s
+
+
+# 3. Nginx 인그레스 컨트롤러에 접근하기 위한 서비스 생성 확인
+$ kubectl get svc -n ingress-nginx
+# NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+# ingress-nginx-controller             LoadBalancer   10.102.238.215   localhost     80:30394/TCP,443:32366/TCP   3m23s
+# ingress-nginx-controller-admission   ClusterIP      10.103.98.26     <none>        443/TCP                      3m23s
+```
+- 기본적으로 `LoadBalancer` 타입의 서비스 `ingress-nginx-controller`가 생성되었다. 요청은 
+  1. `ingress-nginx-controller` 서비스로 들어와
+  2. Ingress의 규칙이 적용되어 host, path에 따라 적절한 서비스로 보내지고 
+  3. 이 서비스에서 deploy, pod까지 요청이 전달된다.
+
+- 이제 클러스터 내부의 `deployment`와 `service`를 정의하고 생성한다.
+```bash
+$ kubectl apply -f hostname-deployment.yaml 
+$ kubectl apply -f hostname-service.yaml 
+```
+- 참고로 deployment 바로 앞단의 서비스는 큰 이유가 없다면 외부 노출을 막을수 있게 `ClusterIP`타입 서비스로 구성한다.
+- [pod의 포트에 이름을 지정하면 service의 ports.targetPorts에서 이름으로 접근 가능](https://stackoverflow.com/questions/48886837/how-to-make-use-of-kubernetes-port-names)하다. yaml파일 참고.
+
+<br>
+
+- 이제 인그레스 컨트롤러의 `/echo-hostname` API를 호출해 본다. 로컬 환경이기 때문에 `localhost/echo-hostname`로 테스트를 해야한다. 그런데 `ingress-example.yaml` 에 도메인을 지정했는데, 이걸 localhost로 바꾸거나 아니면 `curl`의 `--resolve` 옵션을 사용해서 테스트 할 수 있다.
+```bash
+# rhehdrla.example.com:80로의 요청은 localhost(127.0.0.1)로 보내진다.
+$ curl --resolve rhehdrla.example.com:80:127.0.0.1 rhehdrla.example.com/echo-hostname
+
+------------------------ 
+You accessed to path "/"
+Access Server URL : http://rhehdrla.example.com/ 
+Container Hostname : hostname-deployment-68fd7644d9-gm8n7 
+```
+
+> 🦐 **참고로 Ingress 설정에 host, path를 설정하지 않을 경우 모든 요청을 지정된 서비스로 전달한다.** 🦐 하지만 보통 설정해야 하는 경우가 대부분이다.
+
+<br>
+
+인그레스를 사용하는 방법을 다시 순서대로 정리한다.
+
+1. 공식 github에서 제공되는 yaml파일로 `Nginx 인그레스 컨트롤러`(pod)를 생성
+2. `Nginx 인그레스 컨트롤러`를 외부로 노출하기 위한 `서비스` 생성(1의 yaml파일에 포함, LoadBalaner 타입)
+3. 요청 처리 규칙을 정의하는 `인그레스 오브젝트`를 생성
+4. `Nginx 인그레스 컨트롤러`로 들어온 요청은 인그레스 규칙에 따라 적절한 서비스로 전달
+
+- 3.에서 `인그레스 오브젝트`생성시 `Nginx 인그레스 컨트롤러`는 인그레스 리소스를 watch모드로 보고있다가 자동으로 생성된 설정을 로드해서 적용한다. 쿠버네티스는 Watch API를 제공한다.
+```bash
+$ kubectl get pods -w # pod 리소스 변화 감지
+```
+- ***4.에서 요청이 실제로 서비스로 전달되는건 아니고 서비스생성시 생성된 `endpoint`로 요청을 직접 전달한다. 서비스를 거치지 않는데 쿠버네티스에서 바이패스(Bypass)라고 부른다.***
+
+<br>
