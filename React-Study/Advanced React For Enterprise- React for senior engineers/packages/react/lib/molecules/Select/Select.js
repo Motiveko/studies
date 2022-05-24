@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import Text from '../../atoms/Text/Text.js';
 
-const Select = ({ options = [], label = "Please select an option ...", onOptionSelected: handler, renderOption, }) => {
+const Select = ({ options = [], label = "Please select an option ...", onOptionSelected: handler, }) => {
     const labelRef = useRef(null);
     const [overlayTop, setOverlayTop] = useState(undefined);
     useEffect(() => {
@@ -26,21 +26,6 @@ const Select = ({ options = [], label = "Please select an option ...", onOptionS
             caretIcon(isOpen)),
         isOpen && (React.createElement("ul", { style: { top: overlayTop }, className: "dse-select__overlay" }, options.map((option, optionIndex) => {
             const isSelected = selectedIndex === optionIndex;
-            const renderOptionProps = {
-                isSelected,
-                option,
-                getOptionRecommendedProps: (overrideProps = {}) => {
-                    return {
-                        className: `dse-select__option ${isSelected ? "dse-select__option--selected" : ""}`,
-                        onClick: () => onOptionSelected(option, optionIndex),
-                        key: option.value,
-                        ...overrideProps,
-                    };
-                },
-            };
-            if (renderOption) {
-                return renderOption(renderOptionProps);
-            }
             return (React.createElement("li", { className: `dse-select__option ${isSelected ? "dse-select__option--selected" : ""}`, onClick: () => onOptionSelected(option, optionIndex), key: option.value },
                 React.createElement(Text, null, option.label),
                 isSelected && checkIcon));
