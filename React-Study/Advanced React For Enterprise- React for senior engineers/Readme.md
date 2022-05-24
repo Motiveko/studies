@@ -408,6 +408,9 @@ packages/scss/node_modules/ # ./bin/ : symlink들, 이외 의존성 설치되지
 > [`yarn workspace`](https://classic.yarnpkg.com/lang/en/docs/workspaces/),[hoist의 개념과 nohoist가 필요한 이유](https://classic.yarnpkg.com/blog/2018/02/15/nohoist/) 등에 대해 완전히 이해하지 못했다. 링크를 찬찬히 다시 읽어보자.
 
 <br>
+> [`yarn workspace`](https://classic.yarnpkg.com/lang/en/docs/workspaces/),[hoist의 개념과 nohoist가 필요한 이유](https://classic.yarnpkg.com/blog/2018/02/15/nohoist/) 등에 대해 완전히 이해하지 못했다. 링크를 찬찬히 다시 읽어보자.
+
+<br>
 
 # 4. Implementation of React
 - mono repository는 react, angular, vue 등 여러 프레임워크에 대해 각각의 패키지를 만들어서 관리할 수 있다. 이 중 react를 만든다.
@@ -453,7 +456,7 @@ export {
 
 <br>
 
-### 4.2 Add rollup to compile react
+## 4.2 Add rollup to compile react
 - 설치
 ```bash
 yarn add --dev rollup rollup-plugin-typescript2
@@ -682,7 +685,7 @@ const Color: React.FunctionComponent<ColorProps> = ({
 - Text atom도 이와 같은 방식으로 만든다.(생략)
 <br>
 
-### 4.7 Foundation 분리
+## 4.7 Foundation 분리
 - 스프링에서 multi-module 프로젝트를 만들어 도메인들을 모두 분리했던 것 처럼 디자인 시스템의 `foundation js파일`들도 패키지로 분리해, 여러 다른 패키지(react, vue, angular..)에서 재사용 할 수 있다.
 - `@ds.e/foundation` 패키지를 만들고 타입스크립트를 설치한다. 번들러 같은건 없으며, `tsc`로 컴파일한다.
 - `tsconfig.json`파일을 아래와 같이 작성한다. 설정은 많진 않고, 이 패키지는 다른 패키지에서 reference 되어 사용되므로, `"composite": true`와 `"rootDir": "src"`설정은 필수다.
@@ -740,7 +743,7 @@ export default {
 <br>
 
 
-### 4.8 Spacing Component
+## 4.8 Spacing Component
 - 마진 등의 spacing을 따로 컴포넌트로 분리하여 작성한다. `<Margin>{children}</Margin>`형태로 작성할 것이다.
 - 이 때 className은 `dse-margin-[,direction]-{size}`형태로 사전에 정의되어야 한다. scss를 이용하면 쉽게 만들수 있다.
 ```scss
@@ -845,7 +848,7 @@ const Text: React.FunctionComponent<TextProps> = ({
 
 <br>
 
-### 4.9 Select molecule
+## 4.9 Select molecule
 - component basic
 - component style
   - molecule의 css작성은 매우 중요하다. `reusable`, `maintainability`, `best practice`를 따라야 한다.
@@ -878,12 +881,12 @@ const Text: React.FunctionComponent<TextProps> = ({
 
 <br>
 
-### 4.10 Select Component With Render Props(38강)
+## 4.10 Select Component With Render Props(38강)
 - [Render Props](https://ko.reactjs.org/docs/render-props.html#gatsby-focus-wrapper) 패턴을 이용해서 Select 컴포넌트의 option에 랜더링 될 요소를 사용자가 커스터마이징 할 수 있게 한다.
 
 > 솔직히 좋은 패턴은 아닌 것 같다. [`Mui`](https://mui.com/material-ui/react-select/#main-content)에서는 Compound Component같은 패턴을 이용해서 구현했는데 이게 훨씬 직관적이다.
 
-```jsx
+```tsx
 // @ds.e/react  src/molecules/Select.tsx
 interface RenderOptionProps {
   isSelected: boolean;
@@ -897,7 +900,9 @@ interface SelectProps {
 }
 ```
 - 위와같이 `renderOption`을 optional하게 전달하도록 한다. 사전 정의한 `<li>`요소가 아닌 `renderOption 함수의 반환값`을 랜더링한다.
-```jsx
+```tsx
+// @ds.e/react  src/molecules/Select.tsx
+
 const Select = () => {
   // ...
   return (
@@ -930,7 +935,9 @@ const Select = () => {
 }
 ```
 - 복잡해진다. 옵션 요소에 기본 정의한 `.dse-select__option`와 `onClick()`를 넣게 했고 사용자는 `overrideProps`를 전달해 이걸 override하게 했다. `onClick()`의 경우 강의의 방식은 잘못됐다. 아래와 같이 해야한다.
-```ts
+
+
+```tsx
 const callFnsInSequence = (...fns) => (...args) => {
   fns.forEach(fn => fn && fn(...args))
 }
@@ -953,7 +960,195 @@ const renderOptionProps: RenderOptionProps = {
 ```
 - 코드가 중첩 spread해서 좀 복잡해졌지만 이건 간소화 할 방법이 있을것이다. 아무튼 `callFnsInSequence`와 같은 방식으로 기본 함수도 호출하면서 overriding하게 해야 할 것이다.
 
+> ***❗️❗️ Accessibility에서 `Render Porps`패턴을 쓰는 이유가 나온다. RenderProps 패턴을 쓰면 단순히 랜더링 하는것 이상으로 컴포넌트에서 해당 커스텀 요소들에 대한 여러가지 제어를 그대로 가지고 있을 수 있게 된다.***
+
 <br>
+
+
+# 5. Accessibility for the select component
+- 크롬의 [Screen Reader Extension](https://chrome.google.com/webstore/detail/screen-reader/kgejglhpjiefppelpmljglcjbhoiplfn?hl=en)을 사용한다. 강의 녹화 당시에는 `ChromeVox`라는 이름이었나 보다.
+
+## 5.1 popup aria attributes
+- `aria-haspopup`: 해당 요소가 팝업 버튼인지 여부
+- `aria-expanded`: 팝업이 펼쳐졌는지 여부, `boolean`, `undefined`(isOpend)
+- `aria-controls`: 해당 요소가 제어하는 요소의 id값, button은 ul을 제어하므로 ul에 id를 할당하고 이 값을 button의 aria-controls에 할당한다.
+- `role='meun'`: 해당 요소가 드롭다운 메뉴임을 알려줌. `<ul>`에 붙이자
+- 최종적으로 아래와 같다.
+
+  ![이미지](assets/accessibility_1.png)
+
+<br>
+
+## 🔥🔥 5.2 Control menu items with keybord
+- 접근성 외에도 여러가지로 리액트에 대해 배울게 많은 장이다. 
+- 웹 접근성을 위해 `click`대신 키보드로 Option을 열고, Mouse의 `hover`같은 기능(`highlight`, `focus`)을 구현하고 싶다.
+1. click으로 옵션 열기
+```tsx
+// @ds.e/react Select.tsx
+
+// ...
+const Select = () => {
+
+  const onButtonKeyDown: KeyboardEventHandler = (event) => {
+    event.preventDefault();
+
+    if (KEYS.includes(event.key)) {
+      setIsOpen((prev) => !prev);
+    }
+
+    // 첫 번째 item을 highlight
+    highlightItem(0);
+  };
+
+  return (
+    <div className="dse-select">
+      <button
+        onKeyDown={onButtonKeyDown}></button>
+      
+      // ...
+    </div>
+  )
+}
+
+// ...
+
+const KEYS = ["Enter", "ArrowDown", " "];
+```
+- 강의에서는 `event.keycode`로 했으나 이건 deprecated다. `event.key`를 사용하자.
+-
+- `highlight`는 아래와 같이 구현한다. ***우선 `li`요소에 대한 참조를 구해야한다!***
+```tsx
+const Select = () => {
+
+  // option의 수만큼 React.createRef로 RefObject를 만든다.
+  const [optionRefs, setOptionRefs] = useState<
+    React.RefObject<HTMLLIElement>[]
+  >([]);
+  useEffect(() => {
+    setOptionRefs(options.map((_) => createRef<HTMLLIElement>()));
+  }, [options.length]);
+
+
+  return (
+    <div>
+      // ...
+
+      {isOpen && (
+        <ul>
+          {options.map((option, optionIndex) => {
+            
+            const ref = optionRefs[optionIndex];
+            
+            const renderOptionProps: RenderOptionProps = {
+              getOptionRecommendedProps: (overrideProps = {}) => {
+                return {
+                  ref,  // 여기! 각 li요소에 optionRefs에서 가져온 ref를 맵핑했다!!!
+                  // ...
+                }
+              }
+            }
+            return (
+              <li {...renderOptionProps.getOptionRecommendedProps()}>
+                // ...
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+
+```
+- 동적인 요소에 대한 ref를 정의하고 랜더링과정에서 ref.current에 각각의 요소가 들어가도록 구현했다.
+- 이제 이 요소들을 이용해서 focus/highlight가 어떤식으로 구현되는지 알아보자.
+```tsx
+const Select = () => {
+  
+  // ...
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const highlightItem = (optionIndex: number | null) => {
+    setHighlightedIndex(optionIndex);
+  };
+  // highlight 할 때(highlightedIndex 변경될때) focus까지 같이한다.
+  useEffect(() => {
+    if (highlightedIndex !== null && isOpen) {
+      const ref = optionRefs[highlightedIndex];
+
+      ref.current?.focus(); // focus: 스크린 리더의 focus 영역이 이동한다.
+      console.log(ref.current);
+    }
+  }, [highlightedIndex, isOpen]);
+
+  // ...
+  return (
+    <div>
+      // ...
+
+      {isOpen && (
+        <ul>
+          {options.map((option, optionIndex) => {
+            const isHighlighted = highlightedIndex === optionIndex;
+            const renderOptionProps: RenderOptionProps = {
+              getOptionRecommendedProps: (overrideProps = {}) => {
+                return {
+                  ref,  // 여기! 각 li요소에 optionRefs에서 가져온 ref를 맵핑했다!!!
+                  tabIndex: isHighlighted ? -1 : 0, // tabIndex:0이면 탭으로 focus를 이동하는게 가능하다. 기본 input같은 요소들은 tabIndex 지원됨
+                  // :hover를 js로 구현한다.
+                  onMouseEnter: () => highlightItem(optionIndex), 
+                  onMouseLeave: () => highlightItem(null),
+                  // 
+                  className: `${isHighlighted ? "dse-select__option--highlighted" : ""}`,
+                }
+              }
+            }
+            return (
+              <li {...renderOptionProps.getOptionRecommendedProps()}>
+                // ...
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+```
+- `tabIndex: 0`을 주면 focus 할 수 없는 요소에 대해서도 focus 할 수 있다. [tabIndex의 사용](https://nuli.navercorp.com/community/article/1132726)글을 참고하자. 유용하다.
+- `isHighlighted`는 현재 optionIndex와 highlightedIndex를 비교해서 결정한다. 마우스 hover시 `highlightItem()`메서드로 `isHighlighted`값을 변경한다.
+- `:hover`를 `dse-select__option--highlighted`로 바꾼것이기 때문에 scss의 :hover도 적절하게 바꿔준다.
+```scss
+// @ds.e/scss  Select.scss
+.dse-select {
+  // ...
+
+  // 이전 : &:hover{ ...
+  &--highlighted {
+    background-color: $form-bg-color-hover;
+  }
+}
+```
+
+- 이번 장 정리
+  - tabIndex 사용한 focus
+  - css의 `:hover`를 `mouseEnter()`, `mouseLeave()`를 이용하여 구현
+  - 동적인 요소들에 ref[]를 만들어 ref할당 - `React.createRef()`
+  - 적절한 `useEffect`의 활용
+
+<br>
+
+### 5.3 Accessible keyboard navigation
+- 키보드 방향키로 옵션의 focus + hover를 움직이고, enter로 어떤 옵션을 선택할 지 결정한다. 옵션 요소(`li`)에 `optionKeyDown` 이벤트 핸들러로 구현하였다.
+- 그 외에 `role`, `aria-label`을 각 역할에 작성하였고, `aria-checked`로 스크린 리더가 어떤 요소가 선택되어 있는지 알 수 있게 하였다.
+
+<br>
+
+
+
+
+
+
 
 
 
