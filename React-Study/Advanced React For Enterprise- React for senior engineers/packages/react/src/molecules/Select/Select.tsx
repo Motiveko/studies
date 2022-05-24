@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createRef,
+  KeyboardEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Text from "../../atoms/Text";
 interface SelectOption {
   label: string;
@@ -51,10 +58,72 @@ const Select: React.FC<SelectProps> = ({
     [options, selectedIndex]
   );
 
+  // 키보드에는 hover가 없으므로 hover와 키보드로 foucus 선택을 합치기 위한 state
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const highlightItem = (optionIndex: number | null) => {
+    setHighlightedIndex(optionIndex);
+  };
+
+  // 이렇게 구현한 이유는 option이 open되고 요소가 랜더링이 된 상태일때에 focus를 해야 하기 때문이다. useEffect는 상태값 변경에 따른 랜더링 후 동작하기 때문
+  useEffect(() => {
+    if (highlightedIndex !== null && isOpen) {
+      const ref = optionRefs[highlightedIndex];
+      ref.current?.focus(); // focus: 스크린 리더의 focus 영역이 이동한다.
+    }
+  }, [highlightedIndex, isOpen]);
+
+  const getNextOptionIndex = () =>
+    ((highlightedIndex || 0) + 1) % options.length;
+
+  const getPreviousOptionIndex = () => (highlightedIndex || options.length) - 1;
+  const optionKeyDown: KeyboardEventHandler = (event) => {
+    const { key } = event;
+    if (key === "Escape") {
+      setIsOpen(false);
+      return;
+    }
+
+    if (key === "ArrowDown") {
+      highlightItem(getNextOptionIndex());
+      return;
+    }
+
+    if (key === "ArrowUp") {
+      highlightItem(getPreviousOptionIndex());
+      return;
+    }
+
+    if (key === "Enter" && highlightedIndex !== null) {
+      onOptionSelected(options[highlightedIndex], highlightedIndex);
+    }
+  };
+
+  const onButtonKeyDown: KeyboardEventHandler = (event) => {
+    event.preventDefault();
+
+    if (KEYS.includes(event.key)) {
+      setIsOpen((prev) => !prev);
+    }
+
+    highlightItem(highlightedIndex || 0);
+  };
+
+  // 각 option 요소(li)에 대한 참조, 여러개이고 동적이기 때문에 useRef로는 좀 힘들다.
+  const [optionRefs, setOptionRefs] = useState<
+    React.RefObject<HTMLLIElement>[]
+  >([]);
+  useEffect(() => {
+    setOptionRefs(options.map((_) => createRef<HTMLLIElement>()));
+  }, [options.length]);
+
   return (
     <div className="dse-select">
       <button
+        onKeyDown={onButtonKeyDown}
         className="dse-select__label"
+        aria-controls="dse-select-list"
+        aria-haspopup={true}
+        aria-expanded={isOpen ? true : undefined}
         onClick={() => onLabelClick()}
         ref={labelRef}
       >
@@ -62,18 +131,34 @@ const Select: React.FC<SelectProps> = ({
         {caretIcon(isOpen)}
       </button>
       {isOpen && (
-        <ul style={{ top: overlayTop }} className="dse-select__overlay">
+        <ul
+          id="dse-select-list"
+          role="menu"
+          style={{ top: overlayTop }}
+          className="dse-select__overlay"
+        >
           {options.map((option, optionIndex) => {
             const isSelected = selectedIndex === optionIndex;
+            const isHighlighted = highlightedIndex === optionIndex;
+
+            const ref = optionRefs[optionIndex];
 
             const renderOptionProps: RenderOptionProps = {
               isSelected,
               option,
               getOptionRecommendedProps: (overrideProps = {}) => {
                 return {
-                  className: `dse-select__option ${
-                    isSelected ? "dse-select__option--selected" : ""
-                  }`,
+                  ref,
+                  role: "menuitemradio",
+                  "aria-label": option.label,
+                  "aria-checked": isSelected ? true : undefined,
+                  onKeyDown: optionKeyDown,
+                  tabIndex: isHighlighted ? -1 : 0, // tabIndex가 있어야 focus를 받을 수 있다.(기본으로 받을수 있는 요소도 있음)
+                  onMouseEnter: () => highlightItem(optionIndex), // :hover를 js로 구현한다.
+                  onMouseLeave: () => highlightItem(null),
+                  className: `dse-select__option 
+                  ${isSelected ? "dse-select__option--selected" : ""} 
+                  ${isHighlighted ? "dse-select__option--highlighted" : ""}`,
                   onClick: () => onOptionSelected(option, optionIndex),
                   key: option.value,
                   ...overrideProps,
@@ -84,13 +169,7 @@ const Select: React.FC<SelectProps> = ({
               return renderOption(renderOptionProps);
             }
             return (
-              <li
-                className={`dse-select__option ${
-                  isSelected ? "dse-select__option--selected" : ""
-                }`}
-                onClick={() => onOptionSelected(option, optionIndex)}
-                key={option.value}
-              >
+              <li {...renderOptionProps.getOptionRecommendedProps()}>
                 <Text>{option.label}</Text>
                 {isSelected && checkIcon}
               </li>
@@ -133,4 +212,7 @@ const checkIcon = (
     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
   </svg>
 );
+
+const KEYS = ["Enter", "ArrowDown", " "];
+
 export default Select;
