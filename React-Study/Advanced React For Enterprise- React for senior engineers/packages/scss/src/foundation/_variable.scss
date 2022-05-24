@@ -146,7 +146,6 @@ $spacing: (
   // 96px
 ) !default;
 
-// shadow도 보통 일정한 값을 쓰므로 variable로 정의해 재사용한다.
 $shadows: (
   base: 0px 4px 11px rgba(157, 157, 157, 0.21),
 );
