@@ -22,18 +22,6 @@
     cursor: pointer;
   }
 
-  &__caret {
-    transition: all 250ms ease;
-
-    &--open {
-      transform: rotate(180deg);
-    }
-
-    &--closed {
-      transform: rotate(0deg);
-    }
-  }
-
   // .dse-select__overlay
   &__overlay {
     @include padding("none");
@@ -46,28 +34,6 @@
     z-index: 99;
     width: 100%; // 부모요소 넓이 사용
 
-    list-style-type: none;
-
     box-shadow: map-get($shadows, "base");
-  }
-
-  &__option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    cursor: pointer;
-    @include padding("xs");
-    box-sizing: border-box;
-    width: 100%;
-
-    &:hover {
-      background-color: $form-bg-color-hover;
-    }
-
-    &--selected {
-      background-color: $form-bg-option-selected;
-      color: $form-color-option-selected;
-    }
   }
 }
