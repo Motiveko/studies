@@ -154,7 +154,7 @@
   width: 100%;
 }
 
-.dse-select__option--highlighted {
+.dse-select__option:hover {
   background-color: var(--dse-form-bg-color-hover, #f1f2f3);
 }
 

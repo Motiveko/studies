@@ -61,7 +61,7 @@
     box-sizing: border-box;
     width: 100%;
 
-    &--highlighted {
+    &:hover {
       background-color: $form-bg-color-hover;
     }
 
