@@ -124,6 +124,7 @@ const Select: React.FC<SelectProps> = ({
         aria-controls="dse-select-list"
         aria-haspopup={true}
         aria-expanded={isOpen ? true : undefined}
+        data-testid="DseSelectButton"
         onClick={() => onLabelClick()}
         ref={labelRef}
       >

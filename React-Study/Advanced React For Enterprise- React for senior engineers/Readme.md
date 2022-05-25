@@ -1144,7 +1144,48 @@ const Select = () => {
 
 <br>
 
+## 6. Unit testing atomic components
+### 6.1 필요한 패키지 설치
+```bash
+$ cd packages/react
+$ yarn add --dev jest@^27.5.1 @types/jest @babel/preset-env @babel/preset-typescript @babel/preset-react @testing-library/react @testing-library/jest-dom @testing-library/user-event@^13.5.0
+```
+- jest설정(`jest.config.js`), jest-dom import(`jest.setup.ts`), babel-configuration(`babel.config.js`)
+- jsx문법, typescript, ES6+ 를 쓰면 jest 생으로 실행시 알아서 설정하라고 에러로 나온다. 아마 웹팩의 babel-loader로 설정해도 상관없을듯
+- `jest`의 `--verbos`옵션으로 여러 테스트의 각각의 테스트 결과를 볼 수 있다. 여러 옵션들이 있으니 [Jest CLI Options](https://jestjs.io/docs/cli)를 참고하도록 하자.
+- foundation과 react에 테스트 스크립트를 짜고 root package에 lerna로 이걸 다 실행하게 만든다.
 
+
+> 주의 : `@testing-library/react v13+`은 `React >=18`만 지원한다. 리액트 17을 쓰는 나는 `@testing-library/react v12`대를 설치해야함
+> `jest` 역시 v27까지는 잘 동작하던 jsdom 설정이 v28에서 안된다. 다 27로 설정하자. 이게 중요한게 아니므로 이슈는 나중에 해결해보는걸로.
+
+<br>
+
+### 6.2 snapshot 테스트
+1. snapshot 테스트 기본개념
+  - https://jestjs.io/docs/27.x/snapshot-testing
+  - https://www.daleseo.com/jest-snapshot
+  - **어떤 코드 실행 결과를 jest가 snapshot으로 저장해놓고 다음 실행 때 같은 결과가 나오는지 확인해준다.**
+  - snapshot은 기본적으로 jest가 실행시 `prettier` 사용하여, 직접 assertion 코드에 결과를 넣어준다.(`toMatchInlineSnapshot()`) 
+  - 하지만 결과를 `파일`로도 저장할 수 있다.(`toMatchSnapshot()`)
+  - **assertion 결과를 작성하는게 만만찮을 때 쓰면 좋다.**
+
+<br>
+
+2. UI Snapshot test
+  - testing-library의 [`asFragment`](https://testing-library.com/docs/react-testing-library/api/#asfragment)API를 이용하면 screen에 랜더링한 내용 통째를 `DocumentFragment` 태그로 감싸 반환한다.
+  - 이걸 통째로 snapshot 테스트한다.(파일로 저장)
+
+<br>
+
+### 6.3 keyboard event 테스트
+- jsdom 은  native keybord 이벤트를 지원하지 않기때문에 unit testing이 불가능하다. [puppeteer](https://pptr.dev/)같은 라이브러리를 사용해서 테스트해야한다.
+
+<br>
+
+### 6.4 Foundation 테스트
+- 설정은 react와 비슷하다. testing-library, react등의 패키지를 가져오지 않는다.
+- ***`foundation`은 (현재까진)상수값만 있으므로, snapshot 테스트만 진행하면 된다.***
 
 
 
