@@ -219,3 +219,235 @@ Car.prototype.toString = function() {}
 ```
 
 <br>
+
+## Module Pattern
+-  `모듈 패턴`은 기본적으로 `public`, `private` 접근자를 제공해 객체의 캡슐화를 이루는걸 말한다.
+- ***자바스크립트는 private 접근자의 개념이 없기 때문에 `클로저`개념을 사용해서 써서 캡슐화를 구현한다.***
+- ES6+ 에서는 import/export 문법이 나와서 쉽게 구현 가능하다. ES5 이전에는 `즉시실행함수`를 이용해 캡슐화를 구현했다.
+  
+### 1. ES6+
+- `private`으로 사용할 값은 `export` 하지 않고 모듈 내에서 선언해서 사용하기만 한다.
+- `public`으로 사용할 값은 `export` 키워드로 모듈 밖으로 공개한다.
+```js
+// Module Pattern 1
+let counter = 0;
+const testModule = {
+  incrementCounter() {
+    return counter++;
+  },
+  resetCounter() {
+    console.log(`counter value prior to reset: ${counter}`);
+    counter = 0;
+  }
+}
+
+export default testModule
+```
+```js
+// Usage
+import testModule from './testModule';
+
+testModule.incrementCounter();
+testModule.resetCounter();
+```
+- Module에서 선언한 `counter`는 private으로써 모듈 밖에서 직접 참조가 불가능하고, `public method`인 `incrementCounter`나 `resetCounter`를 통해서만 접근 가능하다.
+```js
+// Module Pattern 2
+const userApi = () => {
+  
+  // private property
+  const users = [];
+  
+  const addUser = (name) => {
+    users.push(name);
+    return users.slice(-1)[0];
+  }
+  
+  const getAllUsers = () => {
+    return users;
+  }
+
+  const deleteUser = (name) => {
+    const userIndex = users.indexOf(name);
+    if(userIndex < 0) {
+      throw new Error('User not found');
+    }
+
+    users.splice(userIndex, 1);
+  }
+
+  const updateUser = (name, newName) => {
+    const userIndex = users.indexOf(name);
+    if(userIndex < 0) {
+      throw new Error('User not found');
+    }
+    users[userIndex] = newName;
+  }
+
+  // public method
+  return {
+    addUser,
+    getAllUsers,
+    deleteUser,
+    updateUser
+  }
+}
+
+// Usage 
+const api = userApi();
+...
+```
+- 패턴 예시 2는 여기[https://dev.to/twinfred/design-patterns-in-javascript-1l2l]를 참고하였다
+
+<br>
+
+
+### 2. ES5
+- ES5는 ESM이 존재하지 않는다. `즉시 실행 함수`와 클로저를 이용해서 모듈 패턴을 구현한다.
+```js
+// Module Pattern
+var testModule = (function() {
+  var counter = 0;
+  
+  return {
+    incrementCounter: function() {
+      return counter++;
+    },
+    resetCounter: function() {
+      console.log( "counter value prior to reset: " + counter );
+      counter = 0
+    }
+  }
+})();
+
+// Usage
+testModule.incrementCounter();
+// Check the counter value and reset // Outputs: counter value prior to reset: 1 
+testModule.resetCounter();
+```
+
+<br>
+
+### Module Pattern Variation
+
+> 여러개 있는데 솔직히 한개도 제대로 이해 안된다. 나중에 다시 보도록 하자.
+
+1. Import mixins
+- jquery, underscore 같은 모듈을 import해서 private method로 alias 할 수 있다.
+```js
+// Module Pattern
+import $ from 'jquery'
+import _ from 'underscore'
+
+const privateMethod1 = () => {
+    $(".container").html("test");
+}
+
+const privateMethod2 = () => {
+    console.log(_.min([10, 5, 100, 2, 1000]));
+}
+
+const myModule = {
+    publicMethod1() {
+        privateMethod1();
+    },
+    publicMethod2() {
+      privateMethod2();
+    }
+};
+
+// Default export module, without name
+export default myModule;
+
+
+// Usage
+// Import module from path
+import myModule from './MyModule';
+
+myModule.publicMethod1();
+```
+
+2. Exports
+- global 변수를 네임스페이스를 소비하지 않고 선언한다.
+```js
+// Module object
+const module = {};
+const privateVariable = 'Hello World';
+
+const privateMethod = () => {
+  // ...
+};
+
+module.publicProperty = 'Foobar';
+module.publicMethod = () => {
+  console.log(privateVariable);
+};
+
+// Default export module, without name
+export default module;
+```
+
+3. Modern Module Pattern with [WeakMap](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
+- `WeakMap`객체는 key값으로 객체를 사용하고 key에 대한 약한 참조를 가지는 Map이다. 
+  - key가 원시값이 아닌 객체이기 때문에 약한 참조를 가진다고 표현한다. WeakMap 밖에서 key에 대한 참조가 사라지면 해당 key는 가비지 컬렉션 대상이 되어 키 참조가 사라진다. 키가 제거되면 값도 당연히 가비지 컬렉션 대상이 된다.
+  - `WeakMap`의 키는 약한 참조로 인해서 열거(순회)할 수 없다. 순회 할 수 있다면 강하게 참조하고 있는것이다.
+- WeakMap 객체를 이용해서 모듈패턴을 구현할 수 있다.
+
+```js
+// Module Pattern 1
+let _counter = new WeakMap();
+
+class Module {
+  constructor() {
+    _counter.set(this, 0);  // key가 Module클래스 인스턴스다
+  }
+
+  incrementeCounter() {
+    let counter = _counter.get(this);
+    counter++;
+    _counter.set(this, counter);
+
+    return _couter.get(this);
+  }
+  resetCounter() {
+    console.log(`counter value prior to reset: ${_counter.get(this)}`);
+    _counter.set(this, 0);
+  }
+}
+
+// Usage
+const testModule = new Module();
+
+testModule.incrementCounter();
+testModule.resetCounter();
+```
+
+```js
+// Module Pattern 2: Namespaces with Public/Private variables
+const myPrivateVar = new WeakMap();
+const myPrivateMethod = new WeakMap();
+
+class MyNamespace {
+  constructor() {
+    // private property,method
+    myPriavteVar.set(this, 0);
+    myPrivateMethod.set(this, foo => console.log(foo));
+
+    // public property
+    this.myPublicVar = 'foo';
+  }
+  // public 메서드
+  myPublicFunction(bar) { 
+    
+    let privateVar = myPrivateVar.get(this);
+    const privateMethod = myPrivateMethod.get(this);
+    
+    privateVar++;
+    myPrivateVar.set(this, privateVar);
+    
+    privateMethod(bar);
+  }
+}
+```
+
+<br>
