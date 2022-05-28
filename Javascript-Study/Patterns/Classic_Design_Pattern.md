@@ -299,6 +299,8 @@ const api = userApi();
 ```
 - 패턴 예시 2는 여기[https://dev.to/twinfred/design-patterns-in-javascript-1l2l]를 참고하였다
 
+> 공부하다보니 다음장의 `Revaeling Module Pattern` 이 2번의 예제다. 모듈 패턴을 세부적으로 나누자면 이렇게 나눈다고 하는듯..
+
 <br>
 
 
@@ -449,5 +451,72 @@ class MyNamespace {
   }
 }
 ```
+
+<br>
+
+## [Revealing Module Pattern](https://www.patterns.dev/posts/classic-design-patterns/#revealingmodulepatternjavascript)
+- `Revealing Module Pattern`은 `private`/`public` 프로퍼티를 모두 private scope에 정의한 후 public으로 쓸 것만 객체 리터럴로 묶어서 export 하는 패턴을 말한다. 모듈 패턴 안에서 세부적인 방식을 나누면 이렇게 나누는 것 같다.
+
+<br>
+
+### ES6+
+
+```js
+// Revealing Module Pattern
+let privateVar = 'Ben Cherry';
+const publicVar = 'Hey there!';
+
+const privateFunction = () => {
+  console.log(`Name:${privateVar}`);
+};
+
+const publicSetName = strName => {
+  privateVar = strName;
+};
+
+const publicGetName = () => {
+  privateFunction();
+};
+
+// 공개할 것만 객체 리터럴로 묶어서 내보낸다. 
+const myRevealingModule = {
+  setName: publicSetName,
+  greeting: publicVar,
+  getName: publicGetName,
+};
+
+export default myRevealingModule;
+```
+- 위의 예처럼 객체 리터럴로 묶을때 프로퍼티 명을 바꾸고 싶으면 리터럴에서 바꾸면 된다.
+
+<br>
+
+### ES5
+```js
+// Revealing Module Pattern
+var myRevealingModule = (function() {
+  var privateVar = "Ben Cherry",
+      publicVar = "Hey there!";
+  function privateFunction() {
+      console.log( "Name:" + privateVar );
+  }
+
+  function publicSetName( strName ) {
+      privateVar = strName;
+  }
+
+  function publicGetName() {
+      privateFunction();
+  }
+
+  return {
+      setName: publicSetName,
+      greeting: publicVar,
+      getName: publicGetName
+  };      
+})();
+```
+- ES5 에서는 역시 `즉시실행함수`를 이용하여 모듈을 구현할 수 있다.
+- `Revealing Module Pattern`의 단점은, 만약 private 함수가 public 함수를 참조(사용)하고 있을 경우 public 함수를 오버라이딩 할 수 없다는 것이다. private도 public도 전부 private scope에 정의되어 있기 때문에 public을 오버라이딩 한다고 한들 private은 이전 public 함수를 참조하고 있을 것이기 때문이다. 따라서 RevealingMoudle 패턴은 기본 Module 패턴으로 생성된 모듈보다 취약할 수 있다.
 
 <br>
