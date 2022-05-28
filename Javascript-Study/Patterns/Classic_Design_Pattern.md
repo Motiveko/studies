@@ -520,3 +520,123 @@ var myRevealingModule = (function() {
 - `Revealing Module Pattern`의 단점은, 만약 private 함수가 public 함수를 참조(사용)하고 있을 경우 public 함수를 오버라이딩 할 수 없다는 것이다. private도 public도 전부 private scope에 정의되어 있기 때문에 public을 오버라이딩 한다고 한들 private은 이전 public 함수를 참조하고 있을 것이기 때문이다. 따라서 RevealingMoudle 패턴은 기본 Module 패턴으로 생성된 모듈보다 취약할 수 있다.
 
 <br>
+
+## Singleton Pattern
+- `Singleton`은 애플리케이션 전역에 특정 클래스의 인스턴스가 한개만 존재해야할 때 쓸 수 있는 패턴이다.
+- `Singleton`과 `Static Instance`의 차이는 싱글톤은 지연 생성(lazily constructed)가 가능하다는 것이다. 
+
+<br>
+
+### ES6
+
+```js
+// Pattern 1
+let instance;
+
+// Private methods and variables
+const privateMethod = () => {
+  console.log('private method');
+};
+const privateVariable = 'private variable';
+
+
+class MySingleton {
+  constructor() {
+    if(!instance) {
+      // Public property
+      this.publicProperty = 'I am also public';
+      instance = this;
+    }
+    
+    return instance;
+  }
+  publicMethod() {
+    console.log('public method use private method');
+    privateMethod();
+  }
+
+  getPrivateVaribale() {
+    return privateVariable;
+  }
+}
+export default MySingleton;
+```
+- `MySingleton`은 매번 `new MySingleton()`으로 생성해도 반환되는 인스턴스는 똑같다. 
+- 생성자를 아래와 같이 작성하면 Singleton이 아니게 되니 주의해야한다.
+```js
+// Bad Pattern
+let instance;
+class BadSingleton {
+  constructor {
+    this.publicProperty = 'public';
+    instance = this;  // 여기서 매번 새로운 인스턴스가 할당되게 된다.
+    return instance;
+  }
+}
+```
+
+- 보통 다른 언어에서는 class의 `static method`로 `getInstance()`같은걸 만들어서 한개의 인스턴스만 반환하도록 구현한다. 자바스크립트에는 `static`이 없기때문에 아래와 같이 흉내낼 수 있다.
+
+```js
+// Pattern 2
+class Singleton {
+  constructor(options = {}) {
+    this.options = options;
+  }
+}
+
+let instance;
+
+const SingletonWrapper = {
+  getInstance(options) {
+    if(instance === undefined) {
+      instance = new Singleton(options);
+    }
+    return instance;
+  }
+}
+
+export default SingletonWrapper;
+
+// Usage
+const instance = SingletonWrapper.getInstance();
+```
+
+<br>
+
+### ES5
+```js
+var mySingleton = (function () {
+  // Instance stores a reference to the Singleton
+  var instance;
+  function init() {
+    function privateMethod() {
+      console.log("call privateMethod");
+    }
+
+    var privateVariable = "private variable";
+
+    return {
+      publicMethod: function () {
+        console.log("publicMethod will call privateMethod");
+      },
+      publicProperty: "I am also public",
+    };
+  }
+  return {
+    getInstance: function () {
+      if (!instance) {
+        instance = init();
+      }
+
+      return instance;
+    },
+  };
+})();
+```
+- 싱글톤을 사용한다는건 시스템 내의 모듈들이 강하게 결합되거나 로직이 광범위하게 분산됨을 의미한다고 한다. 
+- 그리고 싱글톤은 의존성이 감춰지고, 여러 인스턴스를 만들거나 의존성을 stubbing 하기 힘들어 테스트하기가 매우 까다롭기 때문에 조심해야 한다고 한다.
+
+> 싱글톤 + DI 기반 스프링은 테스트 하기 훨씬 쉽고 의존성을 stubbing하기 무척 쉬웠는데...
+
+<br>
