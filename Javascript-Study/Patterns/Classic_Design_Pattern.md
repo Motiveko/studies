@@ -785,3 +785,130 @@ export default function App() {
   };
   ```
  <!-- TODO : Publish/Subscribe 패턴과의 차이는 너무 길어서 생략 -->
+
+## Mediator Pattern
+- [자료1(기본)](https://www.patterns.dev/posts/mediator-pattern/), [자료2(심화)](https://refactoring.guru/design-patterns/mediator), [자료3(typescript)](https://refactoring.guru/design-patterns/mediator/typescript/example#lang-features)
+- 여러 컴포넌트간의 직접적인 통신을 중앙화 하는 패턴이다. 대표적으로 공항 관제탑을 생각하면 된다. 비행기는 이/착륙 관련한 통신을 관제탑과 하지 다른 비행기와 직접 하지 않는다.
+- Mediator Pattern과 비슷한걸로 `DOM 이벤트 버블링과 이벤트 위임`이 있다. 각 노드에 직접 이벤트 바인딩 하지 않고 상위 노드에서 묶어서 처리한다.
+- 대표적으로 UI에서 복잡한 폼 역시 Mediator Pattern이라고 할 수 있다. 개별 요소의 validation, 이벤트 핸들링 등은 Form(Container)에서 작성되는데, 이 폼이 Mediator이다.
+
+<br>
+
+### Mediator Pattern 기본
+- 여러 유저들이 대화하는 채팅방 역시 `Mediator Pattern`의 일종이라고 할 수 있다. 유저는 채팅방과 대화하지 다른 유저와 직접적으로 대화하지 않는다.
+- 여기서 다수 존재하는 ***`User`컴포넌트는 `Mediator`인 `ChatRoom` 객체에만 의존한다.*** 여러 컴포넌트들과의 의존성이 제거된 것이다!
+
+```js
+class ChatRoom {
+  logMessage(user, message) {
+    const time = new Date();
+    const sender = user.getName();
+
+    console.log(`${time} [${sender}]: ${message}`);
+  }
+}
+
+class User {
+  constructor(name, chatRoom) {
+    this.name = name;
+    this.chatRoom = chatRoom;
+  }
+
+  getName() {
+    return this.name;
+  }
+
+  send(message) {
+    this.chatRoom.logMessage(this, message);
+  }
+}
+const chatroom = new ChatRoom();
+
+const user1 = new User('고동기', chatroom);
+const user2 = new User('김동기', chatroom);
+
+user1.send("Hi there!");
+user2.send("Hey!");
+```
+
+<br>
+
+### Mediator Pattern 심화
+- Mediator 패턴의 구현은 상당히 다양할 수 있다. 기본예제처럼 한가지 종류의 컴포넌트만 의존하는 경우도 있고, 다양한 형태의 컴포넌트가 의존하는 케이스도 있다. 이런걸 표준화 한 다이어그램은 아래와 같을거다.
+![그림](https://refactoring.guru/images/patterns/diagrams/mediator/structure-2x.png?id=5191daa1c9d4caa36e38af3c5b7d1522)
+
+- 위 다이어그램에 따라 간단한 예를 구현해보자. 특별하게 무슨 기능을 정의하는건 아니고 flow만 보면 된다.
+```ts
+// 기본적으로 Mediator는 notify 메서드 하나로 이뤄진다. 인자로 전달되는 sender, event 따른 동작을 정의하면 된다.
+interface Mediator {
+  notify(sender: object, event: string): void;
+}
+
+class ConcreteMediator implements Mediator {
+  // 기본예제처럼 컴포넌트 형태가 아주 단순하다면 좀 더 간소화 할 수도 있다.
+  private component1: Component1;
+  private component2: Component2;
+
+  constructor(component1: Component1, component2: Component2) {
+    this.component1 = component1;
+    this.component1.setMediator(this);
+    this.component2 = component2;
+    this.component2.setMediator(this);
+  }
+
+  notify(sender: object, event: string) {
+    // 핵심이다. 의존하는 컴포넌트들이 notify를 호출하는것에 따라서 이어지는 로직을 여기다 정의한다. 코드를 분석하는 사람은 여기만 잘보면 되는것
+    if(event === 'A') {
+      this.component2.doC();
+    }
+    if(event === 'D') {
+      this.component1.doB();
+      this.component2.doC();
+    }
+  }
+}
+
+class BaseComponent {
+  protected mediator: Mediator;
+
+  constructor(mediator?: Mediator) {
+    this.mediator = mediator;
+  }
+
+  setMediator(mediator: Mediator): void {
+    this.mediator = mediator;
+  }
+}
+
+class Component1 extends BaseComponent {
+  public doA(): void {
+    // do something A...
+    this.mediator.notify(this, 'A');
+  }
+
+  public doB: void {
+    // do someting B...
+  }
+}
+
+class Component2 extends BaseComponent {
+  public doC(): void {
+    // do something C...
+  }
+
+  public doD(): void {
+    // do somethig D...
+    this.mediator.notify(this, 'D');
+  }
+}
+
+/**
+ * The client code.
+ */
+const c1 = new Component1();
+const c2 = new Component2();
+const mediator = new ConcreteMediator(c1, c2);
+```
+- Mediator 패턴 자체는 기능을 하는거라기 보단 ***컴포넌트간 의존성을 제거하고 코드 flow를 보기쉽게 한데 모으는 방법이라고 할 수 있겠다.***
+
+<br>
