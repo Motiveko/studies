@@ -8,4 +8,5 @@ export const store = configureStore({
 })
 
 export type RootState = ReturnType<typeof store.getState>;
-export type AddDispatch = typeof store.dispatch;
+// thunk 사용시 필요한 내용
+// export type AppDispatch = typeof store.dispatch;
