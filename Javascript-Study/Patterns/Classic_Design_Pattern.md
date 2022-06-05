@@ -912,3 +912,70 @@ const mediator = new ConcreteMediator(c1, c2);
 - Mediator 패턴 자체는 기능을 하는거라기 보단 ***컴포넌트간 의존성을 제거하고 코드 flow를 보기쉽게 한데 모으는 방법이라고 할 수 있겠다.***
 
 <br>
+
+## Prototype Pattern
+### Prototype Pattern Easy
+- [참고자료 1](https://www.patterns.dev/posts/prototype-pattern/)
+- 자바스크립트에서 Prototype Pattern은 같은 타입의 여러 객체에서 동일한 프로퍼티를 공유하도록 하는 패턴이다. 프로토타입 체인을 이용한다. 이 때 공유하는 프로퍼티들을 가진 객체를 프로토타입 객체라고 한다.
+- ES6의 `class`에서 정의한 메서드들은 자동으로 프로토타입 객체의 프로퍼티로 추가된다.(트랜스파일 해보면 알 수 있다.)
+```js
+// ES6
+class Dog {
+  name;
+  constructor(name) {
+    this.name = name;
+  }
+
+  bark() {
+    return `Woof!`;
+  }
+}
+
+// ES2015로 트랜스파일, 메서드를 생성자 함수의 prototype에다가 추가한다.
+var Dog = /** @class */ (function () {
+    function Dog(name) {
+        this.name = name;
+    }
+    Dog.prototype.bark = function () {
+        return "Woof!";
+    };
+    return Dog;
+}());
+```
+- `Dog class`의 인스턴스들은 모두 동일한 `Dog.prototype.bark`를 참조한다.(`insance.__proto__.bark`)
+- Dog를 상속하는 클래스를 정의하면 해당 class는 Dog.prototype을 공유한다.
+```js
+
+class SuperDog extends Dog {
+  constructor(name) {
+    super(name);
+  }
+
+  fly() {
+    return "Flying!";
+  }
+}
+
+const superDog = new SuperDog('sd');
+```
+- `superDog` -(`__proto__`)> `SuperDog.prototype` -(`__proto__`)> `Dog.prototype`이런 식으로 프로토타입 체인이 구성된다.
+- 참고로 `extends`는 트랜스파일 해보면 `Object.setPrototypeOf`메서드를 활용하는걸 알 수 있다.
+- prototype은 생성할 인스턴스의 일종의 `blueprint` 역할을 한다.
+- [`Object.create`](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Object/create)메서드를 이용해서도 프로토타입 패턴을 구현할 수 있다.
+```js
+// signature
+Object.create(proto[, propertiesObject])
+
+// Usage
+const dog = {
+  bark() {
+    console.log(`Woof!`);
+  }
+};
+
+const pet1 = Object.create(dog);
+console.log(pet1.bark === dog.bark);  // true
+```
+- 위 예에서 `Object.create(dog)`로 객체 인스턴스 생성시 dog는 생성되는 모든 인스턴스의 프로토타입 객체가 되어 dog의 모든 프로퍼티를 공유하게 된다.
+
+<br>
