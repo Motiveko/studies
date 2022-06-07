@@ -979,3 +979,55 @@ console.log(pet1.bark === dog.bark);  // true
 - 위 예에서 `Object.create(dog)`로 객체 인스턴스 생성시 dog는 생성되는 모든 인스턴스의 프로토타입 객체가 되어 dog의 모든 프로퍼티를 공유하게 된다.
 
 <br>
+
+### Prototype Pattern 심화
+- [참고자료](https://refactoring.guru/design-patterns/prototype/typescript/example#example-0)
+- ***프로토타입 패턴은 어떤 객체의 `class 타입`을 몰라도 복제할 수 있게 해주는 생성 패턴이다.*** 
+- 보통 자바스크립트에서 프로토타입 객체를 이용해서 프로토 타입을 구현하지만, 프로토타입 객체가 없는 다른 언어에서는 특정 객체를 복사할 수 있는 `clone`메서드를 제공하는걸 말한다.(자바에서 `implements Cloneable`)
+- 위의 easy 예에서 `Object.create()`형태나 프로토타입 객체를 이용하는건 일종의 얕은 복사다. 복사한 객체가 똑같은 프로토타입 프로퍼티를 참조하는 것. 
+- 깊은 복사를 하려면 복사하는 객체의 내부 참조까지 복사해야한다. `clone`메서드로 수행한다.
+- 타입스크립트에서 대략 아래와 같은 형태로 구현할 수 있다.
+```ts
+class Prototype {
+  public primitive: any;  // 원시타입 프로퍼티
+  public component: object; // 객체타입 프로퍼티
+  public circularReference: ComponentWithBackReference; // Prototype과 상호참조하는 프로퍼티(객체)
+
+  public clone(): this {
+    // 기본 클론, this를 프로토타입으로 해서 this가 참조하는걸 그대로 참조하는 객체가 만들어진다. 원시값은 상관 없을것이다.
+    const clone = Object.create(this);
+    
+    // 단순 참조하는 객체를 클론한다.
+    clone.component = Object.create(this.component);
+
+    // 상호참조(circularReference)는 새로 만드는게 조금 복잡하다. 하지만 스프레드 연산자로 충분히 가능하다. shallow clone이기때문에 중첩된 객체라면 좀 더 복잡한 방법필요
+    clone.circularReference = {
+      ...this.circularReference,
+      prototype: { ...this }
+    }
+
+    return clone;
+  }
+}
+
+class ComponentWithBackReference {
+    public prototype;
+
+    constructor(prototype: Prototype) {
+        this.prototype = prototype;
+    }
+}
+
+// Usage
+const p1 = new Prototype();
+p1.primitive = 10;
+p1.component = new Date();
+p1.circularReference = new ComponentWithBackReference(p1);
+
+const p2 = p1.clone();
+
+// 원하던 진정한 클론
+console.log(p1.primitive === p2.primitive)
+console.log(p1.component !== p2.component)
+console.log(p1.circularReference !== p2.circularReference)
+```
