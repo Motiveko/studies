@@ -1031,3 +1031,109 @@ console.log(p1.primitive === p2.primitive)
 console.log(p1.component !== p2.component)
 console.log(p1.circularReference !== p2.circularReference)
 ```
+
+<br>
+
+## Command Pattern
+- https://refactoring.guru/design-patterns/command
+- 커맨드 패턴은 행위(Behavior) 패턴으로, 객체의 메서드와 비즈니스 로직의 결합을 느슨하게 하는데 주 목적을 가진다.
+- 예를 들어, **UI 버튼과 비즈니스 로직이 강하게 결합**했다면 어떻게 될까? 비즈니스 로직별로 버튼 구현체를 하나씩 만들어야 할 것이다. 그리고 어떤 버튼의 클릭시 수행 로직은 다른 오브젝트나 이벤트(토글을 누른다거나 x아이콘을 누르거나, 키보드 이벤트)가 수행하는 로직과 똑 같을수 있다. 강하게 결합하면 똑같은 로직을 수행하는 다른 객체들 역시도 전부 따로 만들어 줘야 한다. 
+
+  ![강한결합](https://refactoring.guru/images/patterns/diagrams/command/solution1-en.png?id=ec37db1713fe2c1a9318886590667cfb)
+
+- 커맨드 패턴으로 비즈니스 로직을 추상화 해서 느슨한 결합을 이루면, 이런 중복들을 제거하고 수정에 유연하게 대처할 수 있게 된다. 
+
+  ![느슨한결합](https://refactoring.guru/images/patterns/diagrams/command/solution2-en.png?id=63bcac5cde2ec536c3329eff4c385839)
+
+
+- 프로토타입 패턴처럼 여러방식의 구현이 있다. 타입스크립트냐 순수 자바스크립트냐에 따라서도 다르다. 공통점은 `execute()`나 `run()`메서드를 가진 Command 객체를 통해 메서드 로직을 추상화 한다는 것이다.
+
+<br>
+
+### Command Pattern Easy1
+- [자료 Easy1](https://www.patterns.dev/posts/classic-design-patterns/#commandpatternjavascript)
+- 아래와 같이 주문내역을 상태로 가지고, 추가/확인/취소 메서드를 가진 `OrderManager`객체가 있다.
+```js
+class OrderManager {
+  constructor() {
+    this.orders = [];
+  }
+
+  placeOrder(order, id) {
+    this.orders.push({id, order});
+    return `You have successfully ordered ${order} (${id})`;
+  }
+
+  traceOrder(id){
+    return `Your order ${id} will arrive in 20 minutes.`
+  }
+
+  cancelOrder(id) {
+    this.orders = this.orders.filter(order => order.id !== id);
+    return `You have canceled your order ${id}`
+  }
+}
+
+// Usage
+const manager = new OrderManager();
+
+manager.placeOrder("Pad Thai", "1234");
+manager.trackOrder("1234");
+manager.cancelOrder("1234");
+```
+- 메서드와 비즈니스 로직이 강하게 결합되어 있다. 이걸 커맨드 패턴으로 추상화 하면 아래와 같이 바꿀 수 있다.
+```js
+class OrderManager {
+  constructor() {
+    this.orders = [];
+  }
+
+  execute(command, ...args) {
+    return command.execute(this.orders, ...args);
+  }
+}
+
+class Command {
+  constructor(execute) {
+    this.execute = execute;
+  }
+}
+
+function PlaceOrderCommand(order, id) {
+  return new Command(orders => {
+    orders.push({id, order});
+    return `You have successfully ordered ${order} (${id})`;
+  })
+}
+
+function TraceOrderCommand(id) {
+  return new Command(() => {
+    return `Your order ${id} will arrive in 20 minutes.`;
+  })
+}
+
+function CancelOrderCommand(id) {
+  return new Command((orders) => {
+    orders = orders.filter(order => order.id !== id);
+    return `You have canceled your order ${id}`;
+  })
+}
+
+// Usage
+const manager = new OrderManager();
+manager.execute(new PlaceOrderCommand("Pad Thai", "1234"));
+manager.execute(new TraceOrderCommand("1234"));
+manager.execute(new CancelOrderCommand("1234"));
+```
+- 순수 자바스크립트로 구현했는데, 여기서는 비즈니스 로직을 `*Command`함수로 구현했다. 
+- `OrderManager`는 `execute`메서드 하나만 가지고, 호출하는 측에서 원하는 로직을 담은 Command를 인자로 넘기기만 하면 된다. OrderManager에서 Command의 제약조건은 `orders` 객체를 인자로 받는다는 점이다.(물론 Trace처럼 안받아도 그만)
+- 이렇게 하면 ***`OrderManager`와 기존 비즈니스 로직이 느슨하게 결합되었고, Command에 구현된 로직은 다른 객체에서도 얼마든지 사용할 수 있게 된다.***
+
+<br>
+
+### Command Pattern Easy2
+- [자료 Easy2](https://www.patterns.dev/posts/command-pattern/)
+<!-- 살짝 이해 안되는데 맑은 정신으로 다시보자. -->
+
+### Command Pattern 심화
+- [Command Pattern Typescript](https://refactoring.guru/design-patterns/command/typescript/example#lang-features)
