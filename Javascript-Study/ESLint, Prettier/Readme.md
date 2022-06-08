@@ -43,7 +43,7 @@
     - ### [object-curly-newline](#object-curly-newline-1)
     - ### [ESLint extends vs plugin](#ESLint-extends-vs-plugin-1)
     - ### [React + eslint-config-airbnb에 Typescript 적용할 시 할 것](#React--eslint-config-airbnb에-Typescript-적용할-시-할-것-1)
-    - ### [eslint cli에 glob 패턴 사용시 " "를 붙여야한다](#eslint-cli에-glob-패턴-사용시-"-"를-붙여야한다-1)
+    - ### [eslint cli에 glob 패턴 사용시 " "를 붙여야한다](#eslint-cli에-glob-패턴-사용시--를-붙여야한다-1)
 
 <br>
 
