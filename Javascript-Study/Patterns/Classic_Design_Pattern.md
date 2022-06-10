@@ -1048,6 +1048,13 @@ console.log(p1.circularReference !== p2.circularReference)
 
 - 프로토타입 패턴처럼 여러방식의 구현이 있다. 타입스크립트냐 순수 자바스크립트냐에 따라서도 다르다. 공통점은 `execute()`나 `run()`메서드를 가진 Command 객체를 통해 메서드 로직을 추상화 한다는 것이다.
 
+> 사실 어찌보면 addEventListener('event', fn) 에서 fn을 전달하는것 자체가 이미 Command 패턴이라고 할 수 있다. 함수는 callee니까 `execute` 하마만 있는 Command객체와 같이 볼 수 있다.
+
+- ***커맨드 패턴이 쓰이는 예***는 아래와 같다.
+  - 
+  - **operation history를 추적하기 위함**
+  - **operation queueing**
+
 <br>
 
 ### Command Pattern Easy1
@@ -1129,11 +1136,148 @@ manager.execute(new CancelOrderCommand("1234"));
 - `OrderManager`는 `execute`메서드 하나만 가지고, 호출하는 측에서 원하는 로직을 담은 Command를 인자로 넘기기만 하면 된다. OrderManager에서 Command의 제약조건은 `orders` 객체를 인자로 받는다는 점이다.(물론 Trace처럼 안받아도 그만)
 - 이렇게 하면 ***`OrderManager`와 기존 비즈니스 로직이 느슨하게 결합되었고, Command에 구현된 로직은 다른 객체에서도 얼마든지 사용할 수 있게 된다.***
 
+> 공부하면서 드는 생각이, 이거 `Function.prototype.call()`아닌가!? 자바스크립트처럼 함수를 일급 객체로 쓸 수 있는 언어는 커맨드 패턴이 필요가 없을지도 모른다!
+
 <br>
 
 ### Command Pattern Easy2
 - [자료 Easy2](https://www.patterns.dev/posts/command-pattern/)
-<!-- 살짝 이해 안되는데 맑은 정신으로 다시보자. -->
+- Command 인터페이스의 예로 작업과 실행 메서드(`run`, `execute`)를 하나의 객체로 묶는식으로 만들 수 있다. 이렇게 하면 Command 인터페이스를 만족하는 어떤 구현체로든 쉽게 교체할 수 있다고 한다.
+- 간단한 자동차 구매 서비스를 구현한다.
+```js
+const carManager = {
+  // request information
+  requestInfo(model, id) {
+      return `The information for ${model} with ID ${id} is foobar`;
+  },
+
+  // purchase the car
+  buyVehicle(model, id) {
+      return `You have successfully purchased Item ${id}, a ${model}`;
+  },
+
+  // arrange a viewing
+  arrangeViewing(model, id) {
+      return `You have successfully booked a viewing of ${model} ( ${id} ) `;
+  },
+}
+```
+- vanilla js에는 interface가 없기 때문에 객체 리터럴로 바로 정의해벌였다.
+- `carManager` 객체의 action(Command)들을 정의했다. 호출부는 `execute`메서드로 정의한다.
+```js
+carManager.execute = function(name) {
+  return (
+    carManager[name] && 
+    carManager[name].apply(carManager, [].slice.call(arguments, 1))
+  )
+}
+
+// USAGE
+carManager.execute('buyVehicle', 'Ford Escort', '453543');
+```
+- `[].slice.call(arguments, 1)`은 arguments로 아무것도 전달 안했을 때 에러 방지를 위해 쓴 방식인 듯 하다. arguments의 두번째 요소부터 마지막까지 짜른다.
+
+> `apply`는 두번째 인자로 arugmnet를 배열 객체로 받는다. call은 일반 함수 호출시 인자 전달처럼 `,`로 구분해서 전달해야 한다.
+
+<br>
+
+
+
+
+
 
 ### Command Pattern 심화
 - [Command Pattern Typescript](https://refactoring.guru/design-patterns/command/typescript/example#lang-features)
+- 위의 Easy들은 사실 너무 간단한 예다. 애초에 인터페이스도 없으니 그럴법하다. 객체지향적으로 Command 패턴을 도식화하면 아래 그림과 같다.
+  ![Command Pattern](https://refactoring.guru/images/patterns/diagrams/command/structure-2x.png?id=176b5f4f1939340f44b1fdb2ac6bbfc7)
+
+- 간단한 동작을 수행하는 커맨드 패턴을 구현해본다. `Command`, `Invoker`, `Receiver`로 구성된다. 
+  - `Command`는 `execute`를 가지며, 실행 동작을 추상화 하였다.
+  - `Receiver`는 필수는 아닌데, 복잡한 Command의 경우 Receiver에 있는 동작을 호출하게 된다.
+  - `Invoker`는 `Command`애 대한 의존성을 가진다. 동작을 수행하면 의존하는 필요한 순서대로 Command의 execute 메서드를 호출할것이다.
+
+```ts
+interface Command {
+  execute(): void;
+}
+
+class SimpleCommand implements Command {
+  constructor(private payload: string){ }
+
+  public execute(): void {
+    console.log(`SimpleCommand.execute(), payload: ${this.payload}`);
+  }
+}
+
+class ComplexCommand implements Command {
+  constructor(
+    private receiver: Receiver,
+    private a: string,
+    private b: string
+  ) {}
+
+  public execute(): void {
+    console.log('ComplexCommand.execute()');
+    receiver.doSomething1(this.a)
+    receiver.doSomething2(this.a)
+  }
+}
+
+class Receiver {
+  public doSomething1(a: string): void {
+    console.log(`Recevier.doSomething1(${a})`)
+  }
+  public doSomething2(b: string): void {
+    console.log(`Recevier.doSomething2(${b})`)
+  }
+}
+
+class Invoker {
+  private onStart: Command;
+  private onFinish: Command;
+
+  public setOnStart(command: Command): void {
+    this.onStart = command;
+  }
+  public setOnFinish(command: Command): void {
+    this.onFinish = command;
+  }
+
+  public doSomethingImportant(): void {
+    console.log('Invoker: 시작')
+    if(this.isCommand(this.onStart)) {
+      this.onStart.execute();
+    }
+
+    console.log('Invoker: 중간')
+    if(this.isCommand(this.onFinish)) {
+      this.onFinish.execute();
+    }
+  }
+
+  private isCommand(object): object is Command {
+    return object.execute !== undefined;
+  }
+}
+
+// Usage
+const invoker = new Invoker();
+invoker.setOnStart(new SimpleCommand('Say Hi!'));
+const receiver = new Receiver();
+invoker.setOnFinish(new ComplexCommand(receiver, 'Send email', 'Save report'));
+invoker.doSomethingImportant();
+
+// ========== 결과 ==========
+// Invoker: 시작
+// SimpleCommand.execute(), payload: Say Hi!
+// Invoker: 중간
+// ComplexCommand.execute()
+// Recevier.doSomething1(Send email)
+// Recevier.doSomething2(Send email)
+```
+- 이렇게 구현했을 때 장점은 무엇일까?
+- Invoker 입장에서는 `execute`메서드를 가지는 Command 인터페이스 구현체라면 뭐든 교체해서 넣을 수 있다는 것이다. ***Invoker 객체에 어떤 Command 구현체를 넣느냐에 따라 비즈니스 로직을 조정할 수 있어, Invoker를 수정하지 않고 새로운 Command를 만들어 전달하는 형태로 코드를 수정할 수 있게 된다.*** 
+
+> [Design Pattern 커맨드 패턴이란](https://gmlwjd9405.github.io/2018/07/07/command-pattern.html) 포스팅을 참고해보자. Invoker를 건들지 않고도 Invoker의 호출 결과 실행되는 로직을 맘대로 주무를 수 있는 대단한 패턴임을 알 수 있다.
+
+<br>
