@@ -13,6 +13,7 @@
 - ### [4. 리액트 실전 활용법](#4-리액트-실전-활용법-1)
 <!-- - ### [5. 레거시 프로젝트를 위한 클래스형 컴포넌트](#5-레거시-프로젝트를-위한-클래스형-컴포넌트-1) -->
 - ### [6. 리덕스로 상태 관리하기](#6-리덕스로-상태-관리하기-1)
+- ### [7. 바벨과 웹팩 자세히 들여다보기](#7-바벨과-웹팩-자세히-들여다보기)
 
 <br><br>
 
@@ -2348,3 +2349,333 @@ describe('fetchData', () => {
 - `try/catch`문 이전까지 제너레이터를 실행해 테스트하고, 이후 ***제너레이터 객체를 `복제`해 next/throw를 호출하며 api 호출 성공/실패를 테스트한다.***
 
 <br>
+
+## 7. 바벨과 웹팩 자세히 들여다보기
+### 7.1 바벨 실행 및 설정하기
+- `바벨`은 Input과 Output이 모드 코드인 컴파일러이다. 초기의 바벨은 ES6를 ES5로 바꿔주는 역할을 했으나 지금은 JSX, 타입스크립트, proposal 단계 문법을 변환하거나 코드 압축 등을 할 수 있다.
+- 바벨을 설정하는 여러가지 방법을 알아보고, 프로젝트별 적합한 설정을 고민해본다.
+- `폴리필`은 무엇이고 어떻게 설정하는지 알아본다. `core-js` 패키지와 `@babel/preset-env` 프리셋을 이용해 폴리필을 관리하는 법을 알아본다.
+
+### 7.1.1 바벨을 실행하는 여러 방법
+- 바벨을 실행하는 방법은 아래와 같다.
+  - `@babel/cli`로 실행하기
+  - webpack에서 `babel-loader`로 실행하기
+  - `@babel/core`를 직접 실행하기
+  - `@babel/register`로 실행하기
+
+- `@babel/register`는 Node 환경에서 `require` 실행시 동적으로 바벨이 실행하게 할 수 있는데, FE 개발에서 이걸 쓸일이 거의 없으므로 제외한다.
+
+<br>
+
+- 아래 명령어로 간단한 실습 프로젝트를 구성한다.
+```bash
+mkdir test-babel-how && cd test-babel-how
+npm init -y
+npm i @babel/core @babel/cli @babel/plugin-transform-arrow-functions @babel/plugin-transform-template-literals @babel/preset-react
+```
+- 실습 프로젝트는 `JSX 문법`, `템플릿 리터럴 문법`, `화살표 함수`를 각각의 바벨 플러그인/프리셋을 이용해 변환할 것이다. `src/code.js`를 만든다.
+```js
+// src/code.js
+const element = <div>babel test</div>;
+const text = `element type is ${element.type}`;
+const add = (a, b) => a + b;
+```
+
+1. `@babel/cli` 로 실행하기
+- 아래 명령어를 이용해 코드를 변환해본다.
+```bash
+npx babel src/code.js --presets=@babel/preset-react --plugins=@babel/plugin-transform-arrow-functions,@babel/plugin-transform-template-literals
+```
+- 콘솔에 출력되는 변환 결과는 아래와 같다.
+```js
+const element = /*#__PURE__*/React.createElement("div", null, "babel test");
+const text = "element type is ".concat(element.type);
+const add = function (a, b) {
+  return a + b;
+};
+```
+- 변환 내용은 아래와 같다.
+  - JSX 문법은 `React.createElement()`로 바뀌었다.
+  - 템플릿 리터럴 문법은 `String.concat()` 메서드로 바뀌었다.
+  - 화살표 함수는 일반 함수 표현식으로 바뀌었다.
+- 사용하는 플러그인, 프리셋은 설정 파일로 관리할 수 있다. babel v6까지는 .babelrc로 설정을 관리했는데 v7 부터는 **`babel.config.js`에 관리**하는걸 권장한다.
+
+```js
+// babel.config.js
+const presets = ['@babel/preset-react'];
+const plugins = [
+  '@babel/plugin-transform-template-literals',
+  '@babel/plugin-transform-arrow-functions'
+]
+
+module.exports = { presets, plugins };
+```
+> 바벨 설정파일의 자세한 작성법은 [Config Reference - Options](https://babeljs.io/docs/en/options)를 참고한다.
+- 결과를 저장하고 싶으면 cli에 `--out-dir` 옵션을 추가한다.
+```bash
+# src폴더의 파일을 트랜스파일해서 dist 폴더에 저장
+npx babel src --out-dir dist
+```
+
+<br>
+
+2. 웹팩의 `babel-loader`로 실행하기
+- 웹팩 로더는 코드의 프리프로세서 역할을 한다. babel-loader를 이용해 웹팩 실행시 바벨을 실행하여 코드를 변환할 수 있다.
+- 필요 패키지를 설치하고 웹팩 설정파일을 작성한다.
+```bash
+npm i webpack webpack-cli babel-loader
+```
+
+```js
+// webpack.config.js
+const path = require('path');
+
+module.exports = {
+  entry: './src/code.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'code.bundle.js'
+  },
+  module: {
+    rules: [{ test: /\.js$/, use: 'babel-loader'}],
+  },
+  optimization: {minimizer: []},  // minimizer off
+}
+```
+- 웹팩은 결과 파일을 기본적으로 압축하는데 코드 확인을 위해 `minimizer`를 끈다. 웹팩을 실행한다.
+```bash
+npx webpack
+```
+- 결과는 약간의 웹팩 코드가 추가된 것 외에 알맹이는 `@babel/cli`로 실행한 것과 같음을 알 수 있다.
+
+<br>
+
+3. `@babel/core` 직접 이용하기
+- `@babel/cli`나 `babel-loader`는 모두 내부적으로 `@babel/core`를 사용한다.(그래서 코어모듈은 필수로 설치해야 했던 것)
+- 프로젝트 루트에 `runBabel.js`을 만들고 아래와 같이 작성한다.
+```js
+// runBabel.js
+const babel = require('@babel/core');
+const fs = require('fs');
+
+const filename = './src/code.js';
+const source = fs.readFileSync(filename, 'utf8');
+const presets = ['@babel/preset-react'];
+const plugins = [
+  '@babel/plugin-transform-template-literals',
+  '@babel/plugin-transform-arrow-functions'
+];
+
+const { code } = babel.transformSync(source, {
+  filename, // 에러 발생시 사용될 원본 파일이름
+  presets,  // 프리셋
+  plugins,  // 플러그인
+  configFile: false // babel.config.js 파일을 사용하지 않는다.
+});
+
+console.log(code);
+```
+- 동기적으로 소스파일을 읽어 동기적으로 코드를 변환하였다. 실행 결과는 `@babel/cli`를 사용한 결과와 같다.
+- `@babel/core` 모듈을 직접 사용하는 방식은 실행 코드를 직접 작성하기 때문에 번거롭지만, 설정 등에 있어 자유도가 높다는 장점도 있다.
+- 바벨은 컴파일 시 아래 세가지 단계를 거친다.
+  - 파싱(parse) : 코드로부터  AST(abstract syntax tree)를 생성한다.
+  - 변환(transform) : AST를 원하는 형태로 변환한다.
+  - 생성(generate): AST를 코드로 출력한다.
+- AST가 같으면 코드도 같다는 특징이 있다.. 이런 특징을 이용해 바벨은 AST를 변환하여 코드를 변환하는 것이다.
+<br>
+
+- 예를들어 같은 코드에 대해 두가지 다른 설정을 적용한다고 생각해보자. `@babel/cli` 등을 이용하려면 babel을 두번 실행해야 하나 `@babel/core`를 직접 쓰면 AST를 한번만 만든 후 변환만 두번 하는 방식으로도 구성할 수 있다.
+- `@babel/preset-react`프리셋은 공통 적용하고, 각각 `@babel/plugin-transform-template-literals`, `@babel/plugin-transform-arrow-functions`플러그인을 적용하는 방식으로 코드를 변환하고 싶다면 어떻게 할 수 있을까?
+```js
+// runBabel2.js
+
+// ...
+const presets = ['@babel/preset-react'];
+
+const { ast } = babel.transformSync(source, {
+  filename,
+  // code 생성 하지 않고 ast 생성까지만 한다.
+  ast: true,
+  code: false,
+  // 프리셋만 적용한 ast
+  presets,
+  configFile: false,
+})
+
+// ast에서 템플릿 리터럴 플러그인을 적용해서 코드로 변환
+const { code: code1 } = babel.transformFromAstSync(ast, source, {
+  filename,
+  plugins: ['@babel/plugin-transform-template-literals'],
+  configFile: false,
+})
+
+// ast에서 arrow function 플러그인을 적용해서 코드로 변환
+const { code: code2 } = babel.transformFromAstSync(ast, source, {
+  filename,
+  plugins: ['@babel/plugin-transform-arrow-functions'],
+  configFile: false,
+});
+
+console.log('code1 ===> \n', code1)
+console.log('code2 ===> \n', code2)
+```
+- 물론 실전에서 이렇게 할 일은 없을 것 같다.
+
+<br>
+
+### 7.1.2 확장성과 유연성을 고려한 바벨 설정 방법
+- eslintrc, tsconfig같은 설정파일 작성과 비슷하다. `extends`, `overrides`, `env`등의 옵션을 이용해 바벨 설정을 설계할 수 있다. 솔직히 쓸 일 없을거 같으므로 자세히 정리하진 않는다.
+
+<br>
+
+1. `extends`
+- 다른 바벨 속성을 상속할 수 있다. 모노레포 등의 구성에서 유용할 것으로 판단된다.
+
+<br>
+
+2. `env` 
+- 실행 환경별로 프리셋 적용 가능, prod에서 minify등을 적용해 파일 크기를 줄일 수 있다.
+- 실행 환경은 `process.env.BABEL_ENV || process.env.NODE_ENV || "development"`로 결정된다. 보통 다른것들과 통일성을 위해 `NODE_ENV` 쓰는듯
+
+<br>
+
+3. `overrides`
+- 파일별로 설정을 지정할 수 있다. `include`, `exclude`를 지정할 수 있음
+
+<br>
+
+### 7.1.3 전체 설정 파일과 지역 설정 파일
+- 전체 설정 파일은 보통 프로젝트 루트의 `babel.config.js`파일을 말한다.
+- 지역 설정 파일은 `.babelrc`, `.babelrc.js`파일과 바벨 설정이 있는 `package.json`파일이 지역 설정 파일이다. 
+- 바벨 실행시 전체 설정파일을 사용하면서 특정 파일에 대해 바벨 실행히 지역 설정 파일이 있으먼 해당 js파일은 전체 설정을 override 한 설정으로 컴파일 하게 된다.
+- ***필요할 때 다시 찾아보는걸로***
+
+<br>
+
+### 7.1.4 바벨과 폴리필
+- 구형 브라우저에서 최신 자바스크립트 문법 사용을 위해서는 **바벨로 코드 문법을 변환하는 것과 함께 `폴리필`도 사용해야 할 수 있다.** 폴리필은 런타임에 특정 기능이 존재하는지 검사한 후 없으면 기능을 주입하는 것을 말한다.
+- 예를들어 ES8의 `String.padStart`는 폴리필을 추가함으로써 사용할 수 있다. 반면 `async/await`는 폴리필로 추가할 수 없고 ***컴파일 타임에 코드를 변환해야 한다.***
+```js
+// String.padStart 폴리필을 추가하는 코드
+if(!String.prototype.padStart) {
+  String.prototype.padStart = func; // func는 padStart 폴리필 함수
+}
+```
+
+- 폴리필을 추가하는 다양한 방법을 알아본다.
+
+<br>
+
+1. [`core-js`](https://www.npmjs.com/package/core-js) 모듈의 폴리필 사용하기
+- `core-js`는 바벨에서 폴리필을 위해 공식 지원하는 패키지다. 가장 간단한 사용법은 `core-js`모듈을 자바스크립트에 불러오는 것이다.
+
+```js
+import 'core-js';
+
+const p = Promise.resolve(10);
+const obj = {
+  a: 10,
+  b: 20,
+  c: 30,
+};
+const arr = Object.values(obj);
+const exists = arr.includes(20);
+```
+- `import 'core-js'`를 하면 구형 브라우저에서도 `Promise`, `Object.values`, `Array.prototype.includes`를 사용할 수 있게 된다. 
+- 웹팩 사용시 설정의 entry 속성에 core-js 모듈을 넣으면 된다.
+```js
+// webpack.config.js
+module.exports = {
+  entry: ['core-js', './src/index.js'],
+  // ...
+}
+```
+- 이렇게 하면 core-js 모듈이 통째로 추가되어 번들이 커지는 단점이 있다. 필요한 폴리필만 추가할 수도 있다.
+```js
+import 'core-js/features/promise'
+import 'core-js/features/object/values'
+import 'core-js/features/array/includes'
+
+//...
+```
+- 이런 방식은 번들은 작아지지만 실수를 할 가능성이 높아 조심해야한다.
+
+2. [`@babel/preset-env`](https://babeljs.io/docs/en/babel-preset-env) 프리셋 이용하기
+- `@babel/preset-env` 프리셋은 ***실행 환경에 대한 정보를 설정해 주면 자동으로 필요한 기능을 주입해 준다.*** 아래는 예시다
+```js
+const presets = [
+  [
+    '@babel/preset-env',
+    {
+      targets: '> 0.25%, not dead',
+    }
+  ]
+]
+```
+- target은 **시장 점유율 0.25% 이상이고 업데이트가 종료되지 않은 브라우저**를 의미한다. 브라우저 정보는 [`browserlist`패키지의 문법](https://github.com/browserslist/browserslist#full-list)을 사용한다. 
+- 간단하게 설정을 실습해본다. 프로젝트를 생성하고 패키지를 설치한다.
+```bash
+mkdir test-babel-env && cd test-babel-env
+npm init -y
+npm i @babel/core @babel/cli @babel/preset-env core-js
+```
+- 바벨 설정파일을 작성한다.
+```js
+// babel.config.js
+const presets = [
+  [
+    '@babel/preset-env',
+    {
+      targets: {
+        chrome: '40', // 1
+      },
+      useBuiltIns: 'entry', // 2
+      corejs: { version: 3, proposals: true}, // 3
+    }
+  ]
+]
+
+module.exports = { presets };
+```
+- 1 : ` 크롬 최소 버전 40`, 2: `useBuiltIns: 'entry'`는 브라우저에서 필요한 폴리필만 포함시킨다. 3: 바벨에게 사용하는 corejs의 버전을 알려준다.
+- src/code.js파일을 만들고 아래 내용을 작성한다.
+```js
+// src/code.js
+import 'core-js'
+
+const p = Promise.resolve(10);
+const obj = {
+  a: 10,
+  b: 20,
+  c: 30,
+};
+const arr = Object.values(obj);
+const exists = arr.includes(20);
+```
+- 바벨을 실행해 코드를 변환해본다.
+```bash
+npx babel src/code.js
+```
+- 결과는 아래와같다.
+```js
+"use strict";
+
+require("core-js/modules/es.symbol");
+// ... 많은수의 폴리필
+require("core-js/modules/web.url-search-params");
+
+// ... 코드
+```
+- 설정한 환경에 필요한 모든 폴리필을 추가했기 때문에 많은 모듈이 추가된다. `useBuiltIns: 'usage'`로 설정을 바꾸면 `import 'core-js'`도 필요없고, 우리 코드를 읽어서 실제 필요한 폴리필 모듈만 추가해준다. 그리고 바벨을 실행해보면 추가되는 폴리필은 아래와 같다.
+```js
+require("core-js/modules/es.object.to-string.js");
+require("core-js/modules/es.promise.js");
+require("core-js/modules/es.object.values.js");
+require("core-js/modules/es.array.includes.js");
+require("core-js/modules/es.string.includes.js"); // 1
+```
+- 1 - array와 string의 includes가 모두 추가되었다. 이유는 ***코드상 `arr.includes`에서 arr의 타입을 바벨이 알지 못하기 때문에 보수적으로 includes 메서드 폴리필을 있는대로 추가한 것***이다. 타입스크립트와 같은 정접 타입 언어라면 array만 추가했을 것이다.
+- 설정상 크롬 최소 버전을 올리면 폴리필이 점점 줄어들 것이다. 브라우저 런타임에 이미 해당 기능이 존재하기 때문이다.
+
+<br>
+
