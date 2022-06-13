@@ -43,6 +43,7 @@
     - ### [object-curly-newline](#object-curly-newline-1)
     - ### [ESLint extends vs plugin](#ESLint-extends-vs-plugin-1)
     - ### [React + eslint-config-airbnb에 Typescript 적용할 시 할 것](#React--eslint-config-airbnb에-Typescript-적용할-시-할-것-1)
+    - ### [eslint cli에 glob 패턴 사용시 " "를 붙여야한다](#eslint-cli에-glob-패턴-사용시--를-붙여야한다-1)
 
 <br>
 
@@ -785,3 +786,12 @@ npm install eslint-plugin-disable --save-dev
 }
 ```
 - 이 패키지의 메인테이너가 [`Jest`, `Promise`, `Prettier`가 적용된 린트 설정 추천 파일](https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js)을 제공하니 참고한다.
+
+<br><br>
+
+### eslint cli에 glob 패턴 사용시 " "를 붙여야한다
+- https://eslint.org/docs/user-guide/command-line-interface
+- `npx eslint [pattern]'에서 glob pattern을 쓰려면 반드시 패턴을 " "로 묶어야한다... 30분간 삽질하다 알아낸 사실..
+```bash
+$ npx eslint "packages/**/!(node_modules)/*.{ts,tsx}"
+```
