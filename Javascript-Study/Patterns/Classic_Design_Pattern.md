@@ -789,8 +789,12 @@ export default function App() {
 ## Mediator Pattern
 - [자료1(기본)](https://www.patterns.dev/posts/mediator-pattern/), [자료2(심화)](https://refactoring.guru/design-patterns/mediator), [자료3(typescript)](https://refactoring.guru/design-patterns/mediator/typescript/example#lang-features)
 - 여러 컴포넌트간의 직접적인 통신을 중앙화 하는 패턴이다. 대표적으로 공항 관제탑을 생각하면 된다. 비행기는 이/착륙 관련한 통신을 관제탑과 하지 다른 비행기와 직접 하지 않는다.
-- Mediator Pattern과 비슷한걸로 `DOM 이벤트 버블링과 이벤트 위임`이 있다. 각 노드에 직접 이벤트 바인딩 하지 않고 상위 노드에서 묶어서 처리한다.
+- Mediator Pattern과 비슷한걸로 `DOM 이벤트 이벤트 위임`이 있다. 각 노드에 직접 이벤트 바인딩 하지 않고 상위 노드에서 묶어서 처리한다.
 - 대표적으로 UI에서 복잡한 폼 역시 Mediator Pattern이라고 할 수 있다. 개별 요소의 validation, 이벤트 핸들링 등은 Form(Container)에서 작성되는데, 이 폼이 Mediator이다.
+
+- 다른 패턴과의 차이
+  - `파사드 패턴` : ***파사드 패턴은 단방향 통신만 가능하지만 중재자 패턴은 양방향 통신을 지원한다.***
+  - `옵저버 패턴` : ***옵저버 패턴은 1개의 publisher와 N개의 subscriber가 존재하며, observer가 pulling/push 방식을 통해 통신하지만, 중재자 패턴은 M개의 publisher와 N개의 subscriber 사이에 1개의 Mediator를 통해 통신하는 방식이다.***
 
 <br>
 
