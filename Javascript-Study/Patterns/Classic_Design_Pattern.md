@@ -1051,13 +1051,12 @@ console.log(p1.circularReference !== p2.circularReference)
 
 
 - 프로토타입 패턴처럼 여러방식의 구현이 있다. 타입스크립트냐 순수 자바스크립트냐에 따라서도 다르다. 공통점은 `execute()`나 `run()`메서드를 가진 Command 객체를 통해 메서드 로직을 추상화 한다는 것이다.
-
-> 사실 어찌보면 addEventListener('event', fn) 에서 fn을 전달하는것 자체가 이미 Command 패턴이라고 할 수 있다. 함수는 callee니까 `execute` 하마만 있는 Command객체와 같이 볼 수 있다.
-
 - ***커맨드 패턴이 쓰이는 예***는 아래와 같다.
   - 
   - **operation history를 추적하기 위함**
   - **operation queueing**
+
+> 사실 어찌보면 addEventListener('event', fn) 에서 fn을 전달하는것 자체가 이미 Command 패턴이라고 할 수 있다. 함수는 callee니까 `execute` 하마만 있는 Command객체와 같이 볼 수 있다.
 
 <br>
 
@@ -1285,3 +1284,188 @@ invoker.doSomethingImportant();
 > [Design Pattern 커맨드 패턴이란](https://gmlwjd9405.github.io/2018/07/07/command-pattern.html) 포스팅을 참고해보자. Invoker를 건들지 않고도 Invoker의 호출 결과 실행되는 로직을 맘대로 주무를 수 있는 대단한 패턴임을 알 수 있다.
 
 <br>
+
+## Facade Pattern
+### Facade Pattern Easy
+  - https://jusungpark.tistory.com/23
+  - https://gdtbgl93.tistory.com/142
+  - https://www.patterns.dev/posts/classic-design-patterns/#facadepatternjavascript
+
+- `파사드 패턴`은 ***어떤 서브시스템의 일련의 인터페이스에 대한 통함된 인터페이스를 제공한다. 파사드에서 고수준 인터페이스를 정의하기 때문에 서브시스템을 더 쉽게 사용할 수 있게 된다.***
+- 어떤 로직을 수행하는데 여러 객체의 다양한 메서드를 호출하는 과정이 필요하다고 해보자. 사용자가 해당 기능을 동작하기 위해서는 복잡한 객체들과 그 메서드들, 그리고 호출 순서 등에 대해서 자세히 알아야 한다. 이 때 **파사드 객체에 고수준 인터페이스를 정의해 복잡한 객체들의 로직을 추상화 시키고, 사용자가 파사드에만 접근하도록해 사용성을 높이는게 파사드 패턴이다.** 이렇게 하면 [`최소 지식 원칙`](#추가---디메테르의-법칙the-law-of-demeter최소-지식-원칙)도 자연스럽게 지킬 수 있게 된다.
+  
+  ![파사드 패턴](https://refactoring.guru/images/patterns/diagrams/facade/structure.png)
+
+- 자바스크립트에서 대표적인 파사드 패턴을 활용한 예는 `jQuery`다. 예를들어 ***Native DOM API로 DOM 이벤트 바인딩을 cross-browser를 고려해서 하는 메서드***를 작성한다고 해보자.
+```js
+const addMyEvent = (el, ev, fn) => {
+  if(el.addEventListener) {
+    el.addEventListener(ev, fn, false);
+  } else if (el.attachEvent) {
+    el.attachEvent(`on${ev}`, fn);
+  } else {
+    el[`on${ev}`] = fn;
+  }
+}
+```
+- 다양한 브라우저에 대응해서 이벤트를 잘 바인딩 하려면 3종류의 이벤트 바인딩 방식을 모두 알고 있어야한다. 잘 모르면 실수할 여지가 충분하다. jQuery가 제공하는 인터페이스는 이를 단순화 시켜준다.
+```js
+$(selector).on(ev, fn);
+```
+
+<br>
+
+- 파사드 패턴은 일반적으로 `모듈 패턴`과 같이 쓰인다. 파사드 패턴으로 공개된 `public 메서드`는 모듈 패턴으로 정의한 `private 메서드`에 대한 접근을 추상화한다.
+```js
+// module
+const _private = {
+  i: 5,
+  get() {
+    console.log(`current value: ${this.i}`);
+  },
+  set(val) {
+    this.i = val;
+  },
+  run() {
+    console.log('running');
+  },
+  jump() {
+    console.log('jumping');
+  }
+}
+
+const module = {
+  facade({ val, run, jump }) {
+    _private.set(val);
+    _private.get();
+    if(run) {
+      _private.run();
+    }
+    if(jump) {
+      _private.jump();
+    }
+  }
+}
+
+export default module;
+
+
+// Usage
+import module from './module.js';
+module.facade({
+  run: true,
+  val: 10
+})
+// Outputs: "current value: 10" and "running"
+```
+- module의 facade 메서드로 `_private`에 대한 호출을 단순화 했다.
+
+<br>
+
+### Facade Pattern - Typsecript
+- https://refactoring.guru/design-patterns/facade/typescript/example#example-0
+- 아주 간단한 파사드 패턴을 class를 이용해서 구현한다.
+```ts
+class Facade {
+  protected: subsystem1: Subsystem1;
+  protected: subsystem2: Subsystem2;
+  
+  constructor(subsystem1: Subsystem1 = null, subsystem2: Subsystem2 = null) {
+    this.subsystem1 = subsystem1 || new Subsystem1();
+    this.subsystem2 = subsystem2 || new Subsystem2();
+  }
+
+  // 복잡하게 얽힌 서비시스템의 로직을 opersation 메서드로 추상화, 사용자는 이 메서드만 접근한다. -> 최소 짓식 원칙
+  public operation(): string {
+    let result = 'Facade initializes subsystems:\n';
+    result += this.subsystem1.operation1();
+    result += this.subsystem2.operation1();
+    result += 'Facade orders subsystems to perform the action:\n';
+    result += this.subsystem1.operationN();
+    result += this.subsystem2.operationZ();
+
+    return result;
+  }
+}
+class Subsystem1 {
+    public operation1(): string {
+        return 'Subsystem1: Ready!\n';
+    }
+    public operationN(): string {
+        return 'Subsystem1: Go!\n';
+    }
+}
+
+class Subsystem2 {
+    public operation1(): string {
+        return 'Subsystem2: Get ready!\n';
+    }
+    public operationZ(): string {
+        return 'Subsystem2: Fire!';
+    }
+}
+function clientCode(facade: Facade) {
+    // ...
+    console.log(facade.operation());
+    // ...
+}
+
+const subsystem1 = new Subsystem1();
+const subsystem2 = new Subsystem2();
+
+// 이미 client가 subsystem 인스턴스를 가지고 있다면, 이걸 사용한다. 
+const facade = new Facade(subsystem1, subsystem2);
+clientCode(facade);
+```
+
+- 위 예시에서 만약 ***`Facade`객체가 `Subsystem` 객체에 대한 라이프사이클까지 모두 관리한다면 사용자는 어떤 서브시스템이 존재하는지도 몰라도 된다. 물론 client가 직접 서브시스템 객체를 파사드에 주입하거나 메서드에 전달해야 하는 케이스도 있을것이다.***
+- 파사드는 구현에 제약이 없다. 그냥 복잡한 로직을 파사드 하나로 추상화 하는 것 뿐. 파사드 패턴 사용시 고려 사항은, 성능상에 큰 문제는 없는지 정도라고 한다.
+
+<br>
+
+### 추가 - 디메테르의 법칙(The Law of Demeter),최소 지식 원칙
+- https://coding-start.tistory.com/264
+- 객체 지향 디자인 원칙 중 하나로, **'결합도가 낮은 설계'**를 위한 설계 원칙이다.
+- 어떤 메소드에 강한 결합도를 가진 로직이 있으면 하나를 수정할 때 많은 곳에서 수정이 일어나기 때문에 생긴 원칙
+- `어떤 객체의 메서드`가 호출할 수 있는 메서드는 아래와 같다.
+  1. 객체 자기 자신의 메서드
+  2. 메서드에 파라미트러 넘겨진 객체의 메서드
+  3. 메서드 또는 인스턴스 변수가 직접 초기화 시킨 객체의 메서드
+  4. 객체가 의존하는 인스턴스의 메서드
+  5. 전역 객체의 메서드
+
+```java
+class Test {
+  private A a;
+
+  constructor(A a) {
+    this.a = a;
+  }
+
+  private int method1() {
+  	return 0;
+  }
+  
+  public void example(B b) {
+    C c = new C();
+    int i = method1();  // 1
+    b.getInteger();     // 2
+    c.toString();       // 3
+    a.getDouble();      // 4
+  }
+
+  // 법칙을 어기는 예
+  public float getTemp(station) {
+    // station의 메서드로 Thermometer 객체 생성 후 그 객체의 메서드 직접호출
+    Thermometer thermometer = station.getThermometer(); 
+    return thermometer.getTemperature();                        
+  }
+
+  // 개선
+  public float getTemp(station) {
+    // station에 애초에 getTemperature 메서드를 만들어 주는것이 좋다.
+    return station.getTemperature();
+  }
+}
+```
+- 물론 이런 원칙에 너무 과몰입하면 안되겠다.
