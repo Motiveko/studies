@@ -1367,8 +1367,8 @@ module.facade({
 - 아주 간단한 파사드 패턴을 class를 이용해서 구현한다.
 ```ts
 class Facade {
-  protected: subsystem1: Subsystem1;
-  protected: subsystem2: Subsystem2;
+  protected subsystem1: Subsystem1;
+  protected subsystem2: Subsystem2;
   
   constructor(subsystem1: Subsystem1 = null, subsystem2: Subsystem2 = null) {
     this.subsystem1 = subsystem1 || new Subsystem1();
@@ -1469,3 +1469,123 @@ class Test {
 }
 ```
 - 물론 이런 원칙에 너무 과몰입하면 안되겠다.
+
+<br>
+
+## Factory Pattern
+- Factory Method 패턴이라고도 부른다. https://gmlwjd9405.github.io/2018/08/07/factory-method-pattern.html 자료는 자바로 되어있으나 예제가 너무 좋아 이걸로 정리한다. 솔직히 쓰임세가 중요한거지 뭘로 구현하느냐는 별로 안중요한듯.
+- 팩토리 메서드 패턴은 ***객체의 생성 처리를 서브클래스로 분리***해서 처리하도록 캡슐화 하는 패턴이다. 캡슐화 한 만큼 ***객체 생성의 변화에 대비하는데 유용***하다.
+  ![팩토리 메서드 패턴 다이어그램](https://gmlwjd9405.github.io/images/design-pattern-factory-method/factory-method-pattern.png)
+- 각각의 역할은 아래와 같다.
+  - `Product`: 팩토리 메서드로 생성도리 객체의 인터페이스
+  - `ConcreteProduct`: `Product` 구현체
+  - `Createor`: `Product` 타입 객체를 반환하는 팩토리 메서드를 갖는 클래스
+  - `ConcreteCreator`: Creator 구현체
+
+### 예시 - 여러 가지 방식의 엘리베이터 스케줄링 지원
+![예시 다이어그램](https://gmlwjd9405.github.io/images/design-pattern-factory-method/factory-method-example.png)
+- 여러대의 엘리베이터가 적절하게 움직이도록 관리하는 기능이다.
+  - `ElevatorManager`: `requestElevator()`메서드로 요청이 오면 특정 엘리베이터가 동작하도록 기능수행
+  - `ElevatorController`: 엘리베이터라
+  - `ThroughputScheduler`: `selectElevator()`메서드로 작업 처리량 최대화 전략으로 움직일 엘리베이터를 스케줄링
+
+```java
+public class ElevatorManager {
+  private List<ElevatorController> controllers;
+  private ThroughputScheduler scheduler;
+
+  public ElevatorManager(int controllerCount) {
+    controllers = new ArrayList<ElevatorController>(controllerCount);
+    for(int i = 0; i < controllerCount; i++) {
+      ElevatorController controller = new ElevatorController(i);
+      controllers.add(controller);
+    }
+
+    scheduler = new ThroughputScheduler();
+  }
+
+  void requestElevator(int destination, Direction direction) {
+    // ThroughputScheduler 이용해 d엘리베이터 선택
+    int selectedElevator = scheduler.selectElevator(this, destination, direction);
+    
+    // 선택된 엘리베이터 이동
+    controllers.get(selectElevator).gotoFloor(destination);
+  }
+}
+```
+```java
+public class ElevatorController {
+  private int id;
+  private int curFloor;
+  public ElevatorController(int id) {
+    this.id = id;
+    curFloor = 1;
+  }
+
+  public void gotoFloor(int destination) {
+    // 엘베 이동
+    System.out.print("Elevator [" + id + "] Floor: " + curFloor);
+    curFloor = destination;
+    System.out.println(" ==> " + curFloor);
+  }
+}
+```
+```java
+public class ThroughputScheduler {
+  public int selectElevator(ElevatorManager manager, int destination, Direction direction) {
+    // 뭔가 적절한 엘베 index 선택해서 반환
+    return 0;
+  }
+}
+```
+
+### 문제점 1
+1. 다른 스케줄링 전략을 사용하려면?
+2. 프로그램을 실행하는 중간에 스케줄링이 동적으로 변해야 한다면?
+  - 예를들어 오전에는 **대기 시간 최소화 전략**을 사용하고, 오후에는 기존처럼 **처리량 최대화 전략**을 사용한다면?
+
+- 이 문제는 `Strategy Pattern`을 이용해 스케줄러를 추상화 해서 어느정도 해결 가능하다.
+```java
+public class ElevatorManager {
+  private List<ElevatorController> controllers;
+  
+  public ElevatorManager(int controllerCount) {
+    controllers = new ArrayList<ElevatorController>(controllerCount);
+    for (int i=0; i<controllerCount; i++) {
+      ElevatorController controller = new ElevatorController(i + 1); // 변경
+      controllers.add(controller);
+    }
+  }
+
+  void requestElevator(int destination, Direction direction) {
+    // 스케줄러 인터페이스
+    ElevatorScheduler scheduler; 
+
+    // 시간에 따라 동적으로 스케줄링 전략 선택
+    int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+    if(hour < 12) {
+      scheduler = new ResponseTimeScheduler();
+    } else {
+      scheduler = new ThroughputScheduler();
+    }
+    
+    int selectedElevator = scheduler.selectElevator(this, destination, direction);
+    
+    controllers.get(selectElevator).gotoFloor(destination);
+  }
+}
+```
+```java
+public interface ElevatorScheduler {
+  public int selectElevator(ElevatorManager manager, int destination, Direction direction);
+}
+public class ResponseTimeScheduler {
+  public int selectElevator(ElevatorManager manager, int destination, Direction direction) {
+    // 전략 수행하여 index 반환
+  }
+}
+```
+
+- 여전히 문제가 남아있다
+
+### 문제점 2
