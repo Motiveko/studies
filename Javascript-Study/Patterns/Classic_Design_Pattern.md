@@ -1477,7 +1477,7 @@ class Test {
 - 팩토리 메서드 패턴은 ***객체의 생성 처리를 서브클래스로 분리***해서 처리하도록 캡슐화 하는 패턴이다. 캡슐화 한 만큼 ***객체 생성의 변화에 대비하는데 유용***하다.
   ![팩토리 메서드 패턴 다이어그램](https://gmlwjd9405.github.io/images/design-pattern-factory-method/factory-method-pattern.png)
 - 각각의 역할은 아래와 같다.
-  - `Product`: 팩토리 메서드로 생성도리 객체의 인터페이스
+  - `Product`: 팩토리 메서드로 생성될 객체의 인터페이스
   - `ConcreteProduct`: `Product` 구현체
   - `Createor`: `Product` 타입 객체를 반환하는 팩토리 메서드를 갖는 클래스
   - `ConcreteCreator`: Creator 구현체
@@ -1588,4 +1588,209 @@ public class ResponseTimeScheduler {
 
 - 여전히 문제가 남아있다
 
+<br>
+
 ### 문제점 2
+- 여기서 엘리베이터 스케줄링 전략이 추가되거나, 스케줄링 방식을 동적으로 선택하도록 변경하려면 ***해당 스케줄링 전략을 지원하는 Scheduler 클래스를 생성***할 뿐 아니라 `requestElevator()`메서드도 수정해야 하는 상황이다.
+- ***`requestElevator()`메서드의 책임은 엘베의 선택과 엘베의 이동 뿐인데, 전략에 따라 메서드 코드를 수정해야 하는 상황은 바람직하지 않다.***
+- 아래와 같은 기능을 추가하려고 한다.
+  1. 새로운 스케줄링 전략 추가
+    - 엘리베이터 노후회 최소화 전략
+  2. 동적 스케줄링 지원
+    - '오전: 대기시간 최소화', '오후: 처리량 최대화' 전략의 시간대를 바꾼다.
+
+<br>
+
+### 문제점 2의 해결
+- 문제의 해결을 위해 `requestElevator()` 메서드가 스케줄링 전략 변화에 따라 코드를 수정할 필요가 없도록, 스케줄링 전략 객체 생성 메서드는 분리해낸다.
+- 이를 위해 해결하기 위해 `Factory Method 패턴`을 이용해, 적절한 스케줄 전략 객체를 생성하는 팩토리 메서드를 만든다.
+
+  ![해결2 다이어그램](https://gmlwjd9405.github.io/images/design-pattern-factory-method/factory-method-solution2.png)
+
+-  아래와 같이 코드를 수정한다.
+```java
+enum SchedulingStrategyID {
+  RESPONSE_TIME, THROUGHPUT, DYNAMIC 
+}
+
+public class SchedulerFactory {
+  public static ElevatorScheduler getScheduler(SchedulingStrategyID strategyID) {
+    ElevatorScheduler scheduler;
+    switch(strategyID) {
+      case RESPONSE_TIME:
+        scheduler = new ResponseTimeScheduler();
+        break;
+      case THROUGHPUT:
+        scheduler = new ThroughputScheduler();
+        break;
+      case DYNAMIC:
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        // 오전: 대기 시간 최소화, 오후: 처리량 최대화
+        if (hour < 12)
+          scheduler = new ResponseTimeScheduler();
+        else
+          scheduler = new ThroughputScheduler();
+        break;
+    }
+    return scheduler;
+  }
+}
+```
+- `ElevatorManager`에서는 `SchedulerFactory.getScheduler()` 메서드를 호출한다.
+```java
+public class ElevatorManager {
+  private List<ElevatorController> controllers;
+  private SchedulingStrategyID strategyID;
+
+  public ElevatorManager(int controllerCount) {
+    controllers = new ArrayList<ElevatorController>(controllerCount);
+    for(int i = 0; i < controllerCount; i++) {
+      ElevatorController controller = new ElevatorController(i);
+      controllers.add(controller);
+    }
+  }
+
+  // 외부에서 동적으로 사용할 스케줄링 전략을 선택할 수 있다.
+  public void setStrategyID(SchedulingStrategyID strategyID) {
+    this.strategyID = strategyID;
+  }
+
+  void requestElevator(int destination, Direction direction) {
+    // 주어진 strategyID에 해당되는 ElevatorScheduler를 사용한다. 
+    ElevatorScheduler scheduler = SchedulerFactory.getScheduler(this.strategyID);
+    int selectedElevator = scheduler.selectElevator(this, destination, direction);
+    controllers.get(selectedElevator).gotoFloor(destination);
+  }
+}
+```
+- `requestElevator()`메서드는 단순히 스케줄러 팩토리의 `getScheduler()`메서드를 호출하기만 하고, strategyID는 setter에 위임했다.(책임 분리)
+- 새로운 스케줄러가 추가되더라도 `ElevatorScheduler` 인터페이스만 따른다면 팩토리에서 알아서 생상할 예정이므로 `requestElevator()`는 고칠 필요가 없어진다.
+
+<br>
+
+- 이걸 좀 더 개선해보자. 동적 스케줄링 방식(DynamicScheduler)라면 매 요청에 스케줄러 객체를 생성한느게 아닌 한번 생성한걸 재활용 하는게 나을것이다. `싱글톤 패턴`을 이용한다.
+  ![https://gmlwjd9405.github.io/images/design-pattern-factory-method/factory-method-solution3.png]
+
+- 아래와 같이 코드를 리팩토링한다.
+```java
+public class SchedulerFactory {
+  public static ElevatorScheduler getScheduler(SchedulingStrategyID strategyID) {
+    ElevatorScheduler scheduler;
+    switch(strategyID) {
+      case RESPONSE_TIME:
+        scheduler = ResponseTimeScheduler.getInstance();
+        break;
+      case THROUGHPUT:
+        scheduler = ThroughputScheduler.getInstance();
+        break;
+      case DYNAMIC:
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        // 오전: 대기 시간 최소화, 오후: 처리량 최대화
+        if (hour < 12)
+          scheduler = ResponseTimeScheduler.getInstance();
+        else
+          scheduler = new ThroughputScheduler.getInstance();
+        break;
+    }
+    return scheduler;
+  }
+}
+```
+```java
+public interface ElevatorScheduler {
+  public int selectElevator(ElevatorManager manager, int destination, Direction direction);
+}
+
+public class ThroughputScheduler implements ElevatorScheduler {
+
+  private static ElevatorScheduler scheduler;
+  private ThroughputScheduler() {}
+
+  public static ThroughputScheduler getInstance() {
+    if(this.scheduler == null) {
+      scheduler = new ThroughputScheduler();
+    }
+
+    return this.scheduler;
+  }
+
+  public int selectElevator(ElevatorManager manager, int destination, Direction direction) {
+    // ...
+  }
+}
+
+public class ResponseTimeScheduler implements ElevatorScheduler {
+  // ThroughputScheduler 동일
+}
+```
+
+<br>
+
+### 다른 방법으로 팩토리 메서드 패턴 적용하기
+- 상속을 이용한 팩토리 메서드 패턴도 있다. [타입스크립트-Factory Method Pattern](https://refactoring.guru/design-patterns/factory-method/typescript/example#example-0) 자료에서는 이런 형태의 방식을 설명한다.
+- 상속을 이용한 구현은 ***스케줄링 전략마다  `ElevatorManager`의 자식 클래스를 만드는 방식으로 구현할 수 있다. 이 방법은 `템플릿 메서드 패턴`을 같이 이용해야 하는 방법이다.***
+
+  ![상속을 이용한 구현](https://gmlwjd9405.github.io/images/design-pattern-factory-method/factory-method-extends1.png)
+
+- 아래와 같이 구현한다.
+```java
+public abstract class ElevatorManager {
+  private List<ElevatorController> controllers;
+
+  public ElevatorManager(int controllerCount) {
+    controllers = new ArrayList<ElevatorController>(controllerCount);
+    for (int i=0; i<controllerCount; i++) {
+      ElevatorController controller = new ElevatorController(i + 1);
+      controllers.add(controller);
+    }
+  }
+  // '팩토리 메서드' ===> 스케줄링 전략 객체를 생성하는 기능을 제공한다.
+  protected abstract ElevatorScheduler getScheduler();
+
+  // '템플릿 메서드' ===> 요청에 따라 엘베를 선택하고 이동시키는, ElevatorManager의 핵심 로직
+  void requestElevator(int destination, Direction direction) {
+    ElevatorScheduler scheduler = getScheduler();
+    int selectedElevator = scheduler.selectElevator(this, destination, direction);
+    controllers.get(selectedElevator).gotoFloor(destination);
+  }
+}
+```
+- `ElevatorManager`의 Concrete class들은 아래와 같다.
+```java
+public ElevatorManagerWithThroughputScheduling extends ElevatorManager {
+  public ElevatorManagerWithThroughputScheduling(int controllerCount) {
+    super(controllerCount);
+  }
+
+  @Override
+  protected ElevatorScheduler getScheduler() {
+    return ThroughputScheduler.getInstance();
+  }
+}
+
+public ElevatorManagerWithDynamicScheduling extends ElevatorManager {
+  public ElevatorManagerWithDynamicScheduling(int controllerCount) {
+    super(controllerCount);
+  }
+
+  @Override
+  protected ElevatorScheduler getScheduler() {
+    ElevatorScheduler scheduler = null;
+
+    // 0..23
+    int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+    // 오전: 대기 시간 최소화, 오후: 처리량 최대화
+    if (hour < 12)
+      scheduler = ResponseTimeScheduler.getInstance();
+    else
+      scheduler = ThroughputScheduler.getInstance();
+
+    return scheduler;
+  }
+}
+```
+- 이 구현에서 `Product`, `Creator`의 역할은 각각 `ElevatorScheduler`, `ElevatorManager`임을 알 수 있다.
+
+> 이렇게 놓고 보니 실질적으로 팩토리 메서드 패턴은 `상속`과 `템플릿 매서드 패턴`을 이용하는 마지막 예제가 표준인 것 같다는 생각이 든다. 다른 예제에서도 이걸 디폴트로 설명함.
+
+<br>
