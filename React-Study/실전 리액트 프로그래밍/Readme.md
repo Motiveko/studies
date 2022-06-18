@@ -2590,7 +2590,7 @@ module.exports = {
   // ...
 }
 ```
-- 이렇게 하면 core-js 모듈이 통째로 추가되어 번들이 커지는 단점이 있다. 필요한 폴리필만 추가할 수도 있다.
+- 이렇게 하면 core-js 모듈이 통째로 추가되어 번들이 커지는 단점이 있다. 아래와 같이 필요한 폴리필만 추가할 수도 있다.
 ```js
 import 'core-js/features/promise'
 import 'core-js/features/object/values'
@@ -2599,6 +2599,8 @@ import 'core-js/features/array/includes'
 //...
 ```
 - 이런 방식은 번들은 작아지지만 실수를 할 가능성이 높아 조심해야한다.
+
+<br>
 
 2. [`@babel/preset-env`](https://babeljs.io/docs/en/babel-preset-env) 프리셋 이용하기
 - `@babel/preset-env` 프리셋은 ***실행 환경에 대한 정보를 설정해 주면 자동으로 필요한 기능을 주입해 준다.*** 아래는 예시다
@@ -2637,7 +2639,10 @@ const presets = [
 
 module.exports = { presets };
 ```
-- 1 : ` 크롬 최소 버전 40`, 2: `useBuiltIns: 'entry'`는 브라우저에서 필요한 폴리필만 포함시킨다. 3: 바벨에게 사용하는 corejs의 버전을 알려준다.
+- 설정은 아래와 같은 의미를 가진다.
+  - 1 - ` 크롬 최소 버전 40`
+  - 2 - `useBuiltIns: 'entry'`는 브라우저에서 필요한 폴리필만 포함시킨다.
+  - 3 - 바벨에게 사용하는 corejs의 버전을 알려준다.
 - src/code.js파일을 만들고 아래 내용을 작성한다.
 ```js
 // src/code.js
@@ -2666,7 +2671,7 @@ require("core-js/modules/web.url-search-params");
 
 // ... 코드
 ```
-- 설정한 환경에 필요한 모든 폴리필을 추가했기 때문에 많은 모듈이 추가된다. `useBuiltIns: 'usage'`로 설정을 바꾸면 `import 'core-js'`도 필요없고, 우리 코드를 읽어서 실제 필요한 폴리필 모듈만 추가해준다. 그리고 바벨을 실행해보면 추가되는 폴리필은 아래와 같다.
+- 설정한 환경에 필요한 모든 폴리필을 추가했기 때문에 많은 모듈이 추가된다. `{useBuiltIns: 'usage'}`로 설정을 바꾸면 `import 'core-js'`도 필요없고, 우리 코드를 읽어서 실제 필요한 폴리필 모듈만 추가해준다. 그리고 바벨을 실행해보면 추가되는 폴리필은 아래와 같다.
 ```js
 require("core-js/modules/es.object.to-string.js");
 require("core-js/modules/es.promise.js");
@@ -2674,7 +2679,7 @@ require("core-js/modules/es.object.values.js");
 require("core-js/modules/es.array.includes.js");
 require("core-js/modules/es.string.includes.js"); // 1
 ```
-- 1 - array와 string의 includes가 모두 추가되었다. 이유는 ***코드상 `arr.includes`에서 arr의 타입을 바벨이 알지 못하기 때문에 보수적으로 includes 메서드 폴리필을 있는대로 추가한 것***이다. 타입스크립트와 같은 정접 타입 언어라면 array만 추가했을 것이다.
+- 1 - array와 string의 includes가 모두 추가되었다. 이유는 ***코드상 `arr.includes`에서 `arr`의 타입이 배열인지 문자열인지 바벨이 알지 못하기 때문에 보수적으로 includes 메서드 폴리필을 있는대로 추가한 것***이다. 타입스크립트와 같은 정접 타입 언어라면 array만 추가했을 것이다.
 - 설정상 크롬 최소 버전을 올리면 폴리필이 점점 줄어들 것이다. 브라우저 런타임에 이미 해당 기능이 존재하기 때문이다.
 
 <br>
