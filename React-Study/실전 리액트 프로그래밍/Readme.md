@@ -2684,3 +2684,309 @@ require("core-js/modules/es.string.includes.js"); // 1
 
 <br>
 
+### 7.2 바벨 플러그인 제작하기
+- 바벨은 누구나 프리셋/플러그인을 제공할 수 있는 API를 제공한다. 이를 이용해서 플러그인을 만들면서 바벨이 내부적으로 어떻게 동작하는지 파악한다.
+- [공식 가이드 - babel-handbook](https://github.com/jamiebuilds/babel-handbook)을 참고하자.
+
+<br>
+
+### 7.2.1 AST 구조 들여다보기
+- 바벨은 코드를 AST로 파싱하고 이걸 변환하는 역할을 한다. 플러그인을 제작하기 위해서는 AST 구조를 이해해야 하는데, [astexplorer](https://astexplorer.net/)사이트에서 코드를 작성하고 바벨 파서가 어떻게 AST를 생성하는지 보는게 제일 좋다.
+- `const v1 = a + b;`라는 코드를 `@babel/parser`로 파싱하면 아래와 같은 결과를 볼 수 있다.(loc 등 생략)
+```json
+{
+  "program": {
+    "type": "Program",  // 1
+    "start": 0,
+    "end": 17,
+    "sourceType": "module",
+    "body": [
+      {
+        "type": "VariableDeclaration",  // 2
+        "start": 0,
+        "end": 17,
+        "declarations": [ // 3
+          {
+            "type": "VariableDeclarator", // 4
+            "start": 6,
+            "end": 16,
+            "id": {
+              "type": "Identifier", // 5
+              "start": 6,
+              "end": 8,
+              "name": "v1"  // 6
+            },
+            "init": { // 7
+              "type": "BinaryExpression", // 8
+              "start": 11,
+              "end": 16,
+              "left": {
+                "type": "Identifier",
+                "start": 11,
+                "end": 12,
+                "name": "a"
+              },
+              "operator": "+",
+              "right": {
+                "type": "Identifier",
+                "start": 15,
+                "end": 16,
+                "name": "b"
+              }
+            }
+          }
+        ],
+        "kind": "const"
+      }
+    ],
+  },
+}
+```
+- 각 번호 주석에 대한 설명은 아래와 같다.
+    1. AST 각 노드는 `type` 속성이 있다.
+    2. 변수 선언은 `VariableDeclaration` 타입이다.
+    3. 하나의 문장에서 여러 개의 변수 선언이 가능하기때문에 `declaration`은 배열로 관리된다.
+    4. 선언된 변수를 나타내는 타입은 `VariableDeclarator`이다.
+    5. 개발자가 만들어낸 각종 이름은 `Identifier` 타입이다.
+    6. 선언한 변수명 v1이 `name` 속성에 있는걸 확인할 수 있다.
+    7. `init` 속성에 변수를 초기화 하는 내용이 들어간다. 
+    8. 사칙연산은 `BinaryExpression` 타입이다. `left`, `right`, `operator` 속성이 존재한다.
+
+<br>
+
+### 7.2.2 바벨 플러그인 기본 구조
+- 바벨 플러그인의 기본 구조는 아래와 같다.
+```js
+module.exports = function({ types: t }) { // 1
+
+  const node = t.BinaryExpression('+', t.Identifier('a'), t.Identifier('b')); // 2
+  console.log('isBinaryExpression : ', t.isBinaryExpression(node));   // 3
+
+  return {
+    visitor: {  // 4
+      Identifier(path) {  // 5
+        console.log('Identifier name : ', path.node.name);
+      }, 
+      BinaryExpression(path) {  // 6
+        console.log('BinaryExpression operator : ', path.node.operator);
+      }
+    }
+  }
+}
+```
+
+- 플러그인은 위와 같이 `{type}` 객체를 인자로 받는 함수다. 각각에 대한 설명은 아래와 같다.
+  1. 매개변수로 넘어온 `types`는 ***여러가지 함수를 가진 유틸같은 객체다. AST노드를 생성하거나 노드 타입 판별등을 할 수 있다.***
+  2. `types`를 이용해 `BinaryExpression`노드를 만들었다. `a + b`를 의미한다.
+  3. `isBinaryExpression()` 메서드는 노드 타입이 `BinaryExpression`인지 판단한다. true를 반환할 것이다.
+  4. 반환하는 객체의 `visitor` 객체 내부에서 `노드의 타입 이름`으로 된 함수를 정의할 수 있다. 해당 타입 노드가 생성되면 같은 이름의 함수가 호출된다.
+  5. `Identifier` 타입의 노드가 생성되면 호출되는 함수다. 만약 `const v1 = a + b;`라는 코드가 입력되면 `v1`, `a`, `b`에 대해 3번 실행될것이다. `path.node`로 해당하는 노드 참조 가능
+  6. `BinaryExpression`탕ㅂ의 노드가 생성되면 호출되는 함수다. `const v1 = a + b;`라는 코드 입력시 한번 실행될 것이다.
+
+<br>
+
+
+### 7.2.3 바벨 플러그인 제작하기: 모든 콘솔 로그 제거
+- 프로젝트를 만든다.
+```bash
+mkdir test-babel-custom-plugin && cd test-babel-custom-plugin
+npm init -y
+npm i @babel/core @babel/cli
+```
+
+<br>
+
+- 바벨로 변환할 코드를 작성한다.
+```js
+// src/code.js
+console.log('aaa');
+const v1 = 123;
+console.log('bbb');
+function onClick(e) {
+  const v = e.target.value;
+}
+function add(a, b) {
+  return a + b;
+}
+```
+- `console.log`를 제거하기 위해서는 해당 코드의 AST 구조를 이해해야 한다. `console.log('aaa')`를 변환하면 대략 아래와 같은 AST가 생성된다.
+
+```json
+{
+  "type": "Program",
+  "start": 0,
+  "end": 19,
+  "sourceType": "module",
+  "body": [
+    {
+      "type": "ExpressionStatement",  // 1
+      "start": 0,
+      "end": 19,
+      "expression": {
+        "type": "CallExpression", // 2
+        "start": 0,
+        "end": 18,
+        "callee": {
+          "type": "MemberExpression", // 3
+          "start": 0,
+          "end": 11,
+          "object": {
+            "type": "Identifier",
+            "start": 0,
+            "end": 7,
+            "name": "console"
+          },
+          "property": {
+            "type": "Identifier",
+            "start": 8,
+            "end": 11,
+            "name": "log"
+          }
+        },
+        "arguments": [
+          {
+            "type": "StringLiteral",
+            "start": 12,
+            "end": 17,
+            "extra": {
+              "rawValue": "aaa",
+              "raw": "'aaa'"
+            },
+            "value": "aaa"
+          }
+        ]
+      }
+    }
+  ],
+  "directives": []
+},
+```
+- 대략적으로 아래와 같다.
+  1. `console.log()`코드는 `ExpressionStatement` 타입 노드로 시작된다. 표현식은 다 이렇게 되는것 같다.
+  2. 함수, 메서드 호출 코드라면 `expression` 속성이 `CallExpression` 타입 노드로 만들어진다.
+  3. `메서드 호출`은 `callee` 속성이 `MemberExpression` 노드로 만들어진다. `MemberExpression` 노드 내부에 객체(`object`)와 메서드(`property`)의 이름 정보가 보인다.
+
+<br>
+
+- 이런 AST 구조를 이용해 해당 코드를 제거하는 플러그인 코드를 만들어본다.
+
+```js
+// plugins/remove-log.js
+module.exports = function({ types: t }) {
+  return {
+    visitor: {
+      ExpressionStatement(path) { // 1
+        if(t.isCallExpression(path.node.expression)) { // 2
+          if(t.isMemberExpression(path.node.expression.callee)) { // 3
+            const memberExp = path.node.expression.callee;
+            if(
+              memberExp.object.name === 'console' &&  // 4
+              memberExp.property.name === 'log'
+            ) {
+              path.remove();  // 5
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+- `1 ~ 4`는 `console.log`코드에 대한 AST인지 검사하는 코드다.
+- 5 - `path.remove()`를 호출하면 AST에서 `ExpressionStatement`를 제거한다.
+- 플러그인 사용을 위해 아래와 같이 바벨 설정파일을 작성한다.
+```js
+// babel.config.js
+const plugins = ['./plugins/remove-log.js'];
+module.exports = { plugins };
+```
+- `npx babel src/code.js`를 수행하면 결과에서 `console.log`가 제거된걸 확인할 수 있다.
+
+<br>
+
+### 7.2.4 바벨 플러그인 제작하기: 함수 내부에 콘솔 로그 추가
+- 함수 이름이 'on'으로 시작하면, 함수 바디 최상단에 `console.log()`를 호출하게 코드를 바꾸는 바벨 플러그인을 작성하려 한다. 우선 기본적인 함수 선언의 AST를 파악해보자. `function f1(p1) { let v1;}`을 파싱하면 아래와 같은 AST가 생성된다. `start`, `end`도 빼고 알짜만 남겨본다.
+```json 
+{
+  "type": "Program",
+  "sourceType": "module",
+  "body": [
+    {
+      "type": "FunctionDeclaration",  // 1
+      "id": {
+        "type": "Identifier",
+        "name": "f1"  // 2
+      },
+      "generator": false,
+      "async": false,
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "p1"
+        }
+      ],
+      "body": { 
+        "type": "BlockStatement",
+        "body": [   // 3
+          {
+            "type": "VariableDeclaration",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "v1"
+                },
+                "init": null
+              }
+            ],
+            "kind": "let"
+          }
+        ],
+      }
+    }
+  ],
+}
+```
+- 대략 아래와 같다.
+    1. 함수를 정의하는 코드는 `FunctionDeclaration`타입 노드로 만들어진다.
+    2. 함수 이름은 `id.name` 속성에 들어있따.
+    3. 함수 바디는 `body.body`속성에 배열로 관리되고 있다.
+- 위 AST구조를 이용해 아래와 같이 `console.log`를 추가하는 플러그인을 만들 수 있다
+
+```js
+// plugins/insert-log.js
+module.exports = function({ types: t }) {
+  return {
+    visitor: {
+      FunctionDeclaration(path) { // 1
+        if(path.node.id.name.startsWith('on')) {  // 2
+          path
+            .get('body')  
+            .unshiftContainer(  // 3
+              'body', 
+              t.expressionStatement(  // 4
+                t.callExpression(
+                  t.memberExpression(
+                    t.identifier('console'),
+                    t.identifier('log'),
+                  ),
+                  [t.stringLiteral(`call ${path.node.id.name}`)],
+                ),
+              )
+            )
+        }
+      }
+    }
+  }
+}
+```
+- `1 ~ 2`는 이름이 'on'으로 시작하는 함수인지 판단한다.
+- 3 - `unshifeContainer('body')`로 body 최상단에 `console.log()`를 집어넣는다.
+- 4 - `console.log('call ${함수명}')` 노드를 만드는 과정이다. 자세한건 API 문서를 보면서 이해하면 된다.
+
+- 설정에 플러그인을 추가하고 바벨을 돌리면 onClick 메서드에 `console.log("call onClick");`가 추가됐음을 알 수 있다.
+
+> `insert-log`와 `remove-log` 플러그인을 둘 다 추가하면 어떻게 될까? visit의 메서드는 'AST 노드 생성시' 호출되므로, `console.log` 메서드가 기존에 코드에 있던걸 파싱하는것이던, `t.expressionStatement()`메서드로 동적으로 생성한 것이던 상관없이 **모두 지우게 된다.**
+
+<br>
