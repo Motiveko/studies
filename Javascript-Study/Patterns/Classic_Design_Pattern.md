@@ -1794,3 +1794,33 @@ public ElevatorManagerWithDynamicScheduling extends ElevatorManager {
 > 이렇게 놓고 보니 실질적으로 팩토리 메서드 패턴은 `상속`과 `템플릿 매서드 패턴`을 이용하는 마지막 예제가 표준인 것 같다는 생각이 든다. 다른 예제에서도 이걸 디폴트로 설명함.
 
 <br>
+
+## Mixin Pattern
+- https://www.patterns.dev/posts/mixin-pattern/
+- 믹스인 패턴은 ***상속 없이 객체에 기능을 추가하는 패턴***을 말한다. GoF에 나오는 일반적인 객체지향 패턴은 아니고 자바스크립트같은 언어에만 한정되는 패턴.
+- 아래와 같은 Dog 클래스가 있다
+```js
+class Dog {
+  constructor(name) {
+    this.name = name;
+  }
+}
+```
+- 개이기때문에 짖기도 하고, 꼬리도 흔들고, 놀기도 하고 싶다. 어떻게 추가할 수 있을까?
+```js
+const dogFunctionality = {
+  bark: () => console.log("Woof!"),
+  wagTail: () => console.log("Wagging my tail!"),
+  play: () => console.log("Playing!")
+};
+```
+- [`Object.assign()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) 메서드를 이용하면 target 객체에 source 객체의 `enumerable: ture`인 속성들을 추가할 수 있다.
+```js
+// Syntax
+Object.assign(target, ...sources)
+```
+```js
+Object.assign(Dog.prototype, dogFunctionality);
+```
+- 이렇게 Dog.prototype에 추가하면, 모든 Dog 인스턴스에서 `bark`, `wagTail`, `play` 메서드를 호출할 수 있게 된다. 런타임에 동적으로 객체에 기능을 추가한것이다.
+
