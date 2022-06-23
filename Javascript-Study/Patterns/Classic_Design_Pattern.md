@@ -1135,11 +1135,11 @@ manager.execute(new PlaceOrderCommand("Pad Thai", "1234"));
 manager.execute(new TraceOrderCommand("1234"));
 manager.execute(new CancelOrderCommand("1234"));
 ```
-- 순수 자바스크립트로 구현했는데, 여기서는 비즈니스 로직을 `*Command`함수로 구현했다. 
+- 순수 자바스크립트로 구현했는데, 여기서는 비즈니스 로직을 `Command`함수로 구현했다. 
 - `OrderManager`는 `execute`메서드 하나만 가지고, 호출하는 측에서 원하는 로직을 담은 Command를 인자로 넘기기만 하면 된다. OrderManager에서 Command의 제약조건은 `orders` 객체를 인자로 받는다는 점이다.(물론 Trace처럼 안받아도 그만)
 - 이렇게 하면 ***`OrderManager`와 기존 비즈니스 로직이 느슨하게 결합되었고, Command에 구현된 로직은 다른 객체에서도 얼마든지 사용할 수 있게 된다.***
 
-> 공부하면서 드는 생각이, 이거 `Function.prototype.call()`아닌가!? 자바스크립트처럼 함수를 일급 객체로 쓸 수 있는 언어는 커맨드 패턴이 필요가 없을지도 모른다!
+> 공부하면서 드는 생각이, `OrderManager`의 `execute()`메서드는 자바스크립트의 `Function.prototype.call()`아닌가!? 자바스크립트처럼 함수를 일급 객체로 쓸 수 있는 언어는 커맨드 패턴이 필요가 없을지도 모른다!
 
 <br>
 
@@ -1183,10 +1183,6 @@ carManager.execute('buyVehicle', 'Ford Escort', '453543');
 > `apply`는 두번째 인자로 arugmnet를 배열 객체로 받는다. call은 일반 함수 호출시 인자 전달처럼 `,`로 구분해서 전달해야 한다.
 
 <br>
-
-
-
-
 
 
 ### Command Pattern 심화
@@ -1281,7 +1277,59 @@ invoker.doSomethingImportant();
 - 이렇게 구현했을 때 장점은 무엇일까?
 - Invoker 입장에서는 `execute`메서드를 가지는 Command 인터페이스 구현체라면 뭐든 교체해서 넣을 수 있다는 것이다. ***Invoker 객체에 어떤 Command 구현체를 넣느냐에 따라 비즈니스 로직을 조정할 수 있어, Invoker를 수정하지 않고 새로운 Command를 만들어 전달하는 형태로 코드를 수정할 수 있게 된다.*** 
 
-> [Design Pattern 커맨드 패턴이란](https://gmlwjd9405.github.io/2018/07/07/command-pattern.html) 포스팅을 참고해보자. Invoker를 건들지 않고도 Invoker의 호출 결과 실행되는 로직을 맘대로 주무를 수 있는 대단한 패턴임을 알 수 있다.
+<br>
+
+### 추가 : 커맨드 패턴 심화(java)
+- [Design Pattern 커맨드 패턴이란](https://gmlwjd9405.github.io/2018/07/07/command-pattern.html) 포스팅을 참고한다.
+- Invoker를 건들지 않고도 Invoker의 호출 결과 실행되는 로직을 맘대로 주무를 수 있게 해주는 패턴이다.
+- 버튼을 누르면 램프가 켜지는 프로그램을 짜보자
+```java
+public class Lamp {
+  public void turnOn() {
+    System.out.println("Lamp on");
+  }
+}
+
+public class Button {
+  public class button(Lamp lamp) {
+    this.lamp = lamp;
+  }
+  public void pressed() {
+    lamp.turnOn();
+  }
+}
+
+// Usage
+Lamp lamp = new Lamp();
+Button lampButton = new Button(lamp);
+lampButton.pressed();
+```
+- 간단한 구현이다. 여기서 문제는 기능을 변경할 때 생긴다. 
+1. 버튼을 눌렀을 때 알람이 실행되게 하려면?
+```java
+public class Alarm {
+  public void start(){ System.out.println("Alarming"); }
+}
+public class Button {
+  private Alarm theAlarm;
+  public Button(Alarm theAlarm) { this.theAlarm = theAlarm; }
+  public void pressed() { theAlarm.start(); }
+}
+
+// Usage
+Alarm alarm = new Alarm();
+Button alarmButton = new Button(alarm);
+alarmButton.pressed();
+```
+- 새로운 기능으로 변경하기 위해 버튼을 변경해야 하므로 [`OCP(Open-Closed Principle, 개방 폐쇄 원칙)`](https://steady-coding.tistory.com/378)을 위반한다. 
+
+<br>
+
+2. 버튼을 누르는 동작에 따라 다른 기능을 수행하려는 경우
+- 
+
+
+
 
 <br>
 
