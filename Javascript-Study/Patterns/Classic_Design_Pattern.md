@@ -31,7 +31,7 @@
   - ### [AMD](#AMD-1)
   - ### [CommonJS](#CommonJS-1)
   - ### [UMD](#UMD-1)
-- ### [Design Patterns In jQuery](#Design-Patterns-In-jQuery-1)
+<!-- - ### [Design Patterns In jQuery](#Design-Patterns-In-jQuery-1)
   - ### [Composite Pattern](#Composite-Pattern-1)
   - ### [Adapter Pattern](#Adapter-Pattern-1)
   - ### [Facade Pattern](#Facade-Pattern-1)
@@ -39,7 +39,7 @@
   - ### [Iterator Pattern](#Iterator-Pattern-1)
   - ### [Lazy Initialization Pattern](#Lazy-Initialization-Pattern-1)
   - ### [Proxy Pattern](#Proxy-Pattern-1)
-  - ### [Builder Pattern](#Builder-Pattern-1)
+  - ### [Builder Pattern](#Builder-Pattern-1) -->
 - ### [jQuery Plugin Design Patterns](#jQuery-Plugin-Design-Patterns-1)
 - ### [JavaScript Namespacing Patterns](#JavaScript-Namespacing-Patterns-1)
 - ### [Conclusions](#Conclusions-1)
@@ -758,13 +758,13 @@ export default function App() {
 
 ### Observer Pattern 심화
 - 기본에서는 옵저버는 단순한 함수로, 옵저버블은 subscribe/unsubscribe/notify의 기본 메서드만 존재했었다. 이걸 상속/확장해서 더 다양한 형태의 옵저버블 패턴을 구현할 수 있다.
-- 대표적으로 RxJS에서 기본적으로 옵저버는 `[next, error, complete]`형태의 3개의 함수를 가진 배열 형태의 객체가 된다. 옵저버블(서브젝트)는 훨씬 복잡한 다양한 형태로 구성된다.
+- 대표적으로 RxJS에서 기본적으로 옵저버는 `{next, error, complete}`형태의 3개의 함수를 가진 객체가 된다. 옵저버블(서브젝트)는 훨씬 복잡한 다양한 형태로 구성된다.
 - 이걸 정리하면 아래 4개의 컴포넌트로 옵저버 패턴을 사용하게 된다.
   - `Subject`: 옵저버블
   - `Observer`: 기본 옵저버
   - `ConcreteSubject`: Subect를 상속해서 필요한 기능을 구현한 옵저버블
   - `ConcreteObserver`: 기본 옵저버를 상속해서 확장한 옵저버
-- [Observable Pattern 디렉토리]('/Observable_ Pattern')에 자세하게 구현되어 있다. 설명은 아래와 같다.
+- [Observable Pattern 디렉토리](/Observable_Pattern)에 자세하게 구현되어 있다. 설명은 아래와 같다.
   - `#mainCheckbox`은 `ConcreteSubject`로 래핑되어 자신의 checked 상태를 옵저버들에게 전파한다.
   - add 버튼 클릭시 `input type='checkbox'`을 DOM에 추가한다. 이 객체는 `ConcreteObserver`로 래핑되고 `ConcreteSubject`객체에 옵저버로 등록된다.
   - 참고로, es5에서 `ConcreteSubject`, `ConcreteObserver`구현시 상속을 구현해야하는데, 아래와 같은 함수로 구현할 수 있다.
