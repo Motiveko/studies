@@ -1305,6 +1305,10 @@ Button lampButton = new Button(lamp);
 lampButton.pressed();
 ```
 - 간단한 구현이다. 여기서 문제는 기능을 변경할 때 생긴다. 
+
+<br>
+
+### 문제점
 1. 버튼을 눌렀을 때 알람이 실행되게 하려면?
 ```java
 public class Alarm {
@@ -1326,10 +1330,123 @@ alarmButton.pressed();
 <br>
 
 2. 버튼을 누르는 동작에 따라 다른 기능을 수행하려는 경우
-- 
+- 버튼을 처음 누르면 램프를 키고, 두번째는 알람이 동작하게 하려면? 여러 가지 방법이 있겠지만 레거시하게 아래 방법이 있을것이다.
+```java
+enum Mode {
+  LAMP,
+  ALARM
+};
+public class Button {
+  private Lamp lamp;
+  private Alarm alarm;
+  private Mode mode;
 
+  public Button(Lamp lamp, Alarm alarm) {
+    this.lamp = lamp;
+    this.lamp = lamp;
+  }
 
+  public void setMode(Mode mode) {
+    this.mode = mode;
+  }
 
+  public void pressed() {
+    switch(mode) {
+      case LAMP: 
+        lamp.turnOn();
+        break;
+      case ALARM:
+        alarm.start();
+        break;
+    }
+  }
+}
+```
+- 기능이 추가될 때 마다 Mode 추가하고 pressed에 switch문 추가하고, 필요하면 새로운 타입의 필드도 추가해야할 것이다.
+
+<br>
+
+### 해결책
+- 문제를 해결하려면 ***버튼에 구체적인 기능을 직접 구현하지 않고 `실행될 기능을 캡슐`화 해야 한다.*** 
+- 즉, Button의 `pressed()`에 구체적 기능을 구현하지 않고, **실행될 기능을 캡슐화해 외부에서 제공받아 `pressed()` 메서드에서 호출하게 하는 것이다.**
+- **기능은 공통 인터페이스로 캡슐화 했고, 외부에서 전달하기 때문에 기능 추가/변경에 대해 Button을 수정할 필요가 없어진다.**
+  ![기능추상화](https://gmlwjd9405.github.io/images/design-pattern-command/command-solution.png)
+
+```java
+// 기능을 캡슐화하는 인터페이스
+public interface Command {
+  public abstract void execute();
+}
+```
+```java
+public class Button {
+  private Command command;
+  public Button(Command command) {
+    this.command = command;
+  }
+
+  // 기능을 외부에서 전달할 수 있다.
+  public void setCommand(Command command) {
+    this.command = command;
+  }
+
+  // pressed() 메서드는 외부에서 전달한 추상화된 기능을 호출하기만 한다.
+  public void pressed() {
+    command.excued();
+  }
+}
+```
+```java
+public class Lamp {
+  public void turnOn(){ 
+    System.out.println("Lamp On"); 
+  }
+}
+
+public class LampOnCommand implements Command {
+  private Lamp lamp;
+  public LampOnCommand(Lamp lamp) {
+    this.lamp = lamp;
+  }
+  public void execute() {
+    lamp.turnOn();
+  }
+}
+```
+```java
+public class Alarm {
+  public void start() {
+    System.out.println("Alarming");
+  }
+}
+
+public class AlarmStartCommand implements Command {
+  private Alarm alarm;
+  public AlarmStartCommand(Alarm alarm) {
+    this.alarm = alarm;
+  }
+  public void execute() {
+    alarm.start();
+  }
+}
+```
+```java
+// Usage
+Lamp lamp = new Lamp();
+Command lampOnCommand = new LampOnCommand(lamp);
+Alarm alarm = new Alarm();
+Command alarmStartCommand = new AlarmStartCommand(alarm);
+
+Button button1 = new Button(lampOnCommand); // 램프 켜는 Command 설정
+button1.pressed(); // 램프 켜는 기능 수행
+
+Button button2 = new Button(alarmStartCommand); // 알람 울리는 Command 설정
+button2.pressed(); // 알람 울리는 기능 수행
+button2.setCommand(lampOnCommand); // 다시 램프 켜는 Command로 설정
+button2.pressed(); // 램프 켜는 기능 수행
+```
+- 앞으로 기능을 추가하고 싶다면, `Command`인터페이스 구현체를 만들어 Button의 `setCommand()`로 해당 커맨드를 전달한 후, `pressed()`를 호출하기만 하면 된다. Button은 더이상 수정할 필요가 없어졌다!
+![결과](https://gmlwjd9405.github.io/images/design-pattern-command/command-solution2.png)
 
 <br>
 
