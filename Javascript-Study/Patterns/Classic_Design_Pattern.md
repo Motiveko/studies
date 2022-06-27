@@ -1989,3 +1989,169 @@ Object.assign(Dog.prototype, dogFunctionality);
 ```
 - 이렇게 Dog.prototype에 추가하면, 모든 Dog 인스턴스에서 `bark`, `wagTail`, `play` 메서드를 호출할 수 있게 된다. 런타임에 동적으로 객체에 기능을 추가한것이다.
 
+<br>
+
+## Decorator Pattern
+- 데코레이터 패턴은 **객체의 결합을 통해 기능을 동적으로 유연하게 확장할 수 있게 해주는 구조(Structural) 패턴**이다.
+- **'기본 기능'**에 여러가지 추가할 수 있는 기능이 많은 경우, 각 추가 기능을 `Decorator`클래스로 정의하고 이를 필요에 따라 조합해서 쓰는 방식이다.
+
+  ![데코레이터](https://gmlwjd9405.github.io/images/design-pattern-decorator/decorator-pattern.png)
+
+- 각 컴포넌트는 아래와 같다.
+  - `ConcreteComponent` : 기본 기능 정의
+  - `Decorator`: 추가 기능 정의
+  - `Component`: `ConcreteComponent`와 `Decorator`의 추상화(`operation()` 메서드)
+  - `ConcreteDecorator` : `Decorator`의 자식 클래스로 개별 추가기능의 구현
+    - `Decorator` 클래스는 `ConcreteComponent`에 대한 참조를 가진다. 합성(Composition)관계를 통해 표현됨
+
+<br>
+
+> 합성(Composition) 관계 : 생성자에서 의존하는 객체 인스턴스를 '생성'하는 것. 전체 객체(객체 + 의존객체)가 한번에 생성되므로, 라이프사이클을 공유한다.
+
+<br>
+
+### 예시 - 도로 표시 방법 조합하기
+- 네비게이션에서 도로를 표시하는 기능을 만든다. 아래와 같은 기능이 있을것이다.
+    1. 도로를 선으로 표시하는 기능(기본 기능)
+    2. 도로의 차선을 표시하는 기능(추가 기능)
+
+![도로표시](https://gmlwjd9405.github.io/images/design-pattern-decorator/decorator-example.png)
+
+<br>
+
+```java
+class RoadDisplay {
+  public void draw() {
+    System.out.println("기본 도로 표시");
+  }
+}
+class RoadDisplayWithLane extends RoadDisplay{
+  public void draw() {
+    super.draw(); // 기본 기능
+    drawLane();   // 추가 기능
+  }
+
+  private void drawLane() {
+    System.out.println("차선 표시");
+  }
+}
+```
+
+<br>
+
+### 문제점
+1. 여기서 또다른 추가 기능(교통량 표시, 교차로 표시)이 생성된다면 어떻게 될까? 
+
+    -> 새로운 `RoadDisplay`를 상속하는 객체를 만든다.
+
+2. 몇가지 추가 기능을 조합해야 한다면?
+
+    -> 차선/교통량/교차로 표시 3가지 기능의 조합은 7개나 된다. 추가 기능은 3개인데, `RoadDisplay`상속 객체를 7개나 만들어야 한다. 추가기능이 10개라면?
+
+![추가 기능 조합](https://gmlwjd9405.github.io/images/design-pattern-decorator/decorator-problem2.png)
+
+<br>
+
+
+### 해결
+- 이 문제를 데코레이터 패턴으로 해결할 수 있다. 차선/교통량/교차로 표시 기능을 각각 Decorator로 정의하고, 기본 기능(`RoadDisplay`)와 조합하는 방식으로 사용하면, 기능 구현체는 3개만 만들면 된다.
+
+![데코레이터 패턴 적용](https://gmlwjd9405.github.io/images/design-pattern-decorator/decorator-solution.png)
+
+```java
+// 최상위 객체(Component)
+public abstract class Display {
+  public abstract void draw();
+}
+
+// 기본 기능
+public class RoadDisplay extends Display {
+  @Override
+  public void draw() {
+    System.out.println("기본 도로 표시");
+  }
+}
+```
+```java
+// 데코레이터들
+public abstract class DisplayDecorator() extends Display {
+  private Display decoratedDisplay;
+  public DisplayDecorator(Display decoratedDisplay) {
+    this.decoratedDisplay = decoratedDisplay;
+  }
+
+  @Override
+  public void draw() {
+    decoratedDisplay.draw();
+  }
+}
+
+// Concrete Decorator
+public class LaneDecorator extends DisplayDecorator() {
+
+  public LaneDecorator(Display decoratedDisplay) { 
+    super(decoratedDisplay); 
+  }
+
+  @Override
+  public void draw() {
+    super.draw();
+    drawLane();
+  }
+
+  private void drawLane() {
+    System.out.println("차선 표시");
+  }
+}
+
+public class TrafficDecorator extends DisplayDecorator() {
+  
+  public TrafficDecorator(Display decoratedDisplay) { 
+    super(decoratedDisplay); 
+  }
+
+  @Override
+  public void draw() {
+    super.draw();
+    drawTraffic();
+  }
+
+  public void drawTraffic() {
+    System.out.println("교통량 표시");
+  }
+}
+
+public class CrossDecorator extends DisplayDecorator() {
+
+  public CrossDecorator(Display decoratedDisplay) { 
+    super(decoratedDisplay); 
+  }
+
+  @Override
+  public void draw() {
+    super.draw();
+    drawCross();
+  }
+
+  public void drawCross() {
+    System.out.println("교차로 표시");
+  }
+}
+```
+- `DisplayDecorator`에서 `Display`타입 객체를 인자로 받아 해당 객체의 `draw()`를 호출하고, 데코레이터 로직흘 수행한다. ***기본기능과 추가기능이 모두 `draw`메서드에 구현되도록 했기 때문에 어떤식으로든 조합이 가능해진다.***
+```java
+// Usage 1 기본 + 차선 표시
+Display roadWithLane = new LaneDecorator(new RoadDisplay());
+roadWithLane.draw();
+
+// Usage 2 기본 + 차선 + 교통량 + 교차로
+Display roadWithLaneTrafficCross = new CrossDecorator(
+  new TrafficDecorator(
+    new LaneDecorator(
+      new RoadDisplay()
+  )));
+roadWithLaneTrafficCross.draw();
+```
+- 이런 설계는 추가 기능이 많을수록 유용하다. 사실 함수를 객체처럼 주고받을 수 있는 자바스크립트에서는 역시나 훨씬 더 쉬운 방식으로 구현 가능할 것 같다.
+
+<br>
