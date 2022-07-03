@@ -1,0 +1,61 @@
+@import url("https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap");
+
+html,
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: "Black Han Sans", sans-serif;
+  background-color: #2f2f2f;
+  font-size: 2rem;
+}
+
+
+button {
+  font-family: roboto;
+  letter-spacing: 1px;
+  padding: 1rem 5rem;
+  border-radius: 9px;
+  font-size: 1.5rem;
+  color: #eaeaea;
+  font-weight: bold;
+  background-color: #ff2e63;
+  box-shadow: 0 3px 12px 0 rgba(0, 0, 0, 0.5);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  /* 강좌에서는 했는데, 없어도 된다. */
+  /* --a: initial; */
+}
+
+button::after {
+  content: "";
+  background-color: rgba(0, 0, 0, 0.4);
+  position: absolute;
+  width: var(--diameter);
+  height: var(--diameter);
+  left: var(--left);
+  top: var(--top);
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 1;
+
+  /* 이거 없으면 여기에도 버튼요소의 클릭 이벤트가 먹힌다. */
+  pointer-events: none;
+
+  /* css 에니메이션이 클릭시마다 동작할 수 있도록 css variable 사용 */
+  /* animation: ripple-effect 1000ms linear; */
+  animation: var(--a);
+
+}
+
+@keyframes ripple-effect {
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
