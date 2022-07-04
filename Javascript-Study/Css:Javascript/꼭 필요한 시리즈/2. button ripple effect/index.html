@@ -27,9 +27,12 @@
       btn.style.setProperty('--diameter', radius * 2 + 'px');
 
       // 클릭 이벤트 발생한 위치의 뷰포트 기준 상대위치(스크롤과 무관하다)
-      const { clientX, clientY } = e;
-      const left = (clientX - x - radius) + 'px';
-      const top = (clientY - y - radius) + 'px';
+      const { clientX, clientY, offsetX, offsetY } = e;
+      // const left = (clientX - x - radius) + 'px';
+      // const top = (clientY - y - radius) + 'px';
+      const left = (offsetX - radius) + 'px'; // offsetX는 위의 clientX - x 와 동일한 값이다!(이벤트 타겟 요소에서 상대거리)
+      const top = (offsetY - radius) + 'px';
+
 
       btn.style.setProperty('--left', left);
       btn.style.setProperty('--top', top);
