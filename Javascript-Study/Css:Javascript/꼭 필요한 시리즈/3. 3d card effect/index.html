@@ -22,49 +22,53 @@
     const frame = document.getElementById('frame');
     const card = document.getElementById('card');
     const light = document.getElementById('light');
-
     let { width: w, height: h } = card.getBoundingClientRect();
+
     window.addEventListener('resize', () => {
-      // 창 크기 변할때 카드 사이즈도 변할수 있기 때문에 이를 위한 재계산
       ({ width: w, height: h } = card.getBoundingClientRect());
     })
 
     frame.addEventListener('mouseenter', () => {
-      card.addEventListener('mousemove', mouseMove);
+      frame.addEventListener('mousemove', mouseMove)
     })
     frame.addEventListener('mouseleave', () => {
-      card.removeEventListener('mousemove', mouseMove);
-      card.style.transform = ''
-      card.style.boxShadow = ''
-      light.style.backgroundImage = ''
+      frame.removeEventListener('mousemove', mouseMove);
+      // 전부 초기화
+      card.style.boxShadow = '';
+      card.style.transform = '';
+      light.style.backgroundImage = '';
     })
 
-    function mouseMove(e) {
-
+    const mouseMove = (e) => {
       const { offsetX, offsetY } = e;
-      const centerY = offsetY - (h / 2)
-      const centerX = offsetX - (w / 2)
+
+      // 카드 중심점으로부터 포인터가 떨어진 거리
+      const centerY = offsetY - h / 2
+      const centerX = offsetX - w / 2
 
       // argA는 음수로 써야한다. 이유는 rotate3d 동서남북 계산해보면 안다.
       const argA = -centerY / 100;
       const argB = centerX / 100;
-
       // 모서리쪽으로 갈수록 기울김 각도 크게, linear하게 하고 최대 약 26~7도 정도
       const deg = Math.sqrt(centerX * centerX + centerY * centerY) / 10 + 'deg';
 
-
-      card.style.transform = `rotate3d(${argA}, ${argB}, 0, ${deg})`;
-
-      // centerX/Y와 정 반대방향으로 box-shadow
-      card.style.boxShadow = `${-centerX / 5}px ${-centerY / 5}px 10px rgba(0,0,0,0.1)`;
-
-      // light, 포인터를 중심으로 약검 - 약흰 - 흰(점점밝아지게)
-      light.style.backgroundImage = `
-          radial-gradient(
-            circle at ${offsetX}px ${offsetY}px, #cccccc02, #dddddd00, #ffffff30
-          )
+      // 이런식으로도 css에 rotate3d 전달 가능하다.
+      card.style.transform = `
+        rotate3d(${argA},${argB},0, ${deg})
       `
+
+      // background-image에 radial-gradient를 이용해서 마우스 가까운위치는 검은색, 가운데는 무색, 먼곳은 흰색 =>
+      light.style.backgroundImage = `
+        radial-gradient(
+          circle at ${offsetX}px ${offsetY}px, #00000010, #ffffff00, #ffffff70
+        )
+      `
+
+      // { box-shadow : x,y, blur, spred, color } => {box-shadow: -centerX -centerY 10px #00000010}=> 그림자는 포인터 반대로
+      card.style.boxShadow = `${-centerX / 10}px ${-centerY / 10}px 10px rgba(0,0,0, 0.1)`
     }
+
+
   </script>
 </body>
 
