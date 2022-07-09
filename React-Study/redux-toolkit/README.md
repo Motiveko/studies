@@ -197,8 +197,49 @@ export interface EntitySelectors<T, V> {
 <br>
 
 2. 상태값인 `EntityState`는 식별자의 배열인 ids와 entity 객체의 `Dictionary`를 가진다. `Dictionary`는 id를 키로 가지는 객체로 id로 검색할 때 시간복잡도 O(1)로 검색 가능하다.(성능++)
-3. `getSelectors()`는 `EntitySelectors`타입 객체를 반환하고, 간단한 [`Selector Functions`](https://redux-toolkit.js.org/api/createEntityAdapter#selector-functions)들을 제공한다.(memoization)
-  - TODO : 이거부터 정리~ 넘졸리다.
+
+<br>
+
+3. `getSelectors()`는 `EntitySelectors`타입 객체를 반환하고, 간단한 [`Selector Functions`](https://redux-toolkit.js.org/api/createEntityAdapter#selector-functions)들을 제공한다. 내부적으로 `reselct`의 `createSelector()`를 사용하므로, memoization 기능을 제공한다. `getSelectors`함수는 두가지 사용법이 있다.
+    ```ts
+    // 두가지 타입의 getSelectors
+    export interface EntityAdapter<T> extends EntityStateAdapter<T> {
+      // ...
+      getSelectors(): EntitySelectors<T, EntityState<T>>;
+      getSelectors<V>(selectState: (state: V) => EntityState<T>): EntitySelectors<T, V>;
+    }
+    ```
+  - 둘의 사용상 차이는 아래와 같단다.
+    ```ts
+    const simpleSelectors = booksAdapter.getSelectors();
+    const globalizedSelectors = booksAdapter.getSelectors<RootState>(
+      (state) => state.books
+    )
+
+    // 1. 일반 셀렉터, books reducer 의 상태를 가져오는 방법을 알려줘야한다.
+    const ids1 = simpleSelectors.selectIds(store.getState().books);
+
+    /**  
+      2. globalizedSeletor, 제네릭으로 rootstate 타입을 전달했고, 컬렉션 가져오는법을 getSelector 인자로 알려줬다.
+      rootstate를 인자로 전달하면 알아서 books 컬렉션을 가져온다.
+    */
+    const ids2 = globalizedSelectors.selectIds(store.getState());
+    ```
+
+<br>
 
 4. [`getInitialState()`](https://redux-toolkit.js.org/api/createEntityAdapter#getinitialstate)는 초기 상태값을 반환하기도 하고, 추가 상태를 전달해 상태값을 변경할 수 기도 하다. ***상태값은 단순히 데이터 컬렉션만 있는게 아니라 `isloading`, `isEmpty` 등 다양한 상태값들이 존재할 수 있기 때문이다.***
-
+```ts
+const bookSlice = createSlice({
+  name: 'books',
+  // 제네릭으로 타입을 전달하고, 인자로 초기값을 전달하면 된다. createSlice는 이를 인식해서 state타입에 해당내용을 반영한다.
+  initialState: booksAdapter.getInitialState<{isLoading: boolean}>({
+    isLoading: true,
+  }),
+  reducers: {
+    setIsLoading(state, action: PayloadAction<boolean>) {
+      state.isLoading = action.payload;
+    }
+  }
+});
+```

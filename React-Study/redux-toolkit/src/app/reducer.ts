@@ -1,4 +1,4 @@
-import { configureStore, createEntityAdapter, createSlice } from "@reduxjs/toolkit";
+import { configureStore, createEntityAdapter, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type Book = {
   bookId: string; // 식별자
@@ -15,12 +15,12 @@ const booksAdapter = createEntityAdapter<Book>({
 
 const bookSlice = createSlice({
   name: 'books',
-  initialState: booksAdapter.getInitialState(), // { ids: [], entities: {} }
+  initialState: booksAdapter.getInitialState<{isLoading: boolean}>({
+    isLoading: true,
+  }),
   reducers: {
-    bookAdded: booksAdapter.addOne, // adapter function을 그대로 reducer에 전달하는 케이스
-    booksReceived(state, action) {
-      // adapter function을 mutating helper로 사용하는 케이스
-      booksAdapter.setAll(state, action.payload.books);
+    setIsLoading(state, action: PayloadAction<boolean>) {
+      state.isLoading = action.payload;
     }
   }
 });
@@ -36,7 +36,17 @@ type RootState = ReturnType<typeof store.getState>
 console.log(store.getState().books);
 // { ids: [], entities: {} }
 
-// Can create a set of memoized selectors based on the location of this entity state
-const booksSelectors = booksAdapter.getSelectors<RootState>(
+
+const simpleSelectors = booksAdapter.getSelectors();
+const globalizedSelectors = booksAdapter.getSelectors<RootState>(
   (state) => state.books
 )
+
+// 1. 일반 셀렉터, books reducer 의 상태를 가져오는 방법을 알려줘야한다.
+const ids1 = simpleSelectors.selectIds(store.getState().books);
+
+/**  
+  2. globalizedSeletor, 제네릭으로 rootstate 타입을 전달했고, 컬렉션 가져오는법을 getSelector 인자로 알려줬다.
+  rootstate를 인자로 전달하면 알아서 books 컬렉션을 가져온다.
+*/
+const ids2 = globalizedSelectors.selectIds(store.getState());
