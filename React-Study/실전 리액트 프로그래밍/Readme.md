@@ -13,6 +13,7 @@
 - ### [4. 리액트 실전 활용법](#4-리액트-실전-활용법-1)
 <!-- - ### [5. 레거시 프로젝트를 위한 클래스형 컴포넌트](#5-레거시-프로젝트를-위한-클래스형-컴포넌트-1) -->
 - ### [6. 리덕스로 상태 관리하기](#6-리덕스로-상태-관리하기-1)
+- ### [7. 바벨과 웹팩 자세히 들여다보기](#7-바벨과-웹팩-자세히-들여다보기)
 
 <br><br>
 
@@ -2346,5 +2347,646 @@ describe('fetchData', () => {
 - testing-utils에서 제공하는 `cloneableGenerator`함수는 사가의 제너레이터 함수가 `복제 가능한 제너레이터 객체`를 반환하게 해준다. 한 제너레이터에서 테스트 케이스가 여러가지 경우로 나뉠 때 굉장히 편하다.
 - 사가의 함수들은 `자바스크립트 객체`를 반환하므로 `generator.next/throw` 과정에서 반환되는 객체를 테스트하기만 하면 된다.
 - `try/catch`문 이전까지 제너레이터를 실행해 테스트하고, 이후 ***제너레이터 객체를 `복제`해 next/throw를 호출하며 api 호출 성공/실패를 테스트한다.***
+
+<br>
+
+## 7. 바벨과 웹팩 자세히 들여다보기
+### 7.1 바벨 실행 및 설정하기
+- `바벨`은 Input과 Output이 모드 코드인 컴파일러이다. 초기의 바벨은 ES6를 ES5로 바꿔주는 역할을 했으나 지금은 JSX, 타입스크립트, proposal 단계 문법을 변환하거나 코드 압축 등을 할 수 있다.
+- 바벨을 설정하는 여러가지 방법을 알아보고, 프로젝트별 적합한 설정을 고민해본다.
+- `폴리필`은 무엇이고 어떻게 설정하는지 알아본다. `core-js` 패키지와 `@babel/preset-env` 프리셋을 이용해 폴리필을 관리하는 법을 알아본다.
+
+### 7.1.1 바벨을 실행하는 여러 방법
+- 바벨을 실행하는 방법은 아래와 같다.
+  - `@babel/cli`로 실행하기
+  - webpack에서 `babel-loader`로 실행하기
+  - `@babel/core`를 직접 실행하기
+  - `@babel/register`로 실행하기
+
+- `@babel/register`는 Node 환경에서 `require` 실행시 동적으로 바벨이 실행하게 할 수 있는데, FE 개발에서 이걸 쓸일이 거의 없으므로 제외한다.
+
+<br>
+
+- 아래 명령어로 간단한 실습 프로젝트를 구성한다.
+```bash
+mkdir test-babel-how && cd test-babel-how
+npm init -y
+npm i @babel/core @babel/cli @babel/plugin-transform-arrow-functions @babel/plugin-transform-template-literals @babel/preset-react
+```
+- 실습 프로젝트는 `JSX 문법`, `템플릿 리터럴 문법`, `화살표 함수`를 각각의 바벨 플러그인/프리셋을 이용해 변환할 것이다. `src/code.js`를 만든다.
+```js
+// src/code.js
+const element = <div>babel test</div>;
+const text = `element type is ${element.type}`;
+const add = (a, b) => a + b;
+```
+
+1. `@babel/cli` 로 실행하기
+- 아래 명령어를 이용해 코드를 변환해본다.
+```bash
+npx babel src/code.js --presets=@babel/preset-react --plugins=@babel/plugin-transform-arrow-functions,@babel/plugin-transform-template-literals
+```
+- 콘솔에 출력되는 변환 결과는 아래와 같다.
+```js
+const element = /*#__PURE__*/React.createElement("div", null, "babel test");
+const text = "element type is ".concat(element.type);
+const add = function (a, b) {
+  return a + b;
+};
+```
+- 변환 내용은 아래와 같다.
+  - JSX 문법은 `React.createElement()`로 바뀌었다.
+  - 템플릿 리터럴 문법은 `String.concat()` 메서드로 바뀌었다.
+  - 화살표 함수는 일반 함수 표현식으로 바뀌었다.
+- 사용하는 플러그인, 프리셋은 설정 파일로 관리할 수 있다. babel v6까지는 .babelrc로 설정을 관리했는데 v7 부터는 **`babel.config.js`에 관리**하는걸 권장한다.
+
+```js
+// babel.config.js
+const presets = ['@babel/preset-react'];
+const plugins = [
+  '@babel/plugin-transform-template-literals',
+  '@babel/plugin-transform-arrow-functions'
+]
+
+module.exports = { presets, plugins };
+```
+> 바벨 설정파일의 자세한 작성법은 [Config Reference - Options](https://babeljs.io/docs/en/options)를 참고한다.
+- 결과를 저장하고 싶으면 cli에 `--out-dir` 옵션을 추가한다.
+```bash
+# src폴더의 파일을 트랜스파일해서 dist 폴더에 저장
+npx babel src --out-dir dist
+```
+
+<br>
+
+2. 웹팩의 `babel-loader`로 실행하기
+- 웹팩 로더는 코드의 프리프로세서 역할을 한다. babel-loader를 이용해 웹팩 실행시 바벨을 실행하여 코드를 변환할 수 있다.
+- 필요 패키지를 설치하고 웹팩 설정파일을 작성한다.
+```bash
+npm i webpack webpack-cli babel-loader
+```
+
+```js
+// webpack.config.js
+const path = require('path');
+
+module.exports = {
+  entry: './src/code.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'code.bundle.js'
+  },
+  module: {
+    rules: [{ test: /\.js$/, use: 'babel-loader'}],
+  },
+  optimization: {minimizer: []},  // minimizer off
+}
+```
+- 웹팩은 결과 파일을 기본적으로 압축하는데 코드 확인을 위해 `minimizer`를 끈다. 웹팩을 실행한다.
+```bash
+npx webpack
+```
+- 결과는 약간의 웹팩 코드가 추가된 것 외에 알맹이는 `@babel/cli`로 실행한 것과 같음을 알 수 있다.
+
+<br>
+
+3. `@babel/core` 직접 이용하기
+- `@babel/cli`나 `babel-loader`는 모두 내부적으로 `@babel/core`를 사용한다.(그래서 코어모듈은 필수로 설치해야 했던 것)
+- 프로젝트 루트에 `runBabel.js`을 만들고 아래와 같이 작성한다.
+```js
+// runBabel.js
+const babel = require('@babel/core');
+const fs = require('fs');
+
+const filename = './src/code.js';
+const source = fs.readFileSync(filename, 'utf8');
+const presets = ['@babel/preset-react'];
+const plugins = [
+  '@babel/plugin-transform-template-literals',
+  '@babel/plugin-transform-arrow-functions'
+];
+
+const { code } = babel.transformSync(source, {
+  filename, // 에러 발생시 사용될 원본 파일이름
+  presets,  // 프리셋
+  plugins,  // 플러그인
+  configFile: false // babel.config.js 파일을 사용하지 않는다.
+});
+
+console.log(code);
+```
+- 동기적으로 소스파일을 읽어 동기적으로 코드를 변환하였다. 실행 결과는 `@babel/cli`를 사용한 결과와 같다.
+- `@babel/core` 모듈을 직접 사용하는 방식은 실행 코드를 직접 작성하기 때문에 번거롭지만, 설정 등에 있어 자유도가 높다는 장점도 있다.
+- 바벨은 컴파일 시 아래 세가지 단계를 거친다.
+  - 파싱(parse) : 코드로부터  AST(abstract syntax tree)를 생성한다.
+  - 변환(transform) : AST를 원하는 형태로 변환한다.
+  - 생성(generate): AST를 코드로 출력한다.
+- AST가 같으면 코드도 같다는 특징이 있다.. 이런 특징을 이용해 바벨은 AST를 변환하여 코드를 변환하는 것이다.
+<br>
+
+- 예를들어 같은 코드에 대해 두가지 다른 설정을 적용한다고 생각해보자. `@babel/cli` 등을 이용하려면 babel을 두번 실행해야 하나 `@babel/core`를 직접 쓰면 AST를 한번만 만든 후 변환만 두번 하는 방식으로도 구성할 수 있다.
+- `@babel/preset-react`프리셋은 공통 적용하고, 각각 `@babel/plugin-transform-template-literals`, `@babel/plugin-transform-arrow-functions`플러그인을 적용하는 방식으로 코드를 변환하고 싶다면 어떻게 할 수 있을까?
+```js
+// runBabel2.js
+
+// ...
+const presets = ['@babel/preset-react'];
+
+const { ast } = babel.transformSync(source, {
+  filename,
+  // code 생성 하지 않고 ast 생성까지만 한다.
+  ast: true,
+  code: false,
+  // 프리셋만 적용한 ast
+  presets,
+  configFile: false,
+})
+
+// ast에서 템플릿 리터럴 플러그인을 적용해서 코드로 변환
+const { code: code1 } = babel.transformFromAstSync(ast, source, {
+  filename,
+  plugins: ['@babel/plugin-transform-template-literals'],
+  configFile: false,
+})
+
+// ast에서 arrow function 플러그인을 적용해서 코드로 변환
+const { code: code2 } = babel.transformFromAstSync(ast, source, {
+  filename,
+  plugins: ['@babel/plugin-transform-arrow-functions'],
+  configFile: false,
+});
+
+console.log('code1 ===> \n', code1)
+console.log('code2 ===> \n', code2)
+```
+- 물론 실전에서 이렇게 할 일은 없을 것 같다.
+
+<br>
+
+### 7.1.2 확장성과 유연성을 고려한 바벨 설정 방법
+- eslintrc, tsconfig같은 설정파일 작성과 비슷하다. `extends`, `overrides`, `env`등의 옵션을 이용해 바벨 설정을 설계할 수 있다. 솔직히 쓸 일 없을거 같으므로 자세히 정리하진 않는다.
+
+<br>
+
+1. `extends`
+- 다른 바벨 속성을 상속할 수 있다. 모노레포 등의 구성에서 유용할 것으로 판단된다.
+
+<br>
+
+2. `env` 
+- 실행 환경별로 프리셋 적용 가능, prod에서 minify등을 적용해 파일 크기를 줄일 수 있다.
+- 실행 환경은 `process.env.BABEL_ENV || process.env.NODE_ENV || "development"`로 결정된다. 보통 다른것들과 통일성을 위해 `NODE_ENV` 쓰는듯
+
+<br>
+
+3. `overrides`
+- 파일별로 설정을 지정할 수 있다. `include`, `exclude`를 지정할 수 있음
+
+<br>
+
+### 7.1.3 전체 설정 파일과 지역 설정 파일
+- 전체 설정 파일은 보통 프로젝트 루트의 `babel.config.js`파일을 말한다.
+- 지역 설정 파일은 `.babelrc`, `.babelrc.js`파일과 바벨 설정이 있는 `package.json`파일이 지역 설정 파일이다. 
+- 바벨 실행시 전체 설정파일을 사용하면서 특정 파일에 대해 바벨 실행히 지역 설정 파일이 있으먼 해당 js파일은 전체 설정을 override 한 설정으로 컴파일 하게 된다.
+- ***필요할 때 다시 찾아보는걸로***
+
+<br>
+
+### 7.1.4 바벨과 폴리필
+- 구형 브라우저에서 최신 자바스크립트 문법 사용을 위해서는 **바벨로 코드 문법을 변환하는 것과 함께 `폴리필`도 사용해야 할 수 있다.** 폴리필은 런타임에 특정 기능이 존재하는지 검사한 후 없으면 기능을 주입하는 것을 말한다.
+- 예를들어 ES8의 `String.padStart`는 폴리필을 추가함으로써 사용할 수 있다. 반면 `async/await`는 폴리필로 추가할 수 없고 ***컴파일 타임에 코드를 변환해야 한다.***
+```js
+// String.padStart 폴리필을 추가하는 코드
+if(!String.prototype.padStart) {
+  String.prototype.padStart = func; // func는 padStart 폴리필 함수
+}
+```
+
+- 폴리필을 추가하는 다양한 방법을 알아본다.
+
+<br>
+
+1. [`core-js`](https://www.npmjs.com/package/core-js) 모듈의 폴리필 사용하기
+- `core-js`는 바벨에서 폴리필을 위해 공식 지원하는 패키지다. 가장 간단한 사용법은 `core-js`모듈을 자바스크립트에 불러오는 것이다.
+
+```js
+import 'core-js';
+
+const p = Promise.resolve(10);
+const obj = {
+  a: 10,
+  b: 20,
+  c: 30,
+};
+const arr = Object.values(obj);
+const exists = arr.includes(20);
+```
+- `import 'core-js'`를 하면 구형 브라우저에서도 `Promise`, `Object.values`, `Array.prototype.includes`를 사용할 수 있게 된다. 
+- 웹팩 사용시 설정의 entry 속성에 core-js 모듈을 넣으면 된다.
+```js
+// webpack.config.js
+module.exports = {
+  entry: ['core-js', './src/index.js'],
+  // ...
+}
+```
+- 이렇게 하면 core-js 모듈이 통째로 추가되어 번들이 커지는 단점이 있다. 아래와 같이 필요한 폴리필만 추가할 수도 있다.
+```js
+import 'core-js/features/promise'
+import 'core-js/features/object/values'
+import 'core-js/features/array/includes'
+
+//...
+```
+- 이런 방식은 번들은 작아지지만 실수를 할 가능성이 높아 조심해야한다.
+
+<br>
+
+2. [`@babel/preset-env`](https://babeljs.io/docs/en/babel-preset-env) 프리셋 이용하기
+- `@babel/preset-env` 프리셋은 ***실행 환경에 대한 정보를 설정해 주면 자동으로 필요한 기능을 주입해 준다.*** 아래는 예시다
+```js
+const presets = [
+  [
+    '@babel/preset-env',
+    {
+      targets: '> 0.25%, not dead',
+    }
+  ]
+]
+```
+- target은 **시장 점유율 0.25% 이상이고 업데이트가 종료되지 않은 브라우저**를 의미한다. 브라우저 정보는 [`browserlist`패키지의 문법](https://github.com/browserslist/browserslist#full-list)을 사용한다. 
+- 간단하게 설정을 실습해본다. 프로젝트를 생성하고 패키지를 설치한다.
+```bash
+mkdir test-babel-env && cd test-babel-env
+npm init -y
+npm i @babel/core @babel/cli @babel/preset-env core-js
+```
+- 바벨 설정파일을 작성한다.
+```js
+// babel.config.js
+const presets = [
+  [
+    '@babel/preset-env',
+    {
+      targets: {
+        chrome: '40', // 1
+      },
+      useBuiltIns: 'entry', // 2
+      corejs: { version: 3, proposals: true}, // 3
+    }
+  ]
+]
+
+module.exports = { presets };
+```
+- 설정은 아래와 같은 의미를 가진다.
+  - 1 - ` 크롬 최소 버전 40`
+  - 2 - `useBuiltIns: 'entry'`는 브라우저에서 필요한 폴리필만 포함시킨다.
+  - 3 - 바벨에게 사용하는 corejs의 버전을 알려준다.
+- src/code.js파일을 만들고 아래 내용을 작성한다.
+```js
+// src/code.js
+import 'core-js'
+
+const p = Promise.resolve(10);
+const obj = {
+  a: 10,
+  b: 20,
+  c: 30,
+};
+const arr = Object.values(obj);
+const exists = arr.includes(20);
+```
+- 바벨을 실행해 코드를 변환해본다.
+```bash
+npx babel src/code.js
+```
+- 결과는 아래와같다.
+```js
+"use strict";
+
+require("core-js/modules/es.symbol");
+// ... 많은수의 폴리필
+require("core-js/modules/web.url-search-params");
+
+// ... 코드
+```
+- 설정한 환경에 필요한 모든 폴리필을 추가했기 때문에 많은 모듈이 추가된다. `{useBuiltIns: 'usage'}`로 설정을 바꾸면 `import 'core-js'`도 필요없고, 우리 코드를 읽어서 실제 필요한 폴리필 모듈만 추가해준다. 그리고 바벨을 실행해보면 추가되는 폴리필은 아래와 같다.
+```js
+require("core-js/modules/es.object.to-string.js");
+require("core-js/modules/es.promise.js");
+require("core-js/modules/es.object.values.js");
+require("core-js/modules/es.array.includes.js");
+require("core-js/modules/es.string.includes.js"); // 1
+```
+- 1 - array와 string의 includes가 모두 추가되었다. 이유는 ***코드상 `arr.includes`에서 `arr`의 타입이 배열인지 문자열인지 바벨이 알지 못하기 때문에 보수적으로 includes 메서드 폴리필을 있는대로 추가한 것***이다. 타입스크립트와 같은 정접 타입 언어라면 array만 추가했을 것이다.
+- 설정상 크롬 최소 버전을 올리면 폴리필이 점점 줄어들 것이다. 브라우저 런타임에 이미 해당 기능이 존재하기 때문이다.
+
+<br>
+
+### 7.2 바벨 플러그인 제작하기
+- 바벨은 누구나 프리셋/플러그인을 제공할 수 있는 API를 제공한다. 이를 이용해서 플러그인을 만들면서 바벨이 내부적으로 어떻게 동작하는지 파악한다.
+- [공식 가이드 - babel-handbook](https://github.com/jamiebuilds/babel-handbook)을 참고하자.
+
+<br>
+
+### 7.2.1 AST 구조 들여다보기
+- 바벨은 코드를 AST로 파싱하고 이걸 변환하는 역할을 한다. 플러그인을 제작하기 위해서는 AST 구조를 이해해야 하는데, [astexplorer](https://astexplorer.net/)사이트에서 코드를 작성하고 바벨 파서가 어떻게 AST를 생성하는지 보는게 제일 좋다.
+- `const v1 = a + b;`라는 코드를 `@babel/parser`로 파싱하면 아래와 같은 결과를 볼 수 있다.(loc 등 생략)
+```json
+{
+  "program": {
+    "type": "Program",  // 1
+    "start": 0,
+    "end": 17,
+    "sourceType": "module",
+    "body": [
+      {
+        "type": "VariableDeclaration",  // 2
+        "start": 0,
+        "end": 17,
+        "declarations": [ // 3
+          {
+            "type": "VariableDeclarator", // 4
+            "start": 6,
+            "end": 16,
+            "id": {
+              "type": "Identifier", // 5
+              "start": 6,
+              "end": 8,
+              "name": "v1"  // 6
+            },
+            "init": { // 7
+              "type": "BinaryExpression", // 8
+              "start": 11,
+              "end": 16,
+              "left": {
+                "type": "Identifier",
+                "start": 11,
+                "end": 12,
+                "name": "a"
+              },
+              "operator": "+",
+              "right": {
+                "type": "Identifier",
+                "start": 15,
+                "end": 16,
+                "name": "b"
+              }
+            }
+          }
+        ],
+        "kind": "const"
+      }
+    ],
+  },
+}
+```
+- 각 번호 주석에 대한 설명은 아래와 같다.
+    1. AST 각 노드는 `type` 속성이 있다.
+    2. 변수 선언은 `VariableDeclaration` 타입이다.
+    3. 하나의 문장에서 여러 개의 변수 선언이 가능하기때문에 `declaration`은 배열로 관리된다.
+    4. 선언된 변수를 나타내는 타입은 `VariableDeclarator`이다.
+    5. 개발자가 만들어낸 각종 이름은 `Identifier` 타입이다.
+    6. 선언한 변수명 v1이 `name` 속성에 있는걸 확인할 수 있다.
+    7. `init` 속성에 변수를 초기화 하는 내용이 들어간다. 
+    8. 사칙연산은 `BinaryExpression` 타입이다. `left`, `right`, `operator` 속성이 존재한다.
+
+<br>
+
+### 7.2.2 바벨 플러그인 기본 구조
+- 바벨 플러그인의 기본 구조는 아래와 같다.
+```js
+module.exports = function({ types: t }) { // 1
+
+  const node = t.BinaryExpression('+', t.Identifier('a'), t.Identifier('b')); // 2
+  console.log('isBinaryExpression : ', t.isBinaryExpression(node));   // 3
+
+  return {
+    visitor: {  // 4
+      Identifier(path) {  // 5
+        console.log('Identifier name : ', path.node.name);
+      }, 
+      BinaryExpression(path) {  // 6
+        console.log('BinaryExpression operator : ', path.node.operator);
+      }
+    }
+  }
+}
+```
+
+- 플러그인은 위와 같이 `{type}` 객체를 인자로 받는 함수다. 각각에 대한 설명은 아래와 같다.
+  1. 매개변수로 넘어온 `types`는 ***여러가지 함수를 가진 유틸같은 객체다. AST노드를 생성하거나 노드 타입 판별등을 할 수 있다.***
+  2. `types`를 이용해 `BinaryExpression`노드를 만들었다. `a + b`를 의미한다.
+  3. `isBinaryExpression()` 메서드는 노드 타입이 `BinaryExpression`인지 판단한다. true를 반환할 것이다.
+  4. 반환하는 객체의 `visitor` 객체 내부에서 `노드의 타입 이름`으로 된 함수를 정의할 수 있다. 해당 타입 노드가 생성되면 같은 이름의 함수가 호출된다.
+  5. `Identifier` 타입의 노드가 생성되면 호출되는 함수다. 만약 `const v1 = a + b;`라는 코드가 입력되면 `v1`, `a`, `b`에 대해 3번 실행될것이다. `path.node`로 해당하는 노드 참조 가능
+  6. `BinaryExpression`탕ㅂ의 노드가 생성되면 호출되는 함수다. `const v1 = a + b;`라는 코드 입력시 한번 실행될 것이다.
+
+<br>
+
+
+### 7.2.3 바벨 플러그인 제작하기: 모든 콘솔 로그 제거
+- 프로젝트를 만든다.
+```bash
+mkdir test-babel-custom-plugin && cd test-babel-custom-plugin
+npm init -y
+npm i @babel/core @babel/cli
+```
+
+<br>
+
+- 바벨로 변환할 코드를 작성한다.
+```js
+// src/code.js
+console.log('aaa');
+const v1 = 123;
+console.log('bbb');
+function onClick(e) {
+  const v = e.target.value;
+}
+function add(a, b) {
+  return a + b;
+}
+```
+- `console.log`를 제거하기 위해서는 해당 코드의 AST 구조를 이해해야 한다. `console.log('aaa')`를 변환하면 대략 아래와 같은 AST가 생성된다.
+
+```json
+{
+  "type": "Program",
+  "start": 0,
+  "end": 19,
+  "sourceType": "module",
+  "body": [
+    {
+      "type": "ExpressionStatement",  // 1
+      "start": 0,
+      "end": 19,
+      "expression": {
+        "type": "CallExpression", // 2
+        "start": 0,
+        "end": 18,
+        "callee": {
+          "type": "MemberExpression", // 3
+          "start": 0,
+          "end": 11,
+          "object": {
+            "type": "Identifier",
+            "start": 0,
+            "end": 7,
+            "name": "console"
+          },
+          "property": {
+            "type": "Identifier",
+            "start": 8,
+            "end": 11,
+            "name": "log"
+          }
+        },
+        "arguments": [
+          {
+            "type": "StringLiteral",
+            "start": 12,
+            "end": 17,
+            "extra": {
+              "rawValue": "aaa",
+              "raw": "'aaa'"
+            },
+            "value": "aaa"
+          }
+        ]
+      }
+    }
+  ],
+  "directives": []
+},
+```
+- 대략적으로 아래와 같다.
+  1. `console.log()`코드는 `ExpressionStatement` 타입 노드로 시작된다. 표현식은 다 이렇게 되는것 같다.
+  2. 함수, 메서드 호출 코드라면 `expression` 속성이 `CallExpression` 타입 노드로 만들어진다.
+  3. `메서드 호출`은 `callee` 속성이 `MemberExpression` 노드로 만들어진다. `MemberExpression` 노드 내부에 객체(`object`)와 메서드(`property`)의 이름 정보가 보인다.
+
+<br>
+
+- 이런 AST 구조를 이용해 해당 코드를 제거하는 플러그인 코드를 만들어본다.
+
+```js
+// plugins/remove-log.js
+module.exports = function({ types: t }) {
+  return {
+    visitor: {
+      ExpressionStatement(path) { // 1
+        if(t.isCallExpression(path.node.expression)) { // 2
+          if(t.isMemberExpression(path.node.expression.callee)) { // 3
+            const memberExp = path.node.expression.callee;
+            if(
+              memberExp.object.name === 'console' &&  // 4
+              memberExp.property.name === 'log'
+            ) {
+              path.remove();  // 5
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+- `1 ~ 4`는 `console.log`코드에 대한 AST인지 검사하는 코드다.
+- 5 - `path.remove()`를 호출하면 AST에서 `ExpressionStatement`를 제거한다.
+- 플러그인 사용을 위해 아래와 같이 바벨 설정파일을 작성한다.
+```js
+// babel.config.js
+const plugins = ['./plugins/remove-log.js'];
+module.exports = { plugins };
+```
+- `npx babel src/code.js`를 수행하면 결과에서 `console.log`가 제거된걸 확인할 수 있다.
+
+<br>
+
+### 7.2.4 바벨 플러그인 제작하기: 함수 내부에 콘솔 로그 추가
+- 함수 이름이 'on'으로 시작하면, 함수 바디 최상단에 `console.log()`를 호출하게 코드를 바꾸는 바벨 플러그인을 작성하려 한다. 우선 기본적인 함수 선언의 AST를 파악해보자. `function f1(p1) { let v1;}`을 파싱하면 아래와 같은 AST가 생성된다. `start`, `end`도 빼고 알짜만 남겨본다.
+```json 
+{
+  "type": "Program",
+  "sourceType": "module",
+  "body": [
+    {
+      "type": "FunctionDeclaration",  // 1
+      "id": {
+        "type": "Identifier",
+        "name": "f1"  // 2
+      },
+      "generator": false,
+      "async": false,
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "p1"
+        }
+      ],
+      "body": { 
+        "type": "BlockStatement",
+        "body": [   // 3
+          {
+            "type": "VariableDeclaration",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "v1"
+                },
+                "init": null
+              }
+            ],
+            "kind": "let"
+          }
+        ],
+      }
+    }
+  ],
+}
+```
+- 대략 아래와 같다.
+    1. 함수를 정의하는 코드는 `FunctionDeclaration`타입 노드로 만들어진다.
+    2. 함수 이름은 `id.name` 속성에 들어있따.
+    3. 함수 바디는 `body.body`속성에 배열로 관리되고 있다.
+- 위 AST구조를 이용해 아래와 같이 `console.log`를 추가하는 플러그인을 만들 수 있다
+
+```js
+// plugins/insert-log.js
+module.exports = function({ types: t }) {
+  return {
+    visitor: {
+      FunctionDeclaration(path) { // 1
+        if(path.node.id.name.startsWith('on')) {  // 2
+          path
+            .get('body')  
+            .unshiftContainer(  // 3
+              'body', 
+              t.expressionStatement(  // 4
+                t.callExpression(
+                  t.memberExpression(
+                    t.identifier('console'),
+                    t.identifier('log'),
+                  ),
+                  [t.stringLiteral(`call ${path.node.id.name}`)],
+                ),
+              )
+            )
+        }
+      }
+    }
+  }
+}
+```
+- `1 ~ 2`는 이름이 'on'으로 시작하는 함수인지 판단한다.
+- 3 - `unshifeContainer('body')`로 body 최상단에 `console.log()`를 집어넣는다.
+- 4 - `console.log('call ${함수명}')` 노드를 만드는 과정이다. 자세한건 API 문서를 보면서 이해하면 된다.
+
+- 설정에 플러그인을 추가하고 바벨을 돌리면 onClick 메서드에 `console.log("call onClick");`가 추가됐음을 알 수 있다.
+
+> `insert-log`와 `remove-log` 플러그인을 둘 다 추가하면 어떻게 될까? visit의 메서드는 'AST 노드 생성시' 호출되므로, `console.log` 메서드가 기존에 코드에 있던걸 파싱하는것이던, `t.expressionStatement()`메서드로 동적으로 생성한 것이던 상관없이 **모두 지우게 된다.**
 
 <br>
