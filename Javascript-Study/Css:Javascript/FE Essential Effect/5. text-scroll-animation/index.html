@@ -21,7 +21,7 @@
     <p class="third-parallel"></p>
   </div>
   <div class="cover">
-    <p class="third-parallel"></p>
+    <p class="forth-parallel"></p>
   </div>
   <script>
     const pTag1 = document.querySelector('.first-parallel')
@@ -34,22 +34,60 @@
     const textArr3 = "Let's Dive Into This Tutorial Take It Easy! Don't Worry".split(' ')
     const textArr4 = 'Pure Moral Conscientious Meritorious Worthy Exemplary Upright '.split(' ')
 
+    let count1 = 0
+    let count2 = 0
+    let count3 = 0
+    let count4 = 0
+
+    initTexts(pTag1, textArr1);
+    initTexts(pTag2, textArr2);
+    initTexts(pTag3, textArr3);
+    initTexts(pTag4, textArr4);
+
     function initTexts(element, textArray) {
-      textArray
-        .concat(textArray)
-        .forEach(text => element.innerText += `${text}\u00A0\u00A0\u00A0\u00A0`);
+      textArray.push(...textArray)
+      for (let i = 0; i < textArray.length; i++) {
+        element.innerText += `${textArray[i]}\u00A0\u00A0\u00A0\u00A0`
+      }
     }
 
-    initTexts(pTag1, textArr1)
-    initTexts(pTag2, textArr2)
+    // 강사의 구현..
+    function marqueeText(count, element, direction) {
+      if (count > element.scrollWidth / 2) {
+        element.style.transform = `translate3d(0, 0, 0)`
+        count = 0
+      }
+      element.style.transform = `translate3d(${direction * count}px, 0, 0)`
 
-    let portion1 = 0;
-    const width1 = pTag1.getBoundingClientRect().width;
-    setInterval(() => {
-      portion1 = portion1 === 100 ? 0 : portion1 + 1;
-      pTag1.style.setProperty('--x', `${-(width1 * portion1) / 200}px`);
-    }, 100);
+      return count
+    }
+
+    function animate() {
+      count1++
+      count2++
+      count3++
+      count4++
+
+      count1 = marqueeText(count1, pTag1, -1)
+      count2 = marqueeText(count2, pTag2, 1)
+      count3 = marqueeText(count3, pTag3, -1)
+      count4 = marqueeText(count4, pTag4, 1)
+
+      // TODO : requestAnimationFrame
+      window.requestAnimationFrame(animate)
+    }
+
+    function scrollHandler() {
+      count1 += 15
+      count2 += 15
+      count3 += 15
+      count4 += 15
+    }
+
+    window.addEventListener('scroll', scrollHandler)
+    animate()
   </script>
+  <!-- <script src="./my-animate.js"></script> -->
 </body>
 
 </html>
