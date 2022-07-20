@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>text scroll animation</title>
+  <link rel="stylesheet" type="text/css" href="reset.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <div class="cover">
+    <p class="first-parallel"></p>
+  </div>
+  <div class="cover">
+    <p class="second-parallel"></p>
+  </div>
+  <div class="cover">
+    <p class="third-parallel"></p>
+  </div>
+  <div class="cover">
+    <p class="third-parallel"></p>
+  </div>
+  <script>
+    const pTag1 = document.querySelector('.first-parallel')
+    const pTag2 = document.querySelector('.second-parallel')
+    const pTag3 = document.querySelector('.third-parallel')
+    const pTag4 = document.querySelector('.forth-parallel')
+
+    const textArr1 = 'Yummy Tasty Delicious Useful Coding Yummy Yummmmy Yummmmmmmmmy yum'.split(' ')
+    const textArr2 = 'Chicken Hamburger Pizza Salad Sushi Bibimbab Gimbab JJajangmyeon'.split(' ')
+    const textArr3 = "Let's Dive Into This Tutorial Take It Easy! Don't Worry".split(' ')
+    const textArr4 = 'Pure Moral Conscientious Meritorious Worthy Exemplary Upright '.split(' ')
+
+    function initTexts(element, textArray) {
+      textArray
+        .concat(textArray)
+        .forEach(text => element.innerText += `${text}\u00A0\u00A0\u00A0\u00A0`);
+    }
+
+    initTexts(pTag1, textArr1)
+    initTexts(pTag2, textArr2)
+
+    let portion1 = 0;
+    const width1 = pTag1.getBoundingClientRect().width;
+    setInterval(() => {
+      portion1 = portion1 === 100 ? 0 : portion1 + 1;
+      pTag1.style.setProperty('--x', `${-(width1 * portion1) / 200}px`);
+    }, 100);
+  </script>
+</body>
+
+</html>
