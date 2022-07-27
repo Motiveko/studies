@@ -366,6 +366,7 @@ textarea {
 .loading-item .glow-text span {
   animation: glow 1.5s ease-in-out infinite;
   background: #eee;
+  border-radius: 5px;
   color: transparent;
   cursor: progress;
   display: inline-block;
