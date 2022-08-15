@@ -1804,3 +1804,28 @@ $ kubectl get pods -w # pod 리소스 변화 감지
 - ***4.에서 요청이 실제로 서비스로 전달되는건 아니고 서비스생성시 생성된 `endpoint`로 요청을 직접 전달한다. 서비스를 거치지 않는데 쿠버네티스에서 바이패스(Bypass)라고 부른다.***
 
 <br>
+
+<hr>
+
+# == 실전 ==
+## 쿠버네티스 클러스터 컨텍스트 변경
+- 현재 컨텍스트 확인하기
+```bash
+kubectl config current-context
+```
+
+- 컨텍스트 목록 보기
+```bash
+kubectl config get-contexts  
+# CURRENT   NAME                        CLUSTER                     AUTHINFO                    NAMESPACE
+# *         ****-***-**-*******         ****-***-**-*******         will.ko_dmail-dev-ay        
+#           *****-***-**-****-*******   *****-***-**-****-*******   will.ko_dmail-prod-ay-n01   
+#           docker-desktop              docker-desktop              docker-desktop              
+# ....
+```
+- 다른 클러스터로 연결하기
+```bash
+kubectl config use-context docker-desktop
+
+# Switched to context "docker-desktop". 
+```
