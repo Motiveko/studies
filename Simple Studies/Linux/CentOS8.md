@@ -178,7 +178,76 @@ AutomaticLogin=centos
 
 Windows 클라이언트는 그냥 생략한다.
 
+<br>
+
+## 4. 서버를 구축하는데 알아야 할 필수 개념과 명령어 
+- X윈도 환경은 다루지 않는다.
+
+### 4.1 먼저 알아야 할 개념
+### 4.1.1 터미널/콘솔에서 시스템 종료
+- `poweroff`, `shutdown -P now`, `halt -p`, `init 0`가 있다. `-P`나 `-p` 옵션은 시스템 종료를 의미함.
+- 이거 하면 EC2 인스턴스가 '중지' 된다. 이 때, ip나 dns가 elastic이라서 바뀌게된다.
+- `shutdown`은 아래와 같이 응용가능
+```bash
+shutdown -P +10 # 10분 후 종료(P: poweroff)
+shutdown -r 22:00 # 오후 10시에 재부팅(r: reboot)
+shutdown -c # 예약된 shutdown 취소(c: cancel)
+shutdown -k +15 # 현재 접속된 사용자에게 15분후 종료된다는 메시지 보냄. 실제로 종료는 안된다고함;; 겁주기용?
+```
+
+<br>
+
+### 4.1.2 재부팅
+`shutdown -r now`, `reboot`, `init 6` 등의 명령이 있다
+
+<br>
+
+### 4.1.3 로그아웃
+`logout`,`exit` 명령어가 있다
+
+<br>
+
+### 4.1.4 가상 콘솔
+/dev 에 가보면 여러 장치가 있는걸 볼 수 있다. 몇개만 보면
+- `tty`: 일반 CLI 콘솔
+- `ttys`: tty1,2,3... 시리얼 tty
+- `pts` : x windows를 위한 가상 콘솔
+- `pty`: 외부의 원격 접속을 위한 가상 콘솔
+
+selinux를 disabled 시키면 가상 콘솔인 ttys를 여러개를 돌아가면서 쓸 수 있다. tty는 일종의 모니터라고 생각하면 된다. `open(),` `close()`, `read()`, `write()`같은걸 수행할 수 있는 콘솔이다.
+
+<br>
+
+### 4.1.5 런레벨
+`init 0`, `init 6`의 뒤 숫자는 런레벨이라 부른다. 리눅스는 시스템이 가동되는 방법을 7가지 런레벨로 나눈다.
+-  `0(Power off)`, `1(Rescue, 시스템 복구 모드)`, `2~4(Multi-User, 텍스트 모드의 다중사용자 모드)`, `5(Graphical, 그래픽 모드 다중 사용자 모드)`, `6(Reboot)` 정도가 있다 Centos는 2,4는 안쓴다고 함
+- 아래 명령어로 런레벨 확인 가능하다.
+```bash
+cd /lib/systemd/system
+ls -l runlevel?.target
+```
+- 각 런레벨 파일은 링크 파일이다. 예를들어 `runlevel0.target`은 `poweroff.target`을 가리킴.
+- 현재 시스템에 설정된 런레벨을 확인할 수도 있다.
+```bash
+ls -l /etc/systemd/system/default.target
+# multiuser(3)으로 설정된걸 알 수 있다.
+# lrwxrwxrwx. 1 root root 41 May  3 09:00 /etc/systemd/system/default.target -> /usr/lib/systemd/system/multi-user.target
+```
+- `default.target`도 결국 링크이므로, 링크를 바꾸면 런레벨을 바꿀수도 있따.
+```bash
+# x windows(6)으로 변경했다
+ln -sf /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.target
+
+# ssh로 접속했기때매 아마 의미없을듯
+reboot
+```
+
+
+
+
 <!-- 
   TODO : 
   EC2 root 게정 활성화하기 :https://goddaehee.tistory.com/193 
 -->
+
+
