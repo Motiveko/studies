@@ -84,31 +84,34 @@ ssh -i {path-to-pem.pem} ec2-user@public-IPv4-DNS
 
 <br>
 
-- `dnf`는 CentOS의 소프트웨어 설치시 사용하는 명령어인데, 이걸 CentOS 8 출시 시점의 소프트웨어가 설치되도록 설정한다. 
+ServerA 설치는 아래와 같다.
+
+9. `dnf`는 CentOS의 소프트웨어 설치시 사용하는 명령어인데, 이걸 CentOS 8 출시 시점의 소프트웨어가 설치되도록 설정한다. 
   - `/etc/yum.repos.d/`의 내용을 모두 백업하도, `This.repo`파을을 만든 후 Base, AppStream 등에 대해 baseurl, gpgcheck 설정을 작성한다.
+  > 이거 책에나온대로 설정했는데, 이대로 하면 내꺼에서는 dnf로 뭘깔아도 python없다고 어쩌고저쩌고 오류가 오지게난다.  원복하였다
 
 <br>
 
-- 서버에 고정IP도 할당한다. `/etc/sysconfig/network-script`에서 `ifcfg-eth0`에 `BOOTPROTO`, `IPADDR`, `NETMASK`, `GATEWAY`, `DNS1`을 설정한다.(나는 고정IP가 있기때문에 하지 않는다.)
-  - `eth0`는 네트워크 장치, `ifcfg-eth0`은 네트워크 설정 파일이다. 자주 사용된다고 함 (책에서는 `eth0` => `ens160`)
-- 설정을 했으면 네트워크 장치를 재부팅해야한다.(난 역시나 안한다.)
+10. 서버에 고정IP도 할당한다. `/etc/sysconfig/network-script`에서 `ifcfg-eth0`에 `BOOTPROTO`, `IPADDR`, `NETMASK`, `GATEWAY`, `DNS1`을 설정한다.(나는 고정IP가 있기때문에 하지 않는다.)
+    - `eth0`는 네트워크 장치, `ifcfg-eth0`은 네트워크 설정 파일이다. 자주 사용된다고 함 (책에서는 `eth0` => `ens160`)
+  - 설정을 했으면 네트워크 장치를 재부팅해야한다.(난 역시나 안한다.)
 
-```bash
-nmcli connection dwon eth0  # 네트워크 장치 시작
-nmcli connection up eth0    # 네트워크 장치 시작
-reboot                      # 컴퓨터 재부팅
-```
-- 네트워크 정보를 확인해본다
-```bash
-ifconfig eth0
-```
-- 근데 aws의 Redhat linux에는 `ifconfig`가 설치되어있지 않다. 두가지 방안이 있다.
-  1. `ip addr` 입력
-  2. [ifconfig 명령어를 가지고 있는 net-tools 패키지를 설치](https://zetawiki.com/wiki/CentOS_7_ifconfig_%EB%AA%85%EB%A0%B9%EC%96%B4_%EC%97%86%EC%9D%8C)
+  ```bash
+  nmcli connection dwon eth0  # 네트워크 장치 시작
+  nmcli connection up eth0    # 네트워크 장치 시작
+  reboot                      # 컴퓨터 재부팅
+  ```
+  - 네트워크 정보를 확인해본다
+  ```bash
+  ifconfig eth0
+  ```
+  - 근데 aws의 Redhat linux에는 `ifconfig`가 설치되어있지 않다. 두가지 방안이 있다.
+    1. `ip addr` 입력
+    2. [ifconfig 명령어를 가지고 있는 net-tools 패키지를 설치](https://zetawiki.com/wiki/CentOS_7_ifconfig_%EB%AA%85%EB%A0%B9%EC%96%B4_%EC%97%86%EC%9D%8C)
 
 <br>
 
-- 보안이 설정된 `SELinux` 기능을 끈다.
+11. 보안이 설정된 `SELinux` 기능을 끈다.
   - 설정열기
   ```bash
   vi /etc/sysconfig/selinux
@@ -117,6 +120,63 @@ ifconfig eth0
 
 <br>
 
+14. 방화벽 관련한 패키지인 `firewall-config` 설치한다.
+  - https://meyouus.tistory.com/221
+  - 이건 X윈도우 용이라고 한다. 나는 yum올 firewalld 설치함. 이후 `firewall-cmd`를 쓸것이다.
+  
+<br>
+
+- 16. VM을 스냅숏을 뜰 수 있다고 한다.(유료버젼에서만) 나는 그런건 좀 힘들다.
+
+<br>
+
+ServerB도 설치한다. ServerB는 X윈도를 사용하지 않고 텍스트 모드만 사용한다.
+
+6. 우선 `wget`와 몇개 프로그램 설치한다. 
+  ```bash
+  dnf -y install bind-utils net-tools wget unzip bzip2
+  ```
+  - 또 dnf 관련된 설정을 커스터마이징한다. 만일을 대비해 기존건 다 백업한다.
+```bash
+cd /etc/yum.repos.d/
+
+# 백업
+mkdir backup
+mv *.repo backup
+
+# 재설정
+wget http://download.hanbit.co.kr/centos/8/This.repo
+ls -l
+
+# 기존 저장소 기록 지우기
+dnf clean all
+```
+
+<br>
+
+7. ServerA와 마찬가지로 네트워크 설정에서 고정 IP를 할당한다. 똑같은방식으로 과정은 생략
+- 이게 결국 VM들 간의 네트워크에서의 고정 IP인건데, 우리도 똑같은 값이다. `ip addr` 해서 `eth0`의 inet 값은 인스턴스의 private IP이다. 
+
+<br>
+
+8. SELinx 끄자 기존과 동일.
+
+<br>
+
+CentOS 클라이언트도 설치한다. 차이점은 아래와 같다.
+- 동적 IP 할당
+- 자동 파티션 설정
+- 9. 에서 root는 못쓰게 막는다. 큰의미없음(`su -` 로 쓰는건 된다. 아예 root로 접속하는게 안되는듯)
+- 14. 별도 로그인 없이 접속할 수 있도록 설정할 수 있다.(자동로그인) 근데 난 왜 저게 없지..
+```bash
+vi /etc/gdm/custom.conf
+
+# [daemon] 아래에 다음 내용 추가
+AutomaticLoginEnable=True
+AutomaticLogin=centos
+```
+
+Windows 클라이언트는 그냥 생략한다.
 
 <!-- 
   TODO : 
