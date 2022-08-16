@@ -51,3 +51,74 @@ ssh -i {path-to-pem.pem} ec2-user@public-IPv4-DNS
 - Redhat에서 제공하는 상업용 리눅스가 RHEL(Redhat Enterprise Linux)이다. 유료지만서도 GPL 라이센스를 따르므로 소스코드를 공개해야 했고, 이걸 그대로 다시 컴파일해 배포하는게 CentOS이다. 결국 RHEL === CentOS이다.
 - Fedora는 RHEL을 개발하기 전 베타버전이다. 따라서 Fedora -> RHEL -> CentOS순으로 공개된다. 이걸 전부 Redhat에서 관리하는데, CentOS가 있으면 도대체 돈을 어떻게 벌지 궁금하다.(AWS는 RHEL을 쓰긴 한다.)
 
+
+<br>
+
+## 3. CentOS 리눅스 설치
+- 인터넷에서 CentOS8 DVD ISO 파일을 다운로드 받고 이걸 VM의 CD/DVD에 마운트해서 설치한다. GUI 사용으로 설치할수도 있고 워크스테이션으로도 설치 가능. 설치는 생략
+- 디스크 파티션도 구성해준다.
+  - 리눅스 디스크 파티션은 루트 파티션('/')과 'swap' 파티션 두개만 있어도 운영이 가능하다. 
+  - 실전에서는 디스크 파티션을 대략 아래와 같은 형태로 나눈다고 한다.(어디서 많이 본것들..)
+
+| 마운트 포인트 | 권장 크기 | 비고 |
+|---|---|---|
+| / | 10GB | 루트 파티션 |
+| /bin | | 기본 명령어가 들어 있음 |
+| /sbin | | 시스템 관리용 명령어가 들어가 있음 |
+| /etc | 4GB | 부팅 커널이 저장됨 |
+| /media | | 외부 장치를 마운트하기 위해 제공됨 |
+| /usr | 설치할 응용 프로그램에 따라.. | 응용 프로그램이 주로 저장됨 |
+| /lib | | 프로그램의 라이브러리가 저장됨 |
+| /dev | | 장치 파일들이 저장됨 |
+| /proc | | 시스템 프로세서 정보, 프로그램 정보, 하드웨어 정보 등 |
+| /tmp | 4GB | 임시 파일이 저장됨 |
+| /var | 10GB | 로그, 캐시 파일 등이 저장됨 |
+| /root | | 시스템 관리자인 root의 홈 디렉터리 |
+| /home |  | 사용자별 공간 |
+| /lost+found | | 파일 시스템 복구를 위한 디렉터리 |
+| swap 파티션 | RAM의 2배 정도 | RAM 부족시 사용되는 공간 |
+
+<br>
+
+  - 루트 파티션과 swap 파티션만 있어도 되는 이유는 나머지 파티션(/bin, /etc, ...)들은 모두 루트 파티션 아래 종속되기 때문이다.
+
+<br>
+
+- `dnf`는 CentOS의 소프트웨어 설치시 사용하는 명령어인데, 이걸 CentOS 8 출시 시점의 소프트웨어가 설치되도록 설정한다. 
+  - `/etc/yum.repos.d/`의 내용을 모두 백업하도, `This.repo`파을을 만든 후 Base, AppStream 등에 대해 baseurl, gpgcheck 설정을 작성한다.
+
+<br>
+
+- 서버에 고정IP도 할당한다. `/etc/sysconfig/network-script`에서 `ifcfg-eth0`에 `BOOTPROTO`, `IPADDR`, `NETMASK`, `GATEWAY`, `DNS1`을 설정한다.(나는 고정IP가 있기때문에 하지 않는다.)
+  - `eth0`는 네트워크 장치, `ifcfg-eth0`은 네트워크 설정 파일이다. 자주 사용된다고 함 (책에서는 `eth0` => `ens160`)
+- 설정을 했으면 네트워크 장치를 재부팅해야한다.(난 역시나 안한다.)
+
+```bash
+nmcli connection dwon eth0  # 네트워크 장치 시작
+nmcli connection up eth0    # 네트워크 장치 시작
+reboot                      # 컴퓨터 재부팅
+```
+- 네트워크 정보를 확인해본다
+```bash
+ifconfig eth0
+```
+- 근데 aws의 Redhat linux에는 `ifconfig`가 설치되어있지 않다. 두가지 방안이 있다.
+  1. `ip addr` 입력
+  2. [ifconfig 명령어를 가지고 있는 net-tools 패키지를 설치](https://zetawiki.com/wiki/CentOS_7_ifconfig_%EB%AA%85%EB%A0%B9%EC%96%B4_%EC%97%86%EC%9D%8C)
+
+<br>
+
+- 보안이 설정된 `SELinux` 기능을 끈다.
+  - 설정열기
+  ```bash
+  vi /etc/sysconfig/selinux
+  ```
+  - 'SELINUX=enforcing'을 'SELINUX=disabled'로 수정한다.
+
+<br>
+
+
+<!-- 
+  TODO : 
+  EC2 root 게정 활성화하기 :https://goddaehee.tistory.com/193 
+-->
