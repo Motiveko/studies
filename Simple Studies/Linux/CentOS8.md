@@ -242,8 +242,63 @@ ln -sf /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.targ
 reboot
 ```
 
+<br>
 
+### 4.1.6 자동 완성과 히스토리
+- 자동완성 : 명령어 입력시 `tab`으로 자동완성하는것
+- 히스토리 : 도스 키(Dos Key), 위/아래 화살표로 이전에 입력한 명령어 순회하는것
+```bash
+# 히스토리 보기
+history
 
+# 히스토리 삭제
+history -c
+```
+
+<br>
+
+### 4.1.7 에디터
+- X 윈도에서는 `gedit`을 제공한다. 하지만 `vim`이 좀 대세다. vi 에디터는 모든 유닉스/리눅스 시스템에 기본으로 포함되어 있다고 한다.
+- [vi 에디터 단축키 정리](https://wayhome25.github.io/etc/2017/03/27/vi/)를 참고해보자.
+- 꽤 유용한거 아래와 같다.
+```bash
+# 에디터열기
+vi {SOMETHING}
+
+:%s/기존문자열/새문자열 # 문자열 치환
+:set numbers      # 에디터에 행 번호 표시
+/문자열             # 해당문자 검색, 이후 n(이전) N(이후)
+```
+
+<br>
+
+### 4.1.8 리눅스 도움말 사용법
+- `man`명령어로 도움말을 볼 수 있다. `man <명령어>`하면 됨. <명령어> -h 랑 같음
+
+<br>
+
+### 4.1.9 마운트와 CD/DVD/USB의 활용
+- ***리눅스에서 하드디스크 파티션, CD/DVD, USB 등을 사용하려면 이런 물리적인 장치를 지정한 위치(폴더)에 연결 시켜야 하는데, 이걸 마운트라고 한다.***
+- 책에서는 CD, USB를 마운트한다. USB같은걸 마운트해서 이걸 통해 호스트 컴퓨터와 VM 서버간에 파일을 주고받는다.(그냥 컴퓨터에 USB쓰는거랑 똑같다.) 하지만 EC2에서는 `EBS(Elastic Block Store)`라는 AWS에서 제공하는 스토리지를 마운트해서 써야 한다.
+  - 참고 블로그 : https://minjii-ya.tistory.com/27
+  - AWS 공식 가이드 : https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/ebs-using-volumes.html
+
+- 책에서 나온 내용은 간단한 개념만 정리한다. `mount` 명령어는 현재 마운트된 장치를 보여준다.
+```bash
+mount
+
+# ...
+# /dev/xvda2 on / type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+# ...
+```
+- 저거의 의미는 `/dev/xvda2`에 루트 파티션('/')이 마운트 되었다는 의미다. `/dev/xvda2`가 장치 이름이다.
+- `CD/DVD`를 마운트하면 `mount` 결과로 `/dev/... on /run/media/[user]/[CD Label]  ....` 형태의 결과가 나온다. 맨 앞 `/dev/...`가 장치 이름이고 `/run/mdeia/...`가 CD/DVD의 디렉터리가 된다. 이 디렉터리에 CD에 저장된 프로그램 같은것들이 들어있는것이다. 참고로 장치이름 `/dev/...`는 ln -s 로 링크 찾아보면 `/dev/cdrom`으로 연결되어 있다고 한다.
+- `USB`도 이와 동일하다. usb의 디렉토리도 `/run/media/[user]/[USB 이름]`로 생성된다. 참고로 CentOS는 기본적으로 FAT32 방식의 USB만 인식 가능하다고 한다. (윈도는 주로 FAT32, NTFS 둘 다 사용)
+- X 윈도의 경우 장치 연결하면 mount까지 되는데, 텍스트 모드일 경우 `mount [장치이름] [장치의 데렉토리]`까지 해줘야한다. Unmount는 `umount [장치이름/장치디렉토리]`로 할 수 있는데, 현재 디렉토리가 장치 디렉토리 내부일 경우 `target is busy` 메시지가 나온다.
+
+<!-- TODO : EC2에 EBS 마운트해보기(https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/ebs-using-volumes.html) 뭐든 찾아서 하면 될 듯 -->
+
+<br>
 
 <!-- 
   TODO : 
