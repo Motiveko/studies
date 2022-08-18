@@ -300,6 +300,87 @@ mount
 
 <br>
 
+## 4.2 리눅스 기본 명령어
+몰랐던거 위주로 찔끔 정리한다.
+
+- `ls`
+  - `ls -l` : `ll`과 동일, 현재 디렉터리 목록을 자새히 보여줌
+  - `ls *.java` : 확장자가 .java인 파일을 포여줌
+- `rm`
+  -  `rm -i`: 진짜 삭제할지 물어봄. rm은 기본 -i가 붙음
+  - `rm -r [dir]`: 디렉토리 삭제
+
+- `cp`
+  - `cp -r` : 디렉터리 복사
+
+- `mv`
+  - `mv [...targets] [destination]` : `mv aaa bbb ccc ddd` => aaa, bbb, ccc를 ddd로 이동시킴
+- `mkdir`
+  - `mkdir -p /abc/def`: -p는 Parents로 /abc 에 /def가 없을 경우 만들어 준다.
+- `rmdir [dir]`: 디렉토리 삭제
+- `head`, `tail`: 파일의 앞/뒤 출력, 
+  - `-[number]`옵션으로 줄수를 지정 가능
+  - `-f`로 계속 출력 가능
+- `more [file]`: 텍스트 형식으로 작성된 파일을 페이지 단위로 화면에 출력. 
+  - `spacebar`: 다음 페이지
+  - `B`:  이전 페이지
+  - `Q`: 종료
+  - `+[number]`: number 줄 부터 출력
+- `less`: `more`과 동일한 기능, `Page Up`, `Page Down` 사용가능
+- `file [file]`: 어떤 종류의 파일인지 표시
+
+
+<br>
+
+## 4.3 사용자 관리와 파일 속성
+- 리눅스 사용자는 반드시 하나 이상의 그룹에 속해 있어야 한다. 아래 명령어로 유저 목록을 볼 수 있다
+```bash
+# 사용자 보기
+$ cat /etc/passwd
+
+# root:x:0:0:root:/root:/bin/bash
+# ...
+# ...
+# sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin
+# ec2-user:x:1000:1000:Cloud User:/home/ec2-user:/bin/bash
+```
+- `sshd` 까지는 ec2에 기본 세팅되어 있다.
+- 의미는 `사용자이름`:`암호`:`사용자ID`:`사용자가 소속된 그룹ID`:`전체 이름`:`홈 디렉터리`:`기본 쉘`이다. 암호가 `x`면 비밀번호가 `/etc/shadow`에 지장되어 있다는 의미
+- 그룹도 볼 수 있다
+```bash
+# 그룹 보기
+$ cat /etc/group
+
+# root:x:0:
+# bin:x:1:
+# daemon:x:2:
+# ...
+# motiveko:x:1001:
+```
+- 의미는 `그룹 이름`:`비밀번호`:`그룹 ID`:`그룹에 속한 사용자 이름`이다. 그룹에 속한 사용자 이름은 참조로 사용돼, 값이 없다고 소속 사용자가 없는게 아니란다.
+- 사용자 관련 명령어도 좀 정리해보자.
+- `useradd`, `adduser`: 사용자 추가한다. 실행하면 `/etc/passwd`, `/etc/shadow`, `/etc/group`에 행이 추가되겠죠?
+  - 기본 : `useradd [user]`
+  - `-u [UserID]` : 생성 유저의 아이디 직접 할당
+  - `-g [Group]`: 사용자를 포함시킬 그룹 지정
+  - `-d [Dir]`: 홈디렉토리 지정
+  - `-s [Shell]`: 기본 쉘 지정
+- `passwd` : 사용자의 비번 지정하거나 변경한다.
+- `usermod`: 사용자 속성을 변경한다. 그룹이나 뭐 기타 등등..
+- `userdel`: 사용자를 삭제한다.
+  - `-r`: 사용자 삭제하면서 디렉토리까지 같이 삭제한다.
+- `chage`(change 아님) : 사용자 암호 주기적으로 변경하도록 설정한다.
+- `groups [User]`: 사용자가 소속된 그룹을 보여준다. 
+- `groupadd`: 그룹 생성
+- `groupdmod`: 그룹 속성 변경
+- `groupdel`: 그룹삭제
+- `gpasswd`: 그룹의 암호 설정, 그룹 관리
+
+
+
+
+## 4.3 사용자 관리와 파일 속성
+
 <!-- 
   TODO : 
   EC2 root 게정 활성화하기 :https://goddaehee.tistory.com/193 
