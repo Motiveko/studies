@@ -387,3 +387,30 @@ $ cat /etc/group
 -->
 
 
+
+
+<br>
+
+## 09 네임 서버 설치와 운영
+
+- `/etc/host.conf`에 도메인에 대한 IP를 얻기 위해 시도할 방법의 우선순위가 장의되어있다.
+- `/etc/hosts`에 `{IP주소} {도메인주소}`형태로 도메인과 IP 매핑이 되어 있다. 기본은 여길 먼저 찾는다.
+- `/etc/resolve.conf`에 `nameserver {네임서버IP주소}` 형태로 네임서버가 설정되어 있다.(로컬 네임 서버) `/etc/hosts`에 주소가 없으면 서버에 쿼리하는것.
+
+### 캐싱 전용 네임 서버 구성
+- [DNS 서버 구성](https://meongj-devlog.tistory.com/117)
+- 캐싱 전용 네임 서버는 자신의 DB를 갖지 않은 네임서버다. 외부의 root, com, 마스터 네임 서버에 대한 캐싱 레이어만 제고앟는 것.
+- `bind`(berkeley internet named domain)는 가장 널리 쓰이는 DNS 서버 프로그램. 데몬명은 `named`를 사용한다.
+- 설치
+```
+yum install bind
+```
+<!-- 책에서는 dnf -y bind bind-chroot, bind-chroot는? -->
+
+- `/etc/named.conf` 파일은 DNS 서버의 환경설정 파일이다. 서버에서 사용하는 zone, reserve zone 파일을 지정한다.
+
+<!-- 
+
+... 마스터네임서버는 정리해야함. 캐싱 전용도 블로그 참고해서 더 정리필요 
+마스터네임서버 구성에서  /etc/named.conf 설정에 대한 설명도 좀 나옴
+-->
