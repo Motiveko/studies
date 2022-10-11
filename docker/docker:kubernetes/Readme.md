@@ -1807,6 +1807,62 @@ $ kubectl get pods -w # pod 리소스 변화 감지
 
 <hr>
 
+## 11. 애플리케이션 배포를 위한 고급 설정
+### 11.1 포드의 자원 사용량 제한
+### 11.1.1 컨테이너와 포드의 자원 사용량 제한: Limits
+- limit는 pod가 사용할 수 있는 자원의 상한선이다.
+```yaml
+spec:
+  resources:
+    limits:
+      memory: "256Mi"
+      cpu: "1000m"
+```
+- 위설정은 `docker run` 에서`--memory 256m --cpus 1`과 같다. 메모리 256메가, cpu 1000밀리코어 설정. 
+  - 1000m는 1 vCore(가상 CPU 코어)정도가 된다. 클라우드 벤더같은 쿠버네티스를 운영하는 인프라에 따라 약간씩 차이가 있다고 함.
+
+- 아래 명령어로 노드의 리소스 할당 정보를 확인할 수 있다.
+```bash
+kubectl get pods -o wide
+# 결과에서 원하는 pod의 node 가져오고
+ 
+kubectl describe node {NODE}
+# 결과 예 ===>
+# ...
+# 
+# Allocatable:
+#   attachable-volumes-csi-cinder.csi.openstack.org:  256
+#   cpu:                                              7900m
+#   ephemeral-storage:                                46663523866
+#   hugepages-1Gi:                                    0
+#   hugepages-2Mi:                                    0
+#   memory:                                           7617828Ki
+#   pods:                                             110
+# 
+# ....
+# 
+# Non-terminated Pods:          (8 in total)
+#   Namespace                   Name                                                               CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+#   ---------                   ----                                                               ------------  ----------  ---------------  -------------  ---
+#   default                     mail-cinnamon-prod-deployment-66d6d94c45-2b6bt                     4 (50%)       4 (50%)     4608Mi (61%)     4608Mi (61%)   15d
+#   kube-system                 cilium-8tjg6                                                       100m (1%)     1 (12%)     64M (0%)         1024M (13%)    483d
+# ...
+
+```
+### 11.1.2 컨테이너와 포드의 자원 사용량 제한: Requests
+- request는 ***'컨테이너에 적어도 이 만큼의 자원은 컨테이너에게 보장돼야 한다'***를 의미하는 것. 이를 통해 쿠버네티스 자원의 `Overcommit`을 가능하게 만든다.
+- 
+
+<!-- 스터디중.. -->
+- Docker에서 컨테이너의 리소스 제한 : 2.2.9
+- cpu 리소스를 나눠쓰는거는 [cpu 스케줄링](https://imbf.github.io/computer-science(cs)/2020/10/18/CPU-Scheduling.html)을 통해서 하는것이다.
+
+
+<br><br>
+
+<hr>
+
+
 # == 실전 ==
 ## 쿠버네티스 클러스터 컨텍스트 변경
 - 현재 컨텍스트 확인하기
