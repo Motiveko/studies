@@ -1809,8 +1809,16 @@ $ kubectl get pods -w # pod 리소스 변화 감지
 
 ## 11. 애플리케이션 배포를 위한 고급 설정
 ### 11.1 포드의 자원 사용량 제한
+- 서버 리소스 풀을 늘리는 것에 두가지가 있다.
+  - 스케일아웃: 클러스터에 서버를 추가하는방식
+  - 스케일업: 기존 서버에 CPU, 메모리를 추가로 꽂아서 성능늘리는것
+- 스케일 조정 외에 클러스터 내부에서 컴퓨팅 자원 활용율(Utiliztaion)을 높이는게 중요하다. 이를 위해 오버커밋을 활용할 수 있다.
+
+<br>
+
 ### 11.1.1 컨테이너와 포드의 자원 사용량 제한: Limits
 - limit는 pod가 사용할 수 있는 자원의 상한선이다.
+  - 쿠버네티스 외에 Docker에서 컨테이너의 리소스 제한할 수 있었다.(2.2.9)
 ```yaml
 spec:
   resources:
@@ -1820,6 +1828,7 @@ spec:
 ```
 - 위설정은 `docker run` 에서`--memory 256m --cpus 1`과 같다. 메모리 256메가, cpu 1000밀리코어 설정. 
   - 1000m는 1 vCore(가상 CPU 코어)정도가 된다. 클라우드 벤더같은 쿠버네티스를 운영하는 인프라에 따라 약간씩 차이가 있다고 함.
+  - ***이게 milli인 이유는 1초당 할당받는 cputime이기 때문. cpu time은 1코어 cpu를 1초에 몇 ms만큼 쓸 수 있느냐인데, 결국 1000m는 1코어를 1초에 1초만큼 다 쓰겠다는 의미. 즉 초당 cpu 코어 사용 시간을 스케줄링 하는것이다.*** 따라서 1000ms를 준다고 1코어를 베타적으로 나만 쓸 수 있거나 그런건 아니고 전체 cpu time에서 이만큼 쓰는것이다. 아마 pod가 많을수록 컨텍스트 스위칭같은 오버헤드가 많이 발생할 듯.
 
 - 아래 명령어로 노드의 리소스 할당 정보를 확인할 수 있다.
 ```bash
@@ -1850,12 +1859,76 @@ kubectl describe node {NODE}
 
 ```
 ### 11.1.2 컨테이너와 포드의 자원 사용량 제한: Requests
-- request는 ***'컨테이너에 적어도 이 만큼의 자원은 컨테이너에게 보장돼야 한다'***를 의미하는 것. 이를 통해 쿠버네티스 자원의 `Overcommit`을 가능하게 만든다.
-- 
+- request는 ***'컨테이너에 적어도 이 만큼의 자원은 컨테이너에게 보장돼야 한다'***를  의미하는 것.
+- request보다 높은 수치의 limit을 주면 `Overcommit`이 가능해진다. 노드에 request를 기준으로 할당 가능한 pod을 띄우고 유휴 리소스에 대해서 각 pod는 언제든 limit까지 사용 가능하다. => 전체 자원 사용률을 높일 수 있다.
+
+
+<br>
+
+### 11.1.3 CPU 자원 사용량의 제한 원리
+- 쿠버네티스 CPU request, limit
+  - request는 docker에서 `--cpu-shares`옵션과 같다. 실제 CPU가 몇개인지 상관 없이 이 값에 따라서 컨테이너가 사용할 수 있는 CPU time이 결정되는것이다. cpu 경합이 발생하면 각 파드의 `request(--cpu-shares)`비율에 맞춰서 스케줄링 되고, 못받는애들은 쓰로틀링이 되면서 좀 느려진다.(CPU는 압축 가능한 리소스)
+  - limit은 docker에서 `--cpus`와 같다.
+
+<br>
+
+### 11.1.4 QoS 클래스와 메모리 자원 사용량 제한 원리
+- 메모리는 CPU와 달리 압축 불가능한(incompressible)자원이다.(이미 데이터가 메모리에 적재되어 있기 때문)
+- 쿠버네티스는 메모리가 모지라면 ***가용 메모리를 확보하기 위해 우선순위가 낮은 포드 또는 프로세스를 강제로 종료한다.*** 이 때 포드는 다른 노드로 옮겨가는데 이를 퇴거(Eviction)이라고 한다.
+- `kubectl describe nodes | grep -A9 Conditions` 해보면 현재 노드의 `MemoryPressure`를 확인할 수 있다. 노드의 메모리가 부족해지면 이게 `False` -> `True`로 바뀌게 된다.(기본적으로 kubelet에 노드 가용 메모리 100Mi 이하일경우 생긴다. 기준값을 Hard Eviction Threshold라고 부른다.)
+- 이렇게 되면 노드에서 메모리 확보를 위해 가장 우선순위가 낮은 포드를 다른 노드로 퇴거(`Evict`) 시키는 것이다. 이 때 어떤 포드를 죽일지 결정하는 기준이 `QoS(Quality of Service)` 클래스다.
+- `kubelet`이 Memory Pressure 상태 감지 전에 급격하게 메모리 사용량이 많아지면 리눅스 시스템의 OOM Killer라는 기능이 우선순위 점수가 낮은 컨테이너의 프로세스를 강제로 종료해 메모리를 확보하게 된다. 이 때 기준은 각 프로세스에 할당된 OOM 점수(oom_score)에 의해 결정되는 것이다.(점수는 프로세스 실행시 자동으로 매겨지고, 실행시 전달할 수도 있는듯하다. 도커 데몬(`dockerd`)은 -999로 매우 낮다. 낮을수록 우선순위 밀리는것)
+```bash
+# 프로세스의 OOM score 확인하는법
+# 노드에 ssh 접속한 뒤
+
+$ ps aux | grep dockerd
+# root 1239 ....
+
+# ls /proc/{PID}/
+$ ls /proc/1239/
+# oom_adj oom_score oom_score_adj
+
+$ cat /proc/1239/oom_score_adj
+# -999
+```
+- OOM  점수는 프로세스가 메모리를 얼마나 더 많이 쓰냐에 따라 갱신된다고 한다.
+
+<br>
+
+### QoS 클래스 종류
+```bash
+$ kubectl describe pod {POD_NAME} | grep QoS
+
+# QoS Class : Guaranteed 
+```
+- 우선순위 순으로 `Guarantted` < `Burstable` < `BestEffort` 세개가 있다. 높을수록 먼저 죽인다.
+- 근데 포드가 메모리를 많이 쓸 수록 우선순위가 낮아진다(안죽인다). 따라서 100%라고 하긴 어렵다.
+- `Guaranteed` 클래스
+  - resource에 `request`와 `limit`에 같은 값을 할당했을 경우
+  - 즉, request한 자원 만큼만 쓰기 때문에 오버커밋 되지 않고 할당받은 자원의 사용을 안정적으로 보장(Guaranteed) 받을 수 있다.
+  - `dockerd`, `kubelet`등의 프로세스와 거의 동일한 레벨로 보호받아, 강제로 종료되는 경우는 잘 없다.
+
+- `Burstable`
+  - `request`보다 `limit`값이 큰 경우다. 즉 오버커밋을 하는 포드들을 의미한다.
+
+- `BestEffort`
+  - request와 limit을 아예 설정하지 않은 포드다. 둘 다 설정하지 않았기 때문에 노드의 유휴 자원 사용에 제약이 없다. request(하한선)도 없기 때문에 자원을 아예 못 사용할수도 있게 된다.
+
+<br>
+
+### QoS클래스와 메모리 부족
+- kubelet이 메모리 부족을 감지하면 파드 퇴거(Evict)를 수행. 포드는 다른 컨테이너에서 재시작된다.
+- 너무 갑자기 메모리 사용량이 높아지면 리눅스 OOM Killer가 컨테이너 프로세스를 강제종료. 포드의 재시작 정책(restart Policy)에 의해 다시 시작된다.
+- 자원 오버 커밋은 꼭 필요한게 아니다. 애플리케이션이 반드시 안정적인 상태를 보장받아야 한다면 포드를 `Guaranteed`클래스로 생성하는 것이 해답이 된다.
 
 <!-- 스터디중.. -->
-- Docker에서 컨테이너의 리소스 제한 : 2.2.9
-- cpu 리소스를 나눠쓰는거는 [cpu 스케줄링](https://imbf.github.io/computer-science(cs)/2020/10/18/CPU-Scheduling.html)을 통해서 하는것이다.
+- 참고
+> https://www.youtube.com/watch?v=ka-HItczp2I : 쿠버네티스 QoS 클래스별로 pod 띄우고 노드에 `stress`명령어로 메모리 부하를 줘서 누가 죽는지 테스트한다. 내 가설을 검증하기 괜찮은 방법일듯
+
+> [OOM - eviction](https://mihai-albert.com/2022/02/13/out-of-memory-oom-in-kubernetes-part-4-pod-evictions-oom-scenarios-and-flows-leading-to-them/)
+
+> cpu 리소스를 나눠쓰는거는 [cpu 스케줄링](https://imbf.github.io/computer-science(cs)/2020/10/18/CPU-Scheduling.html)을 통해서 하는것이다.
 
 
 <br><br>
