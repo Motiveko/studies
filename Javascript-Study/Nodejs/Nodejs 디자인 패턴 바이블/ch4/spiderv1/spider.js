@@ -27,19 +27,8 @@ function download(url, filename, cb) {
     });
   });
 }
-/**
- * 비동기 처리시 같은 링크에 대해 여러번 다운로드하는 경우가 발생할 수 있다. 
- * 이를 위해 작업 시작 전 Set에 작업하는 link를 넣어 해당 link로 다시 다운로드 하지 않도록한다.(최적화)
- */
-const spidering = new Set(); // Set<link>()
+
 export function spider(url, nesting, cb) {
-  
-  if(spidering.has(url)) {
-    return process.nextTick(cb);  // 이미 작업이 수행중/수행완료 이므로 spiderLink작업 없이 바로 cb를 큐잉한다.
-  }
-
-  spidering.add(url);
-
   const filename = urlToFilename(url);
   fs.readFile(filename, 'utf8', (err, fileContent) => {
     if(err) {
@@ -63,35 +52,36 @@ export function spider(url, nesting, cb) {
 
 function getPageLinks(url, body) {
   /** 현재 페이지의 url 호스트와 같은 호스트 url을 모두 가져와 반환한다. */  
+  return ['https://example.com'];
 }
 
 
 /**
- * 병렬(동시성)로 spider 작업 수행. 모든 작업이 완료되고 나면 콜백을 처리한다.
+ * 비동기 I/O 작업을 iterate 함수를 이용해 반복한다.
+ * spider() 함수의 콜백으로 iterate(index + 1)을 전달했기 때문에 links에 대해 순서대로 비동기 I/O가 진행되는것이 보장된다
  */
 function spiderLinks(currentUrl, body, nesting, cb) {
   if(nesting === 0) {
-    return process.nextTickcb(cb);
+    return process.nextTickcb(cb);  // ❗️마이크로 테스크 큐잉, 이게 없으면 콜백이 동기로 호출되어 블로킹 되는 경우가 생길 수 있다.
   }
 
-  const links = getPageLinks(currentUrl, body); 
+  const links = getPageLinks(currentUrl, body); // string[] 
   if(links.length === 0) {
     return process.nextTickcb(cb);
   }
 
-  let completed = 0;
-  let hasError = false;
-
-  function done(err) {
-    if(err) {
-      hasError = true;
-      return cb(err);
+  function iterate(index) {
+    if(index === links.length) { 
+      return cb(); // 왜 모든 콜백을 마이크로 테스크 큐잉 하지 않은것일까
     }
 
-    if(++completed >= links.length || !hasError) {
-      return cb();
-    }
+    spider(links[index], nesting - 1, function(err) {
+      if(err) {
+        return cb(err);
+      }
+      iterate(index + 1); // 재귀적인 호출로 iterate
+    })
   }
 
-  links.forEach(link => spider(link, nesting - 1, done));
+  iterate(0);
 }                                                                                                                    
