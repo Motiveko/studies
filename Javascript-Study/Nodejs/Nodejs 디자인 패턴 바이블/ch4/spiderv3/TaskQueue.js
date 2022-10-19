@@ -10,7 +10,7 @@ export class TaskQueue extends EventEmitter{
 
   pushTask(task) {
     this.queue.push(task);
-    process.nextTick(this.next.bind(this));
+    process.nextTick(this.next.bind(this)); // push되면 무조건 next 호출보장
     return this;
   }
 
