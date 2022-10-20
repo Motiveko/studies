@@ -1,34 +1,23 @@
-let values = [1, 2, 3, 4, 5, 6, 7];
-
-const task = (v) => new Promise((resolve) => {
-  console.log(`Task ${v} 시작`);
-  setTimeout(() => {
-    console.log(`Task ${v} 완료`)
-    resolve(v)
-  }, Math.random() * 3333)
-});
-
-const length = 1;
-const promises = Array.from({length}, () => Promise.resolve());
-
-const dequeueTask = (promise) => {
-  console.log('dequee')
-  if(values.length === 0) {
-    return;
+async function delay(milli) {
+  return new Promise((resolve) => setTimeout(() => resolve(), milli));
+}
+async function asyncFunc(bool) {
+  await delay(1000);
+  console.log('next');
+  if (bool) {
+    await delay(1000);
+    throw new Error('걸렸네!!!');
   }
-  promise.then(() => {
-    return dequeueTask(this)
-  });
-  return task(values.shift());
+  return 30;
 }
 
+const arr = Array.from({length: 10}, (v,i) => asyncFunc(i == 5));
+async function task() {
+  for (const p of arr) {
+    await p;
+  }
+  return 'task complete';
+}
 
-promises.forEach(promise => {
-  promise.then(() => dequeueTask(this))
-})
-
-const promise= Promise.resolve()
-
-promise.then(() => {
-  
-})
+// task().then(console.log).catch(console.error);
+Promise.allSettled(arr).catch(console.error)
