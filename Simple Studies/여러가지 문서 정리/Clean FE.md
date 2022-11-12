@@ -132,3 +132,44 @@ function curry(fn) {
 - 둘 다 잘 쓰면 유용하다. `partial application`과 달리 `currying`은 인자가 1개로 고정되어 있다는 일관성이 있기 때문에(Promise의 `resolve`, `reject`가 인자가 1개인 것 처럼) 좀 더 보편적으로 많이 쓰이는 것 같다.(어디서 쓰던 일관적이고 표준적이다)
 - redux의 reducer 같은것도 내부적으로 보면 currying을 이용해 `store`, `state`, ...를 순서대로 전달하게 구현되어 있다!
 - Currying은 직접 구현할 필요는 없고 [`Ramda`](http://ramdajs.com/), [`lodash/fp`](https://github.com/lodash/lodash/wiki/FP-Guide) 같은 라이브러리를 쓰면 좀 더 편하게 사용 가능하다.
+
+<br>
+
+### 1.1.3 Composition
+- 함수 합성은 함수를 연속적으로 연결/조합해서 사용하는 방식이다.
+- `chaining`은 동일한 구조의 함수들(`jQuery`내부, `underscore` 내부, `RxJS` 내부..)에서만 사용 가능한 반면 Composition은 input/output이 있으면 다 연결 가능하다.
+- 하나의 함수를 가지고 다양한 문제해결을 하려면 결국, 함수를 다양한 방식으로 조립 할 수 있어야 하기 때문에, Composition은 중요하다. 
+- Composition 하기 좋은 함수는 함수가
+  - 재사용 가능해야 하고(**아주 작은 단위**)
+  - 예측 가능해야 한다.(**참조 투명성 보장**)
+- 보통 함수 합성에는 `compose()`, `pipe()` 두개가 있는데, 다 똑같고 인자로 전달하는 함수의 호출 순서가 앞->뒤 / 뒤->앞 이냐의 차이 정도가 있다
+```js
+// pipe의 구현
+const pipe = (...fns) => {
+  return (...args) => {
+    fns.reduce((acc, fn) => fn(acc), ...args)
+  }
+}
+
+// 합성
+const addHello = (str) => str + 'Hello ';
+const addWorld = (str) => str + 'World!';
+pipe(
+  addHello,
+  addWorld,
+  console.log
+)('');
+```
+- Composition 전략: 함수의 합성을 쉽고 자연스럽게 하기 위해서는 설계를 잘해야한다.
+  - 원하는 동작을 **순서대로 설계**한다.
+  - 필요한 **작은 함수 단위**를 결정한다.
+  - **입력과 출력을 결정**하고, 함수간의 연결을 짓는다.
+
+<br>
+
+## 2. JS의 객체지향
+
+- SOLID 원칙
+  - https://dev-momo.tistory.com/entry/SOLID-%EC%9B%90%EC%B9%99
+  - 인터페이스 구현 원칙
+    - https://blog.itcode.dev/posts/2021/08/16/interface-segregation-principle
